@@ -1,0 +1,522 @@
+[
+  {
+    "id": "F-0.01",
+    "phase": 0,
+    "title": "Design tokens with contrast and scale checks",
+    "req_ids": ["UI-01", "UI-03", "UI-05", "UI-07", "UI-08", "UI-09", "UI-10", "UI-13", "UI-06", "A11Y-13"],
+    "acceptance": "Unit tests over tokens.css prove contrast in light, dark and high contrast, the spacing, radius, shadow and motion scales, the 72ch measure, and that no stylesheet uses gradients, glass or blur",
+    "depends_on": []
+  },
+  {
+    "id": "F-0.02",
+    "phase": 0,
+    "title": "Core components and Storybook catalogue",
+    "req_ids": ["UI-14", "UI-02", "UI-04", "UI-11", "UX-13", "UX-14", "UI-12"],
+    "acceptance": "Radix-based Button, Field, Dialog, Menu, Drawer, Tabs, Table, Toast and status components in packages/ui with stories in three themes; storybook builds; reduced motion makes transitions 0 s",
+    "depends_on": ["F-0.01"]
+  },
+  {
+    "id": "F-0.03",
+    "phase": 0,
+    "title": "Static export, headers and repo rules",
+    "req_ids": ["WEB-01", "WEB-02", "WEB-04", "WEB-05", "A11Y-21", "A11Y-23", "SEC-01", "SEC-09", "CI-02"],
+    "acceptance": "Repo-rule tests: output export, no dynamic segments, route handlers, middleware or server actions; vercel.json headers; query keys carry orgId; renovate config; CI workflow; jsx-no-literals active",
+    "depends_on": []
+  },
+  {
+    "id": "F-0.04",
+    "phase": 0,
+    "title": "API conventions: errors, server time, schemas, CORS, logs, shutdown",
+    "req_ids": ["API-01", "API-03", "SEC-04", "SEC-05", "SEC-07", "OBS-01", "REL-03"],
+    "acceptance": "Integration tests: one error shape, X-Server-Time on every response, every route declares request and response schemas and output is stripped, CORS only for configured origins, logs carry requestId, orgId and route with emails hashed, SIGTERM drains in-flight requests",
+    "depends_on": []
+  },
+  {
+    "id": "F-0.05",
+    "phase": 0,
+    "title": "Token verification and session bootstrap",
+    "req_ids": ["AUTH-02", "AUTH-05", "ORG-02", "API-04"],
+    "acceptance": "Bootstrap resolves super admin, then admin, then whitelist and sets claims; requests without a valid token get 401; revoked tokens are refused on admin mutations; org comes from the claim or X-Org-Id for super admins",
+    "depends_on": ["F-0.04"]
+  },
+  {
+    "id": "F-0.06",
+    "phase": 0,
+    "title": "Tenancy guards and route-table checks",
+    "req_ids": ["ORG-01", "ORG-03", "ORG-04", "ORG-05", "ORG-11", "ORG-14"],
+    "acceptance": "Admin guard allows admin of the org or super admin with X-Org-Id; org B resources are 404 for org A admins; a route-table test calls every admin route with both tokens; data-access functions take orgId first",
+    "depends_on": ["F-0.05"]
+  },
+  {
+    "id": "F-0.07",
+    "phase": 0,
+    "title": "Feature flags, limits and usage counters",
+    "req_ids": ["FF-01", "FF-02", "FF-04", "PERF-02"],
+    "acceptance": "resolveEntitlements order unit-tested; a gated route returns 403 FEATURE_DISABLED; monthly counters increment atomically and refuse at the limit; entitlements cached 60 s against the clock",
+    "depends_on": ["F-0.06"]
+  },
+  {
+    "id": "F-0.08",
+    "phase": 0,
+    "title": "Audit writer",
+    "req_ids": ["AUD-01", "AUD-02", "AUD-04"],
+    "acceptance": "Audit entries carry actor, org, action, target, before and after without sensitive fields, IP, user agent and request ID, written in the same batch as the change; no route edits or deletes them",
+    "depends_on": ["F-0.06"]
+  },
+  {
+    "id": "F-0.09",
+    "phase": 0,
+    "title": "Security rules and platform infrastructure",
+    "req_ids": ["DATA-08", "DATA-09", "DATA-11", "SEC-02", "SEC-03", "OBS-02", "CI-01"],
+    "acceptance": "Rules tests deny every client access to Firestore and Storage; infrastructure items are owner checks in MANUAL_CHECKS.md",
+    "depends_on": []
+  },
+  {
+    "id": "F-0.10",
+    "phase": 0,
+    "title": "Google sign-in and role landing",
+    "req_ids": ["AUTH-01", "AUTH-03", "US-ST-01", "WEB-03"],
+    "acceptance": "E2E: each role signs in through the Auth emulator and lands on its home; an unlisted account sees the contact message; a student opening an admin URL is sent back to the student home",
+    "depends_on": ["F-0.05", "F-0.02"]
+  },
+  {
+    "id": "F-1.01",
+    "phase": 1,
+    "title": "Organizations console",
+    "req_ids": ["ORG-06", "ORG-07", "US-SA-01", "US-SA-05", "UX-01", "UX-09", "A11Y-11"],
+    "acceptance": "Super admin creates, edits, suspends, archives and restores organizations; duplicate slug refused next to the field; suspended org users cannot sign in; archived org is read-only",
+    "depends_on": ["F-0.10"]
+  },
+  {
+    "id": "F-1.02",
+    "phase": 1,
+    "title": "Organization admins",
+    "req_ids": ["ORG-08", "AUTH-06", "US-SA-02"],
+    "acceptance": "Super admin adds an admin by email who then signs in to the admin workspace; removing them revokes tokens and access ends",
+    "depends_on": ["F-1.01"]
+  },
+  {
+    "id": "F-1.03",
+    "phase": 1,
+    "title": "Entitlements, locked features and usage",
+    "req_ids": ["FF-03", "FF-05", "ORG-13", "US-SA-03", "US-SA-04"],
+    "acceptance": "Super admin toggles flags and limits with audit before and after; disabled features show locked in the org UI and return 403 even for super admins; usage against limits shown",
+    "depends_on": ["F-1.01"]
+  },
+  {
+    "id": "F-1.04",
+    "phase": 1,
+    "title": "Organization switcher and workspace banner",
+    "req_ids": ["ORG-09", "ORG-12"],
+    "acceptance": "Super admin enters an org's admin workspace from the sidebar switcher; a banner names the org; actions are audit-logged with the super admin as actor",
+    "depends_on": ["F-1.01", "F-1.05"]
+  },
+  {
+    "id": "F-1.05",
+    "phase": 1,
+    "title": "Admin shell, navigation and command palette",
+    "req_ids": ["UX-04", "UX-06", "UX-12", "A11Y-03", "A11Y-04", "A11Y-07", "A11Y-16"],
+    "acceptance": "Sidebar, top bar and page header; skip link, landmarks and heading order; visible focus ring; 44 px targets; Ctrl K palette and ? shortcuts; sidebar icons below 1,200 px; works at 768 px",
+    "depends_on": ["F-0.10"]
+  },
+  {
+    "id": "F-1.06",
+    "phase": 1,
+    "title": "Departments",
+    "req_ids": ["STU-05", "STU-06", "STU-07", "US-AD-03"],
+    "acceptance": "Admin adds, renames, archives and merges departments; a department in use cannot be deleted; renames show everywhere",
+    "depends_on": ["F-1.05"]
+  },
+  {
+    "id": "F-1.07",
+    "phase": 1,
+    "title": "Whitelist upload wizard",
+    "req_ids": ["WL-01", "WL-02", "WL-03", "US-AD-01", "UX-08"],
+    "acceptance": "CSV, XLSX, paste and single add with column mapping and preview; validation report of invalid, duplicate, existing and over-limit entries before saving; emails stored lowercase",
+    "depends_on": ["F-1.06"]
+  },
+  {
+    "id": "F-1.08",
+    "phase": 1,
+    "title": "Whitelist list and bulk actions",
+    "req_ids": ["WL-04", "WL-05", "API-05"],
+    "acceptance": "Whitelist shows invited, registered and disabled; bulk disable, enable, remove and export; cursor pagination with a 200 maximum",
+    "depends_on": ["F-1.07"]
+  },
+  {
+    "id": "F-1.09",
+    "phase": 1,
+    "title": "Student sign-in, org choice and consent",
+    "req_ids": ["AUTH-04", "SEC-08", "DATA-01"],
+    "acceptance": "A student in two orgs picks one; first sign-in shows the consent notice; the uid is linked to the student record created by the whitelist or manual add",
+    "depends_on": ["F-1.07"]
+  },
+  {
+    "id": "F-1.10",
+    "phase": 1,
+    "title": "Profile completion and locking",
+    "req_ids": ["STU-01", "STU-02", "STU-03", "US-ST-02", "UX-07"],
+    "acceptance": "First sign-in requires name, PRN, department and graduation year; whitelist PRN prefilled and locked; duplicate PRN refused; profile lock shows read-only; the admin lock toggle is optimistic and rolls back on refusal",
+    "depends_on": ["F-1.09"]
+  },
+  {
+    "id": "F-1.11",
+    "phase": 1,
+    "title": "Student directory and detail",
+    "req_ids": ["STU-08", "STU-09", "STU-10", "STU-11", "US-AD-02", "UX-02", "UX-05", "A11Y-05"],
+    "acceptance": "Search, filters, sort, column picker, density; row opens a 560 px drawer; edit, disable, delete (typed confirmation when results exist) and manual add, all audit-logged",
+    "depends_on": ["F-1.10"]
+  },
+  {
+    "id": "F-1.12",
+    "phase": 1,
+    "title": "Audit log screens",
+    "req_ids": ["AUD-03", "US-SA-06", "US-AD-16"],
+    "acceptance": "Admin sees own org's log, super admin sees all orgs, with filters by actor, action, target, organization and date, and CSV export",
+    "depends_on": ["F-1.04"]
+  },
+  {
+    "id": "F-1.13",
+    "phase": 1,
+    "title": "Accessibility panel and preferences",
+    "req_ids": ["A11Y-01", "A11Y-02", "US-ST-10"],
+    "acceptance": "Panel in every top bar sets text size, theme, high contrast, motion, spacing and reading ruler; saved to the account and applied before first paint",
+    "depends_on": ["F-1.05"]
+  },
+  {
+    "id": "F-2.01",
+    "phase": 2,
+    "title": "Eligibility and marks logic",
+    "req_ids": ["SER-04", "SER-05", "SER-06", "Q-04", "Q-07"],
+    "acceptance": "Unit tests: eligibility needs registered status and matching rules, empty rules mean no restriction, tests only narrow; pool draw counts; marks resolve question, section, test",
+    "depends_on": []
+  },
+  {
+    "id": "F-2.02",
+    "phase": 2,
+    "title": "Series with defaults and eligibility",
+    "req_ids": ["SER-01", "SER-02", "SER-07", "SER-09", "US-AD-04"],
+    "acceptance": "Admin creates a series with dates, default settings and eligibility; live matching count opens the list; the flexible full-review combination is blocked with a reason; students only see active series",
+    "depends_on": ["F-2.01", "F-1.11"]
+  },
+  {
+    "id": "F-2.03",
+    "phase": 2,
+    "title": "Tests and the series timeline",
+    "req_ids": ["TST-01", "TST-02", "SER-03", "TST-07"],
+    "acceptance": "Admin adds tests with company, day number (suggested, renamable, hideable) and scheduled date; the series page shows a day-by-day timeline; times show the org timezone",
+    "depends_on": ["F-2.02"]
+  },
+  {
+    "id": "F-2.04",
+    "phase": 2,
+    "title": "Inherited and overridden settings",
+    "req_ids": ["TST-03", "US-AD-05"],
+    "acceptance": "Each test setting shows Inherited or Overridden with a reset to the series value",
+    "depends_on": ["F-2.03"]
+  },
+  {
+    "id": "F-2.05",
+    "phase": 2,
+    "title": "Question editor and JSON import",
+    "req_ids": ["Q-01", "A11Y-10"],
+    "acceptance": "Admin writes and edits questions with a live student preview (KaTeX MathML, code, images with alt text), reorders by drag or keyboard, and imports the legacy JSON format",
+    "depends_on": ["F-2.03"]
+  },
+  {
+    "id": "F-2.06",
+    "phase": 2,
+    "title": "Sections, pools, difficulty mix, marking and timers",
+    "req_ids": ["Q-03", "Q-05", "Q-08", "Q-10", "US-AD-07"],
+    "acceptance": "Admin configures sections, draw counts, difficulty mixes (blocked when unsatisfiable), marking presets and per-question time limits",
+    "depends_on": ["F-2.05"]
+  },
+  {
+    "id": "F-2.07",
+    "phase": 2,
+    "title": "Test preview",
+    "req_ids": ["Q-13", "US-AD-08"],
+    "acceptance": "Preview opens the real exam screen with no attempt, no proctoring and a show-answers toggle",
+    "depends_on": ["F-2.06"]
+  },
+  {
+    "id": "F-2.08",
+    "phase": 2,
+    "title": "Approval checklist and publishing",
+    "req_ids": ["TST-04", "TST-05", "Q-14", "Q-15", "UX-10", "US-AD-09"],
+    "acceptance": "Approve runs the checklist; only approved tests publish (\"Test published\") and get a settings snapshot; edits before attempts return the test to in review",
+    "depends_on": ["F-2.07"]
+  },
+  {
+    "id": "F-2.09",
+    "phase": 2,
+    "title": "Super-admin authoring parity",
+    "req_ids": ["ORG-10", "US-SA-07"],
+    "acceptance": "Super admin creates and publishes a series and test in org A's workspace, logged with them as actor",
+    "depends_on": ["F-2.08", "F-1.04"]
+  },
+  {
+    "id": "F-3.01",
+    "phase": 3,
+    "title": "Timing and scoring logic",
+    "req_ids": ["Q-09", "TST-08"],
+    "acceptance": "Unit tests: start windows and deadlines for each timing mode, section timers inside the deadline, scoring with negatives, passing marks, unanswered 0 and optional floor",
+    "depends_on": ["F-2.01"]
+  },
+  {
+    "id": "F-3.02",
+    "phase": 3,
+    "title": "Student dashboard and test page",
+    "req_ids": ["US-ST-03", "UX-11"],
+    "acceptance": "Dashboard lists live, upcoming and completed eligible tests with window, duration, countdown and timezone",
+    "depends_on": ["F-2.08", "F-3.01"]
+  },
+  {
+    "id": "F-3.03",
+    "phase": 3,
+    "title": "Attempt start and resume API",
+    "req_ids": ["EX-03", "EX-04", "SER-08", "DATA-02", "DATA-05", "Q-06", "TST-06", "API-02", "PERF-01", "PERF-03"],
+    "acceptance": "POST /attempts checks eligibility and window, draws once with a seeded order, fixes the deadline, schedules auto-submit and returns one payload without answers; repeats and Idempotency-Key replay the same attempt; locked settings refuse edits",
+    "depends_on": ["F-3.01"]
+  },
+  {
+    "id": "F-3.04",
+    "phase": 3,
+    "title": "Preflight and rules screens",
+    "req_ids": ["EX-01", "EX-02", "PERF-05"],
+    "acceptance": "Preflight shows each check with a fix line and loads the face model; rules screen shows duration, deadline, strikes, marking, sections and privacy note; Start needs passing checks and agreement",
+    "depends_on": ["F-3.03"]
+  },
+  {
+    "id": "F-3.05",
+    "phase": 3,
+    "title": "Exam screen, palette and navigation",
+    "req_ids": ["EX-05", "EX-07", "EX-08", "EX-09", "UX-03", "A11Y-08", "A11Y-14", "A11Y-15"],
+    "acceptance": "Answer sheet with bubble options, timing track and palette states with shape and labels; mark, clear, jump; keyboard shortcuts; resume after closing the tab; palette drawer below 1,280 px",
+    "depends_on": ["F-3.04"]
+  },
+  {
+    "id": "F-3.06",
+    "phase": 3,
+    "title": "Exam timer and announcements",
+    "req_ids": ["EX-06", "A11Y-06", "A11Y-09"],
+    "acceptance": "Timer uses the server offset; visual and polite announcements at 10, 5 and 1 minutes; T speaks the remaining time",
+    "depends_on": ["F-3.05"]
+  },
+  {
+    "id": "F-3.07",
+    "phase": 3,
+    "title": "Offline autosave and answer sync",
+    "req_ids": ["EX-10", "EX-11", "EX-12", "EX-13", "EX-14", "DATA-03", "OBS-03", "API-06", "US-ST-05"],
+    "acceptance": "IndexedDB first, batched sync with sequence numbers, backoff, sync indicator, late sync within 2 minutes, one record per answer, backlog and offset reported, rate limits",
+    "depends_on": ["F-3.05"]
+  },
+  {
+    "id": "F-3.08",
+    "phase": 3,
+    "title": "Submit, auto-submit and grading",
+    "req_ids": ["EX-15", "EX-16", "EX-17", "REL-04"],
+    "acceptance": "Submit summary flushes then submits; offline submit retries; the auto-submit task finalizes at the deadline idempotently and reschedules; grading uses the stored draw and queues a leaderboard",
+    "depends_on": ["F-3.07"]
+  },
+  {
+    "id": "F-3.09",
+    "phase": 3,
+    "title": "Per-question timers",
+    "req_ids": ["Q-11", "Q-12"],
+    "acceptance": "Timed questions lock and advance when time ends, navigation is forward-only, and the server rejects answers after the limit plus 2 s",
+    "depends_on": ["F-3.07"]
+  },
+  {
+    "id": "F-3.10",
+    "phase": 3,
+    "title": "Proctoring events and strikes API",
+    "req_ids": ["PR-07", "PR-08", "PR-10", "PR-11"],
+    "acceptance": "Events within 3 s count once, strikes increment in a transaction, the maximum terminates and grades, and every event is logged and listed",
+    "depends_on": ["F-3.03"]
+  },
+  {
+    "id": "F-3.11",
+    "phase": 3,
+    "title": "Browser lockdown and strike warnings",
+    "req_ids": ["PR-04", "PR-05", "PR-06", "PR-09", "US-ST-06"],
+    "acceptance": "Fullscreen exit, tab switch and blur record strikes with an acknowledged warning (\"Strike 1 of 3\"); devtools policy; copy, paste, print and selection blocked",
+    "depends_on": ["F-3.10", "F-3.05"]
+  },
+  {
+    "id": "F-3.12",
+    "phase": 3,
+    "title": "Laptop camera proctoring",
+    "req_ids": ["PR-01", "PR-02", "PR-03"],
+    "acceptance": "Self-hosted MediaPipe face detection runs on the device; no face past the grace period strikes; the preview collapses but the camera stays on",
+    "depends_on": ["F-3.11"]
+  },
+  {
+    "id": "F-3.13",
+    "phase": 3,
+    "title": "Phone pairing and presence",
+    "req_ids": ["PR-13", "PR-14", "PR-15", "PR-16", "PR-17", "DATA-06", "DATA-07", "DATA-10", "REL-05", "US-ST-04"],
+    "acceptance": "QR pairing link valid 5 minutes and single use; device custom token; phone heartbeats and camera; laptop overlay after 15 s and strike after 60 s; RTDB rules; outage suspends phone strikes",
+    "depends_on": ["F-3.11"]
+  },
+  {
+    "id": "F-4.01",
+    "phase": 4,
+    "title": "Leaderboard ranking logic",
+    "req_ids": ["LB-01", "LB-02", "DATA-04"],
+    "acceptance": "Unit tests: test and series ranking with shared ranks, missed tests as 0, terminated excluded, board size and paging",
+    "depends_on": ["F-3.08"]
+  },
+  {
+    "id": "F-4.02",
+    "phase": 4,
+    "title": "Result release modes and withdrawal",
+    "req_ids": ["RES-01", "RES-05", "US-AD-10"],
+    "acceptance": "Immediate, after window close (scheduled task), manual and never release behave as configured; withdrawal shows \"Results are being reviewed\"",
+    "depends_on": ["F-4.01"]
+  },
+  {
+    "id": "F-4.03",
+    "phase": 4,
+    "title": "Result page and full review",
+    "req_ids": ["RES-02", "RES-03", "RES-06", "SER-10", "US-ST-07"],
+    "acceptance": "Released result shows score, out of, percentage, rank, sections, time and strikes; full review shows answers, key, marks and explanations; terminated attempts show their reason",
+    "depends_on": ["F-4.02"]
+  },
+  {
+    "id": "F-4.04",
+    "phase": 4,
+    "title": "Student history",
+    "req_ids": ["RES-04", "US-ST-08"],
+    "acceptance": "History by series and day with scores only where allowed",
+    "depends_on": ["F-4.03"]
+  },
+  {
+    "id": "F-4.05",
+    "phase": 4,
+    "title": "Leaderboards",
+    "req_ids": ["LB-03", "LB-04", "LB-05", "US-ST-09"],
+    "acceptance": "Boards recomputed at most every 30 s and on release, visible only when enabled and released; students see top 50 plus their highlighted row; admins see all",
+    "depends_on": ["F-4.02"]
+  },
+  {
+    "id": "F-4.06",
+    "phase": 4,
+    "title": "Results exports",
+    "req_ids": ["EXP-01", "EXP-02", "EXP-03", "US-AD-14"],
+    "acceptance": "Test and series exports in CSV and XLSX with every column, built in the worker, downloaded through a 15-minute signed link, audit-logged",
+    "depends_on": ["F-4.03"]
+  },
+  {
+    "id": "F-5.01",
+    "phase": 5,
+    "title": "Live dashboard and RTDB mirror",
+    "req_ids": ["OPS-01", "OPS-02", "OPS-03", "PERF-04", "US-AD-11"],
+    "acceptance": "Live counts and roster from the RTDB mirror update within 5 s, with filters and sorting; only that org's admins can read it",
+    "depends_on": ["F-3.13"]
+  },
+  {
+    "id": "F-5.02",
+    "phase": 5,
+    "title": "Extra time and student signals",
+    "req_ids": ["OPS-06", "OPS-08", "OPS-09", "US-AD-12"],
+    "acceptance": "Grant moves the deadline, reschedules auto-submit, updates the student timer with a notice within 5 s, needs a second confirmation above 100%, and is audit-logged",
+    "depends_on": ["F-5.01"]
+  },
+  {
+    "id": "F-5.03",
+    "phase": 5,
+    "title": "Standing accommodations",
+    "req_ids": ["OPS-07", "A11Y-17"],
+    "acceptance": "Per-student extra percentage or minutes per series applies automatically at start",
+    "depends_on": ["F-5.02"]
+  },
+  {
+    "id": "F-5.04",
+    "phase": 5,
+    "title": "Reset, terminate, reinstate and event timeline",
+    "req_ids": ["OPS-04", "OPS-10", "US-AD-13"],
+    "acceptance": "Row actions open the timeline, terminate with reason, reinstate, and reset with a reason (old attempt archived, fresh draw)",
+    "depends_on": ["F-5.01"]
+  },
+  {
+    "id": "F-5.05",
+    "phase": 5,
+    "title": "Screenshot tests, pre-warming and exam-day runbook",
+    "req_ids": ["UI-15", "PERF-06", "PERF-07", "REL-07", "OBS-04", "OBS-05", "A11Y-18"],
+    "acceptance": "Screenshot tests of exam, result, live dashboard and test editor in three themes; prewarm task; runbook; owner load test and monitoring checks",
+    "depends_on": ["F-5.04"]
+  },
+  {
+    "id": "F-6.01",
+    "phase": 6,
+    "title": "Question checks and LLM instructions",
+    "req_ids": ["IMP-09", "IMP-05", "IMP-06"],
+    "acceptance": "Unit tests: every IMP-09 check with plain reasons; the prompt keeps wording, never invents answers, and treats file content as data",
+    "depends_on": ["F-2.05"]
+  },
+  {
+    "id": "F-6.02",
+    "phase": 6,
+    "title": "Import upload and job API",
+    "req_ids": ["IMP-01", "IMP-02", "IMP-08", "SEC-06"],
+    "acceptance": "Signed upload and job creation; format and size limits by file signature; AI imports count against the monthly limit",
+    "depends_on": ["F-6.01"]
+  },
+  {
+    "id": "F-6.03",
+    "phase": 6,
+    "title": "Worker extraction pipeline",
+    "req_ids": ["IMP-03", "IMP-07", "REL-06"],
+    "acceptance": "Worker parses JSON and template sheets directly and sends PDF pages, TXT and MD to the LLM through the AI SDK; figures cropped; provider, model, tokens and cost logged; LLM failures retry",
+    "depends_on": ["F-6.02"]
+  },
+  {
+    "id": "F-6.04",
+    "phase": 6,
+    "title": "Import review screen",
+    "req_ids": ["IMP-04", "IMP-10", "IMP-11", "IMP-12", "IMP-13", "US-AD-06"],
+    "acceptance": "Live job progress that survives closing the tab; flagged questions grouped with reasons; source page beside the question; approve, edit, discard and approve-all; keyboard shortcuts",
+    "depends_on": ["F-6.03"]
+  },
+  {
+    "id": "F-7.01",
+    "phase": 7,
+    "title": "Analytics metrics",
+    "req_ids": ["EXP-04"],
+    "acceptance": "Unit tests for every metric, including the discrimination index and series trends",
+    "depends_on": ["F-4.03"]
+  },
+  {
+    "id": "F-7.02",
+    "phase": 7,
+    "title": "AI summary check and PDF report",
+    "req_ids": ["EXP-05", "EXP-06"],
+    "acceptance": "Summary from metrics JSON only, rejected when it contains a number not in the metrics; PDF rendered with headless Chromium plus optional XLSX",
+    "depends_on": ["F-7.01"]
+  },
+  {
+    "id": "F-7.03",
+    "phase": 7,
+    "title": "Report gating, limits and listing",
+    "req_ids": ["EXP-07", "US-AD-15"],
+    "acceptance": "Reports locked when the feature is off, counted against the monthly limit, listed for download",
+    "depends_on": ["F-7.02"]
+  },
+  {
+    "id": "F-8.01",
+    "phase": 8,
+    "title": "Accessibility statement and screen-reader pass",
+    "req_ids": ["A11Y-22", "A11Y-12"],
+    "acceptance": "Public accessibility statement page with standard, known gaps and contact; screen-reader passes are owner checks",
+    "depends_on": ["F-1.13"]
+  },
+  {
+    "id": "F-8.02",
+    "phase": 8,
+    "title": "Migrations runner and release operations",
+    "req_ids": ["CI-04", "REL-01", "REL-02", "CI-03"],
+    "acceptance": "Versioned migrations run through /tasks/migrate idempotently; deploy freeze, rollback and the deploy pipeline are owner checks",
+    "depends_on": ["F-3.08"]
+  }
+]
