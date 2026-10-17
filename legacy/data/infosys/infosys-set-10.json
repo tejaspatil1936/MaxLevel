@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the value of √0.0049 × √1.44?",
+      "options": [
+        "0.12",
+        "0.084",
+        "0.0084",
+        "0.84"
+      ],
+      "correctIndex": 1,
+      "explanation": "√0.0049 = 0.07 and √1.44 = 1.2. Product = 0.07 × 1.2 = 0.084.",
+      "topic": "Quantitative: Simplification (square roots)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "How many zeros are there at the end of 125! (125 factorial)?",
+      "options": [
+        "30",
+        "25",
+        "12",
+        "31"
+      ],
+      "correctIndex": 3,
+      "explanation": "Count factors of 5: 125/5 + 125/25 + 125/125 = 25 + 5 + 1 = 31.",
+      "topic": "Quantitative: Number system (factorials)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "How many three-digit numbers are divisible by 7?",
+      "options": [
+        "128",
+        "142",
+        "127",
+        "129"
+      ],
+      "correctIndex": 0,
+      "explanation": "The first is 105 and the last is 994. Count = (994 − 105)/7 + 1 = 127 + 1 = 128.",
+      "topic": "Quantitative: Progressions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "Nisha's salary is first increased by 20%, then decreased by 20%, and then increased by 10%. What is the net change in her salary?",
+      "options": [
+        "4% decrease",
+        "6% increase",
+        "10% increase",
+        "5.6% increase"
+      ],
+      "correctIndex": 3,
+      "explanation": "Net factor = 1.2 × 0.8 × 1.1 = 1.056, which is a 5.6% increase.",
+      "topic": "Quantitative: Percentages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "A dishonest grocer sells rice at cost price but uses a 900 g weight in place of a 1 kg weight. What is his gain percentage?",
+      "options": [
+        "12.5%",
+        "9.09%",
+        "10%",
+        "11.11%"
+      ],
+      "correctIndex": 3,
+      "explanation": "He gives 900 g but charges for 1000 g. Gain = 100/900 × 100 = 11.11%.",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "A sum of money doubles itself in 5 years at compound interest. In how many years will it become 8 times itself at the same rate?",
+      "options": [
+        "20 years",
+        "15 years",
+        "25 years",
+        "40 years"
+      ],
+      "correctIndex": 1,
+      "explanation": "8 = 2³, so it must double three times: 3 × 5 = 15 years.",
+      "topic": "Quantitative: Compound interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "Two numbers are in the ratio 5 : 7. If 6 is added to each, the ratio becomes 3 : 4. What is the larger number?",
+      "options": [
+        "28",
+        "49",
+        "42",
+        "35"
+      ],
+      "correctIndex": 2,
+      "explanation": "(5x + 6)/(7x + 6) = 3/4 gives 20x + 24 = 21x + 18, so x = 6. Larger number = 7 × 6 = 42.",
+      "topic": "Quantitative: Ratio and proportion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A batter's average after a certain number of innings is 32. After scoring 98 in the next innings, the average rises to 35. How many innings has the batter played in total now?",
+      "options": [
+        "23",
+        "21",
+        "20",
+        "22"
+      ],
+      "correctIndex": 3,
+      "explanation": "If n innings were played before, 32n + 98 = 35(n + 1), so 3n = 63 and n = 21. Including the latest innings, the total is 22.",
+      "topic": "Quantitative: Averages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Statements:\nAll cups are plates.\nAll plates are bowls.\n\nConclusions:\nI. All cups are bowls.\nII. Some bowls are cups.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Only conclusion II follows",
+        "Both conclusions I and II follow",
+        "Only conclusion I follows",
+        "Neither conclusion I nor II follows"
+      ],
+      "correctIndex": 1,
+      "explanation": "All cups are plates and all plates are bowls, so all cups are bowls (I). Since cups exist and are all bowls, some bowls are cups (II).",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Find the next term in the series: C3, F9, I27, L81, ?",
+      "options": [
+        "O243",
+        "O162",
+        "P243",
+        "N243"
+      ],
+      "correctIndex": 0,
+      "explanation": "Letters move 3 places forward (C, F, I, L, O) and numbers are multiplied by 3 (3, 9, 27, 81, 243).",
+      "topic": "Logical reasoning: Alphanumeric series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Six students — R, S, T, U, V and W — scored different marks in a test. R scored more than S but less than T. U scored less than S. V scored more than T. W scored less than R but more than U. Who scored the third highest marks?",
+      "options": [
+        "S",
+        "R",
+        "T",
+        "W"
+      ],
+      "correctIndex": 1,
+      "explanation": "V > T > R, and everyone else (S, W, U) is below R. So R is third, whatever the order of S and W.",
+      "topic": "Logical reasoning: Ordering and comparison",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Which is the next year after 2026 that will have exactly the same calendar as 2026?",
+      "options": [
+        "2032",
+        "2036",
+        "2043",
+        "2037"
+      ],
+      "correctIndex": 3,
+      "explanation": "2026 is not a leap year and starts on a Thursday. Adding odd days (1 for a normal year, 2 for a leap year) from 2026 reaches a multiple of 7 at 2037, which is also a non-leap year.",
+      "topic": "Logical reasoning: Calendars",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Find the wrong number in the series: 2, 5, 14, 41, 123, 365",
+      "options": [
+        "14",
+        "123",
+        "365",
+        "41"
+      ],
+      "correctIndex": 1,
+      "explanation": "Each term is three times the previous term minus 1: 2, 5, 14, 41, 122, 365. So 123 should be 122.",
+      "topic": "Logical reasoning: Number series (wrong term)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "A family has six members — A, B, C, D, E and F — with two married couples. D is the grandmother of A and the mother of B. C is the wife of B and the mother of F. F is the only granddaughter of E. How is A related to F?",
+      "options": [
+        "Brother",
+        "Cousin",
+        "Son",
+        "Sister"
+      ],
+      "correctIndex": 0,
+      "explanation": "The two couples must be D–E and B–C, so A and F are the children of B and C. F is E's only granddaughter, so A is a grandson. A is F's brother.",
+      "topic": "Logical reasoning: Blood relations (family puzzle)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Statements: A ≥ B > C;  C < D ≤ E;  F > A\n\nConclusions:\nI. B > D\nII. F > E\n\nWhich of the conclusions is definitely true?",
+      "options": [
+        "Both I and II are definitely true",
+        "Only II is definitely true",
+        "Only I is definitely true",
+        "Neither I nor II is definitely true"
+      ],
+      "correctIndex": 3,
+      "explanation": "B and D are both greater than C, but they cannot be compared with each other. F > A ≥ B > C and E ≥ D > C give no link between F and E. So neither conclusion is definitely true.",
+      "topic": "Logical reasoning: Inequalities",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Each question below has two statements. Decide whether the data in the statements is sufficient to answer the question.\n\nQuestion: What is the value of x + y?\nI. 2x + 3y = 12\nII. 4x + 6y = 24",
+      "options": [
+        "Both statements together are sufficient, but neither alone is",
+        "Statement I alone is sufficient, but statement II alone is not",
+        "Both statements together are not sufficient",
+        "Each statement alone is sufficient"
+      ],
+      "correctIndex": 2,
+      "explanation": "Statement II is just statement I multiplied by 2, so together they are one equation in two unknowns. Different pairs (for example x = 6, y = 0 and x = 0, y = 4) give different values of x + y.",
+      "topic": "Logical reasoning: Data sufficiency",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the word or phrase closest in meaning to 'candid' as used in the sentence.\n\nThe new manager was candid about the challenges the team would face.",
+      "options": [
+        "secretive",
+        "frank",
+        "confused",
+        "cheerful"
+      ],
+      "correctIndex": 1,
+      "explanation": "'Candid' means open and honest, i.e. frank.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. Rather than wait for the municipality to act, she set up a small library in the community hall.\nQ. She soon noticed that the children in her colony had few books to read at home.\nR. Kavita moved to Bhopal after retiring as a school teacher.\nS. Today, more than fifty children borrow books from it every week.",
+      "options": [
+        "RQPS",
+        "QRPS",
+        "RQSP",
+        "RPQS"
+      ],
+      "correctIndex": 0,
+      "explanation": "R introduces Kavita; Q describes the problem she noticed; P gives her response; S ('from it', the library) describes the present result.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Which of the following sentences about today's news is grammatically correct?",
+      "options": [
+        "The newses are very encouraging today.",
+        "The news is very encouraging today.",
+        "The news are very encouraging today.",
+        "The news were very encouraging today."
+      ],
+      "correctIndex": 1,
+      "explanation": "'News' is an uncountable noun that looks plural but takes a singular verb.",
+      "topic": "Verbal: Sentence correction (agreement)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "What does the phrase 'learnt the ropes' mean in the sentence below?\n\nThe new intern quickly learnt the ropes at the office.",
+      "options": [
+        "learnt to climb",
+        "resigned from the job",
+        "got into trouble",
+        "learnt how things are done"
+      ],
+      "correctIndex": 3,
+      "explanation": "'To learn the ropes' means to learn how a particular job or activity is done.",
+      "topic": "Verbal: Idioms and phrases",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nEach boy and each girl / in the class / have to submit / a project report.",
+      "options": [
+        "a project report.",
+        "Each boy and each girl",
+        "have to submit",
+        "in the class"
+      ],
+      "correctIndex": 2,
+      "explanation": "When subjects joined by 'and' are each preceded by 'each' or 'every', the verb is singular: 'has to submit'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the correct passive form of the sentence:\n\nThey are repairing the bridge.",
+      "options": [
+        "The bridge is repaired by them.",
+        "The bridge has been repairing by them.",
+        "The bridge is being repaired by them.",
+        "The bridge was being repaired by them."
+      ],
+      "correctIndex": 2,
+      "explanation": "Present continuous active (are repairing) becomes 'is being' + past participle in the passive.",
+      "topic": "Verbal: Active and passive voice",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Read the passage and answer the question.\n\nSome people dismiss board games as old-fashioned in an age of smartphones. This view overlooks what such games offer: face-to-face conversation, patience, and the experience of losing gracefully. Families who set aside one evening a week for a board game often say it is the only time everyone sits together without a screen.\n\nThe author's attitude towards board games is best described as:",
+      "options": [
+        "Indifferent",
+        "Dismissive",
+        "Sarcastic",
+        "Appreciative"
+      ],
+      "correctIndex": 3,
+      "explanation": "The author rejects the view that board games are old-fashioned and lists their benefits, which shows appreciation.",
+      "topic": "Verbal: Reading comprehension (author's attitude)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Choose the option that correctly fills the blank.\n\nThe new bridge ______ by the time the monsoon begins next June.",
+      "options": [
+        "would complete",
+        "will complete",
+        "will have been completed",
+        "has been completed"
+      ],
+      "correctIndex": 2,
+      "explanation": "An action that will be finished before a future time takes the future perfect; the bridge is acted upon, so the passive 'will have been completed' is needed.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[5] = {5, 7, 5, 3, 7}\nInteger x\nSet x = 0\nfor (each i from 0 to 4)\n    x = x XOR arr[i]\nend for\nPrint x\n\n(XOR is the bitwise exclusive-OR operator. Array indices start at 0.)",
+      "options": [
+        "3",
+        "0",
+        "7",
+        "5"
+      ],
+      "correctIndex": 0,
+      "explanation": "Equal values cancel under XOR (5 ⊕ 5 = 0, 7 ⊕ 7 = 0), leaving 3.",
+      "topic": "Pseudocode: Bitwise XOR (arrays)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 6, b = 4\nfor (each i from 1 to 3)\n    a = a + b\n    b = a - b\nend for\nPrint a + b",
+      "options": [
+        "36",
+        "42",
+        "26",
+        "68"
+      ],
+      "correctIndex": 1,
+      "explanation": "(a, b): (10, 6) → (16, 10) → (26, 16). a + b = 42.",
+      "topic": "Pseudocode: Loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer x)\n    if ((x mod 2) == 0)\n        return x / 2\n    end if\n    return 3 * x + 1\nEnd function\n\nInteger n, steps\nSet n = 6, steps = 0\nwhile (n != 1)\n    n = fun(n)\n    steps = steps + 1\nend while\nPrint steps",
+      "options": [
+        "8",
+        "7",
+        "9",
+        "5"
+      ],
+      "correctIndex": 0,
+      "explanation": "6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1 takes 8 steps.",
+      "topic": "Pseudocode: While loop (functions)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger count    // global variable\nSet count = 0\n\nInteger fun(Integer n)\n    count = count + 1\n    if (n <= 1)\n        return 1\n    end if\n    return fun(n - 1) + fun(n - 2)\nEnd function\n\nfun(5)\nPrint count",
+      "options": [
+        "9",
+        "8",
+        "15",
+        "5"
+      ],
+      "correctIndex": 2,
+      "explanation": "Calls C(n) = 1 + C(n − 1) + C(n − 2), with C(0) = C(1) = 1. So C(2) = 3, C(3) = 5, C(4) = 9, C(5) = 15.",
+      "topic": "Pseudocode: Recursion (call count)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "A wall clock strikes once at 1 o'clock, twice at 2 o'clock, and so on up to 12 times at 12 o'clock. It strikes only on the hour. How many times does it strike in 12 hours?",
+      "options": [
+        "78",
+        "66",
+        "156",
+        "72"
+      ],
+      "correctIndex": 0,
+      "explanation": "Total strikes = 1 + 2 + … + 12 = 12 × 13 / 2 = 78.",
+      "topic": "Puzzles: Clock puzzle",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "A grocer wants to weigh any whole number of kilograms from 1 kg to 31 kg on a balance, placing the weights only on one pan. What is the minimum number of weights he needs?",
+      "options": [
+        "6",
+        "31",
+        "5",
+        "4"
+      ],
+      "correctIndex": 2,
+      "explanation": "With weights of 1, 2, 4, 8 and 16 kg, every value from 1 to 31 is a unique sum (like binary digits). Four weights can make at most 2⁴ − 1 = 15 different non-zero totals, which is not enough for 31.",
+      "topic": "Puzzles: Weights puzzle",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

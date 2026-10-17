@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "On a 300 km journey, a bus covers the first 120 km at 40 km/h and the remaining 180 km at 60 km/h. What is its average speed for the whole journey?",
+      "options": [
+        "52 km/h",
+        "48 km/h",
+        "50 km/h",
+        "45 km/h"
+      ],
+      "correctIndex": 2,
+      "explanation": "Time = 120/40 + 180/60 = 3 + 3 = 6 hours. Average speed = 300/6 = 50 km/h.",
+      "topic": "Quantitative: Speed, time and distance",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "The average age of 30 students in a class is 15 years. When the teacher's age is included, the average increases by 1 year. What is the teacher's age?",
+      "options": [
+        "31 years",
+        "46 years",
+        "47 years",
+        "45 years"
+      ],
+      "correctIndex": 1,
+      "explanation": "Total with teacher = 31 × 16 = 496. Students' total = 30 × 15 = 450. Teacher = 496 − 450 = 46 years.",
+      "topic": "Quantitative: Averages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A train crosses a 180 m long platform in 20 seconds and a man standing on the platform in 8 seconds. What is the speed of the train?",
+      "options": [
+        "81 km/h",
+        "45 km/h",
+        "15 km/h",
+        "54 km/h"
+      ],
+      "correctIndex": 3,
+      "explanation": "L/8 = (L + 180)/20 gives L = 120 m. Speed = 120/8 = 15 m/s = 54 km/h.",
+      "topic": "Quantitative: Problems on trains",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "How many kilograms of sugar costing ₹42 per kg must be mixed with 30 kg of sugar costing ₹50 per kg so that the mixture costs ₹45 per kg?",
+      "options": [
+        "40 kg",
+        "18 kg",
+        "45 kg",
+        "50 kg"
+      ],
+      "correctIndex": 3,
+      "explanation": "By alligation, cheaper : costlier = (50 − 45) : (45 − 42) = 5 : 3. Cheaper sugar = 30 × 5/3 = 50 kg.",
+      "topic": "Quantitative: Mixtures and alligation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "What is the sum of all two-digit numbers that are divisible by 4?",
+      "options": [
+        "1,188",
+        "1,144",
+        "1,232",
+        "1,100"
+      ],
+      "correctIndex": 0,
+      "explanation": "The numbers are 12, 16, …, 96: 22 terms. Sum = 22/2 × (12 + 96) = 11 × 108 = 1,188.",
+      "topic": "Quantitative: Number system (series sum)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "Pipes A and B can fill a tank in 10 hours and 15 hours respectively. When both are opened together, a leak in the tank makes it take 30 minutes longer than usual to fill. How long would the leak alone take to empty the full tank?",
+      "options": [
+        "65 hours",
+        "39 hours",
+        "72 hours",
+        "78 hours"
+      ],
+      "correctIndex": 3,
+      "explanation": "A + B fill in 6 hours; with the leak it takes 6.5 hours. Leak rate = 1/6 − 2/13 = 1/78, so the leak empties the tank in 78 hours.",
+      "topic": "Quantitative: Pipes and cisterns",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "Three ropes of lengths 84 m, 126 m and 210 m are to be cut into pieces that are all of the same length, as long as possible, with nothing left over. How many pieces will there be in total?",
+      "options": [
+        "12",
+        "42",
+        "10",
+        "8"
+      ],
+      "correctIndex": 2,
+      "explanation": "The longest possible piece length is HCF(84, 126, 210) = 42 m. Number of pieces = 84/42 + 126/42 + 210/42 = 2 + 3 + 5 = 10.",
+      "topic": "Quantitative: HCF and LCM",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "In how many distinct ways can the letters of the word KOLKATA be arranged so that all the vowels come together?",
+      "options": [
+        "1260",
+        "120",
+        "360",
+        "180"
+      ],
+      "correctIndex": 3,
+      "explanation": "Treat O, A, A as one block: 5 units with K repeated, giving 5!/2! = 60. The vowels inside the block can be arranged in 3!/2! = 3 ways. Total = 60 × 3 = 180.",
+      "topic": "Quantitative: Permutations and combinations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the next number in the series: 5, 16, 49, 148, ?",
+      "options": [
+        "445",
+        "447",
+        "444",
+        "296"
+      ],
+      "correctIndex": 0,
+      "explanation": "Each term is three times the previous term plus 1: 148 × 3 + 1 = 445.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Statement: A > B ≥ C = D < E\n\nConclusions:\nI. A > D\nII. E > B\n\nWhich of the conclusions is definitely true?",
+      "options": [
+        "Both I and II are definitely true",
+        "Neither I nor II is definitely true",
+        "Only II is definitely true",
+        "Only I is definitely true"
+      ],
+      "correctIndex": 3,
+      "explanation": "A > B ≥ C = D gives A > D, so I is true. E > D and B ≥ D, but E and B cannot be compared, so II is not definitely true.",
+      "topic": "Logical reasoning: Inequalities",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Find the next term in the series: KM5, IP8, GS11, EV14, ?",
+      "options": [
+        "CY17",
+        "DY17",
+        "CY18",
+        "CX17"
+      ],
+      "correctIndex": 0,
+      "explanation": "First letters go back 2 (K, I, G, E, C), second letters go forward 3 (M, P, S, V, Y), and numbers increase by 3 (…, 14, 17).",
+      "topic": "Logical reasoning: Alphanumeric series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Mona said to Raj, \"Your mother's father is my father's only brother.\" How is Mona related to Raj's mother?",
+      "options": [
+        "Sister",
+        "Cousin",
+        "Aunt",
+        "Niece"
+      ],
+      "correctIndex": 1,
+      "explanation": "Raj's mother's father is the brother of Mona's father. So Raj's mother and Mona are children of two brothers, which makes them cousins.",
+      "topic": "Logical reasoning: Blood relations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "In a row of 45 children facing the same direction, Anu is 17th from the left end and Bala is 20th from the right end. How many children sit between Anu and Bala?",
+      "options": [
+        "9",
+        "7",
+        "8",
+        "10"
+      ],
+      "correctIndex": 2,
+      "explanation": "Bala is 45 − 20 + 1 = 26th from the left. The children between positions 17 and 26 number 26 − 17 − 1 = 8.",
+      "topic": "Logical reasoning: Ranking and order",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Find the odd pair: 3 – 10, 5 – 26, 7 – 50, 8 – 63",
+      "options": [
+        "5 – 26",
+        "3 – 10",
+        "7 – 50",
+        "8 – 63"
+      ],
+      "correctIndex": 3,
+      "explanation": "In each pair the second number is the square of the first plus 1 (3² + 1 = 10, 5² + 1 = 26, 7² + 1 = 50). For 8 it should be 65, not 63.",
+      "topic": "Logical reasoning: Odd one out (number pairs)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Statements:\nAll engineers are graduates.\nSome graduates are managers.\nNo managers are clerks.\n\nConclusions:\nI. Some graduates are not clerks.\nII. Some engineers are managers.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Only conclusion I follows",
+        "Both conclusions I and II follow"
+      ],
+      "correctIndex": 2,
+      "explanation": "The graduates who are managers cannot be clerks, so some graduates are not clerks (I). Nothing forces engineers to overlap with managers, so II does not follow.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Seven people — Arjun, Bhumi, Chandan, Deepa, Ekta, Farhan and Govind — sit in a row facing north. Deepa sits at the extreme left end. Govind sits second to the right of Deepa. Exactly three people sit between Bhumi and Farhan, and Bhumi is to the left of Farhan. Ekta sits immediately to the right of Farhan. Chandan is not an immediate neighbour of Govind. Who sits exactly in the middle of the row?",
+      "options": [
+        "Govind",
+        "Arjun",
+        "Chandan",
+        "Bhumi"
+      ],
+      "correctIndex": 1,
+      "explanation": "From the left: Deepa 1st, Govind 3rd. Bhumi and Farhan are four places apart with Ekta right after Farhan, so Bhumi is 2nd, Farhan 6th and Ekta 7th. Chandan cannot be 4th (next to Govind), so Chandan is 5th and Arjun is 4th, the middle seat.",
+      "topic": "Logical reasoning: Seating arrangement (linear)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Read the passage and answer the question.\n\nMillets such as ragi, jowar and bajra were once staple foods across much of India. They need far less water than rice and can grow in poor soil, which makes them suitable for dry regions. Over the past few decades, their consumption declined as rice and wheat became cheaper and more widely available. Recently, nutritionists and farmers' groups have encouraged a return to millets because of their high fibre and mineral content.\n\nAccording to the passage, why did the consumption of millets decline?",
+      "options": [
+        "Millets cannot grow in dry regions.",
+        "Millets need more water than rice.",
+        "Nutritionists advised people to avoid millets.",
+        "Rice and wheat became cheaper and more widely available."
+      ],
+      "correctIndex": 3,
+      "explanation": "The third sentence states that consumption declined as rice and wheat became cheaper and more widely available.",
+      "topic": "Verbal: Reading comprehension (detail)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Choose the word or phrase closest in meaning to 'tenacious' as used in the sentence.\n\nThe founders were tenacious, refusing to give up even after three failed products.",
+      "options": [
+        "wealthy",
+        "timid",
+        "careless",
+        "persistent"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Tenacious' means holding firmly to a goal and not giving up, i.e. persistent.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nThe police has arrested / the two men / who were seen / near the bank.",
+      "options": [
+        "who were seen",
+        "the two men",
+        "The police has arrested",
+        "near the bank."
+      ],
+      "correctIndex": 2,
+      "explanation": "'Police' is a plural noun and takes a plural verb: 'The police have arrested…'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. It was here that she developed a method of growing vegetables with very little water.\nQ. After years of drought in her village, Lakshmi turned a corner of her family's land into a test plot.\nR. Neighbours who were sceptical at first soon began asking her for advice.\nS. Today, the local agriculture office invites her to train farmers from nearby districts.",
+      "options": [
+        "PQRS",
+        "QPRS",
+        "QPSR",
+        "QRPS"
+      ],
+      "correctIndex": 1,
+      "explanation": "Q introduces Lakshmi and the test plot; P ('It was here') refers to that plot; R describes the neighbours' response; S ('Today') gives the present outcome.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the correct indirect (reported) form:\n\nHe said, \"I have finished the assignment.\"",
+      "options": [
+        "He said that he had finish the assignment.",
+        "He said me that he had finished the assignment.",
+        "He said that he had finished the assignment.",
+        "He said that I had finished the assignment."
+      ],
+      "correctIndex": 2,
+      "explanation": "With a past reporting verb, the present perfect shifts to the past perfect ('had finished'), and 'I' becomes 'he'. 'Said' does not take an object directly ('said me' is wrong).",
+      "topic": "Verbal: Direct and indirect speech",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the correct spelling of the word that means 'careful to do one's work well and thoroughly'.",
+      "options": [
+        "Concientious",
+        "Conscientious",
+        "Conscientous",
+        "Consciencious"
+      ],
+      "correctIndex": 1,
+      "explanation": "The correct spelling is c-o-n-s-c-i-e-n-t-i-o-u-s.",
+      "topic": "Verbal: Spelling",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Which of the following sentences about comparing two laptops is grammatically correct?",
+      "options": [
+        "This laptop is superior than that one.",
+        "This laptop is superior to that one.",
+        "This laptop is superior from that one.",
+        "This laptop is more superior to that one."
+      ],
+      "correctIndex": 1,
+      "explanation": "Latin comparatives such as 'superior', 'inferior', 'senior' and 'junior' take 'to', not 'than', and are not used with 'more'.",
+      "topic": "Verbal: Sentence correction (comparison)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Choose the option that correctly fills the blank.\n\nTen kilometres ______ a long distance to walk in this heat.",
+      "options": [
+        "is",
+        "were",
+        "are",
+        "have been"
+      ],
+      "correctIndex": 0,
+      "explanation": "When a plural quantity refers to a single amount or distance, it takes a singular verb: 'Ten kilometres is a long distance'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 3\nb = a * 2\na = b + a\nb = a mod b\nPrint a, b",
+      "options": [
+        "9 0",
+        "6 3",
+        "9 3",
+        "9 6"
+      ],
+      "correctIndex": 2,
+      "explanation": "b = 6, then a = 6 + 3 = 9, then b = 9 mod 6 = 3. Output: 9 3.",
+      "topic": "Pseudocode: Operators",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer n)\n    if (n == 0)\n        return 0\n    end if\n    return (n mod 2) + 10 * fun(n / 2)    // integer division\nEnd function\n\nPrint fun(19)",
+      "options": [
+        "10011",
+        "10101",
+        "1011",
+        "11001"
+      ],
+      "correctIndex": 0,
+      "explanation": "The function writes n in binary using decimal digits. 19 = 16 + 2 + 1 = 10011.",
+      "topic": "Pseudocode: Recursion (number conversion)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[8] = {3, 8, 2, 7, 4, 6, 1, 5}\nInteger m, temp\nfor (each i from 0 to 1)\n    m = i\n    for (each j from i + 1 to 7)\n        if (arr[j] < arr[m])\n            m = j\n        end if\n    end for\n    temp = arr[i]\n    arr[i] = arr[m]\n    arr[m] = temp\nend for\nPrint all elements of arr from index 0 to 7\n\n(Array indices start at 0.)",
+      "options": [
+        "1, 2, 3, 4, 5, 6, 7, 8",
+        "1, 2, 8, 7, 4, 6, 3, 5",
+        "1, 8, 2, 7, 4, 6, 3, 5",
+        "1, 2, 3, 7, 4, 6, 8, 5"
+      ],
+      "correctIndex": 1,
+      "explanation": "Pass 1 swaps 3 with the minimum 1 (index 6). Pass 2 swaps 8 with the next minimum 2 (index 2). Result: 1, 2, 8, 7, 4, 6, 3, 5.",
+      "topic": "Pseudocode: Arrays (selection sort passes)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger c, j\nSet c = 0\nfor (each i from 1 to 10)\n    j = i\n    while (j > 0)\n        j = j / 2    // integer division\n        c = c + 1\n    end while\nend for\nPrint c",
+      "options": [
+        "29",
+        "25",
+        "20",
+        "33"
+      ],
+      "correctIndex": 0,
+      "explanation": "The inner loop counts the binary digits of i: 1, 2, 2, 3, 3, 3, 3, 4, 4, 4 for i = 1 to 10. Total = 29.",
+      "topic": "Pseudocode: Nested loops (while inside for)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "A farmer keeps only hens and goats. Together they have 50 heads and 140 legs. How many goats does the farmer have?",
+      "options": [
+        "20",
+        "30",
+        "25",
+        "15"
+      ],
+      "correctIndex": 0,
+      "explanation": "If all 50 were hens there would be 100 legs. Each goat adds 2 extra legs, and there are 40 extra legs, so there are 20 goats.",
+      "topic": "Puzzles: Heads and legs",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Fill the 4 × 4 grid so that each row, each column and each of the four 2 × 2 corner boxes contains the digits 1 to 4 exactly once. Blanks are shown as _.\n\n1 _ 3 _\n_ _ _ 2\n3 _ _ _\n_ 1 _ _\n\nWhich digit goes in row 2, column 3?",
+      "options": [
+        "4",
+        "1",
+        "2",
+        "3"
+      ],
+      "correctIndex": 1,
+      "explanation": "The top-right box already has 3 and 2, so it needs 1 and 4. Row 1 still needs 2 and 4, so row 1, column 4 must be 4, and the remaining box cell (row 2, column 3) is 1. The completed grid is 1234 / 4312 / 3421 / 2143.",
+      "topic": "Puzzles: Mini Sudoku (4 × 4)",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

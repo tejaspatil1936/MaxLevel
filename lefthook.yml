@@ -1,0 +1,22 @@
+# Git hooks for every commit, human or Claude. Install once: lefthook install
+pre-commit:
+  parallel: true
+  commands:
+    secrets:
+      run: gitleaks git --pre-commit --staged --redact --no-banner
+    lint:
+      glob: "*.{ts,tsx,js,mjs,cjs}"
+      exclude: "^legacy/"
+      run: '[ -d node_modules ] || exit 0; pnpm exec eslint --max-warnings=0 {staged_files}'
+    format:
+      glob: "*.{ts,tsx,js,mjs,cjs,json,css,md,yml,yaml}"
+      exclude: "^legacy/"
+      run: '[ -d node_modules ] || exit 0; pnpm exec prettier --check {staged_files}'
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: '[ -f turbo.json ] || exit 0; pnpm exec turbo run typecheck --filter="...[HEAD]" --output-logs=errors-only'
+
+commit-msg:
+  commands:
+    granular-commit:
+      run: node scripts/check-commit.mjs {1}

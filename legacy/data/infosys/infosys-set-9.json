@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A shop sold laptops of four brands last quarter. Brand P: 120 units at ₹40,000 each; Brand Q: 150 units at ₹35,000 each; Brand R: 180 units at ₹30,000 each; Brand S: 50 units at ₹60,000 each. Which brand earned the shop the highest revenue?",
+      "options": [
+        "Brand P",
+        "Brand Q",
+        "Brand S",
+        "Brand R"
+      ],
+      "correctIndex": 3,
+      "explanation": "Revenues: P = ₹48 lakh, Q = ₹52.5 lakh, R = ₹54 lakh, S = ₹30 lakh. Brand R is highest.",
+      "topic": "Quantitative: Data interpretation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "Karan and Lata invest ₹25,000 and ₹35,000 respectively in a business for one year. If the profit of ₹18,000 is shared in the ratio of their investments, what is Lata's share?",
+      "options": [
+        "₹10,500",
+        "₹9,000",
+        "₹12,600",
+        "₹7,500"
+      ],
+      "correctIndex": 0,
+      "explanation": "Ratio = 25 : 35 = 5 : 7. Lata's share = 7/12 × 18000 = ₹10,500.",
+      "topic": "Quantitative: Partnership",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "If 2^(x + 3) = 32^(x − 1), what is the value of x?",
+      "options": [
+        "1",
+        "4",
+        "2",
+        "3"
+      ],
+      "correctIndex": 2,
+      "explanation": "32^(x − 1) = 2^(5x − 5). So x + 3 = 5x − 5, giving x = 2.",
+      "topic": "Quantitative: Algebra (indices)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "What is the area of a triangle whose sides are 9 cm, 10 cm and 17 cm?",
+      "options": [
+        "36 sq cm",
+        "40 sq cm",
+        "72 sq cm",
+        "45 sq cm"
+      ],
+      "correctIndex": 0,
+      "explanation": "By Heron's formula, s = 18 and area = √(18 × 9 × 8 × 1) = √1296 = 36 sq cm.",
+      "topic": "Quantitative: Mensuration",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "What is the unit digit of 3⁴¹ × 7²³?",
+      "options": [
+        "9",
+        "3",
+        "1",
+        "7"
+      ],
+      "correctIndex": 0,
+      "explanation": "3⁴¹: 41 leaves remainder 1 on division by 4, so the unit digit is 3. 7²³: remainder 3, so the unit digit is 3. Product's unit digit = 3 × 3 = 9.",
+      "topic": "Quantitative: Unit digit",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "The third term of a geometric progression is 12 and the sixth term is 96. What is the sum of its first six terms?",
+      "options": [
+        "381",
+        "93",
+        "189",
+        "192"
+      ],
+      "correctIndex": 2,
+      "explanation": "r³ = 96/12 = 8, so r = 2 and a = 12/4 = 3. Sum = 3(2⁶ − 1)/(2 − 1) = 3 × 63 = 189.",
+      "topic": "Quantitative: Progressions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "At what time between 3 o'clock and 4 o'clock will the hour hand and the minute hand of a clock coincide?",
+      "options": [
+        "15 minutes past 3",
+        "16 minutes past 3",
+        "17 5/11 minutes past 3",
+        "16 4/11 minutes past 3"
+      ],
+      "correctIndex": 3,
+      "explanation": "At 3:00 the gap is 90°, and the minute hand gains 5.5° per minute. Time = 90/5.5 = 180/11 = 16 4/11 minutes past 3.",
+      "topic": "Quantitative: Clocks",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "If √(x + √(x + √(x + …))) = 5, where the pattern continues forever, what is the value of x?",
+      "options": [
+        "30",
+        "20",
+        "25",
+        "15"
+      ],
+      "correctIndex": 1,
+      "explanation": "The expression inside the first root is x plus the whole expression again, so 5 = √(x + 5). Squaring gives 25 = x + 5, so x = 20.",
+      "topic": "Quantitative: Simplification (infinite radicals)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "In a row of students, Meera is 14th from the left end and 9th from the right end. How many students are there in the row?",
+      "options": [
+        "23",
+        "24",
+        "22",
+        "21"
+      ],
+      "correctIndex": 2,
+      "explanation": "Total = 14 + 9 − 1 = 22 (Meera is counted in both positions).",
+      "topic": "Logical reasoning: Ranking and order",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Find the next number in the series: 3, 8, 15, 24, 35, ?",
+      "options": [
+        "48",
+        "47",
+        "46",
+        "49"
+      ],
+      "correctIndex": 0,
+      "explanation": "The terms are 2² − 1, 3² − 1, 4² − 1, …; the next is 7² − 1 = 48. (The differences 5, 7, 9, 11, 13 also confirm it.)",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Town B is 12 km east of town A. Town C is 5 km north of town B. Town D is 12 km west of town C. Where is town D with respect to town A?",
+      "options": [
+        "12 km West",
+        "5 km South",
+        "5 km North",
+        "13 km North-East"
+      ],
+      "correctIndex": 2,
+      "explanation": "Taking A as (0, 0): B = (12, 0), C = (12, 5), D = (0, 5). D is 5 km north of A.",
+      "topic": "Logical reasoning: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "ACE : FHJ :: KMO : ?",
+      "options": [
+        "PQR",
+        "PRT",
+        "OQS",
+        "QSU"
+      ],
+      "correctIndex": 1,
+      "explanation": "Each letter moves 5 places forward: K→P, M→R, O→T.",
+      "topic": "Logical reasoning: Analogy (letters)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statements:\nSome apples are mangoes.\nAll mangoes are fruits.\n\nConclusions:\nI. Some apples are fruits.\nII. All fruits are mangoes.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Only conclusion I follows",
+        "Both conclusions I and II follow",
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows"
+      ],
+      "correctIndex": 0,
+      "explanation": "The apples that are mangoes are also fruits, so I follows. 'All mangoes are fruits' cannot be reversed to 'All fruits are mangoes', so II does not follow.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "In a certain code language:\n'pit nob ral' means 'fresh mango juice',\n'ral sem tik' means 'juice is cold', and\n'nob tik dun' means 'mango is sweet'.\nWhat is the code for 'fresh'?",
+      "options": [
+        "dun",
+        "pit",
+        "ral",
+        "nob"
+      ],
+      "correctIndex": 1,
+      "explanation": "'juice' is common to the first two sentences, so juice = ral. 'mango' is common to the first and third, so mango = nob. The remaining code in the first sentence, pit, means 'fresh'.",
+      "topic": "Logical reasoning: Coding-decoding (sentence codes)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Each question below has two statements. Decide whether the data in the statements is sufficient to answer the question.\n\nQuestion: Is the positive integer n divisible by 6?\nI. n is divisible by 3.\nII. n is divisible by 4.",
+      "options": [
+        "Statement I alone is sufficient, but statement II alone is not",
+        "Statement II alone is sufficient, but statement I alone is not",
+        "Each statement alone is sufficient",
+        "Both statements together are sufficient, but neither alone is"
+      ],
+      "correctIndex": 3,
+      "explanation": "I alone: n = 3 (no) or n = 6 (yes). II alone: n = 4 (no) or n = 12 (yes). Together, n is divisible by 12 and so by 6.",
+      "topic": "Logical reasoning: Data sufficiency",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Eight people — Aarav, Bhavya, Chirag, Dia, Eklavya, Fatima, Gaurav and Hina — sit in a row facing north. Dia sits at one of the ends. Hina sits fourth to the right of Dia. Exactly two people sit between Aarav and Fatima, and Aarav is to the left of Fatima. Chirag sits immediately to the left of Fatima. Eklavya sits at one of the ends. Gaurav sits immediately to the right of Bhavya. Who sits third to the left of Chirag?",
+      "options": [
+        "Aarav",
+        "Hina",
+        "Gaurav",
+        "Bhavya"
+      ],
+      "correctIndex": 2,
+      "explanation": "Dia must be at the left end (1st) so Hina can be 5th. Aarav, Chirag and Fatima then fit only in 4th, 6th and 7th. Eklavya takes the right end (8th), and Bhavya and Gaurav take 2nd and 3rd. Chirag is 6th, so third to his left is 3rd: Gaurav.",
+      "topic": "Logical reasoning: Seating arrangement (linear)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the option that correctly fills the blank.\n\nIf it rains tomorrow, the match ______ postponed.",
+      "options": [
+        "had been",
+        "was",
+        "will be",
+        "would be"
+      ],
+      "correctIndex": 2,
+      "explanation": "A first conditional (real future possibility) uses the simple present in the if-clause and 'will' + verb in the main clause: 'will be postponed'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Which of the following sentences about two cities is grammatically correct?",
+      "options": [
+        "Mumbai is more larger than Pune.",
+        "Mumbai is largest than Pune.",
+        "Mumbai is the larger than Pune.",
+        "Mumbai is larger than Pune."
+      ],
+      "correctIndex": 3,
+      "explanation": "'Larger' is already a comparative, so 'more' must not be added. A superlative or 'the' does not go with 'than'.",
+      "topic": "Verbal: Sentence correction (comparison)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nThe committee has decided / to postpone the meeting / until the director / will return from Delhi.",
+      "options": [
+        "to postpone the meeting",
+        "until the director",
+        "will return from Delhi.",
+        "The committee has decided"
+      ],
+      "correctIndex": 2,
+      "explanation": "A time clause beginning with 'until' uses the simple present for a future event: 'until the director returns from Delhi'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Choose the word or phrase closest in meaning to 'impasse' as used in the sentence.\n\nThe negotiations reached an impasse when neither side was willing to compromise.",
+      "options": [
+        "deadlock",
+        "beginning",
+        "celebration",
+        "agreement"
+      ],
+      "correctIndex": 0,
+      "explanation": "An 'impasse' is a situation in which no progress is possible, i.e. a deadlock.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. They argue that the money would be better spent on improving existing roads.\nQ. The state government has proposed a new expressway between the two cities.\nR. Supporters say it will cut travel time by half and boost trade.\nS. Critics, however, point out that the project will require clearing a large area of forest.",
+      "options": [
+        "QSRP",
+        "QRSP",
+        "QRPS",
+        "RQSP"
+      ],
+      "correctIndex": 1,
+      "explanation": "Q introduces the proposal; R gives the supporters' view; S ('however') introduces the critics; P ('They argue') continues the critics' view.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the one word that can replace the phrase:\n\nA list of items to be discussed at a meeting",
+      "options": [
+        "Itinerary",
+        "Minutes",
+        "Agenda",
+        "Memorandum"
+      ],
+      "correctIndex": 2,
+      "explanation": "An agenda lists items to be discussed. Minutes are the record of what was discussed; an itinerary is a travel plan.",
+      "topic": "Verbal: One-word substitution",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Read the passage and answer the question.\n\nIn 2019, a small coastal town began allowing only electric autorickshaws in its old market area. Shopkeepers had feared that fewer customers would come, but sales records later showed little change. Air quality readings in the market, meanwhile, improved noticeably, and the town has since extended the rule to two more neighbourhoods.\n\nWhich of the following can most reasonably be inferred from the passage?",
+      "options": [
+        "Shopkeepers' sales fell sharply after 2019.",
+        "Air quality in the market became worse.",
+        "Electric autorickshaws are banned in the two other neighbourhoods.",
+        "The town's officials regarded the market experiment as a success."
+      ],
+      "correctIndex": 3,
+      "explanation": "Extending the rule to more neighbourhoods suggests officials judged the experiment a success. The other options contradict the passage.",
+      "topic": "Verbal: Reading comprehension (inference)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Choose the option that correctly fills the blank.\n\nBeing cautious by nature, she is averse ______ taking unnecessary risks.",
+      "options": [
+        "of",
+        "to",
+        "from",
+        "against"
+      ],
+      "correctIndex": 1,
+      "explanation": "'Averse' is followed by 'to': averse to taking risks.",
+      "topic": "Verbal: Prepositions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer n)\n    if (n <= 0)\n        return 0\n    end if\n    if ((n mod 2) == 0)\n        return fun(n - 1) + n\n    else\n        return fun(n - 1) - n\n    end if\nEnd function\n\nPrint fun(6)",
+      "options": [
+        "21",
+        "3",
+        "-3",
+        "0"
+      ],
+      "correctIndex": 1,
+      "explanation": "fun(6) = −1 + 2 − 3 + 4 − 5 + 6 = 3: odd values are subtracted and even values added.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger n\nSet n = 0\nfor (each i from 1 to 10)\n    if ((i mod 3) == 1)\n        n = n + i\n    else\n        n = n - 1\n    end if\nend for\nPrint n",
+      "options": [
+        "22",
+        "10",
+        "14",
+        "16"
+      ],
+      "correctIndex": 3,
+      "explanation": "i = 1, 4, 7, 10 add 22 in total. The other six values subtract 1 each. n = 22 − 6 = 16.",
+      "topic": "Pseudocode: Loops (conditions)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger n, r, p\nSet n = 13, r = 0, p = 1\nwhile (n > 0)\n    r = r + (n mod 2) * p\n    p = p * 10\n    n = n / 2    // integer division\nend while\nPrint r",
+      "options": [
+        "1101",
+        "111",
+        "13",
+        "1011"
+      ],
+      "correctIndex": 0,
+      "explanation": "The loop builds the binary form of 13 as a decimal-looking number: 13 = 1101 in binary.",
+      "topic": "Pseudocode: While loop (number conversion)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[5] = {2, 4, 6, 8, 10}\nfor (each i from 1 to 4)\n    arr[i] = arr[i] - arr[i - 1]\nend for\nPrint arr[4]\n\n(Array indices start at 0.)",
+      "options": [
+        "2",
+        "30",
+        "4",
+        "6"
+      ],
+      "correctIndex": 3,
+      "explanation": "Each step uses the already updated previous element: arr becomes 2, 2, 4, 4, 6. So arr[4] = 6.",
+      "topic": "Pseudocode: Arrays (in-place update)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Amit, Bina and Chetan each have a different profession (doctor, lawyer, engineer) and live in a different city (Pune, Delhi, Chennai). The doctor lives in Pune. Amit is not the doctor and does not live in Chennai. Bina is the engineer. Who lives in Chennai?",
+      "options": [
+        "Amit",
+        "Bina",
+        "Chetan",
+        "The lawyer"
+      ],
+      "correctIndex": 1,
+      "explanation": "Bina is the engineer and Amit is not the doctor, so Amit is the lawyer and Chetan the doctor, living in Pune. Amit does not live in Chennai, so Amit is in Delhi and Bina is in Chennai.",
+      "topic": "Puzzles: Logic puzzle (grid)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Ravi is now twice as old as Sanju was when Ravi was as old as Sanju is now. The sum of their present ages is 42 years. How old is Ravi now?",
+      "options": [
+        "24 years",
+        "18 years",
+        "21 years",
+        "28 years"
+      ],
+      "correctIndex": 0,
+      "explanation": "Let Ravi be R and Sanju S. R − S years ago, Ravi was S and Sanju was 2S − R. So R = 2(2S − R), giving 3R = 4S. With R + S = 42, S = 18 and R = 24.",
+      "topic": "Puzzles: Age puzzle",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

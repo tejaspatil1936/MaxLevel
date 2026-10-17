@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #F9FAFB;
+  --color-surface: #FFFFFF;
+  --color-ink: #111827;
+  --color-ink-muted: #4B5563;
+  --color-line: #E5E7EB;
+  --color-pen: #1E3A8A;
+  --color-pen-wash: #F3F4F6;
+  --color-red: #DC2626;
+  --color-green: #16A34A;
+
+  --font-display: var(--font-bricolage), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-instrument), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #F9FAFB;
+  color: #111827;
+  font-family: var(--font-instrument), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+/* OMR bubble styling */
+.omr-bubble {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 1.5px solid #111827;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.omr-bubble.filled {
+  background-color: #1E3A8A;
+  border-color: #1E3A8A;
+  color: #FFFFFF;
+}
+
+/* Tabular figures for countdown timers, scores, rankings */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom text selection */
+::selection {
+  background-color: #E5E7EB;
+  color: #111827;
+}
+
+/* Focus indicator */
+:focus-visible {
+  outline: 2px solid #1E3A8A;
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

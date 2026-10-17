@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "The average of five numbers is 38. When a sixth number is included, the average becomes 40. What is the sixth number?",
+      "options": [
+        "52",
+        "48",
+        "50",
+        "42"
+      ],
+      "correctIndex": 2,
+      "explanation": "Sum of five = 190. Sum of six = 240. Sixth number = 240 − 190 = 50.",
+      "topic": "Quantitative: Averages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "If a + b = 10 and ab = 21, what is the value of a³ + b³?",
+      "options": [
+        "370",
+        "316",
+        "433",
+        "1000"
+      ],
+      "correctIndex": 0,
+      "explanation": "a³ + b³ = (a + b)³ − 3ab(a + b) = 1000 − 630 = 370.",
+      "topic": "Quantitative: Algebra (identities)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A solid cone has a base radius of 7 cm and a height of 24 cm. What is its total surface area? (Take π = 22/7)",
+      "options": [
+        "1232 sq cm",
+        "528 sq cm",
+        "550 sq cm",
+        "704 sq cm"
+      ],
+      "correctIndex": 3,
+      "explanation": "Slant height = √(7² + 24²) = 25 cm. Total surface area = πr(l + r) = 22/7 × 7 × 32 = 704 sq cm.",
+      "topic": "Quantitative: Mensuration (3D)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "What is the value of (1 − 1/2)(1 − 1/3)(1 − 1/4) … (1 − 1/50)?",
+      "options": [
+        "1/2",
+        "1/49",
+        "49/50",
+        "1/50"
+      ],
+      "correctIndex": 3,
+      "explanation": "The product is 1/2 × 2/3 × 3/4 × … × 49/50. Everything cancels except 1/50.",
+      "topic": "Quantitative: Simplification",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "What is the remainder when 17²³ + 23²³ is divided by 20?",
+      "options": [
+        "18",
+        "0",
+        "10",
+        "2"
+      ],
+      "correctIndex": 1,
+      "explanation": "For odd n, aⁿ + bⁿ is divisible by a + b. Here 17 + 23 = 40, so 17²³ + 23²³ is a multiple of 40 and hence of 20. Remainder = 0.",
+      "topic": "Quantitative: Number system (remainders)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "Vessel A contains milk and water in the ratio 5 : 3 and vessel B contains them in the ratio 3 : 1. In what ratio should the contents of A and B be mixed to get a mixture with milk and water in the ratio 2 : 1?",
+      "options": [
+        "3 : 2",
+        "1 : 1",
+        "1 : 2",
+        "2 : 1"
+      ],
+      "correctIndex": 3,
+      "explanation": "Milk fractions: A = 5/8, B = 3/4, target = 2/3. A : B = (3/4 − 2/3) : (2/3 − 5/8) = 1/12 : 1/24 = 2 : 1.",
+      "topic": "Quantitative: Mixtures and alligation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "A watch loses 8 minutes every 24 hours. It is set to the correct time at 12:00 noon on Monday. What time will it show when the correct time is 6:00 p.m. on Wednesday?",
+      "options": [
+        "5:42 p.m.",
+        "5:52 p.m.",
+        "5:44 p.m.",
+        "6:18 p.m."
+      ],
+      "correctIndex": 0,
+      "explanation": "From Monday noon to Wednesday 6 p.m. is 54 hours = 2.25 days. Time lost = 2.25 × 8 = 18 minutes, so the watch shows 5:42 p.m.",
+      "topic": "Quantitative: Clocks (faulty clocks)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "How many terms of the arithmetic progression 3, 8, 13, 18, … must be added to get a sum of 1,010?",
+      "options": [
+        "25",
+        "19",
+        "21",
+        "20"
+      ],
+      "correctIndex": 3,
+      "explanation": "Sₙ = n/2 × [6 + 5(n − 1)] = 1010 gives 5n² + n − 2020 = 0, i.e. (n − 20)(5n + 101) = 0. So n = 20.",
+      "topic": "Quantitative: Progressions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Statement: A survey of 2,000 daily commuters in a city found that 68% of them prefer the metro to buses because it is faster.\n\nConclusions:\nI. All commuters in the city prefer the metro.\nII. Buses in the city always run late.\n\nWhich conclusion(s) follow from the statement?",
+      "options": [
+        "Both conclusions I and II follow",
+        "Neither conclusion I nor II follows",
+        "Only conclusion I follows",
+        "Only conclusion II follows"
+      ],
+      "correctIndex": 1,
+      "explanation": "68% of those surveyed is not all commuters, so I does not follow. Preferring the faster option says nothing about buses always running late, so II does not follow.",
+      "topic": "Logical reasoning: Statement and conclusions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "DRIVE : EVIRD :: SPACE : ?",
+      "options": [
+        "EACPS",
+        "ECASP",
+        "TQBDF",
+        "ECAPS"
+      ],
+      "correctIndex": 3,
+      "explanation": "The letters of the word are written in reverse order: SPACE → ECAPS.",
+      "topic": "Logical reasoning: Analogy (letters)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "In a test, six students P, Q, R, S, T and U scored different marks. P scored more than Q but less than R. S scored less than Q. T scored more than R. U scored less than S. Whose score is the third highest?",
+      "options": [
+        "T",
+        "R",
+        "P",
+        "Q"
+      ],
+      "correctIndex": 2,
+      "explanation": "The order is T > R > P > Q > S > U, so P is third highest.",
+      "topic": "Logical reasoning: Ranking and order",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Find the next number in the series: 1, 4, 27, 256, ?",
+      "options": [
+        "625",
+        "3125",
+        "1024",
+        "3025"
+      ],
+      "correctIndex": 1,
+      "explanation": "The terms are 1¹, 2², 3³, 4⁴; the next is 5⁵ = 3125.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Find the next group in the series: AYB, CWD, EUF, GSH, ?",
+      "options": [
+        "JQK",
+        "IRJ",
+        "HQI",
+        "IQJ"
+      ],
+      "correctIndex": 3,
+      "explanation": "The first and third letters move forward by 2 (A, C, E, G, I and B, D, F, H, J). The middle letter moves back by 2 (Y, W, U, S, Q).",
+      "topic": "Logical reasoning: Letter series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "A × B means A is the son of B; A + B means A is the sister of B; A ÷ B means A is the father of B; A − B means A is the wife of B. If J + K × L − M, which of the following is definitely true?",
+      "options": [
+        "J is the daughter-in-law of M",
+        "L is the sister of J",
+        "K is the brother of M",
+        "M is the father of J"
+      ],
+      "correctIndex": 3,
+      "explanation": "J is K's sister, K is L's son, and L is M's wife. So K and J are children of L and M, which makes M the father of J.",
+      "topic": "Logical reasoning: Blood relations (coded)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Statements:\nNo phones are laptops.\nSome laptops are tablets.\n\nConclusions:\nI. Some phones are tablets.\nII. Some tablets are not phones.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Only conclusion I follows",
+        "Only conclusion II follows",
+        "Both conclusions I and II follow",
+        "Neither conclusion I nor II follows"
+      ],
+      "correctIndex": 1,
+      "explanation": "The tablets that are laptops cannot be phones, so some tablets are not phones (II follows). No statement links phones to tablets, so I does not follow.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Eight people — Q, R, S, T, U, V, W and X — sit around a circular table, facing the centre. S sits third to the right of Q. V sits opposite S. W is an immediate neighbour of Q but not of V. R sits third to the right of W. T is an immediate neighbour of S. U sits second to the left of V. Who sits opposite W?",
+      "options": [
+        "R",
+        "T",
+        "U",
+        "X"
+      ],
+      "correctIndex": 2,
+      "explanation": "Fix Q. S is third to Q's right and V is opposite S, which puts V next to Q. So W is on Q's other side (Q's right). R is third to W's right, next to S. T must take the other seat beside S. U is second to V's left, and X fills the last seat. U ends up opposite W.",
+      "topic": "Logical reasoning: Seating arrangement (circular)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the word most nearly OPPOSITE in meaning to the word 'vague' as used in the sentence.\n\nThe instructions for the assignment were deliberately vague.",
+      "options": [
+        "unclear",
+        "lengthy",
+        "precise",
+        "careless"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Vague' means unclear or not specific; its opposite is 'precise'. 'Unclear' is a synonym, not an antonym.",
+      "topic": "Verbal: Antonyms in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Which of the following sentences about a plan that will not work is grammatically correct?",
+      "options": [
+        "Between you and myself, the plan will not work.",
+        "Among you and me, the plan will not work.",
+        "Between you and I, the plan will not work.",
+        "Between you and me, the plan will not work."
+      ],
+      "correctIndex": 3,
+      "explanation": "A preposition ('between') takes the object pronoun 'me'. 'Myself' is used only when the subject is also 'I', and 'between' (not 'among') is used for two people.",
+      "topic": "Verbal: Sentence correction (pronouns)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Choose the option that correctly fills the blank.\n\nThe doctor advised him ______ smoking.",
+      "options": [
+        "that he gives up",
+        "give up",
+        "to give up",
+        "giving up"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Advise' + object is followed by a to-infinitive: 'advised him to give up smoking'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Choose the word or phrase closest in meaning to 'convoluted' as used in the sentence.\n\nHer explanation was so convoluted that the audience lost track of the main point.",
+      "options": [
+        "complicated",
+        "loud",
+        "simple",
+        "persuasive"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Convoluted' means extremely complex and difficult to follow.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the correct passive form of the sentence:\n\nSomebody has stolen my bicycle.",
+      "options": [
+        "My bicycle has been stolen.",
+        "My bicycle was being stolen.",
+        "My bicycle had been stolen by somebody.",
+        "My bicycle has stolen."
+      ],
+      "correctIndex": 0,
+      "explanation": "Present perfect active becomes 'has been' + past participle. An indefinite agent like 'somebody' is usually dropped, and the tense must stay present perfect.",
+      "topic": "Verbal: Active and passive voice",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nThe quality of the mangoes / supplied by the new vendor / are much better / than last year's.",
+      "options": [
+        "than last year's.",
+        "The quality of the mangoes",
+        "are much better",
+        "supplied by the new vendor"
+      ],
+      "correctIndex": 2,
+      "explanation": "The subject is 'the quality' (singular), not 'mangoes', so the verb should be 'is much better'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Read the passage and answer the question.\n\nA survey of first-year engineering students found that those who studied in small groups twice a week scored higher in mathematics than those who studied alone. The researchers cautioned, however, that students who chose group study may already have been more motivated. They recommended a follow-up study in which students would be assigned to groups at random.\n\nWhy did the researchers recommend assigning students to groups at random?",
+      "options": [
+        "To prove that studying alone is more effective.",
+        "To rule out the possibility that motivation, rather than group study, explained the higher scores.",
+        "Because students who studied alone refused to take part.",
+        "To make each study group larger."
+      ],
+      "correctIndex": 1,
+      "explanation": "The researchers worried that more motivated students chose group study. Random assignment removes that self-selection, so any difference could be credited to group study itself.",
+      "topic": "Verbal: Reading comprehension (reasoning)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. It is now looking for volunteers in those cities to help run them.\nQ. Encouraged by this response, the organisation plans to open classes in two more cities.\nR. A non-profit in Pune runs weekend classes that teach elderly people to use smartphones.\nS. Since the classes began, many learners have started making video calls to relatives abroad.",
+      "options": [
+        "RSQP",
+        "SRQP",
+        "RQSP",
+        "RSPQ"
+      ],
+      "correctIndex": 0,
+      "explanation": "R introduces the classes; S describes their effect; Q ('this response') follows S; P ('those cities', 'them') refers back to the new cities and classes in Q.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[5] = {4, 1, 3, 9, 7}\nInteger s\nSet s = 0\nfor (each i from 0 to 4)\n    if ((i mod 2) == 0)\n        s = s + arr[i]\n    else\n        s = s - arr[i]\n    end if\nend for\nPrint s\n\n(Array indices start at 0.)",
+      "options": [
+        "4",
+        "24",
+        "-4",
+        "2"
+      ],
+      "correctIndex": 0,
+      "explanation": "Even indices are added and odd indices subtracted: 4 − 1 + 3 − 9 + 7 = 4.",
+      "topic": "Pseudocode: Arrays",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b, c\nSet a = 1, b = 1\nfor (each i from 1 to 5)\n    c = a + b\n    a = b\n    b = c\nend for\nPrint b",
+      "options": [
+        "5",
+        "8",
+        "13",
+        "21"
+      ],
+      "correctIndex": 2,
+      "explanation": "(a, b) moves through (1, 2), (2, 3), (3, 5), (5, 8), (8, 13). After 5 iterations b = 13.",
+      "topic": "Pseudocode: Loops (sequence)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a\nSet a = 0\nfor (each i from 1 to 5)\n    for (each j from 1 to 5)\n        if (j == i)\n            break    // exits only the inner loop\n        end if\n        a = a + 1\n    end for\nend for\nPrint a",
+      "options": [
+        "5",
+        "10",
+        "0",
+        "15"
+      ],
+      "correctIndex": 1,
+      "explanation": "For each i, the inner loop adds 1 for j = 1 to i − 1 and then breaks. Total = 0 + 1 + 2 + 3 + 4 = 10.",
+      "topic": "Pseudocode: Nested loops (break)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nVoid fun(Integer n)\n    if (n > 0)\n        Print n\n        fun(n - 2)\n        Print n\n    end if\nEnd function\n\nfun(5)\n\n(Each Print statement prints its value followed by a space.)",
+      "options": [
+        "5 3 1 1 3 5",
+        "5 3 1 3 5",
+        "5 3 1",
+        "1 3 5 5 3 1"
+      ],
+      "correctIndex": 0,
+      "explanation": "fun(5) prints 5, calls fun(3), then prints 5 again; fun(3) prints 3, calls fun(1), prints 3; fun(1) prints 1, calls fun(−1) which does nothing, prints 1. Output: 5 3 1 1 3 5.",
+      "topic": "Pseudocode: Recursion (output order)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "A rectangular grid is made of 3 rows and 4 columns of equal small squares. How many rectangles of all sizes (squares included) can be found in the grid?",
+      "options": [
+        "48",
+        "60",
+        "20",
+        "12"
+      ],
+      "correctIndex": 1,
+      "explanation": "A rectangle is fixed by choosing 2 of the 4 horizontal lines and 2 of the 5 vertical lines: 4C2 × 5C2 = 6 × 10 = 60.",
+      "topic": "Puzzles: Counting (rectangles)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Asha, Bharat, Chhaya and Dinesh live on different floors (1 to 4, with floor 1 the lowest) of a building, and each likes a different colour: red, blue, green or yellow. Bharat lives on an even-numbered floor, directly above the person who likes green. Chhaya likes yellow and lives above Asha. The person on floor 1 likes blue. Dinesh does not live on floor 4. Asha does not like red. Who likes red?",
+      "options": [
+        "Asha",
+        "Bharat",
+        "Dinesh",
+        "Chhaya"
+      ],
+      "correctIndex": 1,
+      "explanation": "Floor 1 likes blue, so Bharat is not on floor 2 (the person below him likes green); Bharat is on floor 4 and floor 3 likes green. Chhaya (yellow) is above Asha and cannot be on floors 1, 3 or 4, so Chhaya is on 2 and Asha on 1 (blue). Dinesh is on 3 (green), leaving red for Bharat.",
+      "topic": "Puzzles: Logic puzzle (floors)",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the worst-case time complexity of searching for an element in a balanced Binary Search Tree (AVL tree) with n nodes?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      "correctIndex": 1,
+      "explanation": "Because an AVL tree remains strictly balanced with height bounded by 1.44 log n, search takes O(log n) worst case.",
+      "topic": "Data Structures",
+      "source": "TCS NQT Prep"
+    },
+    {
+      "id": "q2",
+      "text": "Which HTTP status code should a server return when a request cannot be processed due to client syntax error?",
+      "options": ["204 No Content", "400 Bad Request", "403 Forbidden", "500 Internal Server Error"],
+      "correctIndex": 1,
+      "explanation": "HTTP 400 Bad Request indicates that the server cannot process the request due to perceived client error.",
+      "topic": "Web Protocols",
+      "source": "Cognizant Prep"
+    },
+    {
+      "id": "q3",
+      "text": "In relational databases, which normal form eliminates transitive dependencies between non-prime attributes?",
+      "options": ["First Normal Form (1NF)", "Second Normal Form (2NF)", "Third Normal Form (3NF)", "Boyce-Codd Normal Form (BCNF)"],
+      "correctIndex": 2,
+      "explanation": "3NF requires the relation to be in 2NF and have no transitive functional dependencies of non-prime attributes on candidate keys.",
+      "topic": "Database Management",
+      "source": "Infosys Prep"
+    },
+    {
+      "id": "q4",
+      "text": "Which concurrency control anomaly occurs when a transaction reads uncommitted changes made by another transaction?",
+      "options": ["Dirty Read", "Non-repeatable Read", "Phantom Read", "Lost Update"],
+      "correctIndex": 0,
+      "explanation": "A dirty read occurs when transaction A modifies a row without committing, and transaction B reads that uncommitted data.",
+      "topic": "DBMS",
+      "source": "Wipro Prep"
+    },
+    {
+      "id": "q5",
+      "text": "In JavaScript, what is the output of typeof null?",
+      "options": ["'null'", "'undefined'", "'object'", "'boolean'"],
+      "correctIndex": 2,
+      "explanation": "In JavaScript, typeof null returns 'object' due to a historical design quirk in the first JS engine.",
+      "topic": "JavaScript",
+      "source": "Accenture Prep"
+    },
+    {
+      "id": "q6",
+      "text": "What is the primary function of the Address Resolution Protocol (ARP) in computer networks?",
+      "options": [
+        "Resolves domain names to IP addresses",
+        "Maps IPv4 addresses to physical MAC addresses",
+        "Assigns dynamic IP addresses to network hosts",
+        "Translates private IP addresses to public IPs"
+      ],
+      "correctIndex": 1,
+      "explanation": "ARP operates at the link layer to map known network-layer IPv4 addresses to physical link-layer MAC addresses.",
+      "topic": "Computer Networks",
+      "source": "Capgemini Prep"
+    },
+    {
+      "id": "q7",
+      "text": "Which CPU scheduling algorithm may lead to starvation if a continuous stream of shorter processes arrives?",
+      "options": [
+        "First-Come, First-Served (FCFS)",
+        "Round Robin (RR)",
+        "Shortest Job First (SJF)",
+        "Multilevel Feedback Queue with aging"
+      ],
+      "correctIndex": 2,
+      "explanation": "Non-preemptive or preemptive Shortest Job First favors shorter jobs, indefinitely delaying longer jobs if short jobs keep arriving.",
+      "topic": "Operating Systems",
+      "source": "TCS Digital"
+    },
+    {
+      "id": "q8",
+      "text": "What is the space complexity of Depth First Search (DFS) on a tree of depth d?",
+      "options": ["O(1)", "O(d)", "O(b^d)", "O(d!)"],
+      "correctIndex": 1,
+      "explanation": "In DFS traversal on a tree of max depth d, the call stack requires memory proportional to the depth of the path, O(d).",
+      "topic": "Algorithms",
+      "source": "Amazon Campus"
+    },
+    {
+      "id": "q9",
+      "text": "Which design pattern is best suited for notifying multiple dependent objects whenever the subject's state changes?",
+      "options": ["Singleton Pattern", "Observer Pattern", "Adapter Pattern", "Factory Method Pattern"],
+      "correctIndex": 1,
+      "explanation": "The Observer pattern defines a one-to-many dependency between objects so that when one object changes state, all dependents are notified.",
+      "topic": "Design Patterns",
+      "source": "Tech Mahindra"
+    },
+    {
+      "id": "q10",
+      "text": "A train 180 meters long running at 54 km/hr crosses a stationary platform in 20 seconds. What is the length of the platform?",
+      "options": ["100 meters", "120 meters", "150 meters", "180 meters"],
+      "correctIndex": 1,
+      "explanation": "Speed = 54 * (5/18) = 15 m/s. Total distance = speed * time = 15 * 20 = 300 m. Platform length = 300 - 180 = 120 m.",
+      "topic": "Quantitative Aptitude",
+      "source": "Campus Placements"
+    }
+  ]
+}

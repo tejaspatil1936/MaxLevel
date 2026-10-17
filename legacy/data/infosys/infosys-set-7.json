@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "6 workers can build a wall in 10 days. How many days will 15 workers take to build the same wall, working at the same rate?",
+      "options": [
+        "25 days",
+        "4 days",
+        "6 days",
+        "5 days"
+      ],
+      "correctIndex": 1,
+      "explanation": "Total work = 6 × 10 = 60 worker-days. With 15 workers, time = 60/15 = 4 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "Two cars start at the same time from cities P and Q, 360 km apart, and drive towards each other at 50 km/h and 70 km/h respectively. How far from P will they meet?",
+      "options": [
+        "210 km",
+        "160 km",
+        "150 km",
+        "180 km"
+      ],
+      "correctIndex": 2,
+      "explanation": "They close the gap at 120 km/h, so they meet after 3 hours. The car from P covers 50 × 3 = 150 km.",
+      "topic": "Quantitative: Speed, time and distance",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A man rows downstream at 14 km/h and upstream at 8 km/h. What is the speed of the current?",
+      "options": [
+        "3 km/h",
+        "11 km/h",
+        "4 km/h",
+        "6 km/h"
+      ],
+      "correctIndex": 0,
+      "explanation": "Speed of current = (downstream − upstream)/2 = (14 − 8)/2 = 3 km/h.",
+      "topic": "Quantitative: Boats and streams",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "The HCF of two numbers is 12 and their LCM is 504. If one of the numbers is 72, what is the other number?",
+      "options": [
+        "96",
+        "84",
+        "42",
+        "60"
+      ],
+      "correctIndex": 1,
+      "explanation": "Product of the numbers = HCF × LCM, so the other number = 12 × 504 / 72 = 84.",
+      "topic": "Quantitative: HCF and LCM",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "Pipe A can fill a tank in 12 hours and pipe B in 15 hours. Pipe C can empty the full tank in 20 hours. All three pipes are opened at 6:00 a.m. on the empty tank. At what time will the tank be full?",
+      "options": [
+        "2:00 p.m.",
+        "4:00 p.m.",
+        "5:00 p.m.",
+        "12:40 p.m."
+      ],
+      "correctIndex": 1,
+      "explanation": "Net rate = 1/12 + 1/15 − 1/20 = (5 + 4 − 3)/60 = 1/10 per hour, so it takes 10 hours: 6:00 a.m. + 10 hours = 4:00 p.m.",
+      "topic": "Quantitative: Pipes and cisterns",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "Two trains 150 m and 210 m long are running on parallel tracks in the same direction at 72 km/h and 54 km/h. How long will the faster train take to pass the slower train completely?",
+      "options": [
+        "20 seconds",
+        "36 seconds",
+        "72 seconds",
+        "10.3 seconds"
+      ],
+      "correctIndex": 2,
+      "explanation": "Relative speed = 72 − 54 = 18 km/h = 5 m/s. Distance = 150 + 210 = 360 m. Time = 360/5 = 72 seconds.",
+      "topic": "Quantitative: Problems on trains",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "A container holds 50 litres of pure milk. 10 litres are taken out and replaced with water. This process is done once more. How much milk is now in the container?",
+      "options": [
+        "30 litres",
+        "34 litres",
+        "36 litres",
+        "32 litres"
+      ],
+      "correctIndex": 3,
+      "explanation": "Each step keeps 4/5 of the milk. Milk left = 50 × (4/5)² = 32 litres.",
+      "topic": "Quantitative: Mixtures and alligation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "The five-digit number 7x86y (where x and y are single digits) is divisible by both 8 and 9. What is the value of x + y?",
+      "options": [
+        "6",
+        "11",
+        "4",
+        "8"
+      ],
+      "correctIndex": 0,
+      "explanation": "For 8, the last three digits 86y must be divisible by 8, so y = 4 (864 = 8 × 108). For 9, the digit sum 7 + x + 8 + 6 + 4 = 25 + x must be a multiple of 9, so x = 2. x + y = 6.",
+      "topic": "Quantitative: Number system (divisibility)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "In a certain code, BOOK is written as 43. Using the same rule, how is PAGE written?",
+      "options": [
+        "31",
+        "33",
+        "29",
+        "27"
+      ],
+      "correctIndex": 2,
+      "explanation": "Each letter is replaced by its position in the alphabet and the values are added: B(2) + O(15) + O(15) + K(11) = 43. PAGE = 16 + 1 + 7 + 5 = 29.",
+      "topic": "Logical reasoning: Coding-decoding (letter values)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Find the odd one out: BDF, KMO, PRT, GIL",
+      "options": [
+        "BDF",
+        "GIL",
+        "PRT",
+        "KMO"
+      ],
+      "correctIndex": 1,
+      "explanation": "In BDF, KMO and PRT each letter is 2 places after the previous one. In GIL, I to L is a gap of 3.",
+      "topic": "Logical reasoning: Odd one out (letter groups)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Find the next number in the series: 1, 2, 6, 15, 31, ?",
+      "options": [
+        "56",
+        "62",
+        "52",
+        "47"
+      ],
+      "correctIndex": 0,
+      "explanation": "The differences are 1, 4, 9, 16, i.e. 1², 2², 3², 4². The next difference is 25, so 31 + 25 = 56.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Starting at point P and facing north, Kabir walks 4 km. He turns 90° anticlockwise and walks 6 km, turns 90° anticlockwise again and walks 12 km, and then turns 90° clockwise and walks 2 km. Where is he now with respect to P?",
+      "options": [
+        "8√2 km, North-West",
+        "10 km, South-West",
+        "8√2 km, South-West",
+        "16 km, South-West"
+      ],
+      "correctIndex": 2,
+      "explanation": "Positions: (0, 4) → west 6 → (−6, 4) → south 12 → (−6, −8) → west 2 → (−8, −8). He is 8 km west and 8 km south, i.e. 8√2 km to the south-west.",
+      "topic": "Logical reasoning: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "P, Q, R, S and T each have a different number of books. Q has more books than only T. P has more books than R but fewer than S. Who has the third highest number of books?",
+      "options": [
+        "Q",
+        "R",
+        "S",
+        "P"
+      ],
+      "correctIndex": 1,
+      "explanation": "Q has more than only T, so T has the fewest and Q is fourth. Then S > P > R fill the top three, so the order is S, P, R, Q, T. R is third.",
+      "topic": "Logical reasoning: Ordering and comparison",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "1 March 2028 falls on a Wednesday. On which day of the week did 1 March 2027 fall?",
+      "options": [
+        "Monday",
+        "Thursday",
+        "Sunday",
+        "Tuesday"
+      ],
+      "correctIndex": 0,
+      "explanation": "Between 1 March 2027 and 1 March 2028 there are 366 days, because 29 February 2028 is included. 366 = 52 weeks + 2 days, so go back 2 days from Wednesday: Monday.",
+      "topic": "Logical reasoning: Calendars",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Each question below has two statements. Decide whether the data in the statements is sufficient to answer the question.\n\nQuestion: How many students are there in Ankit's class?\nI. Ankit's rank is 12th from the top and 15th from the bottom.\nII. There are 8 more girls than boys in the class.",
+      "options": [
+        "Both statements together are not sufficient",
+        "Statement II alone is sufficient, but statement I alone is not",
+        "Both statements together are sufficient, but neither alone is",
+        "Statement I alone is sufficient, but statement II alone is not"
+      ],
+      "correctIndex": 3,
+      "explanation": "From I, the total is 12 + 15 − 1 = 26. II gives only a difference, not a total.",
+      "topic": "Logical reasoning: Data sufficiency",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Statements:\nAll squares are circles.\nNo circles are triangles.\n\nConclusions:\nI. Some triangles are squares is a possibility.\nII. No squares are triangles.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Only conclusion I follows",
+        "Both conclusions I and II follow"
+      ],
+      "correctIndex": 1,
+      "explanation": "Every square is a circle and no circle is a triangle, so no square is a triangle (II follows). That makes 'some triangles are squares' impossible, so I does not follow even as a possibility.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nEach of the players / have been given / a new jersey / for the tournament.",
+      "options": [
+        "a new jersey",
+        "for the tournament.",
+        "have been given",
+        "Each of the players"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Each' is singular, so the verb must be singular: 'Each of the players has been given…'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. Within a few minutes, the sky grew dark and heavy drops began to fall.\nQ. Rohit set out for the market on a bright afternoon without an umbrella.\nR. By the time he reached the shop, he was completely drenched.\nS. Halfway there, he noticed clouds gathering over the hills.",
+      "options": [
+        "QSPR",
+        "QSRP",
+        "SQPR",
+        "QPSR"
+      ],
+      "correctIndex": 0,
+      "explanation": "Q introduces Rohit and the bright afternoon; S (halfway there) notes the clouds; P describes the rain that followed; R ends with him drenched at the shop.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Read the passage and answer the question.\n\nEvery monsoon, low-lying neighbourhoods in many cities flood within hours of heavy rain. Engineers point out that natural drains and lakes, which once absorbed excess water, have been filled in to make room for buildings. Restoring even some of these water bodies, they argue, would cost less than repeatedly repairing flood damage.\n\nWhat is the main argument made by the engineers?",
+      "options": [
+        "Cities should stop all new construction.",
+        "Flooding is caused mainly by poor weather forecasts.",
+        "Monsoon rainfall has increased sharply in recent years.",
+        "Restoring natural water bodies would cost less than repeatedly repairing flood damage."
+      ],
+      "correctIndex": 3,
+      "explanation": "The engineers argue that restoring some lakes and drains would be cheaper than repeated flood repairs. The other options are not mentioned.",
+      "topic": "Verbal: Reading comprehension (main argument)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "What does the phrase 'a fish out of water' mean in the sentence below?\n\nArjun felt like a fish out of water at the formal dinner.",
+      "options": [
+        "extremely confident",
+        "tired after a long day",
+        "uncomfortable in an unfamiliar situation",
+        "very hungry"
+      ],
+      "correctIndex": 2,
+      "explanation": "'A fish out of water' describes someone who feels awkward in surroundings that are unfamiliar to them.",
+      "topic": "Verbal: Idioms and phrases",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the word or phrase closest in meaning to 'frugal' as used in the sentence.\n\nThe village is known for its frugal way of life.",
+      "options": [
+        "economical",
+        "cheerful",
+        "wasteful",
+        "traditional"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Frugal' means careful with money or resources, i.e. economical; 'wasteful' is its opposite.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the correct indirect (reported) form:\n\nThe teacher said to us, \"Do not use your phones during the test.\"",
+      "options": [
+        "The teacher told us to not used our phones during the test.",
+        "The teacher said us not to use your phones during the test.",
+        "The teacher told us that do not use our phones during the test.",
+        "The teacher told us not to use our phones during the test."
+      ],
+      "correctIndex": 3,
+      "explanation": "A negative command is reported with 'told' + object + 'not to' + base verb, and 'your' changes to 'our'.",
+      "topic": "Verbal: Direct and indirect speech",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Choose the option that correctly fills the blank.\n\nI wish I ______ the answer to your question, but I do not.",
+      "options": [
+        "know",
+        "will know",
+        "knew",
+        "have known"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Wish' about a present situation that is not true takes the past tense: 'I wish I knew'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Which of the following sentences about an election is grammatically correct?",
+      "options": [
+        "Who you think will win the election?",
+        "Who do you think will win the election?",
+        "Whom you think will win the election?",
+        "Whom do you think will win the election?"
+      ],
+      "correctIndex": 1,
+      "explanation": "'Who' is the subject of 'will win' ('do you think' is inserted), so the subject form 'who' is correct, and the question needs 'do'.",
+      "topic": "Verbal: Sentence correction (pronouns)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger c\nSet c = 0\nfor (each i from 1 to 24)\n    if ((i mod 4) == 0 OR (i mod 6) == 0)\n        c = c + 1\n    end if\nend for\nPrint c",
+      "options": [
+        "8",
+        "6",
+        "4",
+        "10"
+      ],
+      "correctIndex": 0,
+      "explanation": "Multiples of 4: 6 numbers; multiples of 6: 4 numbers; multiples of both (12, 24): 2. Count = 6 + 4 − 2 = 8.",
+      "topic": "Pseudocode: Loops (conditions)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 48, b = 18\nwhile (a != b)\n    if (a > b)\n        a = a - b\n    else\n        b = b - a\n    end if\nend while\nPrint a",
+      "options": [
+        "12",
+        "3",
+        "6",
+        "18"
+      ],
+      "correctIndex": 2,
+      "explanation": "Repeated subtraction (48, 18) → (30, 18) → (12, 18) → (12, 6) → (6, 6) ends at the GCD, 6.",
+      "topic": "Pseudocode: While loop",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger c\nSet c = 0\nfor (each i from 1 to 5)\n    for (each j from 1 to 5)\n        if (((i * j) mod 4) == 0)\n            c = c + 1\n        end if\n    end for\nend for\nPrint c",
+      "options": [
+        "6",
+        "8",
+        "9",
+        "10"
+      ],
+      "correctIndex": 3,
+      "explanation": "Pairs where i × j is a multiple of 4: i = 4 or j = 4 gives 9 pairs, plus (2, 2). Total = 10.",
+      "topic": "Pseudocode: Nested loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer a, Integer b)\n    if (b == 0)\n        return 1\n    end if\n    if ((b mod 2) == 0)\n        return fun(a, b / 2) * fun(a, b / 2)\n    end if\n    return a * fun(a, b - 1)\nEnd function\n\nPrint fun(3, 5)",
+      "options": [
+        "81",
+        "15",
+        "125",
+        "243"
+      ],
+      "correctIndex": 3,
+      "explanation": "fun(3, 5) = 3 × fun(3, 4) = 3 × fun(3, 2)² = 3 × (3 × 3)² = 243, which is 3⁵.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "A square board is divided into a 4 × 4 grid of 16 equal small squares. How many squares of all sizes can be found on the board?",
+      "options": [
+        "30",
+        "25",
+        "16",
+        "20"
+      ],
+      "correctIndex": 0,
+      "explanation": "1 × 1: 16, 2 × 2: 9, 3 × 3: 4, 4 × 4: 1. Total = 16 + 9 + 4 + 1 = 30.",
+      "topic": "Puzzles: Counting (squares)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "You have a 7-litre jug, a 4-litre jug and an unlimited supply of water. Each of these counts as one step: filling a jug completely, emptying a jug completely, or pouring from one jug into the other until the first is empty or the second is full. What is the minimum number of steps needed to have exactly 6 litres in one of the jugs?",
+      "options": [
+        "7",
+        "8",
+        "5",
+        "6"
+      ],
+      "correctIndex": 3,
+      "explanation": "Fill the 7 L jug (7, 0); pour into the 4 L jug (3, 4); empty the 4 L jug (3, 0); pour the 3 L across (0, 3); fill the 7 L jug (7, 3); pour into the 4 L jug until it is full (6, 4). That is 6 steps, and a search of all jug states shows no shorter sequence exists.",
+      "topic": "Puzzles: Water jug puzzle",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A company's annual profit (in ₹ crore) was 40 in 2021, 46 in 2022, 55.2 in 2023 and 60 in 2024. What was the percentage growth in profit from 2022 to 2023?",
+      "options": [
+        "16.67%",
+        "20%",
+        "18%",
+        "9.2%"
+      ],
+      "correctIndex": 1,
+      "explanation": "Growth = (55.2 − 46)/46 × 100 = 9.2/46 × 100 = 20%.",
+      "topic": "Quantitative: Data interpretation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "In an examination, 35% of the students failed in Mathematics, 25% failed in English and 10% failed in both. What percentage of students passed in both subjects?",
+      "options": [
+        "50%",
+        "55%",
+        "60%",
+        "40%"
+      ],
+      "correctIndex": 0,
+      "explanation": "Failed in at least one = 35 + 25 − 10 = 50%. So 100 − 50 = 50% passed in both.",
+      "topic": "Quantitative: Percentages (sets)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A number leaves a remainder of 63 when divided by 252. What remainder will it leave when divided by 18?",
+      "options": [
+        "7",
+        "0",
+        "3",
+        "9"
+      ],
+      "correctIndex": 3,
+      "explanation": "The number is 252k + 63. Since 252 is a multiple of 18, the remainder is 63 mod 18 = 9.",
+      "topic": "Quantitative: Number system (remainders)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "A committee of 4 is to be formed from 6 men and 5 women. In how many ways can it be formed if it must include at least 2 women?",
+      "options": [
+        "195",
+        "230",
+        "215",
+        "150"
+      ],
+      "correctIndex": 2,
+      "explanation": "2 women: 10 × 15 = 150; 3 women: 10 × 6 = 60; 4 women: 5. Total = 150 + 60 + 5 = 215.",
+      "topic": "Quantitative: Permutations and combinations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "A number is picked at random from 1 to 50. What is the probability that it is a multiple of 3 or of 5?",
+      "options": [
+        "13/25",
+        "1/2",
+        "21/50",
+        "23/50"
+      ],
+      "correctIndex": 3,
+      "explanation": "Multiples of 3: 16, of 5: 10, of both (15): 3. Favourable = 16 + 10 − 3 = 23, so P = 23/50.",
+      "topic": "Quantitative: Probability",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "Ajay, Bhanu and Chetan invest capital in the ratio 2 : 3 : 5 for 6 months, 8 months and 4 months respectively. Out of a total profit of ₹42,000, what is Bhanu's share?",
+      "options": [
+        "₹12,600",
+        "₹18,000",
+        "₹14,000",
+        "₹15,000"
+      ],
+      "correctIndex": 1,
+      "explanation": "Profit ratio = 2 × 6 : 3 × 8 : 5 × 4 = 12 : 24 : 20 = 3 : 6 : 5. Bhanu gets 6/14 × 42000 = ₹18,000.",
+      "topic": "Quantitative: Partnership",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "A 150 m long train passes a man walking at 6 km/h in the same direction in 15 seconds. What is the speed of the train?",
+      "options": [
+        "42 km/h",
+        "48 km/h",
+        "30 km/h",
+        "36 km/h"
+      ],
+      "correctIndex": 0,
+      "explanation": "Relative speed = 150/15 = 10 m/s = 36 km/h. Train speed = 36 + 6 = 42 km/h.",
+      "topic": "Quantitative: Problems on trains",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A and B together can finish a job in 12 days, B and C together in 15 days, and C and A together in 20 days. How many days will A alone take?",
+      "options": [
+        "20 days",
+        "40 days",
+        "30 days",
+        "24 days"
+      ],
+      "correctIndex": 2,
+      "explanation": "2(A + B + C) = 1/12 + 1/15 + 1/20 = 1/5, so A + B + C = 1/10. A = 1/10 − 1/15 (B + C) = 1/30, i.e. 30 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Pointing to a girl in a photograph, Vikram (a man) said, \"She is the daughter of the only son of my mother.\" How is the girl related to Vikram?",
+      "options": [
+        "Niece",
+        "Daughter",
+        "Sister",
+        "Cousin"
+      ],
+      "correctIndex": 1,
+      "explanation": "Vikram is a son of his mother, so 'the only son of my mother' is Vikram himself. The girl is his daughter.",
+      "topic": "Logical reasoning: Blood relations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "A cube painted blue on all faces is cut into 125 equal smaller cubes. How many of the smaller cubes have no painted face?",
+      "options": [
+        "64",
+        "36",
+        "8",
+        "27"
+      ],
+      "correctIndex": 3,
+      "explanation": "The cube is 5 × 5 × 5. The unpainted cubes form the inner 3 × 3 × 3 block, which is 27 cubes.",
+      "topic": "Logical reasoning: Cubes and dice",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Find the next number in the series: 3, 10, 6, 20, 12, 40, ?",
+      "options": [
+        "80",
+        "24",
+        "18",
+        "36"
+      ],
+      "correctIndex": 1,
+      "explanation": "Two series alternate: 3, 6, 12, 24 (doubling) and 10, 20, 40 (doubling). The next term belongs to the first series: 24.",
+      "topic": "Logical reasoning: Number series (alternating)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Find the next group in the series: BDF, HJL, NPR, ?",
+      "options": [
+        "SUW",
+        "TUV",
+        "UWY",
+        "TVX"
+      ],
+      "correctIndex": 3,
+      "explanation": "Within each group the letters skip one (B, D, F). Each group starts 6 letters after the previous start (B, H, N, T): TVX.",
+      "topic": "Logical reasoning: Letter series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "In a certain code, P @ Q means P ≥ Q; P # Q means P > Q; P $ Q means P = Q; P % Q means P < Q; and P & Q means P ≤ Q.\n\nStatement: M # N, N $ O, O & R\n\nConclusions:\nI. M # O\nII. R @ N\n\nWhich of the conclusions is definitely true?",
+      "options": [
+        "Only I is definitely true",
+        "Both I and II are definitely true",
+        "Neither I nor II is definitely true",
+        "Only II is definitely true"
+      ],
+      "correctIndex": 1,
+      "explanation": "Decoded, the statement is M > N = O ≤ R. I means M > O, which is true. II means R ≥ N, which is true since R ≥ O = N.",
+      "topic": "Logical reasoning: Inequalities (coded)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Find the odd one out: 2197, 3375, 4913, 5832",
+      "options": [
+        "3375",
+        "4913",
+        "5832",
+        "2197"
+      ],
+      "correctIndex": 2,
+      "explanation": "All four are cubes: 13³, 15³, 17³ and 18³. Only 5832 is the cube of an even number (and is itself even); the others are cubes of odd numbers.",
+      "topic": "Logical reasoning: Odd one out (numbers)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Seven friends — J, K, L, M, N, O and P — sit around a circular table, facing the centre. K sits second to the left of J. M sits third to the right of K. N sits between L and M. P is not an immediate neighbour of J. Who sits second to the right of O?",
+      "options": [
+        "K",
+        "J",
+        "M",
+        "N"
+      ],
+      "correctIndex": 2,
+      "explanation": "Fix J. K is second to J's left; counting three seats to K's right lands M immediately to J's right. N is next to M with L beyond. The remaining two seats are for O and P; P cannot be next to J, so O is on J's left. Two seats to O's right are J and then M.",
+      "topic": "Logical reasoning: Seating arrangement (circular)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Statements:\nNo cars are buses.\nSome buses are trucks.\nAll trucks are vans.\n\nConclusions:\nI. Some vans are not cars.\nII. Some trucks are not cars.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Neither conclusion I nor II follows",
+        "Only conclusion I follows",
+        "Only conclusion II follows",
+        "Both conclusions I and II follow"
+      ],
+      "correctIndex": 3,
+      "explanation": "Take a bus that is a truck: it is also a van, and being a bus it is not a car. So some vans are not cars (I) and some trucks are not cars (II).",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Which of the following sentences about a trip to Jaipur is grammatically correct?",
+      "options": [
+        "I visited Jaipur last year.",
+        "I was visit Jaipur last year.",
+        "I am visiting Jaipur last year.",
+        "I have visited Jaipur last year."
+      ],
+      "correctIndex": 0,
+      "explanation": "A finished action at a stated past time ('last year') takes the simple past. The present perfect cannot be used with a specific past time expression.",
+      "topic": "Verbal: Sentence correction (tenses)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. Next, it is ground together with soaked urad dal into a smooth batter.\nQ. Finally, the fermented batter is poured into moulds and steamed to make idlis.\nR. The batter is then left overnight to ferment.\nS. First, the rice is soaked in water for a few hours.",
+      "options": [
+        "SRPQ",
+        "SPRQ",
+        "SPQR",
+        "PSRQ"
+      ],
+      "correctIndex": 1,
+      "explanation": "The markers 'First', 'Next', 'then' and 'Finally' give the order S, P, R, Q.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Choose the option that correctly fills the blank.\n\nThe new phone is expensive; ______, its battery life is far better than that of its rivals.",
+      "options": [
+        "therefore",
+        "for example",
+        "as a result",
+        "however"
+      ],
+      "correctIndex": 3,
+      "explanation": "The second clause offers a point in the phone's favour after a drawback, so a contrast connector ('however') is needed.",
+      "topic": "Verbal: Sentence completion (connectors)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Choose the option that correctly fills the blank.\n\nNot only the students but also the teacher ______ surprised by the result.",
+      "options": [
+        "were",
+        "have been",
+        "was",
+        "are"
+      ],
+      "correctIndex": 2,
+      "explanation": "With 'not only … but also', the verb agrees with the nearer subject, 'the teacher' (singular), so 'was' is correct.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the word or phrase closest in meaning to 'poignant' as used in the sentence.\n\nThe documentary gives a poignant account of families who lost their homes to the flood.",
+      "options": [
+        "deeply moving",
+        "brief",
+        "inaccurate",
+        "humorous"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Poignant' means evoking a strong sense of sadness or emotion.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the correct spelling of the word that means 'required or essential'.",
+      "options": [
+        "Necesary",
+        "Neccessary",
+        "Necessary",
+        "Neccesary"
+      ],
+      "correctIndex": 2,
+      "explanation": "The correct spelling has one 'c' and a double 's': necessary.",
+      "topic": "Verbal: Spelling",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nNo sooner did the bell ring / when the students / rushed out / of the classroom.",
+      "options": [
+        "when the students",
+        "of the classroom.",
+        "rushed out",
+        "No sooner did the bell ring"
+      ],
+      "correctIndex": 0,
+      "explanation": "'No sooner' is paired with 'than', not 'when': 'No sooner did the bell ring than the students rushed out…'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Read the passage and answer the question.\n\nCoral reefs cover less than one percent of the ocean floor, yet they support about a quarter of all marine species. When sea temperatures stay even slightly high for several weeks, corals expel the tiny algae living in their tissues, lose their colour, and may die. This process is known as bleaching. Reefs can recover if temperatures return to normal quickly, but repeated bleaching events leave them little time to do so.\n\nAccording to the passage, why are repeated bleaching events especially harmful?",
+      "options": [
+        "They leave reefs little time to recover between events.",
+        "They permanently lower sea temperatures.",
+        "They increase the area covered by reefs.",
+        "They cause algae to multiply inside corals."
+      ],
+      "correctIndex": 0,
+      "explanation": "The last sentence says reefs can recover if temperatures return to normal quickly, but repeated events leave them little time to do so.",
+      "topic": "Verbal: Reading comprehension (detail)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger c\nSet c = 0\nfor (each i from 1 to 4)\n    for (each j from i to 4)\n        c = c + 1\n    end for\nend for\nPrint c",
+      "options": [
+        "6",
+        "4",
+        "16",
+        "10"
+      ],
+      "correctIndex": 3,
+      "explanation": "For i = 1, 2, 3, 4 the inner loop runs 4, 3, 2, 1 times. Total = 10.",
+      "topic": "Pseudocode: Nested loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger n, c\nSet n = 40500, c = 0\nwhile (n > 0)\n    if ((n mod 10) == 0)\n        c = c + 1\n    end if\n    n = n / 10    // integer division\nend while\nPrint c",
+      "options": [
+        "4",
+        "5",
+        "2",
+        "3"
+      ],
+      "correctIndex": 3,
+      "explanation": "The digits of 40500 read from the right are 0, 0, 5, 0, 4. Three of them are 0.",
+      "topic": "Pseudocode: While loop (digits)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a\nSet a = 2\nfor (each i from 1 to 4)\n    a = (a * a) mod 7\nend for\nPrint a",
+      "options": [
+        "2",
+        "4",
+        "0",
+        "1"
+      ],
+      "correctIndex": 0,
+      "explanation": "a goes 2 → 4 → 16 mod 7 = 2 → 4 → 2. After 4 iterations a = 2.",
+      "topic": "Pseudocode: Loops (mod)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[6] = {5, 3, 8, 1, 9, 2}\nInteger temp\nfor (each i from 0 to 4)\n    if (arr[i] > arr[i + 1])\n        temp = arr[i]\n        arr[i] = arr[i + 1]\n        arr[i + 1] = temp\n    end if\nend for\nPrint all elements of arr from index 0 to 5\n\n(Array indices start at 0.)",
+      "options": [
+        "1, 2, 3, 5, 8, 9",
+        "3, 5, 1, 8, 2, 9",
+        "3, 5, 8, 1, 2, 9",
+        "3, 1, 5, 2, 8, 9"
+      ],
+      "correctIndex": 1,
+      "explanation": "One bubble pass swaps (5, 3), (8, 1) and (9, 2), giving 3, 5, 1, 8, 2, 9. The largest value moves to the end, but the array is not fully sorted.",
+      "topic": "Pseudocode: Arrays (sorting pass)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "A book has pages numbered from 1 to 150. How many digits are printed in total to number all the pages?",
+      "options": [
+        "333",
+        "342",
+        "351",
+        "450"
+      ],
+      "correctIndex": 1,
+      "explanation": "Pages 1–9 use 9 digits, pages 10–99 use 90 × 2 = 180, and pages 100–150 use 51 × 3 = 153. Total = 9 + 180 + 153 = 342.",
+      "topic": "Puzzles: Counting (digits)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "A number between 100 and 200 leaves a remainder of 2 when divided by 3, by 4 and by 5, and it is exactly divisible by 7. What is the number?",
+      "options": [
+        "162",
+        "122",
+        "182",
+        "142"
+      ],
+      "correctIndex": 2,
+      "explanation": "Numbers leaving remainder 2 on division by 3, 4 and 5 are 60k + 2: 122 and 182 lie between 100 and 200. Only 182 = 7 × 26 is divisible by 7.",
+      "topic": "Puzzles: Number puzzle",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

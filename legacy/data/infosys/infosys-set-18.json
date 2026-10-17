@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A boat's speed in still water is 12 km/h and the speed of the stream is 3 km/h. How long will the boat take to travel 45 km downstream?",
+      "options": [
+        "3 hours",
+        "3.75 hours",
+        "4 hours",
+        "5 hours"
+      ],
+      "correctIndex": 0,
+      "explanation": "Downstream speed = 12 + 3 = 15 km/h. Time = 45/15 = 3 hours.",
+      "topic": "Quantitative: Boats and streams",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "What is the smallest number that must be added to 2,345 to make it exactly divisible by 13?",
+      "options": [
+        "9",
+        "5",
+        "8",
+        "6"
+      ],
+      "correctIndex": 2,
+      "explanation": "2345 = 13 × 180 + 5, so the remainder is 5. Adding 13 − 5 = 8 gives 2353 = 13 × 181.",
+      "topic": "Quantitative: Number system (divisibility)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "Three alarms ring at intervals of 12, 18 and 30 minutes. They all ring together at 9:00 a.m. When will they next ring together?",
+      "options": [
+        "10:30 a.m.",
+        "12:00 noon",
+        "11:00 a.m.",
+        "1:00 p.m."
+      ],
+      "correctIndex": 1,
+      "explanation": "LCM of 12, 18 and 30 is 180 minutes = 3 hours, so they next ring together at 12:00 noon.",
+      "topic": "Quantitative: HCF and LCM",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "Two fair dice are rolled together. What is the probability that the sum of the numbers shown is 8?",
+      "options": [
+        "1/6",
+        "1/9",
+        "5/36",
+        "7/36"
+      ],
+      "correctIndex": 2,
+      "explanation": "Favourable outcomes are (2,6), (3,5), (4,4), (5,3), (6,2): 5 out of 36.",
+      "topic": "Quantitative: Probability",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "A store's monthly sales (in ₹ lakh) were: January 12, February 15, March 18, April 15. By what percentage did March sales exceed February sales?",
+      "options": [
+        "18%",
+        "25%",
+        "20%",
+        "16.67%"
+      ],
+      "correctIndex": 2,
+      "explanation": "Increase = 18 − 15 = 3 lakh on a base of 15 lakh. Percentage = 3/15 × 100 = 20%.",
+      "topic": "Quantitative: Data interpretation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "How many three-digit even numbers can be formed using the digits 1, 2, 3, 4 and 5 if no digit is repeated?",
+      "options": [
+        "36",
+        "24",
+        "60",
+        "48"
+      ],
+      "correctIndex": 1,
+      "explanation": "The units digit must be 2 or 4 (2 ways); the hundreds and tens places then have 4 × 3 = 12 ways. Total = 2 × 12 = 24.",
+      "topic": "Quantitative: Permutations and combinations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "If x + 1/x = 5, what is the value of x³ + 1/x³?",
+      "options": [
+        "110",
+        "115",
+        "120",
+        "125"
+      ],
+      "correctIndex": 0,
+      "explanation": "x³ + 1/x³ = (x + 1/x)³ − 3(x + 1/x) = 125 − 15 = 110.",
+      "topic": "Quantitative: Algebra",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A trader mixes tea costing ₹180 per kg with tea costing ₹260 per kg and sells the mixture at ₹264 per kg, making a 10% profit. In what ratio did he mix the cheaper and the costlier tea?",
+      "options": [
+        "3 : 1",
+        "1 : 3",
+        "2 : 3",
+        "1 : 2"
+      ],
+      "correctIndex": 1,
+      "explanation": "Cost price of the mixture = 264/1.1 = ₹240. By alligation, cheaper : costlier = (260 − 240) : (240 − 180) = 20 : 60 = 1 : 3.",
+      "topic": "Quantitative: Mixtures and alligation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "15 August 2026 falls on a Saturday. On which day of the week will 15 August 2027 fall?",
+      "options": [
+        "Friday",
+        "Sunday",
+        "Saturday",
+        "Monday"
+      ],
+      "correctIndex": 1,
+      "explanation": "The period from 15 August 2026 to 15 August 2027 has 365 days (February 2027 has 28 days). 365 = 52 weeks + 1 day, so the day moves forward by one: Sunday.",
+      "topic": "Logical reasoning: Calendars",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "In a class of 40 students, Rahul ranks 9th from the top. What is his rank from the bottom?",
+      "options": [
+        "33rd",
+        "31st",
+        "30th",
+        "32nd"
+      ],
+      "correctIndex": 3,
+      "explanation": "Rank from bottom = 40 − 9 + 1 = 32.",
+      "topic": "Logical reasoning: Ranking and order",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "In a certain code, MOBILE is written as NLYROV. How is SILVER written in that code?",
+      "options": [
+        "RIEVOH",
+        "HRPEVI",
+        "HROEVI",
+        "TJMWFS"
+      ],
+      "correctIndex": 2,
+      "explanation": "Each letter is replaced by its opposite letter in the alphabet (A↔Z, B↔Y, …): S→H, I→R, L→O, V→E, E→V, R→I.",
+      "topic": "Logical reasoning: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Statement: The municipal corporation has announced that the water supply in Ward 5 will be stopped on Sunday from 10 a.m. to 4 p.m. for repairs to a pipeline in the ward.\n\nConclusions:\nI. Ward 5 will not get piped water for six hours on Sunday.\nII. A pipeline in Ward 5 needs repair.\n\nWhich conclusion(s) follow from the statement?",
+      "options": [
+        "Only conclusion I follows",
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Both conclusions I and II follow"
+      ],
+      "correctIndex": 3,
+      "explanation": "10 a.m. to 4 p.m. is six hours, so I follows. The stated reason is pipeline repair in the ward, so II also follows.",
+      "topic": "Logical reasoning: Statement and conclusions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Each question below has two statements. Decide whether the data in the statements is sufficient to answer the question.\n\nQuestion: What is Ravi's present age?\nI. Ravi is 4 years older than Sita.\nII. Sita's age is half of Ravi's age.",
+      "options": [
+        "Statement I alone is sufficient, but statement II alone is not",
+        "Statement II alone is sufficient, but statement I alone is not",
+        "Each statement alone is sufficient",
+        "Both statements together are sufficient, but neither alone is"
+      ],
+      "correctIndex": 3,
+      "explanation": "Neither statement alone fixes Ravi's age. Together, R = S + 4 and S = R/2 give R = 8 years.",
+      "topic": "Logical reasoning: Data sufficiency",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Find the next number in the series: 6, 7, 10, 19, 46, ?",
+      "options": [
+        "92",
+        "137",
+        "127",
+        "118"
+      ],
+      "correctIndex": 2,
+      "explanation": "The differences are 1, 3, 9, 27 (powers of 3). The next difference is 81, so 46 + 81 = 127.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Statements:\nAll stars are planets.\nSome planets are moons.\n\nConclusions:\nI. Some moons are stars is a possibility.\nII. All stars are moons is a possibility.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Both conclusions I and II follow",
+        "Only conclusion II follows",
+        "Only conclusion I follows",
+        "Neither conclusion I nor II follows"
+      ],
+      "correctIndex": 0,
+      "explanation": "Nothing in the statements rules out moons overlapping with stars, so I is possible. All stars could also lie inside the moons that are planets, so II is possible too.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Six friends — Gita, Hari, Ishaan, Jaya, Kunal and Lata — sit in a row facing south. Hari sits at one of the ends. Jaya sits third to the right of Hari. Ishaan sits immediately to the left of Jaya. Kunal is not an immediate neighbour of Hari. Gita does not sit at either end. Lata sits immediately to the right of Kunal. Who sits immediately to the right of Hari?",
+      "options": [
+        "Ishaan",
+        "Kunal",
+        "Lata",
+        "Gita"
+      ],
+      "correctIndex": 3,
+      "explanation": "Facing south, a person's right is towards the west. Hari must be at the east end so that Jaya can be third to his right; Ishaan is next to Jaya on the east side. Kunal cannot be beside Hari and Lata is to Kunal's right, which leaves Gita beside Hari.",
+      "topic": "Logical reasoning: Seating arrangement (linear)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the word or phrase closest in meaning to 'lucid' as used in the sentence.\n\nThe speaker gave a lucid explanation of a complex topic.",
+      "options": [
+        "clear",
+        "lengthy",
+        "humorous",
+        "confusing"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Lucid' means expressed clearly and easy to understand.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Choose the option that correctly fills the blank.\n\nThe roads were flooded after the storm; ______, the school declared a holiday.",
+      "options": [
+        "nevertheless",
+        "in contrast",
+        "consequently",
+        "however"
+      ],
+      "correctIndex": 2,
+      "explanation": "The second clause is a result of the first, so a cause-and-effect connector ('consequently') is needed, not a contrast word.",
+      "topic": "Verbal: Sentence completion (connectors)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nMy father, who is a doctor, / has been working / in this hospital / since fifteen years.",
+      "options": [
+        "in this hospital",
+        "My father, who is a doctor,",
+        "has been working",
+        "since fifteen years."
+      ],
+      "correctIndex": 3,
+      "explanation": "'Since' is used with a point in time; for a period of time, 'for' is used: 'for fifteen years'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Read the passage and answer the question.\n\nWhen the city introduced dedicated bus lanes on its busiest road, average bus travel time during peak hours fell by nearly a quarter. Car users initially complained that the remaining lanes had become more crowded. Within a year, however, bus ridership on that route rose sharply, and traffic surveys recorded fewer private cars on the road.\n\nWhich of the following can most reasonably be inferred from the passage?",
+      "options": [
+        "The city removed the bus lanes after one year.",
+        "Some former car users probably started taking the bus.",
+        "Car users were still complaining after one year.",
+        "The bus lanes made peak-hour travel slower for bus passengers."
+      ],
+      "correctIndex": 1,
+      "explanation": "Bus ridership rose while the number of private cars fell, which suggests that some car users switched to buses. The other options contradict the passage or are not supported by it.",
+      "topic": "Verbal: Reading comprehension (inference)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the option that correctly fills the blank.\n\nBy the time the guests arrived, we ______ the hall.",
+      "options": [
+        "had decorated",
+        "have decorated",
+        "decorate",
+        "will decorate"
+      ],
+      "correctIndex": 0,
+      "explanation": "An action completed before another past action ('arrived') takes the past perfect: 'had decorated'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the one word that can replace the phrase:\n\nA speech made without any prior preparation",
+      "options": [
+        "Monologue",
+        "Extempore",
+        "Soliloquy",
+        "Dialogue"
+      ],
+      "correctIndex": 1,
+      "explanation": "'Extempore' means spoken without preparation. A monologue or soliloquy is a long speech by one person, and a dialogue is a conversation.",
+      "topic": "Verbal: One-word substitution",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Which of the following sentences about a person's hobbies is grammatically correct?",
+      "options": [
+        "She likes to read, swimming and to cycle.",
+        "She likes reading, to swim and cycling.",
+        "She likes read, swim and cycling.",
+        "She likes reading, swimming and cycling."
+      ],
+      "correctIndex": 3,
+      "explanation": "Items in a list should be in the same grammatical form. Only 'reading, swimming and cycling' keeps all three as -ing forms.",
+      "topic": "Verbal: Sentence correction (parallelism)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. It also requires careful testing with the people who will actually use it.\nQ. That is why many companies now involve users from the earliest stages of design.\nR. Good software is not built by writing code alone.\nS. Without such testing, even well-designed systems can fail when they meet real users.",
+      "options": [
+        "RPQS",
+        "RPSQ",
+        "PRSQ",
+        "RSPQ"
+      ],
+      "correctIndex": 1,
+      "explanation": "R makes the claim; P ('It also requires') extends it; S ('Without such testing') explains the risk; Q ('That is why') draws the conclusion.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger x\nSet x = 17\nx = (x mod 5) + (x / 5)    // integer division\nPrint x",
+      "options": [
+        "5",
+        "2",
+        "3",
+        "8"
+      ],
+      "correctIndex": 0,
+      "explanation": "17 mod 5 = 2 and 17/5 = 3 (integer division). x = 2 + 3 = 5.",
+      "topic": "Pseudocode: Operators (mod and integer division)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger x, c\nSet x = 100, c = 0\nwhile (x > 1)\n    x = x / 3    // integer division\n    c = c + 1\nend while\nPrint c",
+      "options": [
+        "4",
+        "3",
+        "5",
+        "33"
+      ],
+      "correctIndex": 0,
+      "explanation": "x goes 100 → 33 → 11 → 3 → 1, which is 4 divisions, so c = 4.",
+      "topic": "Pseudocode: While loop",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 12, b = 10\nPrint (a AND b) + (a OR b)\n\n(AND and OR are bitwise operators.)",
+      "options": [
+        "14",
+        "26",
+        "22",
+        "8"
+      ],
+      "correctIndex": 2,
+      "explanation": "12 AND 10 = 1100 AND 1010 = 1000 = 8; 12 OR 10 = 1110 = 14. Sum = 22.",
+      "topic": "Pseudocode: Bitwise operators",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer n)\n    if (n <= 1)\n        return 1\n    end if\n    return n + fun(n - 2)\nEnd function\n\nPrint fun(7)",
+      "options": [
+        "13",
+        "28",
+        "16",
+        "15"
+      ],
+      "correctIndex": 2,
+      "explanation": "fun(7) = 7 + fun(5) = 7 + 5 + fun(3) = 7 + 5 + 3 + fun(1) = 15 + 1 = 16.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Find the missing number. Each row follows the same rule.\n\nRow 1: 3, 5, 34\nRow 2: 4, 6, 52\nRow 3: 2, 7, ?",
+      "options": [
+        "53",
+        "81",
+        "18",
+        "45"
+      ],
+      "correctIndex": 0,
+      "explanation": "The third number is the sum of the squares of the first two: 3² + 5² = 34, 4² + 6² = 52, so 2² + 7² = 53.",
+      "topic": "Puzzles: Number grid",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "A two-digit number AB is added to the number formed by reversing its digits (BA), and the sum is 121. The tens digit A is 5 more than the units digit B. What is the number AB?",
+      "options": [
+        "38",
+        "74",
+        "92",
+        "83"
+      ],
+      "correctIndex": 3,
+      "explanation": "AB + BA = 11(A + B) = 121, so A + B = 11. With A − B = 5, A = 8 and B = 3. Check: 83 + 38 = 121.",
+      "topic": "Puzzles: Digit puzzle",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

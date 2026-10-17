@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A tap can fill a tank in 6 hours. Because of a leak at the bottom, it takes 8 hours to fill the tank. How long would the leak take to empty the full tank?",
+      "options": [
+        "24 hours",
+        "2 hours",
+        "48 hours",
+        "14 hours"
+      ],
+      "correctIndex": 0,
+      "explanation": "Leak rate = 1/6 − 1/8 = 1/24 per hour, so the leak empties the full tank in 24 hours.",
+      "topic": "Quantitative: Pipes and cisterns",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "Simplify: (0.83 × 0.83 × 0.83 + 0.17 × 0.17 × 0.17) ÷ (0.83 × 0.83 − 0.83 × 0.17 + 0.17 × 0.17)",
+      "options": [
+        "0.66",
+        "1.34",
+        "1",
+        "0.5"
+      ],
+      "correctIndex": 2,
+      "explanation": "Using a³ + b³ = (a + b)(a² − ab + b²), the expression equals a + b = 0.83 + 0.17 = 1.",
+      "topic": "Quantitative: Simplification",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "By selling a bicycle for ₹4,410, a dealer loses 2%. At what price should he sell it to gain 8%?",
+      "options": [
+        "₹4,950",
+        "₹4,800",
+        "₹4,851",
+        "₹4,860"
+      ],
+      "correctIndex": 3,
+      "explanation": "Cost price = 4410/0.98 = ₹4,500. For an 8% gain, selling price = 4500 × 1.08 = ₹4,860.",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "What is the compound interest on ₹20,000 for 3 years at 10% per annum, compounded annually?",
+      "options": [
+        "₹6,000",
+        "₹6,820",
+        "₹6,200",
+        "₹6,620"
+      ],
+      "correctIndex": 3,
+      "explanation": "Amount = 20000 × 1.1³ = ₹26,620. Compound interest = 26620 − 20000 = ₹6,620.",
+      "topic": "Quantitative: Compound interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "The average of 11 results is 50. The average of the first six results is 49 and the average of the last six results is 52. What is the sixth result?",
+      "options": [
+        "50",
+        "56",
+        "58",
+        "54"
+      ],
+      "correctIndex": 1,
+      "explanation": "The sixth result is counted in both groups: 6 × 49 + 6 × 52 − 11 × 50 = 294 + 312 − 550 = 56.",
+      "topic": "Quantitative: Averages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "Ten years ago, a father was three times as old as his son. Ten years from now, he will be twice as old as his son. What is the father's present age?",
+      "options": [
+        "80 years",
+        "60 years",
+        "50 years",
+        "70 years"
+      ],
+      "correctIndex": 3,
+      "explanation": "F − 10 = 3(S − 10) and F + 10 = 2(S + 10). Solving gives S = 30 and F = 70.",
+      "topic": "Quantitative: Problems on ages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "12 men or 18 women can complete a job in 14 days. In how many days can 8 men and 16 women together complete the same job?",
+      "options": [
+        "9 days",
+        "12 days",
+        "10.5 days",
+        "8 days"
+      ],
+      "correctIndex": 0,
+      "explanation": "12 men = 18 women, so 1 man = 1.5 women. 8 men + 16 women = 28 women. Work = 18 × 14 = 252 woman-days, so time = 252/28 = 9 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "Walking at 4/5 of her usual speed, Priya reaches her office 9 minutes late. What is her usual time to reach the office?",
+      "options": [
+        "27 minutes",
+        "45 minutes",
+        "36 minutes",
+        "40 minutes"
+      ],
+      "correctIndex": 2,
+      "explanation": "At 4/5 of the speed, time becomes 5/4 of usual. The extra 1/4 of the usual time is 9 minutes, so the usual time is 36 minutes.",
+      "topic": "Quantitative: Speed, time and distance",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Five friends — Arun, Bina, Chetan, Divya and Esha — sit in a row facing north. Chetan sits in the middle. Bina sits second to the right of Chetan. Divya sits immediately to the left of Chetan. Arun does not sit at either end. Who sits at the extreme left end?",
+      "options": [
+        "Arun",
+        "Divya",
+        "Bina",
+        "Esha"
+      ],
+      "correctIndex": 3,
+      "explanation": "Positions from left: Chetan 3rd, Divya 2nd, Bina 5th. Arun cannot be at an end, so Arun is 4th and Esha is 1st (extreme left).",
+      "topic": "Logical reasoning: Seating arrangement (linear)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Find the next number in the series: 120, 99, 80, 63, 48, ?",
+      "options": [
+        "36",
+        "37",
+        "33",
+        "35"
+      ],
+      "correctIndex": 3,
+      "explanation": "The terms are 11² − 1, 10² − 1, 9² − 1, 8² − 1, 7² − 1; the next is 6² − 1 = 35. (Differences 21, 19, 17, 15, 13 also confirm it.)",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Statement: A notice from the organisers of a technology conference says, \"Register before 30 November to get a 20% discount on the conference fee.\"\n\nAssumptions:\nI. Some people would like to pay a lower fee.\nII. The conference will be cancelled if fewer people register.\n\nWhich assumption(s) are implicit in the statement?",
+      "options": [
+        "Both assumptions I and II are implicit",
+        "Only assumption I is implicit",
+        "Neither assumption I nor II is implicit",
+        "Only assumption II is implicit"
+      ],
+      "correctIndex": 1,
+      "explanation": "Offering a discount assumes people value a lower fee, so I is implicit. Nothing in the notice suggests cancellation, so II is not.",
+      "topic": "Logical reasoning: Statement and assumptions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Find the next letter in the series: Z, W, S, N, H, ?",
+      "options": [
+        "C",
+        "B",
+        "D",
+        "A"
+      ],
+      "correctIndex": 3,
+      "explanation": "Moving backwards by 3, 4, 5, 6 and then 7 places: H (8th letter) − 7 = A (1st letter).",
+      "topic": "Logical reasoning: Letter series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statements:\nSome keys are locks.\nSome locks are doors.\n\nConclusions:\nI. Some keys are doors.\nII. Some doors are locks.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Only conclusion I follows",
+        "Both conclusions I and II follow",
+        "Only conclusion II follows",
+        "Neither conclusion I nor II follows"
+      ],
+      "correctIndex": 2,
+      "explanation": "Two 'some' statements give no definite link between keys and doors, so I does not follow. 'Some locks are doors' converts to 'Some doors are locks', so II follows.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "In a row, Ajay is 10th from the left and Vijay is 15th from the right. When they exchange places, Ajay becomes 18th from the left. How many people are in the row?",
+      "options": [
+        "31",
+        "32",
+        "28",
+        "33"
+      ],
+      "correctIndex": 1,
+      "explanation": "Ajay's new place is Vijay's old place, which is 18th from the left and 15th from the right. Total = 18 + 15 − 1 = 32.",
+      "topic": "Logical reasoning: Ranking and order",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "A $ B means A is the mother of B; A # B means A is the brother of B; A @ B means A is the husband of B; A & B means A is the daughter of B. If P # Q $ R @ S & T, which of the following is true?",
+      "options": [
+        "P is the father of S",
+        "R is the son of T",
+        "P is the maternal uncle of R",
+        "Q is the mother-in-law of T"
+      ],
+      "correctIndex": 2,
+      "explanation": "P is Q's brother and Q is R's mother, so P is R's maternal uncle. R is S's husband and S is T's daughter, so R is T's son-in-law and Q is S's mother-in-law, not T's.",
+      "topic": "Logical reasoning: Blood relations (coded)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "BDFH : YWUS :: CEGI : ?",
+      "options": [
+        "XVTR",
+        "DFHJ",
+        "WUSQ",
+        "XWUS"
+      ],
+      "correctIndex": 0,
+      "explanation": "Each letter is replaced by its opposite in the alphabet (B↔Y, D↔W, F↔U, H↔S). For CEGI: C↔X, E↔V, G↔T, I↔R, giving XVTR.",
+      "topic": "Logical reasoning: Analogy (letters)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. A bill is first introduced in either House of Parliament.\nQ. Next, the bill is sent to the President for assent.\nR. Once the President gives assent, the bill becomes an Act.\nS. After being debated and passed by one House, it goes to the other House for approval.",
+      "options": [
+        "PSQR",
+        "SPQR",
+        "PSRQ",
+        "PQSR"
+      ],
+      "correctIndex": 0,
+      "explanation": "The process runs: introduction (P), passage through both Houses (S), sending to the President (Q, 'Next'), and becoming an Act after assent (R).",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Choose the correct indirect (reported) form:\n\nMeena said, \"I am preparing for my exams.\"",
+      "options": [
+        "Meena said that she is preparing for my exams.",
+        "Meena said that she was preparing for her exams.",
+        "Meena said that I was preparing for her exams.",
+        "Meena said that she had been prepare for her exams."
+      ],
+      "correctIndex": 1,
+      "explanation": "With a past reporting verb, 'am preparing' shifts to 'was preparing', and 'I/my' change to 'she/her'.",
+      "topic": "Verbal: Direct and indirect speech",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Read the passage and answer the question.\n\nElectric two-wheelers have become popular in Indian cities, partly because their running cost per kilometre is a fraction of that of petrol scooters. Yet buyers in smaller towns remain hesitant. Dealers report that the most common concern is not the price of the vehicle but the lack of public charging points on highways and in rural areas.\n\nAccording to the dealers, what most often makes buyers in smaller towns hesitate?",
+      "options": [
+        "The high running cost per kilometre.",
+        "The poor resale value of electric vehicles.",
+        "The lack of public charging points.",
+        "The price of the vehicle."
+      ],
+      "correctIndex": 2,
+      "explanation": "Dealers say the most common concern is 'not the price of the vehicle but the lack of public charging points'.",
+      "topic": "Verbal: Reading comprehension (detail)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Choose the option that correctly fills the blank.\n\nDuring the press conference, the minister avoided ______ the question directly.",
+      "options": [
+        "answer",
+        "to answering",
+        "to answer",
+        "answering"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Avoid' is followed by a gerund (-ing form), not a to-infinitive: 'avoided answering'.",
+      "topic": "Verbal: Fill in the blank (gerunds and infinitives)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nUnless you do not submit / the form by Friday, / your application / will be rejected.",
+      "options": [
+        "will be rejected.",
+        "your application",
+        "the form by Friday,",
+        "Unless you do not submit"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Unless' already means 'if not', so adding 'do not' creates a double negative. It should be 'Unless you submit…'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the option that correctly fills the blank.\n\nThe new leave policy will come ______ effect from 1 April.",
+      "options": [
+        "to",
+        "on",
+        "into",
+        "in"
+      ],
+      "correctIndex": 2,
+      "explanation": "The fixed phrase is 'come into effect' (or 'take effect').",
+      "topic": "Verbal: Prepositions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Which of the following sentences about a wet floor is grammatically correct?",
+      "options": [
+        "Walk carefully lest you will slip on the wet floor.",
+        "Walk carefully lest you should slip on the wet floor.",
+        "Walk carefully lest you would slip on the wet floor.",
+        "Walk carefully lest you do not slip on the wet floor."
+      ],
+      "correctIndex": 1,
+      "explanation": "'Lest' means 'for fear that' and is followed by 'should' + base verb (or the base verb alone). It already carries a negative sense, so 'not' is wrong.",
+      "topic": "Verbal: Sentence correction (conjunctions)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Choose the word or phrase closest in meaning to 'perfunctory' as used in the sentence.\n\nThe report was criticised for its perfunctory analysis of the survey data.",
+      "options": [
+        "expensive",
+        "thorough",
+        "superficial",
+        "original"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Perfunctory' means done with minimum effort and without care, i.e. superficial.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b, c\nSet a = 7, b = 3\nc = a * b - a / b    // integer division\nPrint c",
+      "options": [
+        "19",
+        "14",
+        "21",
+        "18"
+      ],
+      "correctIndex": 0,
+      "explanation": "7 × 3 = 21 and 7/3 = 2 (integer division). c = 21 − 2 = 19.",
+      "topic": "Pseudocode: Operators",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger s\nSet s = 0\nfor (each i from 1 to 20)\n    s = s + i\n    if (s > 30)\n        break    // exit the loop\n    end if\nend for\nPrint i",
+      "options": [
+        "8",
+        "36",
+        "9",
+        "7"
+      ],
+      "correctIndex": 0,
+      "explanation": "The running sums are 1, 3, 6, 10, 15, 21, 28, 36. s first exceeds 30 when i = 8, and the loop breaks there.",
+      "topic": "Pseudocode: Loops (break)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 5\na = a << 2    // left shift by 2 bits\nb = a >> 1    // right shift by 1 bit\nPrint a + b",
+      "options": [
+        "25",
+        "30",
+        "40",
+        "15"
+      ],
+      "correctIndex": 1,
+      "explanation": "5 << 2 = 20 (multiply by 4). 20 >> 1 = 10 (divide by 2). a + b = 30.",
+      "topic": "Pseudocode: Bit shift operators",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer a, Integer b)\n    if (a < b)\n        return a\n    end if\n    return fun(a - b, b) + 1\nEnd function\n\nPrint fun(17, 5)",
+      "options": [
+        "4",
+        "5",
+        "3",
+        "2"
+      ],
+      "correctIndex": 1,
+      "explanation": "fun(17, 5) = fun(12, 5) + 1 = fun(7, 5) + 2 = fun(2, 5) + 3 = 2 + 3 = 5.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Three siblings have different ages in whole years. The eldest is twice as old as the youngest, and the middle sibling is 3 years younger than the eldest. Their ages add up to 32. How old is the middle sibling?",
+      "options": [
+        "11 years",
+        "12 years",
+        "7 years",
+        "14 years"
+      ],
+      "correctIndex": 0,
+      "explanation": "Let the youngest be y. Then y + 2y + (2y − 3) = 32, so 5y = 35 and y = 7. The eldest is 14 and the middle sibling is 11.",
+      "topic": "Puzzles: Age puzzle",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "A month has 31 days, and its 1st day is a Wednesday. How many Saturdays are there in that month?",
+      "options": [
+        "6",
+        "4",
+        "5",
+        "3"
+      ],
+      "correctIndex": 1,
+      "explanation": "31 days = 4 full weeks + 3 extra days. The extra days are the first three weekdays of the month: Wednesday, Thursday and Friday, which occur 5 times. Saturday occurs only 4 times (the 4th, 11th, 18th and 25th).",
+      "topic": "Puzzles: Calendar puzzle",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

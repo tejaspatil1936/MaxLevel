@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the compound interest on ₹10,000 for 1 year at 8% per annum, compounded half-yearly?",
+      "options": [
+        "₹808",
+        "₹800",
+        "₹832",
+        "₹816"
+      ],
+      "correctIndex": 3,
+      "explanation": "Half-yearly rate = 4% for 2 periods. Amount = 10000 × 1.04² = ₹10,816, so the interest is ₹816.",
+      "topic": "Quantitative: Compound interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "The average marks of 40 students were calculated as 71.5. It was later found that one student's marks had been entered as 63 instead of 83. What is the correct average?",
+      "options": [
+        "71.75",
+        "71",
+        "72.5",
+        "72"
+      ],
+      "correctIndex": 3,
+      "explanation": "The total was understated by 83 − 63 = 20. Correct average = 71.5 + 20/40 = 72.",
+      "topic": "Quantitative: Averages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A family's monthly income of ₹60,000 is spent as follows: rent 30%, food 25%, transport 10%, education 15%, and the remaining 20% is saved. If food expenses rise by 20% while income and the other expenses stay the same, what will the monthly savings become?",
+      "options": [
+        "₹9,000",
+        "₹10,000",
+        "₹12,000",
+        "₹9,600"
+      ],
+      "correctIndex": 0,
+      "explanation": "Food = ₹15,000, which rises by 20% to ₹18,000, an extra ₹3,000. Savings fall from ₹12,000 to ₹9,000.",
+      "topic": "Quantitative: Data interpretation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "A trader buys pens at 6 for ₹50 and sells them at 5 for ₹48. What is his profit percentage?",
+      "options": [
+        "14%",
+        "13.2%",
+        "16%",
+        "15.2%"
+      ],
+      "correctIndex": 3,
+      "explanation": "Cost per pen = 50/6 = ₹8.33; selling price per pen = 48/5 = ₹9.60. Profit % = (9.60 − 8.33)/8.33 × 100 = 15.2% (exactly 9.6 × 6/50 = 1.152).",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "The sum of the present ages of a mother and her daughter is 50 years. Five years ago, the mother was 7 times as old as the daughter. After how many years will the mother be twice as old as the daughter?",
+      "options": [
+        "10 years",
+        "20 years",
+        "15 years",
+        "30 years"
+      ],
+      "correctIndex": 1,
+      "explanation": "M + D = 50 and M − 5 = 7(D − 5) give D = 10 and M = 40. Then 40 + t = 2(10 + t), so t = 20 years.",
+      "topic": "Quantitative: Problems on ages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "What is the value of 1/(√2 + 1) + 1/(√3 + √2) + 1/(√4 + √3) + 1/(√5 + √4) + 1/(√6 + √5) + 1/(√7 + √6)?",
+      "options": [
+        "6",
+        "√7 − √2",
+        "√7 − 1",
+        "√7 + 1"
+      ],
+      "correctIndex": 2,
+      "explanation": "Rationalising gives 1/(√(k + 1) + √k) = √(k + 1) − √k. The sum telescopes to √7 − 1.",
+      "topic": "Quantitative: Simplification (surds)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "In an election between two candidates, 20% of the registered voters did not vote and 500 of the votes cast were invalid. The winner received 55% of the valid votes and won by 1,800 votes. How many voters were registered?",
+      "options": [
+        "23,000",
+        "22,500",
+        "23,125",
+        "23,750"
+      ],
+      "correctIndex": 2,
+      "explanation": "The margin is 10% of valid votes, so valid votes = 18,000 and votes cast = 18,500. Registered voters = 18500/0.8 = 23,125.",
+      "topic": "Quantitative: Percentages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A sum of money is divided among Asha, Bina and Charu. Asha gets two-thirds of what Bina and Charu together get, and Bina gets one-fourth of what Asha and Charu together get. If Asha gets ₹4,000 more than Bina, what is the total sum?",
+      "options": [
+        "₹16,000",
+        "₹20,000",
+        "₹24,000",
+        "₹12,000"
+      ],
+      "correctIndex": 1,
+      "explanation": "Asha = 2/3 of the rest means Asha = 2/5 of the total; Bina = 1/4 of the rest means Bina = 1/5 of the total. The difference is 1/5 of the total = ₹4,000, so the total is ₹20,000.",
+      "topic": "Quantitative: Ratio and proportion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "P + Q means P is the father of Q; P − Q means P is the wife of Q; P × Q means P is the brother of Q. If A − B + C × D, how is A related to D?",
+      "options": [
+        "Sister",
+        "Mother",
+        "Grandmother",
+        "Aunt"
+      ],
+      "correctIndex": 1,
+      "explanation": "A is B's wife, B is C's father, and C is D's brother, so B is D's father too. A, B's wife, is D's mother.",
+      "topic": "Logical reasoning: Blood relations (coded)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "In a certain code, WINTER is written as YHPSGQ. How is SUMMER written in that code?",
+      "options": [
+        "UTOLGQ",
+        "UVOLGS",
+        "TUNLFQ",
+        "UTOMGQ"
+      ],
+      "correctIndex": 0,
+      "explanation": "Letters in odd positions move 2 forward and letters in even positions move 1 back: S→U, U→T, M→O, M→L, E→G, R→Q.",
+      "topic": "Logical reasoning: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Each question below has two statements. Decide whether the data in the statements is sufficient to answer the question.\n\nQuestion: Is a > b, where a and b are real numbers?\nI. a − b = 3\nII. a² > b²",
+      "options": [
+        "Statement I alone is sufficient, but statement II alone is not",
+        "Each statement alone is sufficient",
+        "Statement II alone is sufficient, but statement I alone is not",
+        "Both statements together are sufficient, but neither alone is"
+      ],
+      "correctIndex": 0,
+      "explanation": "I gives a = b + 3, so a > b: sufficient. II fails for a = −3, b = 1 (a² > b² but a < b) and holds for a = 3, b = 1, so it is not sufficient.",
+      "topic": "Logical reasoning: Data sufficiency",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Find the odd one out: 165, 286, 473, 592",
+      "options": [
+        "165",
+        "286",
+        "592",
+        "473"
+      ],
+      "correctIndex": 2,
+      "explanation": "In 165, 286 and 473 the middle digit equals the sum of the outer digits (1 + 5 = 6, 2 + 6 = 8, 4 + 3 = 7), so each is a multiple of 11. In 592, 5 + 2 = 7, not 9.",
+      "topic": "Logical reasoning: Odd one out (numbers)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Find the next number in the series: 2, 3, 10, 39, 172, ?",
+      "options": [
+        "869",
+        "885",
+        "860",
+        "690"
+      ],
+      "correctIndex": 1,
+      "explanation": "Each term = previous × n + n² for n = 1, 2, 3, …: 2×1+1 = 3, 3×2+4 = 10, 10×3+9 = 39, 39×4+16 = 172, 172×5+25 = 885.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Statements:\nAll lions are tigers.\nSome tigers are not bears.\nAll bears are wolves.\n\nConclusions:\nI. Some lions are not bears.\nII. Some wolves are tigers.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Both conclusions I and II follow",
+        "Only conclusion I follows"
+      ],
+      "correctIndex": 0,
+      "explanation": "The tigers that are not bears need not include any lions, so I does not follow. Bears are wolves, but no statement links bears or wolves to tigers, so II does not follow.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "A clock lies face up on a table. At 3:00 p.m. its minute hand points north-east. In which direction will the hour hand point at 7:30 p.m.?",
+      "options": [
+        "North",
+        "West",
+        "East",
+        "South-West"
+      ],
+      "correctIndex": 1,
+      "explanation": "At 3:00 the minute hand is at 12, so the 12 mark points north-east. At 7:30 the hour hand is halfway between 7 and 8, which is 225° clockwise from 12. North-east (45°) + 225° = 270°, which is west.",
+      "topic": "Logical reasoning: Direction sense (clock)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "In a certain code:\nA © B means A is not smaller than B;\nA ★ B means A is neither greater than nor equal to B;\nA ◆ B means A is neither smaller than nor equal to B;\nA ▲ B means A is not greater than B;\nA ■ B means A is neither smaller nor greater than B.\n\nStatement: D ◆ E, E ■ F, F ▲ G, G ★ H\n\nConclusions:\nI. H ◆ F\nII. D ◆ G\n\nWhich of the conclusions is definitely true?",
+      "options": [
+        "Only I is definitely true",
+        "Only II is definitely true",
+        "Neither I nor II is definitely true",
+        "Both I and II are definitely true"
+      ],
+      "correctIndex": 0,
+      "explanation": "Decode: © is ≥, ★ is <, ◆ is >, ▲ is ≤, ■ is =. The statement is D > E = F ≤ G < H. I (H > F) is true because F ≤ G < H. II (D > G) cannot be determined.",
+      "topic": "Logical reasoning: Inequalities (coded)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Read the passage and answer the question.\n\nRainwater harvesting is the practice of collecting rain from rooftops and storing it for later use. In many Indian cities, apartment complexes now store this water in underground tanks or use it to recharge borewells. The practice reduces dependence on the municipal supply during summer and helps raise the groundwater level. However, the tanks must be cleaned regularly, or the stored water can become unsafe.\n\nAccording to the passage, what must be done for stored rainwater to remain safe?",
+      "options": [
+        "The municipal supply must be stopped in summer.",
+        "The water must be used only to recharge borewells.",
+        "The storage tanks must be cleaned regularly.",
+        "Rain must be collected only from rooftops."
+      ],
+      "correctIndex": 2,
+      "explanation": "The last sentence says the tanks must be cleaned regularly, or the stored water can become unsafe.",
+      "topic": "Verbal: Reading comprehension (detail)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. As a result, many small shops now accept payments through a phone app.\nQ. Digital payments in India have grown rapidly over the past decade.\nR. This growth has been driven largely by cheap smartphones and low-cost mobile data.\nS. Even so, cash remains common in many rural areas.",
+      "options": [
+        "RQPS",
+        "QPRS",
+        "QRPS",
+        "QRSP"
+      ],
+      "correctIndex": 2,
+      "explanation": "Q states the topic; R ('This growth') explains its cause; P ('As a result') gives the effect; S ('Even so') adds a contrast at the end.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Choose the option that correctly fills the blank.\n\nThe instructions were printed in both Hindi and English ______ that every applicant could understand them.",
+      "options": [
+        "unless",
+        "so",
+        "although",
+        "such"
+      ],
+      "correctIndex": 1,
+      "explanation": "'So that' introduces a purpose: the instructions were printed in two languages so that everyone could understand them.",
+      "topic": "Verbal: Sentence completion (connectors)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Which of the following sentences about missing a train is grammatically correct?",
+      "options": [
+        "When he had reached the station, the train has already left.",
+        "When he reached the station, the train already left.",
+        "When he reached the station, the train had already left.",
+        "When he reaches the station, the train had already left."
+      ],
+      "correctIndex": 2,
+      "explanation": "The train left before he reached, so the earlier action takes the past perfect ('had already left') and the later one the simple past ('reached').",
+      "topic": "Verbal: Sentence correction (tenses)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nI look forward / to meet you / at the conference / next month.",
+      "options": [
+        "I look forward",
+        "at the conference",
+        "to meet you",
+        "next month."
+      ],
+      "correctIndex": 2,
+      "explanation": "In 'look forward to', 'to' is a preposition, so it is followed by an -ing form: 'look forward to meeting you'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the word or phrase closest in meaning to 'pragmatic' as used in the sentence.\n\nThe committee's recommendations were largely pragmatic rather than idealistic.",
+      "options": [
+        "theoretical",
+        "emotional",
+        "unrealistic",
+        "practical"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Pragmatic' means dealing with things sensibly and realistically, i.e. practical.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Choose the option that correctly fills the blank.\n\nThe new leave rules are applicable ______ all employees, including contract staff.",
+      "options": [
+        "with",
+        "on",
+        "to",
+        "for"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Applicable' is followed by 'to': 'applicable to all employees'.",
+      "topic": "Verbal: Prepositions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Choose the option that correctly fills the blank.\n\nNot until the results were announced ______ how close the contest had been.",
+      "options": [
+        "did we realise",
+        "we did realise",
+        "had we realise",
+        "we realised"
+      ],
+      "correctIndex": 0,
+      "explanation": "A sentence beginning with 'Not until …' needs inversion in the main clause: 'did we realise'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b, t\nSet a = 270, b = 192\nwhile (b != 0)\n    t = b\n    b = a mod b\n    a = t\nend while\nPrint a",
+      "options": [
+        "2",
+        "12",
+        "18",
+        "6"
+      ],
+      "correctIndex": 3,
+      "explanation": "Euclid's algorithm: (270, 192) → (192, 78) → (78, 36) → (36, 6) → (6, 0). GCD = 6.",
+      "topic": "Pseudocode: While loop",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger m[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}\nInteger s\nSet s = 0\nfor (each i from 0 to 2)\n    for (each j from 0 to 2)\n        if (i == j OR i + j == 2)\n            s = s + m[i][j]\n        end if\n    end for\nend for\nPrint s\n\n(m[i][j] is the element in row i and column j; indices start at 0.)",
+      "options": [
+        "25",
+        "30",
+        "20",
+        "15"
+      ],
+      "correctIndex": 0,
+      "explanation": "The condition selects both diagonals: 1, 5, 9 and 3, 7. The centre 5 is added only once, because each (i, j) pair is visited once. Sum = 15 + 10 = 25.",
+      "topic": "Pseudocode: Nested loops (2D arrays)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[8] = {2, 7, 1, 8, 2, 8, 1, 8}\nInteger best, bestCount, c\nSet best = -1, bestCount = 0\nfor (each i from 0 to 7)\n    c = 0\n    for (each j from 0 to 7)\n        if (arr[j] == arr[i])\n            c = c + 1\n        end if\n    end for\n    if (c > bestCount)\n        bestCount = c\n        best = arr[i]\n    end if\nend for\nPrint best, bestCount\n\n(Array indices start at 0.)",
+      "options": [
+        "8 3",
+        "1 2",
+        "8 2",
+        "2 2"
+      ],
+      "correctIndex": 0,
+      "explanation": "8 appears three times; 2 and 1 appear twice each. Because the condition is strictly greater, the first value to reach the maximum count, 8, is kept: 8 3.",
+      "topic": "Pseudocode: Arrays (frequency)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger funA(Integer n)\n    if (n <= 0)\n        return 0\n    end if\n    return n + funB(n - 1)\nEnd function\n\nInteger funB(Integer n)\n    if (n <= 0)\n        return 0\n    end if\n    return funA(n - 1) - n\nEnd function\n\nPrint funA(5)",
+      "options": [
+        "-3",
+        "3",
+        "15",
+        "5"
+      ],
+      "correctIndex": 1,
+      "explanation": "funA(5) = 5 + funB(4); funB(4) = funA(3) − 4; funA(3) = 3 + funB(2); funB(2) = funA(1) − 2; funA(1) = 1 + funB(0) = 1. Back-substituting: funB(2) = −1, funA(3) = 2, funB(4) = −2, funA(5) = 3.",
+      "topic": "Pseudocode: Recursion (mutual)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "A three-digit number has a digit sum of 15. Its hundreds digit is twice its units digit. When its digits are reversed, the new number is 297 less than the original. What is the number?",
+      "options": [
+        "636",
+        "483",
+        "852",
+        "663"
+      ],
+      "correctIndex": 3,
+      "explanation": "Reversing reduces the number by 99 × (hundreds − units) = 297, so hundreds − units = 3. With hundreds = 2 × units, the units digit is 3 and the hundreds digit is 6. The tens digit is 15 − 6 − 3 = 6, giving 663.",
+      "topic": "Puzzles: Digit puzzle",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "In the multiplication AB × A = BCB, each letter stands for a different digit, and AB and BCB are numbers written with those digits (A and B are not zero). What is the value of A + B + C?",
+      "options": [
+        "12",
+        "16",
+        "15",
+        "14"
+      ],
+      "correctIndex": 3,
+      "explanation": "BCB is a three-digit number, so A must be large. Trying values, 75 × 7 = 525 fits the pattern with A = 7, B = 5, C = 2, and it is the only solution. A + B + C = 14.",
+      "topic": "Puzzles: Cryptarithm",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A bag contains ₹1, 50-paise and 25-paise coins in the ratio 5 : 6 : 8 by number. If the total value of the coins is ₹210, how many 50-paise coins are there?",
+      "options": [
+        "84",
+        "105",
+        "168",
+        "126"
+      ],
+      "correctIndex": 3,
+      "explanation": "Value ratio = 5 × 1 : 6 × 0.5 : 8 × 0.25 = 5 : 3 : 2, so 10x = 210 and x = 21. Number of 50-paise coins = 6 × 21 = 126.",
+      "topic": "Quantitative: Ratio and proportion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "The ages of Aman and Bhuvan are in the ratio 4 : 5 and their sum is 54 years. After how many years will the ratio of their ages become 5 : 6?",
+      "options": [
+        "6 years",
+        "8 years",
+        "5 years",
+        "4 years"
+      ],
+      "correctIndex": 0,
+      "explanation": "Ages are 24 and 30. (24 + t)/(30 + t) = 5/6 gives 144 + 6t = 150 + 5t, so t = 6 years.",
+      "topic": "Quantitative: Problems on ages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "Pipe A fills a tank three times as fast as pipe B. Together they fill the tank in 36 minutes. How long would pipe B alone take?",
+      "options": [
+        "48 minutes",
+        "108 minutes",
+        "144 minutes",
+        "72 minutes"
+      ],
+      "correctIndex": 2,
+      "explanation": "If B's rate is b, then 3b + b = 1/36, so b = 1/144. B alone takes 144 minutes.",
+      "topic": "Quantitative: Pipes and cisterns",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "A thief is spotted by a policeman from a distance of 200 m. The thief runs at 10 km/h and the policeman chases him at 12 km/h. How far will the thief have run before he is caught?",
+      "options": [
+        "1 km",
+        "800 m",
+        "1.2 km",
+        "600 m"
+      ],
+      "correctIndex": 0,
+      "explanation": "Relative speed = 2 km/h, so the 0.2 km gap closes in 0.1 hour. In that time the thief runs 10 × 0.1 = 1 km.",
+      "topic": "Quantitative: Speed, time and distance",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "What is the greatest number that divides 1,253 and 1,729 leaving remainders 5 and 1 respectively?",
+      "options": [
+        "32",
+        "48",
+        "96",
+        "144"
+      ],
+      "correctIndex": 2,
+      "explanation": "The required number is HCF(1253 − 5, 1729 − 1) = HCF(1248, 1728) = 96.",
+      "topic": "Quantitative: HCF and LCM",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "A two-digit number is 4 times the sum of its digits. If 27 is added to the number, its digits are reversed. What is the number?",
+      "options": [
+        "63",
+        "48",
+        "24",
+        "36"
+      ],
+      "correctIndex": 3,
+      "explanation": "Let the number be 10a + b. Then 10a + b = 4(a + b) gives b = 2a, and adding 27 reverses the digits, so b − a = 3. Hence a = 3, b = 6 and the number is 36.",
+      "topic": "Quantitative: Algebra (linear equations)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "A sum of money invested at compound interest (compounded annually) amounts to ₹8,820 in 2 years and to ₹9,261 in 3 years. What is the sum invested?",
+      "options": [
+        "₹8,400",
+        "₹7,938",
+        "₹8,000",
+        "₹8,379"
+      ],
+      "correctIndex": 2,
+      "explanation": "Interest on ₹8,820 for one year = ₹441, so the rate is 441/8820 = 5%. Principal = 8820/(1.05)² = ₹8,000.",
+      "topic": "Quantitative: Compound interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A boat covers 24 km upstream and 36 km downstream in 6 hours. It covers 36 km upstream and 24 km downstream in 6.5 hours. What is the speed of the boat in still water?",
+      "options": [
+        "9 km/h",
+        "12 km/h",
+        "10 km/h",
+        "8 km/h"
+      ],
+      "correctIndex": 2,
+      "explanation": "Solving 24/u + 36/d = 6 and 36/u + 24/d = 6.5 gives u = 8 and d = 12 km/h. Still-water speed = (8 + 12)/2 = 10 km/h.",
+      "topic": "Quantitative: Boats and streams",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the wrong number in the series: 17, 26, 37, 50, 64, 82",
+      "options": [
+        "64",
+        "82",
+        "50",
+        "37"
+      ],
+      "correctIndex": 0,
+      "explanation": "The terms are n² + 1 for n = 4 to 9: 17, 26, 37, 50, 65, 82. So 64 should be 65.",
+      "topic": "Logical reasoning: Number series (wrong term)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "8 : 65 :: 6 : ?",
+      "options": [
+        "36",
+        "37",
+        "217",
+        "35"
+      ],
+      "correctIndex": 1,
+      "explanation": "65 = 8² + 1; similarly 6² + 1 = 37.",
+      "topic": "Logical reasoning: Analogy (numbers)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "In a certain code, LAMP is written as MCPT. How is DESK written in that code?",
+      "options": [
+        "EGVO",
+        "FGVO",
+        "EGUO",
+        "EFTL"
+      ],
+      "correctIndex": 0,
+      "explanation": "The 1st, 2nd, 3rd and 4th letters move forward by 1, 2, 3 and 4 places: D→E, E→G, S→V, K→O.",
+      "topic": "Logical reasoning: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Tara and Uday start from the same point. Tara walks 7 km east and then 5 km north. Uday walks 3 km west and then 19 km south. What is the straight-line distance between them now?",
+      "options": [
+        "22 km",
+        "34 km",
+        "24 km",
+        "26 km"
+      ],
+      "correctIndex": 3,
+      "explanation": "Tara is at (7, 5) and Uday at (−3, −19). The gaps are 10 km east–west and 24 km north–south, so the distance is √(10² + 24²) = 26 km.",
+      "topic": "Logical reasoning: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Six friends — Aditi, Bilal, Charu, Dev, Esha and Farid — sit around a circular table, facing the centre. Aditi sits opposite Dev. Bilal sits second to the right of Aditi. Esha sits immediately to the right of Dev. Charu is not an immediate neighbour of Bilal. Who sits between Aditi and Bilal?",
+      "options": [
+        "Dev",
+        "Esha",
+        "Farid",
+        "Charu"
+      ],
+      "correctIndex": 2,
+      "explanation": "With Aditi fixed, Bilal is two seats to her right and Dev is opposite her; Esha is on Dev's right. The two free seats are the one between Aditi and Bilal and the one between Esha and Aditi. Charu cannot be next to Bilal, so Farid sits between Aditi and Bilal.",
+      "topic": "Logical reasoning: Seating arrangement (circular)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Statement: Only those candidates who scored above 70% in the written test were called for the interview. Rohan was called for the interview.\n\nConclusions:\nI. Rohan scored above 70% in the written test.\nII. Rohan was selected for the job.\n\nWhich conclusion(s) follow from the statement?",
+      "options": [
+        "Only conclusion I follows",
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Both conclusions I and II follow"
+      ],
+      "correctIndex": 0,
+      "explanation": "Since only candidates scoring above 70% were called, Rohan must have scored above 70% (I). Being called for an interview does not mean being selected (II does not follow).",
+      "topic": "Logical reasoning: Statement and conclusions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Each question below has two statements. Decide whether the data in the statements is sufficient to answer the question.\n\nQuestion: In a certain code language, what is the code for 'sky'?\nI. 'high blue sea' is written as 'pa ka na'.\nII. 'blue sky high' is written as 'ka ra pa' and 'sky is clear' is written as 'ra ma ta'.",
+      "options": [
+        "Both statements together are sufficient, but neither alone is",
+        "Statement II alone is sufficient, but statement I alone is not",
+        "Both statements together are not sufficient",
+        "Statement I alone is sufficient, but statement II alone is not"
+      ],
+      "correctIndex": 1,
+      "explanation": "Statement I does not contain the word 'sky'. In II, 'sky' is the only word common to both sentences and 'ra' is the only common code, so sky = ra.",
+      "topic": "Logical reasoning: Data sufficiency",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Statements:\nSome teachers are writers.\nAll writers are readers.\nNo readers are painters.\n\nConclusions:\nI. Some teachers are not painters.\nII. All readers are writers.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Only conclusion I follows",
+        "Both conclusions I and II follow"
+      ],
+      "correctIndex": 2,
+      "explanation": "The teachers who are writers are readers and so cannot be painters, so I follows. 'All writers are readers' cannot be reversed, so II does not follow.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Read the passage and answer the question.\n\nMany companies now allow employees to work from home two or three days a week. Some managers worried that productivity would fall, but internal surveys at several firms showed that output stayed the same or improved slightly. Employees named shorter commutes and fewer interruptions as the main reasons. Some teams, however, reported that new employees found it harder to learn informally from experienced colleagues.\n\nWhich challenge of this working arrangement does the passage mention?",
+      "options": [
+        "New employees may find it harder to learn informally from experienced colleagues.",
+        "Employees' commutes became longer.",
+        "Managers stopped conducting surveys.",
+        "Productivity fell sharply at most firms."
+      ],
+      "correctIndex": 0,
+      "explanation": "The last sentence mentions that new employees found it harder to learn informally from experienced colleagues. The passage says output stayed the same or improved.",
+      "topic": "Verbal: Reading comprehension (detail)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Choose the option that correctly fills the blank.\n\nThe project was completed ahead of schedule ______ the team was short of two members.",
+      "options": [
+        "so",
+        "because",
+        "unless",
+        "although"
+      ],
+      "correctIndex": 3,
+      "explanation": "The two ideas contrast (finished early despite being short-staffed), so the contrast word 'although' fits.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Choose the word or phrase closest in meaning to 'ambiguous' as used in the sentence.\n\nHer ambiguous reply left the interviewers unsure about her plans.",
+      "options": [
+        "very short",
+        "carefully planned",
+        "rude",
+        "open to more than one meaning"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Ambiguous' means capable of being understood in more than one way, which is why the interviewers were unsure.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Choose the option that correctly fills the blank.\n\nThe success of the outdoor event depends largely ______ the weather.",
+      "options": [
+        "in",
+        "of",
+        "on",
+        "at"
+      ],
+      "correctIndex": 2,
+      "explanation": "The verb 'depend' is followed by 'on' (or 'upon').",
+      "topic": "Verbal: Prepositions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nIf he would have studied / harder, he would / have passed / the exam.",
+      "options": [
+        "have passed",
+        "harder, he would",
+        "the exam.",
+        "If he would have studied"
+      ],
+      "correctIndex": 3,
+      "explanation": "In a third conditional, the if-clause takes the past perfect: 'If he had studied harder, he would have passed'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the option that correctly fills the blank.\n\nThe evidence against him was strong; ______, the court acquitted him because the police had not followed proper procedure.",
+      "options": [
+        "similarly",
+        "consequently",
+        "therefore",
+        "nevertheless"
+      ],
+      "correctIndex": 3,
+      "explanation": "Acquittal despite strong evidence is a contrast, so 'nevertheless' (= in spite of that) fits. 'Consequently' and 'therefore' signal a result.",
+      "topic": "Verbal: Sentence completion (connectors)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Which of the following sentences about job applicants is grammatically correct?",
+      "options": [
+        "The number of applicants have increased this year.",
+        "The number of applicants has increased this year.",
+        "The numbers of applicant has increased this year.",
+        "A number of applicants has applied this year."
+      ],
+      "correctIndex": 1,
+      "explanation": "'The number of' takes a singular verb (the subject is 'number'), while 'a number of' means 'many' and takes a plural verb.",
+      "topic": "Verbal: Sentence correction (agreement)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. Crops are then grown in the partial shade beneath the panels.\nQ. In agrivoltaics, solar panels are mounted high above farm fields.\nR. Besides this dual use, the shade also helps by reducing water loss from the soil.\nS. This allows the same piece of land to produce both food and electricity.",
+      "options": [
+        "PQSR",
+        "QPSR",
+        "QPRS",
+        "QSPR"
+      ],
+      "correctIndex": 1,
+      "explanation": "Q defines agrivoltaics; P ('then', 'beneath the panels') follows; S ('This allows') states the dual use; R ('Besides this dual use') adds a further benefit.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger i, s\nSet i = 0, s = 0\nwhile (i < 10)\n    i = i + 3\n    s = s + i\nend while\nPrint s",
+      "options": [
+        "27",
+        "12",
+        "30",
+        "18"
+      ],
+      "correctIndex": 2,
+      "explanation": "i becomes 3, 6, 9 and then 12, because 9 < 10 lets the loop run once more. s = 3 + 6 + 9 + 12 = 30.",
+      "topic": "Pseudocode: While loop",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger s\nSet s = 0\nfor (each i from 1 to 3)\n    for (each j from 1 to 3)\n        s = s + (i mod j)\n    end for\nend for\nPrint s",
+      "options": [
+        "5",
+        "3",
+        "9",
+        "6"
+      ],
+      "correctIndex": 0,
+      "explanation": "For j = 1 every i mod 1 is 0. For j = 2: 1, 0, 1 (sum 2). For j = 3: 1, 2, 0 (sum 3). Total = 0 + 2 + 3 = 5.",
+      "topic": "Pseudocode: Nested loops (mod)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger n, c\nSet n = 45, c = 0\nwhile (n > 0)\n    c = c + (n AND 1)\n    n = n >> 1    // right shift by 1 bit\nend while\nPrint c\n\n(AND is the bitwise AND operator.)",
+      "options": [
+        "5",
+        "4",
+        "6",
+        "3"
+      ],
+      "correctIndex": 1,
+      "explanation": "45 = 101101 in binary, which has four 1-bits. The loop counts them.",
+      "topic": "Pseudocode: Bitwise operators",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[6] = {1, 2, 3, 4, 5, 6}\nInteger temp\nfor (each i from 0 to 5)\n    temp = arr[i]\n    arr[i] = arr[5 - i]\n    arr[5 - i] = temp\nend for\nPrint arr[0], arr[1]\n\n(Array indices start at 0.)",
+      "options": [
+        "1 2",
+        "6 5",
+        "1 6",
+        "5 6"
+      ],
+      "correctIndex": 0,
+      "explanation": "Swapping arr[i] with arr[5 − i] for every i from 0 to 5 reverses the array twice, so it returns to the original order: 1 2.",
+      "topic": "Pseudocode: Arrays (swapping)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "In the 3 × 3 grid below, every row, every column and both diagonals add up to the same total. Find the missing number.\n\n13 6 11\n8 10 12\n9 ? 7",
+      "options": [
+        "15",
+        "14",
+        "16",
+        "12"
+      ],
+      "correctIndex": 1,
+      "explanation": "Each row sums to 30 (13 + 6 + 11). The middle column gives 6 + 10 + ? = 30, so ? = 14. The bottom row 9 + 14 + 7 = 30 confirms it.",
+      "topic": "Puzzles: Number grid (magic square)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Exactly one of four colleagues — A, B, C or D — broke the office printer. Each makes one statement, and exactly one of the four statements is true.\nA: \"B broke it.\"\nB: \"D broke it.\"\nC: \"I did not break it.\"\nD: \"B is lying.\"\nWho broke the printer?",
+      "options": [
+        "D",
+        "C",
+        "B",
+        "A"
+      ],
+      "correctIndex": 1,
+      "explanation": "B and D contradict each other, so exactly one of them is true, which means A and C must both be false. C's statement being false means C broke it. Check: with C as culprit, only D's statement is true.",
+      "topic": "Puzzles: Truth and lies",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

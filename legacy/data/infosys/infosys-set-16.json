@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Riya scored 342 marks out of 450 in her semester exams. What percentage of marks did she score?",
+      "options": [
+        "72%",
+        "78%",
+        "76%",
+        "74%"
+      ],
+      "correctIndex": 2,
+      "explanation": "Percentage = 342/450 × 100 = 76%.",
+      "topic": "Quantitative: Percentages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "A shopkeeper buys a ceiling fan for ₹1,600 and sells it for ₹1,880. What is his profit percentage?",
+      "options": [
+        "15%",
+        "14.9%",
+        "17.5%",
+        "18%"
+      ],
+      "correctIndex": 2,
+      "explanation": "Profit = 1880 − 1600 = ₹280. Profit % = 280/1600 × 100 = 17.5% (profit is always taken on cost price).",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "₹7,200 is divided among Arjun, Bela and Chirag in the ratio 3 : 4 : 5. What is Chirag's share?",
+      "options": [
+        "₹2,400",
+        "₹3,000",
+        "₹1,800",
+        "₹3,600"
+      ],
+      "correctIndex": 1,
+      "explanation": "Total parts = 12. Chirag gets 5/12 × 7200 = ₹3,000.",
+      "topic": "Quantitative: Ratio and proportion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "Ravi can finish a piece of work in 12 days and Sunita can finish it in 18 days. In how many days can they finish it working together?",
+      "options": [
+        "7.5 days",
+        "7.2 days",
+        "6 days",
+        "15 days"
+      ],
+      "correctIndex": 1,
+      "explanation": "Combined rate = 1/12 + 1/18 = 5/36 per day. Time = 36/5 = 7.2 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "A sum of money lent at simple interest amounts to ₹9,800 in 3 years and to ₹10,400 in 5 years. What is the sum lent?",
+      "options": [
+        "₹9,000",
+        "₹9,200",
+        "₹8,900",
+        "₹8,600"
+      ],
+      "correctIndex": 2,
+      "explanation": "Interest for 2 years = 10400 − 9800 = ₹600, so ₹300 per year. Principal = 9800 − 3 × 300 = ₹8,900.",
+      "topic": "Quantitative: Simple interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "The present ages of Meena and her son are in the ratio 7 : 2. After 8 years, the ratio will be 9 : 4. What is Meena's present age?",
+      "options": [
+        "28 years",
+        "24 years",
+        "32 years",
+        "35 years"
+      ],
+      "correctIndex": 0,
+      "explanation": "(7x + 8)/(2x + 8) = 9/4 gives 28x + 32 = 18x + 72, so x = 4. Meena's age = 7 × 4 = 28 years.",
+      "topic": "Quantitative: Problems on ages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "Two inlet pipes can fill an empty tank in 20 minutes and 30 minutes respectively. An outlet pipe can empty the full tank in 15 minutes. If all three are opened together on the empty tank, how long will it take to fill it?",
+      "options": [
+        "45 minutes",
+        "60 minutes",
+        "30 minutes",
+        "12 minutes"
+      ],
+      "correctIndex": 1,
+      "explanation": "Net rate = 1/20 + 1/30 − 1/15 = (3 + 2 − 4)/60 = 1/60 per minute, so the tank fills in 60 minutes.",
+      "topic": "Quantitative: Pipes and cisterns",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "What is the unit digit of 1! + 2! + 3! + … + 50!?",
+      "options": [
+        "4",
+        "0",
+        "9",
+        "3"
+      ],
+      "correctIndex": 3,
+      "explanation": "From 5! onwards every factorial ends in 0. 1 + 2 + 6 + 24 = 33, so the unit digit is 3.",
+      "topic": "Quantitative: Unit digit",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the next number in the series: 4, 9, 19, 39, 79, ?",
+      "options": [
+        "159",
+        "160",
+        "119",
+        "158"
+      ],
+      "correctIndex": 0,
+      "explanation": "Each term is twice the previous term plus 1: 79 × 2 + 1 = 159.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "In a certain code, PLANT is written as QMBOU. How is GREEN written in that code?",
+      "options": [
+        "FQDDM",
+        "HSFFO",
+        "HSFEO",
+        "HTFFO"
+      ],
+      "correctIndex": 1,
+      "explanation": "Each letter is replaced by the next letter of the alphabet: G→H, R→S, E→F, E→F, N→O.",
+      "topic": "Logical reasoning: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Pointing to a man, Neha said, \"He is the only son of the only son of my paternal grandfather.\" Neha has no other siblings. How is the man related to Neha?",
+      "options": [
+        "Brother",
+        "Cousin",
+        "Uncle",
+        "Father"
+      ],
+      "correctIndex": 0,
+      "explanation": "The only son of Neha's paternal grandfather is Neha's father. The father's only son is Neha's brother.",
+      "topic": "Logical reasoning: Blood relations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Ankit walks 5 km towards the north, turns right and walks 3 km, then turns right again and walks 5 km. How far is he from his starting point, and in which direction?",
+      "options": [
+        "3 km, West",
+        "13 km, North",
+        "5 km, East",
+        "3 km, East"
+      ],
+      "correctIndex": 3,
+      "explanation": "North 5 km, then right (east) 3 km, then right (south) 5 km. He ends 3 km east of the start.",
+      "topic": "Logical reasoning: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statements:\nAll pens are books.\nSome books are bags.\n\nConclusions:\nI. Some pens are bags.\nII. Some bags are books.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Both conclusions I and II follow",
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Only conclusion I follows"
+      ],
+      "correctIndex": 2,
+      "explanation": "The bags that are books need not include any pens, so I does not follow. 'Some books are bags' converts to 'Some bags are books', so II follows.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Seven people — Pooja, Qadir, Ritu, Sahil, Tanvi, Uma and Varun — sit in a row facing north. Ritu sits at the extreme right end. Tanvi sits third to the left of Ritu. Qadir sits second to the left of Tanvi. Uma sits immediately to the right of Pooja. Varun is not an immediate neighbour of Tanvi. Who sits exactly between Qadir and Tanvi?",
+      "options": [
+        "Uma",
+        "Pooja",
+        "Sahil",
+        "Varun"
+      ],
+      "correctIndex": 2,
+      "explanation": "From the left: Ritu is 7th, Tanvi 4th and Qadir 2nd. Pooja and Uma need two adjacent free seats, so they take 5th and 6th. Varun cannot be beside Tanvi, so Varun is 1st and Sahil is 3rd, between Qadir and Tanvi.",
+      "topic": "Logical reasoning: Seating arrangement (linear)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "In a queue, Ravi is 7th from the front and Sameer is 12th from the back. Ravi is ahead of Sameer and there are exactly 4 people between them. How many people are in the queue?",
+      "options": [
+        "23",
+        "24",
+        "21",
+        "22"
+      ],
+      "correctIndex": 0,
+      "explanation": "Count from the front: 7 people up to Ravi, 4 between, then Sameer and the 11 behind him (12 counted from the back). Total = 7 + 4 + 12 = 23.",
+      "topic": "Logical reasoning: Ranking and order",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Find the odd one out: 121, 169, 225, 289",
+      "options": [
+        "289",
+        "169",
+        "121",
+        "225"
+      ],
+      "correctIndex": 3,
+      "explanation": "121, 169 and 289 are squares of the primes 11, 13 and 17. 225 is the square of 15, which is not prime.",
+      "topic": "Logical reasoning: Odd one out",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the one word that can replace the phrase:\n\nA person who can speak two languages fluently",
+      "options": [
+        "Linguist",
+        "Polyglot",
+        "Translator",
+        "Bilingual"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Bilingual' means able to speak two languages. A polyglot knows many languages; a linguist studies language; a translator converts text between languages.",
+      "topic": "Verbal: One-word substitution",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nThe furniture in the / new office are / both comfortable / and affordable.",
+      "options": [
+        "both comfortable",
+        "and affordable.",
+        "new office are",
+        "The furniture in the"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Furniture' is an uncountable noun and takes a singular verb: 'The furniture in the new office is…'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Choose the word or phrase closest in meaning to 'dismay' as used in the sentence.\n\nThe committee's decision to postpone the exam was met with widespread dismay.",
+      "options": [
+        "indifference",
+        "relief",
+        "disappointment",
+        "approval"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Dismay' is a feeling of distress and disappointment, typically at something unexpected.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. Many small businesses still record their sales by hand in notebooks.\nQ. Simple accounting software can help prevent them.\nR. Such errors, though small, can add up to large losses over time.\nS. This often leads to mistakes in totals and missed payments.",
+      "options": [
+        "PSQR",
+        "PSRQ",
+        "PRSQ",
+        "SPRQ"
+      ],
+      "correctIndex": 1,
+      "explanation": "P sets the scene; S ('This') names the mistakes it causes; R ('Such errors') describes their effect; Q ('prevent them') offers the solution.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the option that correctly fills the blank.\n\nHad I known about the traffic jam, I ______ earlier.",
+      "options": [
+        "would leave",
+        "would have left",
+        "will have left",
+        "had left"
+      ],
+      "correctIndex": 1,
+      "explanation": "'Had I known' is an inverted third conditional (= If I had known), so the main clause needs 'would have' + past participle.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Read the passage and answer the question.\n\nUnlike classroom training, apprenticeships let young people earn while they learn. Employers benefit too, because they can train workers in the exact skills they need. Critics argue, however, that some firms use apprentices as cheap labour without offering real training. For apprenticeship schemes to succeed, they say, firms must be held accountable for what apprentices actually learn.\n\nWhat do the critics suggest is needed for apprenticeship schemes to succeed?",
+      "options": [
+        "Firms must be held accountable for what apprentices actually learn.",
+        "Apprenticeships should be replaced with classroom training.",
+        "Apprentices should be paid the same as experienced workers.",
+        "Apprenticeship schemes should be ended."
+      ],
+      "correctIndex": 0,
+      "explanation": "The last sentence states the critics' view: firms must be held accountable for what apprentices actually learn.",
+      "topic": "Verbal: Reading comprehension (detail)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "What does the phrase 'at loggerheads' mean in the sentence below?\n\nThe two departments were at loggerheads over the budget.",
+      "options": [
+        "waiting for a decision",
+        "in strong disagreement",
+        "equally responsible",
+        "working closely together"
+      ],
+      "correctIndex": 1,
+      "explanation": "To be 'at loggerheads' is to be in a strong disagreement or dispute.",
+      "topic": "Verbal: Idioms and phrases",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Which of the following sentences about candidates' documents is grammatically correct?",
+      "options": [
+        "Each of the candidates have submitted their documents.",
+        "Every candidates has submitted the required documents.",
+        "Every one of the candidates has submitted the required documents.",
+        "Each of the candidate has submitted the required documents."
+      ],
+      "correctIndex": 2,
+      "explanation": "'Every one of' and 'each of' are followed by a plural noun but a singular verb. 'Every' alone takes a singular noun.",
+      "topic": "Verbal: Sentence correction (agreement)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a\nSet a = 3\nfor (each i from 1 to 4)\n    a = a + i * 2\nend for\nPrint a",
+      "options": [
+        "23",
+        "21",
+        "19",
+        "25"
+      ],
+      "correctIndex": 0,
+      "explanation": "a takes the values 3 → 5 → 9 → 15 → 23 as 2, 4, 6 and 8 are added.",
+      "topic": "Pseudocode: Loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 15, b = 4\nif ((a mod b) > 2)\n    Print a - b\nelse\n    Print a + b\nend if",
+      "options": [
+        "11",
+        "60",
+        "19",
+        "3"
+      ],
+      "correctIndex": 0,
+      "explanation": "15 mod 4 = 3, which is greater than 2, so a − b = 11 is printed.",
+      "topic": "Pseudocode: Conditionals",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger n, s\nSet n = 1234, s = 0\nwhile (n > 0)\n    s = s * 10 + (n mod 10)\n    n = n / 10    // integer division\nend while\nPrint s",
+      "options": [
+        "10",
+        "4",
+        "1234",
+        "4321"
+      ],
+      "correctIndex": 3,
+      "explanation": "Each pass appends the last digit of n to s, so the digits are reversed: s = 4321.",
+      "topic": "Pseudocode: While loop (digits)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer n)\n    if (n <= 1)\n        return n\n    end if\n    return fun(n - 1) + 2 * fun(n - 2)\nEnd function\n\nPrint fun(6)",
+      "options": [
+        "43",
+        "13",
+        "11",
+        "21"
+      ],
+      "correctIndex": 3,
+      "explanation": "Values: fun(0) = 0, fun(1) = 1, fun(2) = 1, fun(3) = 3, fun(4) = 5, fun(5) = 11, fun(6) = 11 + 2 × 5 = 21.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Four friends — Priya, Qasim, Raghav and Sneha — each own a different pet: a cat, a dog, a parrot or a fish. Priya owns neither the dog nor the cat. Qasim owns the parrot. Sneha does not own the cat. Who owns the cat?",
+      "options": [
+        "Raghav",
+        "Qasim",
+        "Priya",
+        "Sneha"
+      ],
+      "correctIndex": 0,
+      "explanation": "Qasim has the parrot. Priya cannot have the dog or cat, so she has the fish. The cat must then go to Raghav or Sneha, and Sneha does not own it, so Raghav does.",
+      "topic": "Puzzles: Logic puzzle (matching)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Find the missing number. The same rule is applied to each pair of numbers.\n\n(2, 3) → 11\n(4, 5) → 29\n(6, 7) → ?",
+      "options": [
+        "42",
+        "49",
+        "85",
+        "55"
+      ],
+      "correctIndex": 3,
+      "explanation": "The rule is product + sum: 2 × 3 + 2 + 3 = 11 and 4 × 5 + 4 + 5 = 29. So 6 × 7 + 6 + 7 = 55.",
+      "topic": "Puzzles: Number pattern",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

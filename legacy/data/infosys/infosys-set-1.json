@@ -1,0 +1,274 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A college library had 1,250 books. In June it added 20% more books, and then 10% of the new total was sent out for binding. How many books remained on the shelves?",
+      "options": ["1,375", "1,350", "1,500", "1,400"],
+      "correctIndex": 1,
+      "explanation": "After adding 20%: 1,250 x 1.2 = 1,500. Sending 10% for binding leaves 1,500 x 0.9 = 1,350.",
+      "topic": "Quantitative: Percentages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "A shopkeeper in Pune buys a pressure cooker for Rs. 1,600 and sells it for Rs. 1,880. What is his profit percentage?",
+      "options": ["14.9%", "15%", "18%", "17.5%"],
+      "correctIndex": 3,
+      "explanation": "Profit = 1,880 - 1,600 = 280. Profit % = 280/1,600 x 100 = 17.5% (profit is always calculated on cost price, not selling price).",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "Ravi can paint a wall in 12 days and Sameer can paint it in 18 days. They work together for 4 days, after which Ravi leaves. How many more days will Sameer take to finish the remaining work?",
+      "options": ["8 days", "10 days", "6 days", "12 days"],
+      "correctIndex": 0,
+      "explanation": "Together they do 1/12 + 1/18 = 5/36 per day, so in 4 days they finish 20/36 = 5/9. The remaining 4/9 takes Sameer (4/9) x 18 = 8 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "A train 240 m long crosses a platform 360 m long in 30 seconds. What is the speed of the train?",
+      "options": ["20 km/h", "28.8 km/h", "72 km/h", "43.2 km/h"],
+      "correctIndex": 2,
+      "explanation": "Distance covered = 240 + 360 = 600 m, so speed = 600/30 = 20 m/s. Converting, 20 x 18/5 = 72 km/h.",
+      "topic": "Quantitative: Speed, distance and time",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "Rs. 7,200 is divided among Asha, Bina and Chetan in the ratio 3 : 4 : 5. How much more does Chetan get than Asha?",
+      "options": ["Rs. 600", "Rs. 1,800", "Rs. 1,200", "Rs. 3,000"],
+      "correctIndex": 2,
+      "explanation": "Total parts = 12, so one part = 7,200/12 = 600. Chetan gets 3,000 and Asha gets 1,800, a difference of Rs. 1,200.",
+      "topic": "Quantitative: Ratio and proportion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "What is the simple interest on Rs. 15,000 at 8% per annum for 2.5 years?",
+      "options": ["Rs. 3,000", "Rs. 2,400", "Rs. 3,600", "Rs. 1,200"],
+      "correctIndex": 0,
+      "explanation": "SI = P x R x T / 100 = 15,000 x 8 x 2.5 / 100 = Rs. 3,000.",
+      "topic": "Quantitative: Simple interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "The average marks of 40 students in a test is 62. If the top 5 students, whose average is 90, are excluded, what is the average of the remaining students?",
+      "options": ["56", "60", "57.5", "58"],
+      "correctIndex": 3,
+      "explanation": "Total = 40 x 62 = 2,480 and the top 5 total 5 x 90 = 450. The remaining 35 students total 2,030, so the average is 2,030/35 = 58.",
+      "topic": "Quantitative: Averages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "Three alarms ring at intervals of 12, 15 and 20 minutes. They ring together at 9:00 am. How many times will they ring together from 9:00 am to 3:00 pm, counting both 9:00 am and 3:00 pm?",
+      "options": ["6", "7", "5", "8"],
+      "correctIndex": 1,
+      "explanation": "LCM of 12, 15 and 20 is 60, so they ring together every hour. From 9:00 am to 3:00 pm inclusive, that is 9, 10, 11, 12, 1, 2 and 3, which makes 7 times.",
+      "topic": "Quantitative: LCM and HCF",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the next number in the series: 5, 11, 23, 47, 95, ?",
+      "options": ["191", "189", "190", "143"],
+      "correctIndex": 0,
+      "explanation": "Each term is double the previous term plus 1: 95 x 2 + 1 = 191.",
+      "topic": "Logical: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "In a certain code language, PUNE is written as QTOD. How is GOA written in that code?",
+      "options": ["HPB", "FNB", "HNB", "HNZ"],
+      "correctIndex": 2,
+      "explanation": "The letters are shifted alternately by +1 and -1 (P+1=Q, U-1=T, N+1=O, E-1=D). So G+1=H, O-1=N, A+1=B, giving HNB.",
+      "topic": "Logical: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Pointing to a young man, Kavya, a woman, said, 'His mother is the only daughter of my mother.' How is the young man related to Kavya?",
+      "options": ["Brother", "Nephew", "Cousin", "Son"],
+      "correctIndex": 3,
+      "explanation": "The only daughter of Kavya's mother is Kavya herself. So Kavya is the young man's mother, and he is her son.",
+      "topic": "Logical: Blood relations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Arjun walks 6 km north, turns right and walks 8 km, then turns right again and walks 12 km. How far is he from his starting point, and in which direction?",
+      "options": ["10 km, North-East", "10 km, South-East", "14 km, South-East", "26 km, South"],
+      "correctIndex": 1,
+      "explanation": "He ends 8 km east and 12 - 6 = 6 km south of the start. The distance is sqrt(8^2 + 6^2) = 10 km, towards the South-East.",
+      "topic": "Logical: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statements: All laptops are devices. Some devices are expensive.\nConclusions:\nI. Some laptops are expensive.\nII. Some devices are laptops.\nWhich conclusion(s) follow?",
+      "options": ["Only I follows", "Only II follows", "Both I and II follow", "Neither I nor II follows"],
+      "correctIndex": 1,
+      "explanation": "Since all laptops are devices, some devices must be laptops, so II follows. The expensive devices may or may not include laptops, so I does not follow.",
+      "topic": "Logical: Syllogism",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Find the next letter in the series: C, F, J, O, ?",
+      "options": ["T", "V", "S", "U"],
+      "correctIndex": 3,
+      "explanation": "The letter positions are 3, 6, 10 and 15, with gaps of +3, +4 and +5. The next gap is +6, giving position 21, which is U.",
+      "topic": "Logical: Letter series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "In a row of 35 students, Neha is 12th from the left end. What is her position from the right end?",
+      "options": ["24th", "23rd", "25th", "22nd"],
+      "correctIndex": 0,
+      "explanation": "Position from the right = total - position from the left + 1 = 35 - 12 + 1 = 24th.",
+      "topic": "Logical: Order and ranking",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Thermometer is related to Temperature in the same way as Anemometer is related to:",
+      "options": ["Humidity", "Pressure", "Wind speed", "Rainfall"],
+      "correctIndex": 2,
+      "explanation": "A thermometer measures temperature and an anemometer measures wind speed. Humidity is measured by a hygrometer and pressure by a barometer.",
+      "topic": "Logical: Analogy",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the grammatically correct sentence.",
+      "options": ["Each of the trainees has submitted the report.", "Each of the trainees have submitted the report.", "Each of the trainees have submit the report.", "Each of the trainee has submitted the report."],
+      "correctIndex": 0,
+      "explanation": "'Each' is singular and takes the singular verb 'has'. The phrase 'each of' must be followed by a plural noun ('trainees').",
+      "topic": "Verbal: Subject-verb agreement",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Read the sentence: 'The manager's reply was so terse that the team could not tell whether the proposal had been approved.' The word 'terse' most nearly means:",
+      "options": ["Angry", "Brief", "Confusing", "Polite"],
+      "correctIndex": 1,
+      "explanation": "'Terse' means using very few words. The reply was so short that the team could not tell what it meant.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Fill in the blank: The new metro line will reduce the travel time ____ the airport and the city centre by half.",
+      "options": ["among", "from", "within", "between"],
+      "correctIndex": 3,
+      "explanation": "'Between' is used for two points joined by 'and'. 'From' would need 'to', and 'among' is used for more than two items.",
+      "topic": "Verbal: Prepositions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Identify the part of the sentence that contains an error:\n(P) Neither the principal / (Q) nor the teachers / (R) was informed about / (S) the change in the exam schedule.",
+      "options": ["Part P", "Part Q", "Part R", "Part S"],
+      "correctIndex": 2,
+      "explanation": "With 'neither...nor', the verb agrees with the nearer subject. 'Teachers' is plural, so it should be 'were informed'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the word most nearly OPPOSITE in meaning to 'scarce'.",
+      "options": ["Rare", "Limited", "Plentiful", "Costly"],
+      "correctIndex": 2,
+      "explanation": "'Scarce' means in short supply, so its opposite is 'plentiful'. 'Rare' and 'limited' are near-synonyms of 'scarce'.",
+      "topic": "Verbal: Antonyms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Arrange the sentences to form a coherent paragraph:\nP: She then compared prices at three nearby shops.\nQ: Meera needed a new bicycle for her daily ride to college.\nR: Finally, she bought the one that came with a free service for a year.\nS: First, she made a list of the features she wanted.",
+      "options": ["QSPR", "QPSR", "SQPR", "QSRP"],
+      "correctIndex": 0,
+      "explanation": "Q introduces the need, and S ('First'), P ('then') and R ('Finally') follow in sequence, giving QSPR.",
+      "topic": "Verbal: Para-jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Read the passage and answer the question.\n\nMany small farmers in Maharashtra have started using drip irrigation. The method delivers water directly to the roots of plants, so less water is lost to evaporation. Although the initial cost is high, government subsidies cover a large part of it. Farmers who have adopted it report lower water bills and steadier yields during dry months.\n\nWhich statement is best supported by the passage?",
+      "options": ["Drip irrigation is cheaper to install than other methods.", "Drip irrigation reduces water loss and helps keep yields stable in dry periods.", "All farmers in Maharashtra now use drip irrigation.", "Government subsidies cover the full cost of drip irrigation."],
+      "correctIndex": 1,
+      "explanation": "The passage says less water is lost and yields are steadier in dry months. It also says the initial cost is high, that subsidies cover only a large part of it, and that only many farmers use it, not all.",
+      "topic": "Verbal: Reading comprehension",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Read the passage and answer the question.\n\nThe public libraries in one city recently added quiet study zones with power outlets and Wi-Fi. Since the change, the number of college students visiting them has risen sharply. Librarians say these students also borrow more books than before, because they browse the shelves during breaks. The city council now plans to keep the libraries open until 10 pm.\n\nWhat is the main idea of the passage?",
+      "options": ["College students prefer libraries to their own colleges.", "Wi-Fi is the most important facility in a library.", "The city council is reducing the library budget.", "New facilities in the libraries are attracting students and increasing book borrowing."],
+      "correctIndex": 3,
+      "explanation": "The passage links the new facilities to more student visits and more borrowing. The other options are either not stated or contradict the passage.",
+      "topic": "Verbal: Reading comprehension",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nSet sum = 0\nfor i = 1 to 5\n    if i mod 2 == 1\n        sum = sum + i\n    end if\nend for\nprint sum",
+      "options": ["15", "6", "5", "9"],
+      "correctIndex": 3,
+      "explanation": "Only odd values of i are added: 1 + 3 + 5 = 9.",
+      "topic": "Pseudocode: Loops and conditions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode? (Assume / performs integer division.)\n\nSet n = 2706\nSet r = 0\nwhile n > 0\n    r = r * 10 + n mod 10\n    n = n / 10\nend while\nprint r",
+      "options": ["6072", "2706", "672", "15"],
+      "correctIndex": 0,
+      "explanation": "The loop reverses the digits. r becomes 6, then 60, then 607, then 6072. The 0 is kept because it is in the middle of the reversed number.",
+      "topic": "Pseudocode: Digit manipulation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nSet a = 7, b = 12\nif a > b\n    print a - b\nelse if (a + b) mod 3 == 1\n    print a * 2\nelse\n    print b - a\nend if",
+      "options": ["-5", "5", "14", "19"],
+      "correctIndex": 2,
+      "explanation": "a > b is false. a + b = 19 and 19 mod 3 = 1, so the second branch runs and prints 7 x 2 = 14.",
+      "topic": "Pseudocode: Conditional branching",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nSet count = 0\nfor i = 1 to 4\n    for j = i to 4\n        if (i + j) mod 2 == 0\n            count = count + 1\n        end if\n    end for\nend for\nprint count",
+      "options": ["10", "6", "8", "2"],
+      "correctIndex": 1,
+      "explanation": "The pairs (i, j) with j >= i and an even sum are (1,1), (1,3), (2,2), (2,4), (3,3) and (4,4), so count = 6.",
+      "topic": "Pseudocode: Nested loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Five friends, Amit, Bhavna, Chirag, Deepa and Esha, sit in a row facing north. Chirag sits in the middle. Amit sits at the extreme left end. Esha sits immediately to the right of Chirag. Deepa does not sit next to Amit. Who sits second from the left?",
+      "options": ["Bhavna", "Deepa", "Esha", "Chirag"],
+      "correctIndex": 0,
+      "explanation": "Positions from the left are Amit 1, Chirag 3 and Esha 4. Deepa cannot be in 2 (next to Amit), so Deepa is in 5 and Bhavna is in 2.",
+      "topic": "Puzzle: Linear seating arrangement",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Six people, P, Q, R, S, T and U, live on floors 1 to 6 of a building, one person per floor (floor 1 is the lowest).\n- U lives on the top floor.\n- R lives on an even-numbered floor.\n- Exactly two people live between R and T.\n- P lives on a floor below T.\n- Q lives on the floor immediately above S.\nWho lives on floor 3?",
+      "options": ["P", "Q", "S", "R"],
+      "correctIndex": 2,
+      "explanation": "U is on 6, so R is on 2 or 4. If R were on 4, T would be on 1 and P could not be below T, so R is on 2 and T is on 5. Floors 1, 3 and 4 remain, and Q directly above S forces S on 3, Q on 4 and P on 1.",
+      "topic": "Puzzle: Floor arrangement",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

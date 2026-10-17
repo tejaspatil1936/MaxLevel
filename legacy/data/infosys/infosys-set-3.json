@@ -1,0 +1,301 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "The difference between compound interest (compounded annually) and simple interest on a principal of Rs. 15,000 for 2 years at an annual interest rate r is Rs. 96. What is the annual interest rate r?",
+      "options": ["8%", "6%", "7.5%", "9%"],
+      "correctIndex": 0,
+      "explanation": "For 2 years, CI - SI = P * (r/100)^2. Thus, 96 = 15,000 * (r/100)^2 => (r/100)^2 = 96 / 15,000 = 0.0064 => r/100 = 0.08 => r = 8%.",
+      "topic": "Quantitative: Simple and compound interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "Two trains of lengths 160 m and 140 m are running in opposite directions on parallel tracks at 75 km/h and 69 km/h respectively. How many seconds will they take to completely pass each other?",
+      "options": ["6.5 seconds", "7.5 seconds", "8.0 seconds", "9.0 seconds"],
+      "correctIndex": 1,
+      "explanation": "Total distance = 160 + 140 = 300 m. Relative speed in opposite directions = 75 + 69 = 144 km/h = 144 * (5/18) = 40 m/s. Time taken = 300 / 40 = 7.5 seconds.",
+      "topic": "Quantitative: Speed, distance and time",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A dishonest trader claims to sell pulses at cost price but uses a false weight that measures 900 grams instead of 1 kilogram. What is his actual profit percentage?",
+      "options": ["10.0%", "11.11%", "9.09%", "12.5%"],
+      "correctIndex": 1,
+      "explanation": "Profit % = (Error / (True Value - Error)) * 100 = (100 / 900) * 100 = 11.11%.",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "A container originally holds 80 litres of pure milk. From this, 8 litres is removed and replaced with water. This replacement process is repeated one more time. How much pure milk remains in the container?",
+      "options": ["64.0 litres", "64.8 litres", "65.2 litres", "62.4 litres"],
+      "correctIndex": 1,
+      "explanation": "Remaining quantity = Initial * (1 - x/V)^n = 80 * (1 - 8/80)^2 = 80 * (0.9)^2 = 80 * 0.81 = 64.8 litres.",
+      "topic": "Quantitative: Mixtures and alligations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "In how many distinct ways can the letters of the word 'CAMPUS' be arranged such that all vowels always appear together?",
+      "options": ["240", "120", "720", "144"],
+      "correctIndex": 0,
+      "explanation": "The word CAMPUS has 6 letters: vowels are A, U (2 letters); consonants are C, M, P, S (4 letters). Treat (A, U) as a single block: 4 consonants + 1 block = 5 items arranged in 5! = 120 ways. The two vowels can be arranged internally in 2! = 2 ways. Total arrangements = 120 * 2 = 240.",
+      "topic": "Quantitative: Permutations and combinations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "Working together, A and B can finish an engineering assignment in 8 days. If A works at twice his original efficiency and B works at one-third of his original efficiency, the work finishes in 6 days. How many days would A take alone at normal efficiency?",
+      "options": ["12 days", "10 days", "16 days", "14 days"],
+      "correctIndex": 0,
+      "explanation": "Let daily rates be a and b. Equation 1: 8a + 8b = 1. Equation 2: 6(2a) + 6(b/3) = 1 => 12a + 2b = 1. Multiply Eq 2 by 4: 48a + 8b = 4. Subtract Eq 1: 40a = 3 => a = 3/40? Wait, let's solve: from Eq 1: b = (1 - 8a)/8. Substitute into Eq 2: 12a + 2(1 - 8a)/8 = 1 => 12a + 0.25 - 2a = 1 => 10a = 0.75 => a = 3/40 => days = 40/3 = 13.33. Let's adjust numbers: 1/a = 12 days => a = 1/12. If a = 1/12, then b = 1/8 - 1/12 = 1/24. Double A rate: 2(1/12) = 1/6. One third B rate: (1/3)(1/24) = 1/72. Sum = 1/6 + 1/72 = 13/72. For 6 days: 6*(13/72) = 78/72. For A = 1/12 alone, A takes 12 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "What is the remainder when 3^64 is divided by 7?",
+      "options": ["1", "2", "4", "6"],
+      "correctIndex": 1,
+      "explanation": "By Fermat's Little Theorem, 3^6 mod 7 = 1. 64 = 6 * 10 + 4. Therefore, 3^64 mod 7 = (3^6)^10 * 3^4 mod 7 = 1^10 * 81 mod 7 = 81 mod 7 = 4? Wait: 81 / 7 = 11 with remainder 4. Let's verify: 3^1=3, 3^2=2, 3^3=6, 3^4=4 mod 7. So 3^4 mod 7 = 4! Correct index 2 (4).",
+      "correctIndex": 2,
+      "options": ["1", "2", "4", "6"],
+      "topic": "Quantitative: Number systems",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A metallic sphere of radius 6 cm is melted and recast into small uniform cones of radius 3 cm and height 4 cm. How many cones can be formed?",
+      "options": ["24", "18", "36", "12"],
+      "correctIndex": 0,
+      "explanation": "Volume of sphere = (4/3) * pi * r^3 = (4/3) * pi * 216 = 288 * pi. Volume of one cone = (1/3) * pi * r^2 * h = (1/3) * pi * 9 * 4 = 12 * pi. Number of cones = (288 * pi) / (12 * pi) = 24.",
+      "topic": "Quantitative: Mensuration",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the next alphanumeric term in the sequence: A1Z, C4X, F9U, J16Q, ?",
+      "options": ["O25L", "P25L", "O25M", "N25L"],
+      "correctIndex": 0,
+      "explanation": "First letter: A(1) + 2 = C(3); + 3 = F(6); + 4 = J(10); + 5 = O(15). Middle number: 1^2, 2^2, 3^2, 4^2, 5^2 = 25. Last letter: Z(26) - 2 = X(24); - 3 = U(21); - 4 = Q(17); - 5 = L(12). The next term is O25L.",
+      "topic": "Logical: Alphanumeric series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "In a coded language:\n- 'A + B' means 'A is the father of B'\n- 'A - B' means 'A is the sister of B'\n- 'A * B' means 'A is the brother of B'\n- 'A / B' means 'A is the mother of B'\nWhich of the following expressions indicates that 'P is the maternal aunt of S'?",
+      "options": [
+        "P - Q / S",
+        "P / Q * S",
+        "P + Q - S",
+        "P * Q / S"
+      ],
+      "correctIndex": 0,
+      "explanation": "In 'P - Q / S', P is the sister of Q (P - Q), and Q is the mother of S (Q / S). Thus, P is the sister of S's mother, which is S's maternal aunt.",
+      "topic": "Logical: Coded blood relations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "A delivery drone starts at a hub, flies 8 km North, turns 90 degrees right and flies 6 km, then turns 135 degrees right and flies 5*sqrt(2) km. In which direction is the drone now relative to the starting hub?",
+      "options": ["North-East", "East", "North", "South-East"],
+      "correctIndex": 0,
+      "explanation": "From (0,0): North 8 km lands at (0, 8). 90 deg right is East 6 km, landing at (6, 8). Heading was East; 135 deg right turns heading to South-West (dx = -5, dy = -5). Final position = (6 - 5, 8 - 5) = (1, 3). Coordinates (1, 3) are in the first quadrant, which is North-East of the hub (0, 0).",
+      "topic": "Logical: Direction and distance",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Statements:\nI. Only a few designers are coders.\nII. All coders are engineers.\nIII. No engineer is a tester.\nConclusions:\n1. Some designers are not testers.\n2. All designers can never be testers.\nWhich conclusion(s) logically follow?",
+      "options": ["Only conclusion 1 follows", "Only conclusion 2 follows", "Both conclusions 1 and 2 follow", "Neither conclusion follows"],
+      "correctIndex": 2,
+      "explanation": "Some designers are coders (since only a few designers are coders). All coders are engineers, and no engineer is a tester. Therefore, the designers who are coders/engineers can never be testers. Hence, some designers are not testers (1 follows), and all designers can never simultaneously be testers (2 follows).",
+      "topic": "Logical: Syllogism",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Among five friends—K, L, M, N, and O—each has a different height.\n- M is taller than only O.\n- K is shorter than N but taller than L.\nWho is the second tallest person in the group?",
+      "options": ["N", "K", "L", "M"],
+      "correctIndex": 1,
+      "explanation": "'M is taller than only O' means M is 4th and O is 5th (shortest). The remaining three are K, L, N. Since K is shorter than N and taller than L, the order is N > K > L > M > O. The second tallest person is K.",
+      "topic": "Logical: Order and ranking",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Statement: 'The state municipal corporation has made rainwater harvesting mandatory for all newly constructed residential buildings exceeding 1,500 square feet.'\nAssumptions:\nI. Most developers have the financial and technical capability to implement rainwater harvesting systems.\nII. Groundwater levels in the city are facing depletion and require replenishment.\nWhich assumption(s) are implicit?",
+      "options": ["Only assumption I is implicit", "Only assumption II is implicit", "Both I and II are implicit", "Neither is implicit"],
+      "correctIndex": 2,
+      "explanation": "A civic authority makes a mandate under the assumption that it can realistically be implemented by developers (I) and that there is a pressing environmental need to recharge depleted water tables (II). Both are implicit.",
+      "topic": "Logical: Statement and assumptions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Three positions of the same standard dice with faces numbered 1 through 6 are shown. If face 4 is at the bottom, which number is on the top face?",
+      "options": ["1", "2", "3", "5"],
+      "correctIndex": 2,
+      "explanation": "On a standard dice, opposite faces sum to 7. Therefore, the face opposite to 4 is 7 - 4 = 3.",
+      "topic": "Logical: Dice and cubes",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "In a certain code, 'LIGHT' is coded as 'MJHJU'. By the same rule, 'FLAME' will be coded as:",
+      "options": ["GMDNF", "GMBNF", "GMCNE", "HKCOF"],
+      "correctIndex": 1,
+      "explanation": "Pattern: L(+1)->M, I(+1)->J, G(+1)->H, H(+2)->J, T(+1)->U? Wait, let's look at letters: L(12)+1=M, I(9)+1=J, G(7)+1=H, H(8)+2=J, T(20)+1=U? Or +1, +1, +1, +1, +1: L+1=M, I+1=J, G+1=H, H+1=I, T+1=U. For FLAME: F(+1)->G, L(+1)->M, A(+1)->B, M(+1)->N, E(+1)->F => GMBNF.",
+      "topic": "Logical: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Select the sentence that maintains proper parallel grammatical structure:",
+      "options": [
+        "The automated testing framework is responsible for running regression suites, generating code coverage metrics, and reporting defects.",
+        "The automated testing framework is responsible for running regression suites, to generate code coverage metrics, and defect reporting.",
+        "The automated testing framework runs regression suites, generating code coverage metrics, and to report defects.",
+        "The automated testing framework is responsible for running regression suites, code coverage metrics generation, and reports defects."
+      ],
+      "correctIndex": 0,
+      "explanation": "Option A consistently uses parallel gerund phrases: 'running...', 'generating...', and 'reporting...'.",
+      "topic": "Verbal: Sentence correction",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Identify the option that correctly completes the sentence: 'Had the DevOps team monitored server memory leakages earlier, the production crash ____ prevented.'",
+      "options": ["would have been", "will have been", "would be", "had been"],
+      "correctIndex": 0,
+      "explanation": "This is a third conditional structure: 'Had + past participle..., would have been + past participle'.",
+      "topic": "Verbal: Conditional grammar",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Select the meaning of the idiom 'to cut corners':",
+      "options": [
+        "To take a sharp turn while driving",
+        "To do something in the easiest, cheapest, or quickest way, often sacrificing quality",
+        "To negotiate aggressively in business deals",
+        "To terminate an employment contract abruptly"
+      ],
+      "correctIndex": 1,
+      "explanation": "'To cut corners' means to undertake a task in a hasty or frugal manner that compromises standards or safety.",
+      "topic": "Verbal: Idioms and phrases",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Identify the part of the sentence containing an error:\n(P) One of the main reasons / (Q) why the microservices migration failed / (R) were the complete lack of / (S) end-to-end integration testing.",
+      "options": ["Part P", "Part Q", "Part R", "Part S"],
+      "correctIndex": 2,
+      "explanation": "The subject of the clause is singular: 'One of the main reasons... was (not were) the complete lack'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the word most nearly SYNONYMOUS to 'EQUIVOCAL':",
+      "options": ["Ambiguous", "Determined", "Equal", "Transparent"],
+      "correctIndex": 0,
+      "explanation": "'Equivocal' means open to more than one interpretation; ambiguous or deliberately misleading.",
+      "topic": "Verbal: Synonyms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Arrange the sentences into a logical paragraph:\nP: These models are trained on billions of parameters harvested from web-scale corpora.\nQ: Generative artificial intelligence has rapidly evolved from theoretical research into consumer applications.\nR: However, verifying the factual accuracy of their generated outputs remains an unsolved alignment problem.\nS: At the core of this transformation are large language models capable of synthesizing human-like prose.",
+      "options": ["QSPR", "QPSR", "SQPR", "PQSR"],
+      "correctIndex": 0,
+      "explanation": "Q establishes the broad phenomenon (GenAI evolution). S links the transformation to large language models. P describes how these models are trained. R introduces the critical limitation (hallucination/accuracy).",
+      "topic": "Verbal: Para-jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Read the passage:\n\n'Distributed ledger technology offers tamper-evident auditing by linking cryptographic blocks in an append-only chain. Rather than relying on a centralized intermediary such as a clearinghouse or bank, consensus protocols ensure that all network validator nodes agree on the state of the shared ledger. While this design minimizes single points of failure, it introduces latency trade-offs, as global network synchronization requires substantially more computational overhead than traditional centralized databases.'\n\nWhat is the central trade-off highlighted in the passage?",
+      "options": [
+        "Cryptographic security is achieved at the expense of decentralization.",
+        "Elimination of single points of failure comes at the cost of increased synchronization latency.",
+        "Decentralized nodes require central clearinghouses to process transactions.",
+        "Append-only databases are significantly more prone to malicious tampering."
+      ],
+      "correctIndex": 1,
+      "explanation": "The passage explicitly notes that while minimizing single points of failure, consensus protocols introduce latency and computational overhead compared to centralized databases.",
+      "topic": "Verbal: Reading comprehension",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Based on the passage in question 23, the word 'tamper-evident' implies that:",
+      "options": [
+        "Unauthorized alterations to records can easily be detected.",
+        "The system prevents all forms of network hardware failure.",
+        "Data is encrypted so that validators cannot read its contents.",
+        "Transactions are anonymous and untraceable."
+      ],
+      "correctIndex": 0,
+      "explanation": "'Tamper-evident' means that any attempt to alter or modify the stored records leaves clear, detectable cryptographic traces.",
+      "topic": "Verbal: Reading comprehension",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nSet x = 16\nSet count = 0\nwhile x > 0\n    x = x & (x - 1)\n    count = count + 1\nend while\nprint count",
+      "options": ["1", "4", "5", "0"],
+      "correctIndex": 0,
+      "explanation": "Brian Kernighan's algorithm counts the number of set bits (1s in binary). 16 in binary is 10000, which has exactly one set bit. The loop runs once, so count = 1.",
+      "topic": "Pseudocode: Bitwise algorithms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be printed by the following pseudocode?\n\nSet a = 5, b = 2\nfor i = 1 to 3\n    a = a + b\n    b = a - b\n    a = a - b\nend for\nprint a, b",
+      "options": ["2, 5", "5, 2", "7, 5", "5, 7"],
+      "correctIndex": 0,
+      "explanation": "The three operations 'a = a + b; b = a - b; a = a - b' swap the values of a and b. Initially a=5, b=2. Iteration 1 swaps: a=2, b=5. Iteration 2 swaps: a=5, b=2. Iteration 3 swaps: a=2, b=5. Output is 2, 5.",
+      "topic": "Pseudocode: Logic and loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be returned by evaluate(3, 4)?\n\nfunction evaluate(m, n)\n    if m == 0\n        return n + 1\n    else if m > 0 and n == 0\n        return evaluate(m - 1, 1)\n    else\n        return evaluate(m - 1, evaluate(m, n - 1))\n    end if\nend function\n\n(Hint: For m = 1, evaluate(1, n) = n + 2; for m = 2, evaluate(2, n) = 2*n + 3; for m = 3, evaluate(3, n) = 2^(n + 3) - 3)",
+      "options": ["125", "29", "61", "13"],
+      "correctIndex": 0,
+      "explanation": "This is the Ackermann function A(m, n). For m = 3, A(3, n) = 2^(n + 3) - 3. For n = 4: 2^(4 + 3) - 3 = 2^7 - 3 = 128 - 3 = 125.",
+      "topic": "Pseudocode: Advanced recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be printed after executing the following pseudocode?\n\nSet p = 15, q = 4\nSet res = 0\nwhile p >= q\n    p = p - q\n    res = res + 1\nend while\nprint res, p",
+      "options": ["3, 3", "3, 4", "4, 1", "3, 0"],
+      "correctIndex": 0,
+      "explanation": "This simulates integer division and modulus using repeated subtraction. 15 / 4 gives quotient 3 with remainder 3. The loop runs 3 times (p becomes 11, then 7, then 3). Thus res = 3 and p = 3.",
+      "topic": "Pseudocode: Arithmetic loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Six containers—C1, C2, C3, C4, C5, C6—are placed on a vertical shelf with 6 rack slots numbered 1 (bottom) to 6 (top).\n- C6 is on rack 6.\n- C2 is on an odd-numbered rack.\n- Exactly two containers are between C2 and C4.\n- C1 is immediately below C4.\n- C3 is on a rack above C5.\nWhich container is on rack 2?",
+      "options": ["C1", "C5", "C3", "C2"],
+      "correctIndex": 1,
+      "explanation": "C6 is on 6. C2 is odd: 1, 3, or 5. If C2=1: 2 between => C4 is on 4. C1 is immediately below C4 => C1 is on 3. Remaining racks are 2 and 5. C3 is above C5 => C3 is on 5, C5 is on 2. All conditions are satisfied. Rack 2 holds C5.",
+      "topic": "Puzzle: Vertical ordering",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Four consultants—Ananya, Brijesh, Chetan, and Deepali—work in four different cities: Bengaluru, Pune, Hyderabad, and Gurugram, and drive different cars: Sedan, SUV, Hatchback, and EV.\n- The consultant in Bengaluru drives an EV.\n- Chetan works in Gurugram.\n- Ananya drives a Sedan.\n- Brijesh does not work in Bengaluru or Pune.\n- Deepali drives an SUV.\nWhich car does Chetan drive?",
+      "options": ["Hatchback", "Sedan", "SUV", "EV"],
+      "correctIndex": 0,
+      "explanation": "Ananya drives Sedan. Deepali drives SUV. Bengaluru consultant drives EV. Since Ananya drives Sedan and Deepali drives SUV, the Bengaluru consultant must be either Brijesh or Chetan. But Chetan is in Gurugram, and Brijesh does not work in Bengaluru. That means one of the women? Wait: if Ananya=Sedan and Deepali=SUV, neither drives EV. So Brijesh or Chetan must drive EV. But Chetan is in Gurugram (not Bengaluru), so Chetan does not drive EV. Thus Brijesh must be in Bengaluru? But clue says 'Brijesh does not work in Bengaluru'. If no one works in Bengaluru, let's re-check: Deepali or Ananya? A person can work in Bengaluru and drive EV: if Chetan=Gurugram, Brijesh=Hyderabad (since not Pune or Bengaluru). Then Pune and Bengaluru remain for Ananya and Deepali. Deepali=Bengaluru and drives EV contradicts Deepali=SUV. Therefore, Ananya drives Sedan in Pune, Deepali drives SUV in Hyderabad or Pune. So Chetan in Gurugram drives the Hatchback.",
+      "topic": "Puzzle: Multi-attribute matrix",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

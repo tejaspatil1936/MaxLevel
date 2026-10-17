@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "The sum of the ages of Kavya and her brother is 34 years. Kavya is 6 years older than her brother. How old is Kavya?",
+      "options": [
+        "14 years",
+        "22 years",
+        "17 years",
+        "20 years"
+      ],
+      "correctIndex": 3,
+      "explanation": "Let the brother be b. Then b + (b + 6) = 34, so b = 14 and Kavya = 20 years.",
+      "topic": "Quantitative: Problems on ages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "In an arithmetic progression, the 4th term is 14 and the 9th term is 34. What is the 20th term?",
+      "options": [
+        "78",
+        "80",
+        "82",
+        "74"
+      ],
+      "correctIndex": 0,
+      "explanation": "5d = 34 − 14 = 20, so d = 4 and a = 14 − 12 = 2. t₂₀ = 2 + 19 × 4 = 78.",
+      "topic": "Quantitative: Progressions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "What is the remainder when 2¹⁰⁰ is divided by 7?",
+      "options": [
+        "2",
+        "4",
+        "3",
+        "1"
+      ],
+      "correctIndex": 0,
+      "explanation": "2³ = 8 leaves remainder 1 on division by 7. 2¹⁰⁰ = (2³)³³ × 2, so the remainder is 1 × 2 = 2.",
+      "topic": "Quantitative: Number system (remainders)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "What is the smallest four-digit number that leaves a remainder of 4 when divided by 6, 9 and 15?",
+      "options": [
+        "1,080",
+        "1,084",
+        "1,004",
+        "1,094"
+      ],
+      "correctIndex": 1,
+      "explanation": "LCM of 6, 9 and 15 is 90. The smallest four-digit multiple of 90 is 1080, so the number is 1080 + 4 = 1,084.",
+      "topic": "Quantitative: HCF and LCM",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "In how many ways can 6 people be seated around a circular table if two particular people must always sit next to each other?",
+      "options": [
+        "48",
+        "240",
+        "120",
+        "24"
+      ],
+      "correctIndex": 0,
+      "explanation": "Treat the pair as one unit: 5 units around a circle give (5 − 1)! = 24 ways. The pair can swap places, so total = 24 × 2 = 48.",
+      "topic": "Quantitative: Permutations and combinations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "A box contains 4 defective and 8 working bulbs. Three bulbs are picked at random. What is the probability that at least one of them is defective?",
+      "options": [
+        "14/55",
+        "41/55",
+        "28/55",
+        "1/3"
+      ],
+      "correctIndex": 1,
+      "explanation": "P(none defective) = 8C3/12C3 = 56/220 = 14/55. P(at least one) = 1 − 14/55 = 41/55.",
+      "topic": "Quantitative: Probability",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "If α and β are the roots of x² − 9x + 14 = 0, what is the value of α² + β²?",
+      "options": [
+        "67",
+        "81",
+        "53",
+        "49"
+      ],
+      "correctIndex": 2,
+      "explanation": "α + β = 9 and αβ = 14. α² + β² = (α + β)² − 2αβ = 81 − 28 = 53.",
+      "topic": "Quantitative: Algebra (quadratic equations)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "Farhan starts a business with ₹45,000. Some months later Gauri joins with ₹30,000. At the end of the year, the profit is divided between them in the ratio 2 : 1. After how many months did Gauri join?",
+      "options": [
+        "9 months",
+        "3 months",
+        "6 months",
+        "4 months"
+      ],
+      "correctIndex": 1,
+      "explanation": "45000 × 12 : 30000 × (12 − m) = 2 : 1 gives 540000 = 60000(12 − m), so 12 − m = 9 and m = 3.",
+      "topic": "Quantitative: Partnership",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the next number in the series: 8, 12, 24, 60, 180, ?",
+      "options": [
+        "540",
+        "600",
+        "720",
+        "630"
+      ],
+      "correctIndex": 3,
+      "explanation": "The multipliers increase by 0.5 each time: ×1.5, ×2, ×2.5, ×3, so the next is ×3.5: 180 × 3.5 = 630.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "If south-east is called north, north-east is called west, and all other directions are renamed in the same way, what will west be called?",
+      "options": [
+        "South-West",
+        "North-East",
+        "South-East",
+        "North-West"
+      ],
+      "correctIndex": 2,
+      "explanation": "South-east becoming north is a turn of 135° anticlockwise, and north-east becoming west confirms it. West turned 135° anticlockwise is south-east.",
+      "topic": "Logical reasoning: Direction sense (rotated directions)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Five friends — A, B, C, D and E — have different weights. C is heavier than B. B is heavier than both A and D. E is lighter than D but heavier than A. Who is the second lightest?",
+      "options": [
+        "B",
+        "D",
+        "A",
+        "E"
+      ],
+      "correctIndex": 3,
+      "explanation": "C > B, and B is heavier than A and D. Since D > E > A, the full order is C > B > D > E > A. E is second lightest.",
+      "topic": "Logical reasoning: Ordering and comparison",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Statements: J ≤ K < L;  M > L;  N ≥ M\n\nConclusions:\nI. N > K\nII. M ≥ N\n\nWhich of the conclusions is definitely true?",
+      "options": [
+        "Only II is definitely true",
+        "Only I is definitely true",
+        "Both I and II are definitely true",
+        "Neither I nor II is definitely true"
+      ],
+      "correctIndex": 1,
+      "explanation": "N ≥ M > L > K gives N > K (I). The statement says N ≥ M, so M ≥ N holds only if they are equal; it is not definitely true.",
+      "topic": "Logical reasoning: Inequalities",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statements:\nSome files are folders.\nNo folders are disks.\nAll disks are drives.\n\nConclusions:\nI. Some files are not disks.\nII. Some drives are not folders.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Only conclusion I follows",
+        "Neither conclusion I nor II follows",
+        "Both conclusions I and II follow",
+        "Only conclusion II follows"
+      ],
+      "correctIndex": 2,
+      "explanation": "The files that are folders cannot be disks, so I follows. Every disk is a drive and no disk is a folder, so those drives are not folders and II follows.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "A cuboid measuring 4 cm × 3 cm × 2 cm is painted on all its faces and then cut into 1 cm cubes. How many of the small cubes have exactly two faces painted?",
+      "options": [
+        "12",
+        "8",
+        "16",
+        "4"
+      ],
+      "correctIndex": 0,
+      "explanation": "There are two layers of 4 × 3 cubes, and every cube touches the top or the bottom. In each layer, the 6 non-corner cubes on the outer border get one more painted face, making two. Total = 6 × 2 = 12.",
+      "topic": "Logical reasoning: Cubes and dice",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "In a certain code, MANGO is written as LBMFP. How is FOREST written in that code?",
+      "options": [
+        "GNSDTU",
+        "EPQFRS",
+        "ENQFRS",
+        "EPQDRS"
+      ],
+      "correctIndex": 1,
+      "explanation": "Vowels move one letter forward and consonants one letter back: M→L, A→B, N→M, G→F, O→P. So F→E, O→P, R→Q, E→F, S→R, T→S.",
+      "topic": "Logical reasoning: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "On which day of the week did 2 October 1869 fall?",
+      "options": [
+        "Saturday",
+        "Friday",
+        "Thursday",
+        "Sunday"
+      ],
+      "correctIndex": 0,
+      "explanation": "1600 years give 0 odd days; 1601–1800 give 3 (200 years = 3); 1801–1868 give 68 + 17 leap years = 85 ≡ 1. Up to 2 October 1869: Jan–Sep = 273 days ≡ 0, plus 2 = 2. Total = 0 + 3 + 1 + 2 = 6 odd days, which is Saturday.",
+      "topic": "Logical reasoning: Calendars",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Which of the following sentences about travelling by bus is grammatically correct?",
+      "options": [
+        "She don't like travelling by bus.",
+        "She not like travelling by bus.",
+        "She doesn't like travelling by bus.",
+        "She doesn't likes travelling by bus."
+      ],
+      "correctIndex": 2,
+      "explanation": "With 'does not' (doesn't), the main verb takes its base form: 'like'. 'She don't' is incorrect because 'she' needs 'does'.",
+      "topic": "Verbal: Sentence correction",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Choose the word or phrase closest in meaning to 'sceptical' as used in the sentence.\n\nThe scientist was sceptical of claims that the new medicine could cure every form of the disease.",
+      "options": [
+        "doubtful",
+        "unaware",
+        "certain",
+        "excited"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Sceptical' means not easily convinced; having doubts.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nNot only he plays / the violin / but he also composes / his own music.",
+      "options": [
+        "the violin",
+        "Not only he plays",
+        "but he also composes",
+        "his own music."
+      ],
+      "correctIndex": 1,
+      "explanation": "When a sentence begins with 'Not only', the subject and auxiliary are inverted: 'Not only does he play the violin…'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Choose the word most nearly OPPOSITE in meaning to the word 'stagnant' as used in the sentence.\n\nThe company's growth has remained stagnant for three years.",
+      "options": [
+        "thriving",
+        "recorded",
+        "sluggish",
+        "uncertain"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Stagnant' means showing no growth or activity; the opposite is 'thriving'. 'Sluggish' has a similar meaning.",
+      "topic": "Verbal: Antonyms in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the one word that can replace the phrase:\n\nA person who endures pain or hardship calmly, without showing feelings or complaining",
+      "options": [
+        "Cynic",
+        "Hedonist",
+        "Stoic",
+        "Sceptic"
+      ],
+      "correctIndex": 2,
+      "explanation": "A stoic accepts hardship calmly. A cynic distrusts others' motives, a sceptic doubts claims, and a hedonist pursues pleasure.",
+      "topic": "Verbal: One-word substitution",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Read the passage and answer the question.\n\nTo reduce plastic waste, a city has banned single-use plastic bags in all shops. Shops found using such bags will be fined. Officials expect that shoppers will now start carrying their own cloth bags.\n\nThe officials' expectation is based on which assumption?",
+      "options": [
+        "Plastic bags will remain available in other cities.",
+        "All shops already sell cloth bags.",
+        "Shoppers will still need some way to carry what they buy.",
+        "Cloth bags are cheaper to produce than plastic bags."
+      ],
+      "correctIndex": 2,
+      "explanation": "Expecting shoppers to bring cloth bags only makes sense if they still need something to carry their purchases. The other options are not required for the expectation to hold.",
+      "topic": "Verbal: Reading comprehension (assumption)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Choose the option that correctly fills the blank.\n\nThe meeting ______ for two hours when the power failed.",
+      "options": [
+        "had been going on",
+        "is going on",
+        "was going on since",
+        "has been going on"
+      ],
+      "correctIndex": 0,
+      "explanation": "An action that continued up to a point in the past ('when the power failed') takes the past perfect continuous: 'had been going on for two hours'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. It found that about 60 percent of them did so.\nQ. That figure, the authors note, is higher than the national average.\nR. A recent report examined how many graduates in the state find jobs within a year.\nS. Yet the report also warns that many of these jobs do not match the graduates' training.",
+      "options": [
+        "RQPS",
+        "PRQS",
+        "RPSQ",
+        "RPQS"
+      ],
+      "correctIndex": 3,
+      "explanation": "R introduces the report; P ('It found') gives the figure; Q ('That figure') comments on it; S ('Yet … also warns') adds a caution.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 5, b = 8\na = a + b\nb = a - b\na = a - b\nPrint a, b",
+      "options": [
+        "8 13",
+        "13 8",
+        "5 8",
+        "8 5"
+      ],
+      "correctIndex": 3,
+      "explanation": "After a = 13, b = 13 − 8 = 5 and a = 13 − 5 = 8. The values are swapped: 8 5.",
+      "topic": "Pseudocode: Variables (swap)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger n, p, d\nSet n = 2025, p = 1\nwhile (n > 0)\n    d = n mod 10\n    if (d != 0)\n        p = p * d\n    end if\n    n = n / 10    // integer division\nend while\nPrint p",
+      "options": [
+        "10",
+        "0",
+        "20",
+        "9"
+      ],
+      "correctIndex": 2,
+      "explanation": "The digits of 2025 are 5, 2, 0, 2. Zero is skipped, so p = 5 × 2 × 2 = 20.",
+      "topic": "Pseudocode: While loop (digits)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[5] = {10, 20, 30, 40, 50}\nInteger t\nfor (each k from 1 to 2)\n    t = arr[0]\n    for (each i from 0 to 3)\n        arr[i] = arr[i + 1]\n    end for\n    arr[4] = t\nend for\nPrint all elements of arr from index 0 to 4\n\n(Array indices start at 0.)",
+      "options": [
+        "50, 10, 20, 30, 40",
+        "30, 40, 50, 10, 20",
+        "40, 50, 10, 20, 30",
+        "20, 30, 40, 50, 10"
+      ],
+      "correctIndex": 1,
+      "explanation": "Each pass rotates the array left by one place. Two passes give 30, 40, 50, 10, 20.",
+      "topic": "Pseudocode: Arrays (rotation)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer n)\n    if (n <= 2)\n        return n\n    end if\n    return fun(n - 1) * fun(n - 2) - n\nEnd function\n\nPrint fun(5)",
+      "options": [
+        "-1",
+        "-6",
+        "11",
+        "1"
+      ],
+      "correctIndex": 3,
+      "explanation": "fun(3) = 2 × 1 − 3 = −1, fun(4) = (−1) × 2 − 4 = −6, fun(5) = (−6) × (−1) − 5 = 1.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Four friends must cross a narrow bridge at night with one torch. At most two people can cross at a time, anyone crossing must carry the torch, and a pair walks at the slower person's pace. Asha takes 1 minute, Balu 3 minutes, Charu 6 minutes and Dev 8 minutes. What is the minimum total time needed for all four to cross?",
+      "options": [
+        "21 minutes",
+        "19 minutes",
+        "18 minutes",
+        "17 minutes"
+      ],
+      "correctIndex": 2,
+      "explanation": "Asha and Balu cross (3), Asha returns (1), Charu and Dev cross (8), Balu returns (3), Asha and Balu cross (3): 3 + 1 + 8 + 3 + 3 = 18. Letting Asha escort everyone takes 8 + 1 + 6 + 1 + 3 = 19, and a full search confirms 18 is the minimum.",
+      "topic": "Puzzles: Crossing puzzle",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Each of four people — A, B, C and D — is either a truth-teller, who always tells the truth, or a liar, who always lies.\nA says: \"B and C are both liars.\"\nB says: \"D is a liar.\"\nC says: \"A and I are of the same type.\"\nD says: \"Exactly two of us four are truth-tellers.\"\nWho are the truth-tellers?",
+      "options": [
+        "B and D",
+        "B and C",
+        "A and C",
+        "A and D"
+      ],
+      "correctIndex": 3,
+      "explanation": "If C tells the truth, A is of the same type, so A is truthful. If C lies, A is of a different type, so again A is truthful. A's statement then makes B and C liars. B's lie means D is a truth-teller, and D's claim (two truth-tellers: A and D) checks out.",
+      "topic": "Puzzles: Truth-tellers and liars",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

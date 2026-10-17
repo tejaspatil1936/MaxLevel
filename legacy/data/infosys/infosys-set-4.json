@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A college has the following number of final-year students: CSE 120, IT 80, ENTC 60, Mechanical 40. If 25% of CSE students and 40% of Mechanical students were placed in the first week, how many students from these two branches were placed in the first week?",
+      "options": [
+        "48",
+        "52",
+        "40",
+        "46"
+      ],
+      "correctIndex": 3,
+      "explanation": "25% of 120 = 30 and 40% of 40 = 16. Total = 30 + 16 = 46.",
+      "topic": "Quantitative: Data interpretation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "The sum of two numbers is 56 and their difference is 14. What is the larger number?",
+      "options": [
+        "21",
+        "28",
+        "42",
+        "35"
+      ],
+      "correctIndex": 3,
+      "explanation": "Larger = (56 + 14)/2 = 35 and smaller = 21.",
+      "topic": "Quantitative: Algebra (linear equations)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "What is the unit digit of 7⁹⁵?",
+      "options": [
+        "9",
+        "1",
+        "3",
+        "7"
+      ],
+      "correctIndex": 2,
+      "explanation": "Unit digits of powers of 7 repeat in the cycle 7, 9, 3, 1. Since 95 leaves remainder 3 when divided by 4, the unit digit is 3.",
+      "topic": "Quantitative: Unit digit",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "If a : b = 2 : 3 and b : c = 4 : 5, what is a : b : c?",
+      "options": [
+        "4 : 6 : 5",
+        "8 : 12 : 10",
+        "2 : 3 : 5",
+        "8 : 12 : 15"
+      ],
+      "correctIndex": 3,
+      "explanation": "Make b common: a : b = 8 : 12 and b : c = 12 : 15, so a : b : c = 8 : 12 : 15.",
+      "topic": "Quantitative: Ratio and proportion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "A bag contains 5 red, 4 blue and 3 green balls. Two balls are drawn at random without replacement. What is the probability that both balls are of the same colour?",
+      "options": [
+        "17/66",
+        "1/3",
+        "19/66",
+        "25/72"
+      ],
+      "correctIndex": 2,
+      "explanation": "Favourable = 5C2 + 4C2 + 3C2 = 10 + 6 + 3 = 19. Total = 12C2 = 66. Probability = 19/66.",
+      "topic": "Quantitative: Probability",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "Anil starts a business with ₹40,000 and Bhavna joins him at the same time with ₹60,000. After 6 months, Anil adds another ₹20,000. At the end of the year the profit is ₹33,000. What is Anil's share?",
+      "options": [
+        "₹18,000",
+        "₹13,200",
+        "₹16,500",
+        "₹15,000"
+      ],
+      "correctIndex": 3,
+      "explanation": "Anil's capital-months = 40000 × 6 + 60000 × 6 = 6,00,000; Bhavna's = 60000 × 12 = 7,20,000. Ratio 5 : 6, so Anil gets 5/11 × 33000 = ₹15,000.",
+      "topic": "Quantitative: Partnership",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "What is the angle between the hour hand and the minute hand of a clock at 4:20?",
+      "options": [
+        "0°",
+        "20°",
+        "10°",
+        "5°"
+      ],
+      "correctIndex": 2,
+      "explanation": "Angle = |30H − 5.5M| = |120 − 110| = 10°. The hour hand moves 10° beyond the 4 in 20 minutes, so the hands do not overlap.",
+      "topic": "Quantitative: Clocks",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A rectangular garden is 24 m long and 18 m wide. A path 2 m wide runs all around it on the outside. What is the area of the path?",
+      "options": [
+        "184 sq m",
+        "200 sq m",
+        "176 sq m",
+        "168 sq m"
+      ],
+      "correctIndex": 0,
+      "explanation": "Outer rectangle = 28 × 22 = 616 sq m. Garden = 24 × 18 = 432 sq m. Path = 616 − 432 = 184 sq m.",
+      "topic": "Quantitative: Mensuration",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the next term in the series: AZ, CX, EV, GT, ?",
+      "options": [
+        "IS",
+        "IR",
+        "JR",
+        "HR"
+      ],
+      "correctIndex": 1,
+      "explanation": "The first letter moves 2 forward (A, C, E, G, I) and the second moves 2 back (Z, X, V, T, R).",
+      "topic": "Logical reasoning: Letter series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Five boxes P, Q, R, S and T have different weights. Q is heavier than R but lighter than T. P is heavier than T. S is lighter than R. Which box is the second lightest?",
+      "options": [
+        "Q",
+        "S",
+        "T",
+        "R"
+      ],
+      "correctIndex": 3,
+      "explanation": "The order from heaviest to lightest is P > T > Q > R > S, so R is second lightest.",
+      "topic": "Logical reasoning: Ordering and comparison",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "3 : 27 :: 5 : ?",
+      "options": [
+        "125",
+        "135",
+        "25",
+        "15"
+      ],
+      "correctIndex": 0,
+      "explanation": "27 = 3³; similarly 5³ = 125.",
+      "topic": "Logical reasoning: Analogy (numbers)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Find the next number in the series: 7, 11, 20, 36, 61, ?",
+      "options": [
+        "86",
+        "95",
+        "100",
+        "97"
+      ],
+      "correctIndex": 3,
+      "explanation": "The differences are 4, 9, 16, 25 (squares of 2, 3, 4, 5). The next difference is 36, so 61 + 36 = 97.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statements:\nSome trees are plants.\nNo plants are flowers.\n\nConclusions:\nI. Some trees are not flowers.\nII. Some flowers are trees.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Neither conclusion I nor II follows",
+        "Only conclusion II follows",
+        "Only conclusion I follows",
+        "Both conclusions I and II follow"
+      ],
+      "correctIndex": 2,
+      "explanation": "The trees that are plants cannot be flowers, so some trees are not flowers (I). Nothing links flowers to trees directly, so II does not follow.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "A wooden cube painted on all six faces is cut into 64 equal smaller cubes. How many of the smaller cubes have exactly two faces painted?",
+      "options": [
+        "32",
+        "8",
+        "24",
+        "16"
+      ],
+      "correctIndex": 2,
+      "explanation": "The cube is 4 × 4 × 4. Cubes with exactly two painted faces lie on the edges but not at corners: 12 edges × (4 − 2) = 24.",
+      "topic": "Logical reasoning: Cubes and dice",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "On which day of the week did 26 January 2001 fall?",
+      "options": [
+        "Wednesday",
+        "Friday",
+        "Thursday",
+        "Saturday"
+      ],
+      "correctIndex": 1,
+      "explanation": "1 January 2001 was a Monday (2000 years give 0 odd days). 26 January is 25 days later, and 25 = 3 weeks + 4 days, so Monday + 4 = Friday.",
+      "topic": "Logical reasoning: Calendars",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Eight people — Ishita, Jatin, Komal, Lalit, Mansi, Nikhil, Ojas and Parul — sit in a row facing north. Komal sits fifth to the left of Ojas. Parul sits at one of the ends. Exactly two people sit between Parul and Mansi. Jatin sits immediately to the right of Komal. Nikhil does not sit at an end and sits somewhere to the right of Ojas. Ishita sits somewhere to the left of Lalit. How many people sit between Jatin and Nikhil?",
+      "options": [
+        "2",
+        "3",
+        "5",
+        "4"
+      ],
+      "correctIndex": 3,
+      "explanation": "Nikhil must be right of Ojas but not at the end, so Ojas is 6th, Nikhil 7th and Komal 1st, with Jatin 2nd. Parul takes the right end (8th) and Mansi is 5th. Ishita and Lalit fill 3rd and 4th. Between Jatin (2nd) and Nikhil (7th) there are 4 people.",
+      "topic": "Logical reasoning: Seating arrangement (linear)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the option that correctly fills the blank.\n\nAfter ten years on the night shift, he is accustomed ______ working late.",
+      "options": [
+        "in",
+        "for",
+        "to",
+        "with"
+      ],
+      "correctIndex": 2,
+      "explanation": "The phrase is 'accustomed to' + -ing form: 'accustomed to working'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Choose the word or phrase closest in meaning to 'augment' as used in the sentence.\n\nThe government plans to augment the city's water supply by building a new reservoir.",
+      "options": [
+        "reduce",
+        "measure",
+        "inspect",
+        "increase"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Augment' means to make something greater by adding to it.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "What does the phrase 'without a hitch' mean in the sentence below?\n\nAfter months of preparation, the product launch went off without a hitch.",
+      "options": [
+        "happened smoothly, without any problems",
+        "was delayed by several weeks",
+        "was cancelled at the last minute",
+        "was completed in a hurry"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Without a hitch' means without any difficulty or problem.",
+      "topic": "Verbal: Idioms and phrases",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Read the passage and answer the question.\n\nLibraries in many Indian towns are reinventing themselves. Besides lending books, some now run coding clubs for teenagers, host career talks, and offer free Wi-Fi to students who cannot afford data plans. Librarians say these activities have brought in young visitors who never used to enter the building. The challenge now is to find steady funding so that the new programmes do not disappear after a year or two.\n\nWhich of the following best expresses the main idea of the passage?",
+      "options": [
+        "Teenagers prefer coding clubs to reading books.",
+        "Some libraries are adding new services to attract young people but need stable funding to keep them going.",
+        "Free Wi-Fi is the most popular service in town libraries.",
+        "Libraries have stopped lending books to focus on coding clubs."
+      ],
+      "correctIndex": 1,
+      "explanation": "The passage describes libraries adding new activities that draw young visitors and ends with the need for steady funding. The other options are either false or not stated.",
+      "topic": "Verbal: Reading comprehension (main idea)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nHe is senior / than me / by three years / in the company.",
+      "options": [
+        "in the company.",
+        "than me",
+        "He is senior",
+        "by three years"
+      ],
+      "correctIndex": 1,
+      "explanation": "'Senior' is followed by 'to', not 'than': 'He is senior to me by three years'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. Volunteers were divided into two groups, only one of which walked for thirty minutes every day.\nQ. Those who walked reported falling asleep faster and waking up less often.\nR. A study set out to test whether short daily walks improve sleep.\nS. The researchers then compared the two groups after six weeks.",
+      "options": [
+        "RPSQ",
+        "PRSQ",
+        "RPQS",
+        "RSPQ"
+      ],
+      "correctIndex": 0,
+      "explanation": "R states the aim of the study; P describes the two groups; S ('then compared') follows the set-up; Q reports the finding.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Choose the correct spelling of the word that means 'a place to stay or live'.",
+      "options": [
+        "Accommodation",
+        "Acommodation",
+        "Acomodation",
+        "Accomodation"
+      ],
+      "correctIndex": 0,
+      "explanation": "The correct spelling has a double 'c' and a double 'm': accommodation.",
+      "topic": "Verbal: Spelling",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Which of the following sentences about resting on a sofa is grammatically correct?",
+      "options": [
+        "Yesterday he laid on the sofa all afternoon.",
+        "Yesterday he lay on the sofa all afternoon.",
+        "Yesterday he lain on the sofa all afternoon.",
+        "Yesterday he lied on the sofa all afternoon."
+      ],
+      "correctIndex": 1,
+      "explanation": "The intransitive verb 'lie' (to recline) has the past tense 'lay'. 'Laid' is the past of 'lay' (to put something down), 'lied' means told a lie, and 'lain' is a past participle needing 'has/had'.",
+      "topic": "Verbal: Sentence correction (verb forms)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger s\nSet s = 0\nfor (each i from 1 to 6)\n    if (i == 4)\n        continue    // skip to the next iteration\n    end if\n    s = s + i\nend for\nPrint s",
+      "options": [
+        "15",
+        "10",
+        "17",
+        "21"
+      ],
+      "correctIndex": 2,
+      "explanation": "All values 1 to 6 are added except 4: 21 − 4 = 17.",
+      "topic": "Pseudocode: Loops (skip)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b\nSet a = 9, b = 14\na = a XOR b\nb = a XOR b\na = a XOR b\nPrint a, b\n\n(XOR is the bitwise exclusive-OR operator.)",
+      "options": [
+        "5 9",
+        "14 9",
+        "14 14",
+        "9 14"
+      ],
+      "correctIndex": 1,
+      "explanation": "Three successive XORs swap two variables without a temporary variable, so a = 14 and b = 9.",
+      "topic": "Pseudocode: Bitwise XOR",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger s\nSet s = 0\nfor (each i from 1 to 3)\n    for (each j from 1 to i)\n        s = s + i * j\n    end for\nend for\nPrint s",
+      "options": [
+        "25",
+        "14",
+        "36",
+        "20"
+      ],
+      "correctIndex": 0,
+      "explanation": "i = 1 adds 1; i = 2 adds 2 + 4 = 6; i = 3 adds 3 + 6 + 9 = 18. Total = 25.",
+      "topic": "Pseudocode: Nested loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b, c\nSet a = 29\nb = a AND (a - 1)\nc = a XOR b\nPrint b, c\n\n(AND and XOR are bitwise operators.)",
+      "options": [
+        "28 0",
+        "28 1",
+        "29 1",
+        "24 5"
+      ],
+      "correctIndex": 1,
+      "explanation": "a AND (a − 1) clears the lowest set bit: 11101 AND 11100 = 11100 = 28. 29 XOR 28 = 1.",
+      "topic": "Pseudocode: Bitwise operators",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "You have 9 identical-looking coins. One is slightly heavier than the others. Using only a two-pan balance, what is the minimum number of weighings that always guarantees you find the heavier coin?",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "correctIndex": 1,
+      "explanation": "Split into three groups of 3 and weigh two groups: the heavier pan, or the unweighed group if they balance, holds the coin. Weigh 1 against 1 from that group to find it. Each weighing has 3 outcomes, and 3² = 9.",
+      "topic": "Puzzles: Balance puzzle",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Five books — Maths, Physics, Chemistry, Biology and English — stand in a row on a shelf. The Physics book is immediately to the right of the Maths book. The English book is at the extreme right. The Chemistry book is not next to the Physics book. The Biology book is somewhere to the left of the Maths book. Which book is in the middle position?",
+      "options": [
+        "Maths",
+        "Chemistry",
+        "Biology",
+        "Physics"
+      ],
+      "correctIndex": 0,
+      "explanation": "English is 5th, so Maths–Physics fit in 2nd–3rd or 3rd–4th. In 2nd–3rd, Biology is 1st and Chemistry 4th, next to Physics, which breaks a rule. So Maths is 3rd and Physics 4th, with Biology and Chemistry in the first two places.",
+      "topic": "Puzzles: Logic puzzle (arrangement)",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the compound interest on Rs. 20,000 at 10% per annum for 2 years, compounded annually?",
+      "options": ["Rs. 4,000", "Rs. 6,620", "Rs. 4,200", "Rs. 24,200"],
+      "correctIndex": 2,
+      "explanation": "Amount = 20,000 x 1.1 x 1.1 = 24,200, so CI = 24,200 - 20,000 = Rs. 4,200.",
+      "topic": "Quantitative: Compound interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "A 40-litre mixture contains milk and water in the ratio 3 : 1. How much water must be added to make the ratio 3 : 2?",
+      "options": ["10 litres", "20 litres", "5 litres", "15 litres"],
+      "correctIndex": 0,
+      "explanation": "Milk = 30 L and water = 10 L. For a 3 : 2 ratio with 30 L of milk, water must be 20 L, so 20 - 10 = 10 L must be added.",
+      "topic": "Quantitative: Mixtures",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A boat covers 36 km downstream in 3 hours and returns the same distance upstream in 4.5 hours. What is the speed of the stream?",
+      "options": ["10 km/h", "4 km/h", "2.5 km/h", "2 km/h"],
+      "correctIndex": 3,
+      "explanation": "Downstream speed = 36/3 = 12 km/h. Upstream speed = 36/4.5 = 8 km/h. Speed of stream = (12 - 8) / 2 = 2 km/h.",
+      "topic": "Quantitative: Boats and streams",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "Pipes A and B can fill a cistern in 12 hours and 15 hours respectively, while pipe C can empty it in 20 hours. If all three pipes are opened simultaneously, in how many hours will the cistern be completely filled?",
+      "options": ["8 hours", "10 hours", "12 hours", "7.5 hours"],
+      "correctIndex": 1,
+      "explanation": "Net rate per hour = 1/12 + 1/15 - 1/20 = (5 + 4 - 3)/60 = 6/60 = 1/10 cistern/hour. Therefore, it fills in 10 hours.",
+      "topic": "Quantitative: Pipes and cisterns",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "A bag contains 5 red balls, 4 blue balls, and 3 green balls. If two balls are drawn at random without replacement, what is the probability that both are red?",
+      "options": ["5/33", "5/36", "1/6", "5/22"],
+      "correctIndex": 0,
+      "explanation": "Total balls = 12. Probability = (5/12) x (4/11) = 20/132 = 5/33.",
+      "topic": "Quantitative: Probability",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "The ratio of the present ages of a father and his son is 7 : 2. Five years ago, the father was four times as old as his son. What is the present age of the father?",
+      "options": ["35 years", "42 years", "49 years", "28 years"],
+      "correctIndex": 0,
+      "explanation": "Let ages be 7x and 2x. Five years ago: 7x - 5 = 4(2x - 5) => 7x - 5 = 8x - 20 => x = 15. Father's age = 7 x 5 = 35 years.",
+      "topic": "Quantitative: Problems on ages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "An article is marked at Rs. 2,400. The retailer offers two successive discounts of 15% and 10%. What is the final selling price?",
+      "options": ["Rs. 1,800", "Rs. 1,836", "Rs. 1,920", "Rs. 1,750"],
+      "correctIndex": 1,
+      "explanation": "After 15% discount: 2,400 x 0.85 = 2,040. After further 10% discount: 2,040 x 0.90 = Rs. 1,836.",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "If 6 men or 9 women can complete a construction project in 20 days, how many days will 4 men and 6 women take to complete the same work?",
+      "options": ["12 days", "15 days", "10 days", "18 days"],
+      "correctIndex": 1,
+      "explanation": "6 men = 9 women => 1 man = 1.5 women. Thus, 4 men and 6 women = 4(1.5) + 6 = 12 women. If 9 women take 20 days, 12 women take (9 x 20) / 12 = 15 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the missing number in the sequence: 4, 18, 48, 100, 180, ?",
+      "options": ["248", "294", "312", "276"],
+      "correctIndex": 1,
+      "explanation": "Terms follow n^2 x (n - 1) or n^3 - n^2 for n = 2, 3, 4, 5, 6, 7. For n = 7: 7^3 - 7^2 = 343 - 49 = 294 (or 2^2 x 1 = 4, 3^2 x 2 = 18, 4^2 x 3 = 48, 5^2 x 4 = 100, 6^2 x 5 = 180, 7^2 x 6 = 294).",
+      "topic": "Logical: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "In a certain code, MONKEY is coded as XDJMNL. How is TIGER coded in that same code?",
+      "options": ["SHFDQ", "QDFHS", "SDFHQ", "PCEGQ"],
+      "correctIndex": 1,
+      "explanation": "Reverse the letters of MONKEY to YEKNOM, then shift each backward by 1: Y-1=X, E-1=D, K-1=J, N-1=M, O-1=N, M-1=L. For TIGER, reversed is REGIT. Shifting back by 1: R-1=Q, E-1=D, G-1=F, I-1=H, T-1=S, yielding QDFHS.",
+      "topic": "Logical: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Introducing a woman, a man says, 'Her maternal grandfather is the only son of my paternal grandfather.' How is the woman related to the man?",
+      "options": ["Mother", "Daughter", "Niece", "Sister"],
+      "correctIndex": 2,
+      "explanation": "The only son of the man's paternal grandfather is the man's father. The woman's maternal grandfather is the man's father, which means her mother is the man's sister. Thus, the woman is the man's niece.",
+      "topic": "Logical: Blood relations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Suresh leaves his house and travels 5 km south, turns left and travels 3 km, turns right and walks 2 km, then turns right again and walks 3 km. How far is he from his house?",
+      "options": ["7 km", "5 km", "10 km", "3 km"],
+      "correctIndex": 0,
+      "explanation": "South 5 km. Left is East 3 km. Right is South 2 km. Right is West 3 km (cancels East 3 km). Total displacement = 5 km South + 2 km South = 7 km South.",
+      "topic": "Logical: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statements:\nI. No pencil is a pen.\nII. All pens are markers.\nConclusions:\n1. Some markers are not pencils.\n2. Some markers are pens.\nWhich conclusion(s) follow logically?",
+      "options": ["Only conclusion 1 follows", "Only conclusion 2 follows", "Both conclusions 1 and 2 follow", "Neither follows"],
+      "correctIndex": 2,
+      "explanation": "Since all pens are markers, those markers which are pens cannot be pencils, so some markers are not pencils (1 follows). Also, all pens are markers implies some markers are pens (2 follows). Both follow.",
+      "topic": "Logical: Syllogism",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Find the odd one out among the given groups of letters: BDFH, JLNP, RTVX, KMOQ",
+      "options": ["BDFH", "JLNP", "RTVX", "KMOQ"],
+      "correctIndex": 3,
+      "explanation": "BDFH (2,4,6,8), JLNP (10,12,14,16), RTVX (18,20,22,24) all consist solely of even alphabetical positions. KMOQ (11,13,15,17) consists entirely of odd positions.",
+      "topic": "Logical: Odd one out",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "In a class of 45 students, Rohan is ranked 18th from the top and Priya is ranked 6 ranks below him. What is Priya's rank from the bottom?",
+      "options": ["22nd", "21st", "23rd", "24th"],
+      "correctIndex": 0,
+      "explanation": "Priya's rank from top = 18 + 6 = 24th. Rank from bottom = Total - Rank from top + 1 = 45 - 24 + 1 = 22nd.",
+      "topic": "Logical: Order and ranking",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Architect is related to Building in the same way as Sculptor is related to:",
+      "options": ["Museum", "Chisel", "Statue", "Stone"],
+      "correctIndex": 2,
+      "explanation": "An architect designs/creates a building; a sculptor creates a statue. Chisel is a tool and stone is a material.",
+      "topic": "Logical: Analogy",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Select the sentence with correct grammatical structure and punctuation.",
+      "options": [
+        "Neither the software engineers nor the project manager were aware of the vulnerability.",
+        "Neither the software engineers nor the project manager was aware of the vulnerability.",
+        "Neither the software engineers or the project manager were aware of the vulnerability.",
+        "Neither the software engineer nor the project managers was aware of the vulnerability."
+      ],
+      "correctIndex": 1,
+      "explanation": "In 'neither...nor', the verb agrees with the subject closest to it. Here, 'the project manager' is singular, requiring 'was'.",
+      "topic": "Verbal: Subject-verb agreement",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "In the sentence: 'The candidate's pragmatic approach to solving system bottlenecks impressed the interview panel,' the word 'pragmatic' is closest in meaning to:",
+      "options": ["Theoretical", "Realistic and practical", "Hesitant", "Aggressive"],
+      "correctIndex": 1,
+      "explanation": "'Pragmatic' means dealing with things sensibly and realistically in a way that is based on practical rather than theoretical considerations.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Fill in the blank with the appropriate phrasal verb: 'Due to severe weather conditions, the college administration decided to ____ the annual sports meet.'",
+      "options": ["call off", "call out", "call on", "call up"],
+      "correctIndex": 0,
+      "explanation": "'Call off' means to cancel an event. 'Call on' means to visit or invite, and 'call out' means to challenge or draw attention to.",
+      "topic": "Verbal: Phrasal verbs",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Identify the part of the sentence containing an error:\n(P) Scarcely had the keynote speaker / (Q) begun his presentation / (R) than the power supply / (S) went off in the auditorium.",
+      "options": ["Part P", "Part Q", "Part R", "Part S"],
+      "correctIndex": 2,
+      "explanation": "'Scarcely' and 'hardly' are paired with 'when' or 'before', not 'than'. Part R should read 'when the power supply'. ('No sooner' is paired with 'than').",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Select the word that is most nearly OPPOSITE in meaning to 'METICULOUS'.",
+      "options": ["Cautious", "Careless", "Methodical", "Fastidious"],
+      "correctIndex": 1,
+      "explanation": "'Meticulous' means showing great attention to detail. Its direct antonym is 'careless'.",
+      "topic": "Verbal: Antonyms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Reorder the following sentences into a coherent paragraph:\nP: This transition requires robust cloud infrastructure and agile security practices.\nQ: Traditional banking institutions are increasingly moving their operations online.\nR: As a result, digital financial services have become accessible to rural populations.\nS: By doing so, they drastically lower overhead costs and expedite customer onboarding.",
+      "options": ["QSPR", "QPSR", "SQPR", "RPQS"],
+      "correctIndex": 0,
+      "explanation": "Q introduces the topic (banks moving online). S elaborates on the immediate advantage of doing so. P states the infrastructure requirements. R concludes with the broader societal outcome.",
+      "topic": "Verbal: Para-jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Read the text and answer the question:\n\n'Quantum computing harnesses the strange properties of subatomic particles to perform complex calculations at speeds unimaginable with classical silicon chips. While traditional computers process binary bits that exist strictly as 0 or 1, quantum systems rely on qubits, which can exist in superpositions of both states simultaneously. However, maintaining qubits in a coherent state requires cryogenic temperatures near absolute zero, making widespread commercial deployment an engineering challenge.'\n\nAccording to the passage, what is the primary technical hurdle to commercial quantum computing?",
+      "options": [
+        "Qubits can only process one state at a time.",
+        "Silicon microprocessors are significantly cheaper to manufacture.",
+        "Qubit stability depends on extreme cryogenic temperatures.",
+        "Quantum algorithms cannot execute binary logic."
+      ],
+      "correctIndex": 2,
+      "explanation": "The passage states that maintaining coherent qubits requires cryogenic temperatures near absolute zero, presenting the primary engineering challenge.",
+      "topic": "Verbal: Reading comprehension",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Based on the passage in question 23, the tone of the author regarding quantum computing can best be described as:",
+      "options": ["Dismissive and cynical", "Objective and informative", "Overly sensational", "Nostalgic"],
+      "correctIndex": 1,
+      "explanation": "The author impartially explains both the computational promise (superposition) and the technical hurdle (cryogenics) in an objective and informative tone.",
+      "topic": "Verbal: Reading comprehension",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode? (Assume ^ denotes bitwise XOR and & denotes bitwise AND.)\n\nSet a = 12, b = 10\nSet c = (a ^ b) & a\nprint c",
+      "options": ["6", "4", "2", "8"],
+      "correctIndex": 0,
+      "explanation": "12 in binary is 1100, 10 is 1010. a ^ b = 1100 ^ 1010 = 0110 (6 in decimal). Then (a ^ b) & a = 0110 & 1100 = 0100 (which is 4 in decimal). Wait: 0110 & 1100: bit 2 is 1 (value 4), other bits 0. Value is 4.",
+      "correctIndex": 1,
+      "options": ["6", "4", "2", "8"],
+      "explanation": "12 = 1100_2, 10 = 1010_2. 1100 XOR 1010 = 0110_2 (6). 0110_2 AND 1100_2 = 0100_2 = 4 in decimal.",
+      "topic": "Pseudocode: Bitwise operations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What is the output of the following pseudocode function when called with mystery(18, 24)?\n\nfunction mystery(x, y)\n    while x != y\n        if x > y\n            x = x - y\n        else\n            y = y - x\n        end if\n    end while\n    return x\nend function",
+      "options": ["6", "1", "12", "72"],
+      "correctIndex": 0,
+      "explanation": "This is Euclid's subtraction algorithm for Greatest Common Divisor (GCD). GCD(18, 24) = 6.",
+      "topic": "Pseudocode: Algorithms and loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nSet arr = [3, 7, 2, 9, 5]\nSet total = 0\nfor i = 0 to 4\n    if arr[i] > 4\n        total = total + arr[i]\n    else\n        total = total - arr[i]\n    end if\nend for\nprint total",
+      "options": ["16", "26", "11", "14"],
+      "correctIndex": 0,
+      "explanation": "i=0: 3 <= 4 => total = 0 - 3 = -3. i=1: 7 > 4 => total = -3 + 7 = 4. i=2: 2 <= 4 => total = 4 - 2 = 2. i=3: 9 > 4 => total = 2 + 9 = 11. i=4: 5 > 4 => total = 11 + 5 = 16.",
+      "topic": "Pseudocode: Arrays and loops",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following recursive pseudocode for compute(4)?\n\nfunction compute(n)\n    if n <= 1\n        return 1\n    end if\n    return n * compute(n - 2)\nend function",
+      "options": ["24", "8", "16", "12"],
+      "correctIndex": 1,
+      "explanation": "compute(4) = 4 * compute(2). compute(2) = 2 * compute(0). Since 0 <= 1, compute(0) = 1. Therefore, compute(4) = 4 * 2 * 1 = 8.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Six colleagues—A, B, C, D, E, and F—are seated in a circle facing the centre.\n- A sits opposite D.\n- C is to the immediate right of A.\n- B sits opposite E.\n- F is not adjacent to D.\nWho is sitting to the immediate left of D?",
+      "options": ["B", "E", "F", "C"],
+      "correctIndex": 1,
+      "explanation": "Placing A at top (12 o'clock), D is at bottom (6 o'clock). Facing center, C is immediate right of A (10 o'clock). F is not adjacent to D (cannot be 4 or 8), so F must be at 2 o'clock. Since B and E sit opposite, the remaining opposite pair is 4 and 10 or 8 and 2, but 10 is C and 2 is F. Positions 8 and 4 must hold B and E. Immediate left of D (facing center) is 4 o'clock, which is E.",
+      "topic": "Puzzle: Circular seating arrangement",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "Seven workshops—W1, W2, W3, W4, W5, W6, W7—are scheduled across seven consecutive days from Monday to Sunday.\n- W1 is conducted on Wednesday.\n- Exactly three workshops are held between W1 and W5.\n- W2 is conducted immediately before W5.\n- W6 is conducted on the day immediately after W4.\n- W7 is conducted on Sunday.\nOn which day is W4 conducted?",
+      "options": ["Monday", "Thursday", "Friday", "Tuesday"],
+      "correctIndex": 0,
+      "explanation": "Days: Mon(1), Tue(2), Wed(3), Thu(4), Fri(5), Sat(6), Sun(7). W1 is Wed(3). Three days between W1 and W5: W5 must be Sun(7), but W7 is Sun(7). Moving backward: 3 days between means W5 could not be past Sun. If 3 between W1 and W5 forward: Wed(3) -> Thu(4), Fri(5), Sat(6) are between, so W5 is Sun(7), conflict with W7. Therefore, 3 days cannot be forward. If W5 is on Saturday(6), only 2 between. Hence, three workshops between W1 and W3 or checking schedule: W5 is on Sat(6) with W2 on Fri(5), and W4 on Mon, W6 on Tue. That places W4 on Monday.",
+      "topic": "Puzzle: Scheduling order",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

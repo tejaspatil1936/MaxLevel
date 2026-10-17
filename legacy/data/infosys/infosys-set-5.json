@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the value of 25% of 480 + 40% of 350?",
+      "options": [
+        "260",
+        "270",
+        "240",
+        "250"
+      ],
+      "correctIndex": 0,
+      "explanation": "25% of 480 = 120 and 40% of 350 = 140. Sum = 260.",
+      "topic": "Quantitative: Simplification",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "The price of cooking gas rises by 25%. By what percentage must a family reduce its consumption so that its expenditure on gas stays the same?",
+      "options": [
+        "20%",
+        "22.5%",
+        "25%",
+        "18%"
+      ],
+      "correctIndex": 0,
+      "explanation": "Reduction = 25/(100 + 25) × 100 = 20%.",
+      "topic": "Quantitative: Percentages",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "A cylindrical water tank has a radius of 7 m and a height of 10 m. What is its capacity in litres? (Take π = 22/7)",
+      "options": [
+        "15,400 litres",
+        "1,54,000 litres",
+        "15,40,000 litres",
+        "4,40,000 litres"
+      ],
+      "correctIndex": 2,
+      "explanation": "Volume = πr²h = 22/7 × 49 × 10 = 1540 m³. Since 1 m³ = 1000 litres, capacity = 15,40,000 litres.",
+      "topic": "Quantitative: Mensuration",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "How many positive factors does 360 have?",
+      "options": [
+        "20",
+        "18",
+        "36",
+        "24"
+      ],
+      "correctIndex": 3,
+      "explanation": "360 = 2³ × 3² × 5. Number of factors = (3 + 1)(2 + 1)(1 + 1) = 24.",
+      "topic": "Quantitative: Number system (factors)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "What is the sum of the first 20 terms of the arithmetic progression 7, 11, 15, 19, …?",
+      "options": [
+        "900",
+        "940",
+        "830",
+        "860"
+      ],
+      "correctIndex": 0,
+      "explanation": "Sum = n/2 × [2a + (n − 1)d] = 10 × (14 + 76) = 900.",
+      "topic": "Quantitative: Progressions",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "A shopkeeper marks his goods 40% above cost price and then allows two successive discounts of 10% and 5%. What is his profit percentage?",
+      "options": [
+        "25%",
+        "19.7%",
+        "26%",
+        "21%"
+      ],
+      "correctIndex": 1,
+      "explanation": "Selling price = 1.40 × 0.90 × 0.95 = 1.197 times cost price, so the profit is 19.7%.",
+      "topic": "Quantitative: Profit and loss",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "What is the difference between the compound interest and the simple interest on ₹15,000 for 2 years at 8% per annum, compounded annually?",
+      "options": [
+        "₹96",
+        "₹48",
+        "₹192",
+        "₹120"
+      ],
+      "correctIndex": 0,
+      "explanation": "For 2 years, CI − SI = P(r/100)² = 15000 × 0.0064 = ₹96.",
+      "topic": "Quantitative: Compound interest",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "The incomes of Asha and Bina are in the ratio 5 : 4 and their expenditures are in the ratio 3 : 2. If each of them saves ₹6,000 a month, what is Asha's monthly income?",
+      "options": [
+        "₹15,000",
+        "₹12,000",
+        "₹18,000",
+        "₹20,000"
+      ],
+      "correctIndex": 0,
+      "explanation": "Let incomes be 5x, 4x and expenditures 3y, 2y. Then 5x − 3y = 6000 and 4x − 2y = 6000, giving x = y = 3000. Asha's income = 5 × 3000 = ₹15,000.",
+      "topic": "Quantitative: Ratio and proportion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Find the wrong number in the series: 5, 11, 23, 48, 95, 191",
+      "options": [
+        "23",
+        "191",
+        "95",
+        "48"
+      ],
+      "correctIndex": 3,
+      "explanation": "Each term is twice the previous term plus 1: 5, 11, 23, 47, 95, 191. So 48 should be 47.",
+      "topic": "Logical reasoning: Number series (wrong term)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Statements:\nAll rivers are lakes.\nNo lakes are ponds.\n\nConclusions:\nI. No rivers are ponds.\nII. No ponds are rivers.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Only conclusion I follows",
+        "Neither conclusion I nor II follows",
+        "Both conclusions I and II follow",
+        "Only conclusion II follows"
+      ],
+      "correctIndex": 2,
+      "explanation": "Every river is a lake and no lake is a pond, so no river is a pond (I). A 'No' statement can be reversed, so no pond is a river (II).",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "In a certain code, TABLE is written as FMCBU. How is CAMERA written in that code?",
+      "options": [
+        "BSFNBC",
+        "DBNFSB",
+        "BSFNBD",
+        "ARFMAC"
+      ],
+      "correctIndex": 2,
+      "explanation": "The word is reversed (TABLE → ELBAT) and each letter is moved one place forward (ELBAT → FMCBU). CAMERA → AREMAC → BSFNBD.",
+      "topic": "Logical reasoning: Coding-decoding",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Early one morning, Raju stood facing a lamp post. The shadow of the post fell exactly to his right. Which direction was Raju facing?",
+      "options": [
+        "South",
+        "West",
+        "East",
+        "North"
+      ],
+      "correctIndex": 0,
+      "explanation": "In the morning the sun is in the east, so shadows fall towards the west. If west is on Raju's right, he is facing south.",
+      "topic": "Logical reasoning: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Statement: P ≤ Q < R = S ≥ T\n\nConclusions:\nI. P < S\nII. T ≤ R\n\nWhich of the conclusions is definitely true?",
+      "options": [
+        "Only I is definitely true",
+        "Both I and II are definitely true",
+        "Only II is definitely true",
+        "Neither I nor II is definitely true"
+      ],
+      "correctIndex": 1,
+      "explanation": "P ≤ Q < R = S gives P < S (I). T ≤ S = R gives T ≤ R (II). Both are true.",
+      "topic": "Logical reasoning: Inequalities",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Each question below has two statements. Decide whether the data in the statements is sufficient to answer the question.\n\nQuestion: Is the integer x even?\nI. 3x is even.\nII. x + 4 is odd.",
+      "options": [
+        "Statement I alone is sufficient, but statement II alone is not",
+        "Both statements together are sufficient, but neither alone is",
+        "Statement II alone is sufficient, but statement I alone is not",
+        "Each statement alone is sufficient"
+      ],
+      "correctIndex": 3,
+      "explanation": "I: 3x is even only if x is even, so the answer is yes. II: x + 4 odd means x is odd, so the answer is a definite no. Each statement alone answers the question.",
+      "topic": "Logical reasoning: Data sufficiency",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Eight colleagues — A, B, C, D, E, F, G and H — sit around a circular table, facing the centre. B sits second to the right of A. F sits opposite A. D sits third to the left of B. C sits immediately to the right of F. G sits between B and F. E is not an immediate neighbour of A. Who sits opposite G?",
+      "options": [
+        "E",
+        "H",
+        "C",
+        "D"
+      ],
+      "correctIndex": 3,
+      "explanation": "Fix A. B is second to A's right and F is opposite A; G fills the seat between B and F. D is third to B's left, which puts D next to A on A's left. C is on F's right, and E (not next to A) takes the last seat beside C, leaving H on A's right. D faces G.",
+      "topic": "Logical reasoning: Seating arrangement (circular)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Find the odd one out: ACFJ, BDGK, CEHL, DFIN",
+      "options": [
+        "ACFJ",
+        "BDGK",
+        "DFIN",
+        "CEHL"
+      ],
+      "correctIndex": 2,
+      "explanation": "In ACFJ, BDGK and CEHL the gaps between letters are +2, +3, +4. In DFIN the last gap is I → N = +5.",
+      "topic": "Logical reasoning: Odd one out (letter groups)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nThe teacher, along with / her students, / are visiting / the science museum today.",
+      "options": [
+        "her students,",
+        "are visiting",
+        "The teacher, along with",
+        "the science museum today."
+      ],
+      "correctIndex": 1,
+      "explanation": "The subject is 'the teacher' (singular); a phrase beginning 'along with' does not change it. So it should be 'is visiting'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Which of the following sentences about reaching on time despite traffic is grammatically correct?",
+      "options": [
+        "Despite the heavy traffic, we reached on time.",
+        "In spite the heavy traffic, we reached on time.",
+        "Despite of heavy traffic, we were reached on time.",
+        "Despite of the heavy traffic, we reached on time."
+      ],
+      "correctIndex": 0,
+      "explanation": "'Despite' is never followed by 'of'; the alternative is 'in spite of'. 'In spite' alone is incomplete.",
+      "topic": "Verbal: Sentence correction (prepositions)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Choose the word or phrase closest in meaning to 'meticulous' as used in the sentence.\n\nHer meticulous notes made it easy for the team to retrace every step of the experiment.",
+      "options": [
+        "brief",
+        "hurried",
+        "colourful",
+        "very careful and precise"
+      ],
+      "correctIndex": 3,
+      "explanation": "'Meticulous' means showing great attention to detail.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. However, the first version of the app crashed often on older phones.\nQ. The team then rewrote the code so that it used less memory.\nR. A group of students built an app that helps farmers check crop prices.\nS. The new version ran smoothly and was soon used in hundreds of villages.",
+      "options": [
+        "RPQS",
+        "PRQS",
+        "RPSQ",
+        "RQPS"
+      ],
+      "correctIndex": 0,
+      "explanation": "R introduces the app; P ('However') states the problem; Q gives the fix; S describes the result of the new version.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Read the passage and answer the question.\n\nRooftop solar panels allow households to generate their own electricity. In several states, families can sell surplus power back to the grid through a system called net metering. Although the initial cost of installation is high, government subsidies and lower electricity bills mean that many households recover their investment within five to seven years.\n\nWhich of the following statements is supported by the passage?",
+      "options": [
+        "Households can never sell electricity to the grid.",
+        "Rooftop solar panels have no upfront cost.",
+        "Net metering is available in every state.",
+        "Savings from rooftop solar can eventually cover its installation cost."
+      ],
+      "correctIndex": 3,
+      "explanation": "The passage says many households recover their investment within five to seven years. It mentions net metering only in 'several states' and says the initial cost is high.",
+      "topic": "Verbal: Reading comprehension (supported statement)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Choose the option that correctly fills the blank.\n\nScarcely had we entered the auditorium ______ the lights went out.",
+      "options": [
+        "then",
+        "when",
+        "that",
+        "than"
+      ],
+      "correctIndex": 1,
+      "explanation": "The correct pair is 'scarcely … when'. 'Than' pairs with 'no sooner'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Choose the word most nearly OPPOSITE in meaning to the word 'conciliatory' as used in the sentence.\n\nThe minister's speech was conciliatory in tone.",
+      "options": [
+        "peaceful",
+        "hostile",
+        "formal",
+        "brief"
+      ],
+      "correctIndex": 1,
+      "explanation": "'Conciliatory' means intended to calm or reduce conflict; the opposite is 'hostile'. 'Peaceful' is close in meaning, not opposite.",
+      "topic": "Verbal: Antonyms in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Choose the correct passive form of the sentence:\n\nWho wrote this report?",
+      "options": [
+        "By whom has this report been wrote?",
+        "Who was written this report by?",
+        "By whom was this report written?",
+        "By whom this report was written?"
+      ],
+      "correctIndex": 2,
+      "explanation": "In the passive, the question keeps question order (auxiliary before subject): 'By whom was this report written?' The simple past 'wrote' becomes 'was written'.",
+      "topic": "Verbal: Active and passive voice",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger n, c\nSet n = 36, c = 0\nfor (each i from 1 to n)\n    if ((n mod i) == 0)\n        c = c + 1\n    end if\nend for\nPrint c",
+      "options": [
+        "6",
+        "10",
+        "9",
+        "8"
+      ],
+      "correctIndex": 2,
+      "explanation": "36 has the divisors 1, 2, 3, 4, 6, 9, 12, 18, 36, which is 9 divisors.",
+      "topic": "Pseudocode: Loops (divisors)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[8] = {3, 1, 4, 1, 5, 9, 2, 6}\nInteger s\nSet s = 0\nfor (each i from 0 to 7, increasing by 2)\n    s = s + arr[i]\nend for\nPrint s\n\n(Array indices start at 0.)",
+      "options": [
+        "31",
+        "14",
+        "11",
+        "17"
+      ],
+      "correctIndex": 1,
+      "explanation": "Indices 0, 2, 4, 6 hold 3, 4, 5, 2. Sum = 14.",
+      "topic": "Pseudocode: Arrays",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger a, b, c\nSet a = 25, b = 40, c = 15\nif ((a > b OR c < a) AND b > c)\n    Print a + c\nelse\n    Print b - a\nend if",
+      "options": [
+        "15",
+        "25",
+        "40",
+        "65"
+      ],
+      "correctIndex": 2,
+      "explanation": "c < a is true, so (a > b OR c < a) is true, and b > c is true. So a + c = 40 is printed.",
+      "topic": "Pseudocode: Conditionals (logical operators)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer a, Integer b)\n    if (b == 0)\n        return a\n    end if\n    return fun(b, a mod b)\nEnd function\n\nPrint fun(84, 36)",
+      "options": [
+        "6",
+        "12",
+        "4",
+        "36"
+      ],
+      "correctIndex": 1,
+      "explanation": "fun(84, 36) → fun(36, 12) → fun(12, 0) → 12. This is Euclid's algorithm for the GCD.",
+      "topic": "Pseudocode: Recursion (GCD)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "Fill the 4 × 4 grid so that each row, each column and each of the four 2 × 2 corner boxes contains the digits 1 to 4 exactly once. Blanks are shown as _.\n\n1 2 _ 4\n_ 4 _ _\n_ _ 4 _\n4 _ _ 2\n\nWhich digit goes in row 3, column 2?",
+      "options": [
+        "2",
+        "4",
+        "3",
+        "1"
+      ],
+      "correctIndex": 3,
+      "explanation": "Row 1 is 1 2 3 4, so row 2 starts 3 4, and column 4 forces row 2 to end 2 1. Column 1 then gives 2 in row 3, and column 4 gives 3 in row 3, column 4. Row 3 reads 2 _ 4 3, so the blank is 1.",
+      "topic": "Puzzles: Mini Sudoku (4 × 4)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "On an island, every person is either a truth-teller, who always tells the truth, or a liar, who always lies. You meet three islanders, P, Q and R.\nP says: \"Q is a liar.\"\nQ says: \"P and R are both liars.\"\nR says: \"Q is a truth-teller.\"\nWho is a truth-teller?",
+      "options": [
+        "Only R",
+        "Only Q",
+        "Only P",
+        "P and R"
+      ],
+      "correctIndex": 2,
+      "explanation": "Suppose Q tells the truth: then R is a liar, but R's statement 'Q is a truth-teller' would be true, which is a contradiction. So Q is a liar. Then P's statement is true, so P tells the truth, and R's statement is false, so R is a liar.",
+      "topic": "Puzzles: Truth-tellers and liars",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}

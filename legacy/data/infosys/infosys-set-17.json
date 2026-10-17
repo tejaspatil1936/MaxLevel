@@ -1,0 +1,424 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "A 240 m long train passes a signal pole in 16 seconds. How long will it take to cross a 360 m long platform at the same speed?",
+      "options": [
+        "36 seconds",
+        "40 seconds",
+        "32 seconds",
+        "24 seconds"
+      ],
+      "correctIndex": 1,
+      "explanation": "Speed = 240/16 = 15 m/s. To cross the platform it covers 240 + 360 = 600 m, taking 600/15 = 40 s.",
+      "topic": "Quantitative: Problems on trains",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q2",
+      "text": "Anil can complete a task in 10 days and Bharat can complete it in 15 days. They work together for 4 days, after which Anil leaves. In how many more days will Bharat finish the remaining work?",
+      "options": [
+        "4 days",
+        "6 days",
+        "5 days",
+        "3 days"
+      ],
+      "correctIndex": 2,
+      "explanation": "In 4 days they finish 4 × (1/10 + 1/15) = 2/3. The remaining 1/3 takes Bharat (1/3)/(1/15) = 5 days.",
+      "topic": "Quantitative: Time and work",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q3",
+      "text": "Pipe A fills a tank in 8 hours and pipe B fills it in 12 hours. Both are opened together on the empty tank, and after 2 hours pipe A is closed. How many more hours will pipe B take to fill the tank?",
+      "options": [
+        "7 hours",
+        "6 hours",
+        "5 hours",
+        "8 hours"
+      ],
+      "correctIndex": 0,
+      "explanation": "In 2 hours both fill 2 × (1/8 + 1/12) = 5/12. The remaining 7/12 takes B (7/12)/(1/12) = 7 hours.",
+      "topic": "Quantitative: Pipes and cisterns",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q4",
+      "text": "A car travels from Pune to Nashik at 60 km/h and returns along the same road at 40 km/h. What is its average speed for the whole journey?",
+      "options": [
+        "52 km/h",
+        "45 km/h",
+        "50 km/h",
+        "48 km/h"
+      ],
+      "correctIndex": 3,
+      "explanation": "For equal distances, average speed = 2 × 60 × 40 / (60 + 40) = 48 km/h, not the simple average of 50.",
+      "topic": "Quantitative: Speed, time and distance",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q5",
+      "text": "A 40-litre mixture contains milk and water in the ratio 3 : 1. How many litres of water must be added to make the ratio 3 : 2?",
+      "options": [
+        "15 litres",
+        "5 litres",
+        "20 litres",
+        "10 litres"
+      ],
+      "correctIndex": 3,
+      "explanation": "Milk = 30 L, water = 10 L. For 3 : 2 the water must be 20 L, so 10 L must be added.",
+      "topic": "Quantitative: Mixtures and alligation",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q6",
+      "text": "How many times do the hour hand and the minute hand of a clock coincide in a day (24 hours)?",
+      "options": [
+        "44",
+        "24",
+        "22",
+        "12"
+      ],
+      "correctIndex": 2,
+      "explanation": "The hands coincide 11 times every 12 hours (once between 11 and 1, not twice), so 22 times in 24 hours.",
+      "topic": "Quantitative: Clocks",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q7",
+      "text": "In a business, Arun invests three times as much as Bimal, and Bimal invests two-thirds of what Chitra invests. All invest for the same period. Out of a profit of ₹66,000, what is Chitra's share?",
+      "options": [
+        "₹22,000",
+        "₹18,000",
+        "₹36,000",
+        "₹12,000"
+      ],
+      "correctIndex": 1,
+      "explanation": "Let Chitra = 3, then Bimal = 2 and Arun = 6. Ratio 6 : 2 : 3, so Chitra gets 3/11 × 66000 = ₹18,000.",
+      "topic": "Quantitative: Partnership",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q8",
+      "text": "A boat takes 3 hours more to travel 36 km upstream than to travel 36 km downstream. If the speed of the stream is 3 km/h, what is the speed of the boat in still water?",
+      "options": [
+        "6 km/h",
+        "12 km/h",
+        "15 km/h",
+        "9 km/h"
+      ],
+      "correctIndex": 3,
+      "explanation": "36/(b − 3) − 36/(b + 3) = 3 gives 216 = 3(b² − 9), so b² = 81 and b = 9 km/h.",
+      "topic": "Quantitative: Boats and streams",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q9",
+      "text": "Doctor : Hospital :: Teacher : ?",
+      "options": [
+        "Student",
+        "Lesson",
+        "Chalk",
+        "School"
+      ],
+      "correctIndex": 3,
+      "explanation": "A doctor works in a hospital; similarly, a teacher works in a school.",
+      "topic": "Logical reasoning: Analogy",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q10",
+      "text": "Find the next letter in the series: B, E, H, K, N, ?",
+      "options": [
+        "O",
+        "Q",
+        "R",
+        "P"
+      ],
+      "correctIndex": 1,
+      "explanation": "Each letter moves 3 places forward: N + 3 = Q.",
+      "topic": "Logical reasoning: Letter series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q11",
+      "text": "Find the next number in the series: 5, 10, 30, 120, 600, ?",
+      "options": [
+        "3600",
+        "4200",
+        "2400",
+        "3000"
+      ],
+      "correctIndex": 0,
+      "explanation": "The multipliers increase by 1 each time: ×2, ×3, ×4, ×5, so the next is ×6: 600 × 6 = 3600.",
+      "topic": "Logical reasoning: Number series",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q12",
+      "text": "Statement: Several students in a college hostel fell ill after eating dinner at the hostel mess.\n\nCourses of action:\nI. The hostel should be shut down permanently.\nII. The food and drinking water served at the mess should be tested.\n\nWhich course(s) of action logically follow?",
+      "options": [
+        "Only course of action II follows",
+        "Both courses of action I and II follow",
+        "Neither course of action I nor II follows",
+        "Only course of action I follows"
+      ],
+      "correctIndex": 0,
+      "explanation": "Testing the food and water addresses the likely cause, so II follows. Permanently shutting the hostel is an extreme step not justified by the statement.",
+      "topic": "Logical reasoning: Statement and courses of action",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q13",
+      "text": "Rohan's mother is the only daughter of Sita's father. Sita is a woman. How is Sita related to Rohan?",
+      "options": [
+        "Sister",
+        "Mother",
+        "Grandmother",
+        "Aunt"
+      ],
+      "correctIndex": 1,
+      "explanation": "The only daughter of Sita's father is Sita herself (Sita is a woman). So Rohan's mother is Sita.",
+      "topic": "Logical reasoning: Blood relations",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q14",
+      "text": "Statements:\nNo doctors are singers.\nAll singers are dancers.\n\nConclusions:\nI. Some dancers are not doctors.\nII. No dancers are doctors.\n\nAssuming the statements are true even if they seem to differ from commonly known facts, which conclusion(s) logically follow?",
+      "options": [
+        "Neither conclusion I nor II follows",
+        "Only conclusion I follows",
+        "Both conclusions I and II follow",
+        "Only conclusion II follows"
+      ],
+      "correctIndex": 1,
+      "explanation": "Every singer is a dancer but not a doctor, so some dancers are not doctors (I follows). Other dancers may still be doctors, so II does not follow.",
+      "topic": "Logical reasoning: Syllogisms",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q15",
+      "text": "Six people — P, Q, R, S, T and U — sit around a circular table, facing the centre. P sits opposite S. Q sits immediately to the right of P. R sits second to the left of Q. T is not an immediate neighbour of R. Who sits immediately to the left of S?",
+      "options": [
+        "T",
+        "Q",
+        "R",
+        "U"
+      ],
+      "correctIndex": 0,
+      "explanation": "Going round: P, Q (P's right), then S opposite P; R is second to Q's left, which puts R next to P on the other side. The two seats beside S remain for T and U. T cannot be next to R, so T is to S's left and U to S's right.",
+      "topic": "Logical reasoning: Seating arrangement (circular)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q16",
+      "text": "Sonal walks 10 m towards the south, turns left and walks 6 m, turns left again and walks 18 m, and then turns right and walks 9 m. How far is she from her starting point?",
+      "options": [
+        "17 m",
+        "19 m",
+        "23 m",
+        "15 m"
+      ],
+      "correctIndex": 0,
+      "explanation": "Taking the start as (0, 0): south 10 → (0, −10); east 6 → (6, −10); north 18 → (6, 8); east 9 → (15, 8). Distance = √(15² + 8²) = 17 m.",
+      "topic": "Logical reasoning: Direction sense",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q17",
+      "text": "Choose the correct passive form of the sentence:\n\nThe committee will announce the results tomorrow.",
+      "options": [
+        "The results will announce by the committee tomorrow.",
+        "The results are announced by the committee tomorrow.",
+        "The results would be announced by the committee tomorrow.",
+        "The results will be announced by the committee tomorrow."
+      ],
+      "correctIndex": 3,
+      "explanation": "Simple future active (will announce) becomes 'will be' + past participle in the passive: 'will be announced'.",
+      "topic": "Verbal: Active and passive voice",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q18",
+      "text": "Read the passage and answer the question.\n\nBefore refrigerators were invented, people relied on drying, salting and pickling to stop food from spoiling. These methods work by removing moisture or by creating conditions in which bacteria cannot grow easily. Many traditional Indian pickles, for example, use salt, oil and spices that slow the growth of microbes. Although refrigerators have made such methods less necessary, they remain popular because of the flavours they create.\n\nAccording to the passage, why do traditional pickles last a long time?",
+      "options": [
+        "They contain no moisture at all.",
+        "They are cooked at very high temperatures.",
+        "They are always kept in refrigerators.",
+        "Salt, oil and spices slow the growth of microbes."
+      ],
+      "correctIndex": 3,
+      "explanation": "The third sentence says pickles use salt, oil and spices that slow the growth of microbes.",
+      "topic": "Verbal: Reading comprehension (detail)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q19",
+      "text": "Choose the word most nearly OPPOSITE in meaning to the word 'rigid' as used in the sentence.\n\nThe rules for the competition were rigid.",
+      "options": [
+        "flexible",
+        "written",
+        "strict",
+        "unclear"
+      ],
+      "correctIndex": 0,
+      "explanation": "'Rigid' means fixed and unable to change; the opposite is 'flexible'. 'Strict' is close in meaning.",
+      "topic": "Verbal: Antonyms in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q20",
+      "text": "The sentence below is divided into four parts. Identify the part that contains a grammatical error.\n\nNeither the manager / nor his assistants / was present / at the review meeting.",
+      "options": [
+        "nor his assistants",
+        "at the review meeting.",
+        "was present",
+        "Neither the manager"
+      ],
+      "correctIndex": 2,
+      "explanation": "With 'neither … nor', the verb agrees with the nearer subject. 'Assistants' is plural, so it should be 'were present'.",
+      "topic": "Verbal: Error spotting",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q21",
+      "text": "Choose the option that correctly fills the blank.\n\nIt is high time we ______ a decision on this issue.",
+      "options": [
+        "will take",
+        "have taken",
+        "took",
+        "take"
+      ],
+      "correctIndex": 2,
+      "explanation": "'It is high time' is followed by a past-tense verb to show something is overdue: 'It is high time we took a decision'.",
+      "topic": "Verbal: Fill in the blank (grammar)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q22",
+      "text": "Rearrange the sentences P, Q, R and S to form a coherent paragraph. Choose the correct order.\n\nP. Last week, the housing society introduced a fine for littering in the park.\nQ. The fine, she explained, would be used to maintain the park.\nR. Several residents objected at first.\nS. The secretary then called a meeting to explain the decision.",
+      "options": [
+        "RPSQ",
+        "PRQS",
+        "PSRQ",
+        "PRSQ"
+      ],
+      "correctIndex": 3,
+      "explanation": "P introduces the fine; R gives the objection; S ('then') describes the secretary's response; Q ('she explained') reports what the secretary said at the meeting.",
+      "topic": "Verbal: Para jumbles",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q23",
+      "text": "Choose the word or phrase closest in meaning to 'cryptic' as used in the sentence.\n\nThe professor's remarks were so cryptic that few students understood them.",
+      "options": [
+        "insulting",
+        "cheerful",
+        "obscure",
+        "lengthy"
+      ],
+      "correctIndex": 2,
+      "explanation": "'Cryptic' means having a hidden or unclear meaning, i.e. obscure.",
+      "topic": "Verbal: Vocabulary in context",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q24",
+      "text": "Which of the following sentences about a rainy day is grammatically correct?",
+      "options": [
+        "Being a rainy day, we stayed at home.",
+        "As it was a rainy day, we stayed at home.",
+        "Being rainy day, we stayed at home.",
+        "As it was a rainy day, so we stayed at home."
+      ],
+      "correctIndex": 1,
+      "explanation": "'Being a rainy day' wrongly makes 'we' the rainy day (a dangling modifier). 'As … so' is redundant; only one connector is needed.",
+      "topic": "Verbal: Sentence correction (clauses)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q25",
+      "text": "What will be the output of the following pseudocode?\n\nInteger s\nSet s = 0\nfor (each i from 10 down to 1, decreasing by 3)\n    s = s + i\nend for\nPrint s",
+      "options": [
+        "21",
+        "55",
+        "18",
+        "22"
+      ],
+      "correctIndex": 3,
+      "explanation": "i takes the values 10, 7, 4, 1. Sum = 22.",
+      "topic": "Pseudocode: Loops (step)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q26",
+      "text": "What will be the output of the following pseudocode?\n\nInteger fun(Integer x)\n    if (x > 10)\n        return x - 3\n    else\n        return fun(x * 2)\n    end if\nEnd function\n\nPrint fun(3)",
+      "options": [
+        "9",
+        "6",
+        "12",
+        "3"
+      ],
+      "correctIndex": 0,
+      "explanation": "fun(3) calls fun(6), which calls fun(12). Since 12 > 10, it returns 12 − 3 = 9.",
+      "topic": "Pseudocode: Recursion",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q27",
+      "text": "What will be the output of the following pseudocode?\n\nInteger arr[5] = {4, 9, 2, 7, 5}\nInteger c\nSet c = 0\nfor (each i from 1 to 4)\n    if (arr[i] > arr[i - 1])\n        c = c + 1\n    end if\nend for\nPrint c\n\n(Array indices start at 0.)",
+      "options": [
+        "4",
+        "2",
+        "3",
+        "1"
+      ],
+      "correctIndex": 1,
+      "explanation": "Only 9 > 4 and 7 > 2 hold, so c = 2.",
+      "topic": "Pseudocode: Arrays",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q28",
+      "text": "What will be the output of the following pseudocode?\n\nInteger x, y\nSet x = 1, y = 1\nwhile (x < 100)\n    x = x * 3\n    y = y + x\nend while\nPrint y",
+      "options": [
+        "121",
+        "364",
+        "243",
+        "40"
+      ],
+      "correctIndex": 1,
+      "explanation": "x takes the values 3, 9, 27, 81, 243, which are all added to y = 1: 1 + 363 = 364. The loop ends only after x reaches 243.",
+      "topic": "Pseudocode: While loop",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q29",
+      "text": "At a team meeting, each of the 10 members shook hands exactly once with every other member. How many handshakes took place?",
+      "options": [
+        "100",
+        "50",
+        "45",
+        "90"
+      ],
+      "correctIndex": 2,
+      "explanation": "Each handshake involves a pair of people. Number of pairs = 10 × 9 / 2 = 45.",
+      "topic": "Puzzles: Counting (handshakes)",
+      "source": "Original (Infosys-style)"
+    },
+    {
+      "id": "q30",
+      "text": "One of three friends — Arav, Bela or Chirag — ate the last laddoo. Exactly one of them is telling the truth.\nArav: \"Bela ate it.\"\nBela: \"I did not eat it.\"\nChirag: \"I did not eat it.\"\nWho ate the laddoo?",
+      "options": [
+        "Cannot be determined",
+        "Arav",
+        "Chirag",
+        "Bela"
+      ],
+      "correctIndex": 2,
+      "explanation": "If Arav ate it, Bela and Chirag both speak the truth. If Bela ate it, Arav and Chirag both speak the truth. Only if Chirag ate it is exactly one statement (Bela's) true.",
+      "topic": "Puzzles: Truth and lies",
+      "source": "Original (Infosys-style)"
+    }
+  ]
+}
