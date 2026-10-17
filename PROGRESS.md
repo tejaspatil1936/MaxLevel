@@ -1,0 +1,15 @@
+# Progress
+
+Unattended build driven by docs/prompts/00-oneshot.md on branch build/all.
+
+## Setup (prompts 01 and 02)
+
+- Audit: docs/req-matrix.json (297 IDs, 11 proposed), OPEN_QUESTIONS.md (33 questions, all AUTO-DECIDED),
+  TEST_ENV.md, OWNER_SETUP.md, MANUAL_CHECKS.md.
+- Scaffold: pnpm + Turborepo; packages/config, shared, ui; apps/web (static export), api, worker; Firebase emulators
+  (demo-mitaoe) with deny-all rules; lefthook; Vitest unit and emulator integration tests; rules tests; Playwright
+  (desktop, exam, phone, lockdown) against the local production stack; base seed; test-only API; feature_list.json
+  (65 features); scripts/verify.sh; CI workflow.
+- Harness self-test (in a clone under /tmp/harness-test, deleted afterwards):
+  - Breaking `TestClock.now()` in packages/shared made `scripts/verify.sh fast` print `VERIFY fast FAIL`
+    (the unit step failed).
