@@ -38,7 +38,7 @@ export function FieldFrame({ label, hint, error, requiredText, children }: Field
 }
 
 const control =
-  'min-h-11 w-full rounded-control border border-rule bg-surface px-3 text-ink aria-[invalid=true]:border-redpen';
+  'min-h-11 w-full rounded-control border border-graphite bg-surface px-3 text-ink aria-[invalid=true]:border-redpen';
 
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'children'> {
   label: ReactNode;

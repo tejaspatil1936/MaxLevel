@@ -22,7 +22,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
       <RDialog.Portal>
         <RDialog.Overlay className={overlay} />
-        <RDialog.Content className={panel} aria-describedby={description ? undefined : undefined}>
+        <RDialog.Content className={panel} {...(description ? {} : { 'aria-describedby': undefined })}>
           <RDialog.Title className="text-heading-2 font-bold">{title}</RDialog.Title>
           {description ? <RDialog.Description className="mt-2 text-graphite">{description}</RDialog.Description> : null}
           <div className="mt-4">{children}</div>
