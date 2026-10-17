@@ -135,8 +135,9 @@ e2e_feature() {
   playwright "$file"
 }
 semgrep_scan() {
+  # Application code only; scripts/ is local tooling that never runs in production.
   semgrep scan --config p/default --config p/typescript --error --metrics=off --quiet \
-    --exclude legacy --exclude 'node_modules' --exclude '*.test.ts' --exclude 'tests' apps packages scripts
+    --exclude 'node_modules' --exclude '*.test.ts' --exclude '*.test.tsx' --exclude '*.stories.tsx' apps packages
 }
 gitleaks_scan() { gitleaks git --redact --no-banner; }
 audit() { pnpm audit --prod --audit-level=high; }
