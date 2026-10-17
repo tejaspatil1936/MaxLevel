@@ -17,7 +17,7 @@
     "apps/web": {
       "entry": ["app/**/*.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
       "project": ["app/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@fontsource-variable/.+", "tailwindcss", "@mitaoe/ui", "@mitaoe/shared"]
+      "ignoreDependencies": ["@fontsource-variable/.+", "tailwindcss"]
     },
     "packages/shared": {
       "entry": ["src/**/*.test.ts"],
@@ -25,7 +25,8 @@
     },
     "packages/ui": {
       "entry": ["src/**/*.test.ts", "src/**/*.stories.tsx"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["tailwindcss"]
     }
   }
 }
