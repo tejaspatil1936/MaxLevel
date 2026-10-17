@@ -31,3 +31,6 @@ F-0.05 done — token verification with revocation on admin writes, bootstrap or
 F-0.06 done — admin guard (org admin or super admin + X-Org-Id), route-table parity and 404 isolation tests with per-route samples, orgId-first data layer check, GET /v1/org and PATCH /v1/org/settings
 F-0.08 done — append-only audit log written in the same batch as the change, with actor, target, scrubbed before/after, IP, user agent, request ID
 F-0.09 done — Firestore and Storage deny-all rules tests (from setup); infrastructure items are owner checks
+F-0.07 done — FF-01 resolution, FEATURE_DISABLED gate (also for super admins), 60 s clock cache, atomic monthly usage counters in the org timezone
+F-0.10 done — Google popup and emulator sign-in, bootstrap and token refresh, role homes, client guards, AUTH-03 alert; CSP allows the Firebase auth helper script
+F-0.02 done — Radix-based core components, Storybook catalogue in light, dark and high contrast, reduced motion instant
