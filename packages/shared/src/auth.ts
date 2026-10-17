@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { entitlementsSchema } from './entitlements';
 
 /** Custom claim role values (DECISIONS: superAdmin, admin, student, device). */
 export const ROLES = ['superAdmin', 'admin', 'student', 'device'] as const;
@@ -51,5 +52,7 @@ export const meResponseSchema = z.object({
   orgId: z.string().nullable(),
   studentId: z.string().nullable(),
   org: orgSummarySchema.nullable(),
+  /** Effective feature flags and limits of the org (GET /v1/me, FF-03). */
+  entitlements: entitlementsSchema.nullable(),
 });
 export type MeResponse = z.infer<typeof meResponseSchema>;
