@@ -16,7 +16,11 @@ export function SignInScreen() {
   }, [session, router]);
 
   const message =
-    session.status === 'notOnList' ? session.message : session.status === 'failed' ? t('signIn.failed') : null;
+    session.status === 'notOnList'
+      ? t(session.code === 'NOT_ON_LIST' ? 'signIn.notOnList' : 'signIn.unavailable')
+      : session.status === 'failed'
+        ? t('signIn.failed')
+        : null;
 
   return (
     <main

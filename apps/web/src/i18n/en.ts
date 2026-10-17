@@ -8,6 +8,8 @@ export const en = {
   'signIn.title': 'Sign in',
   'signIn.lead': 'Placement exams for your college. Sign in with the Google account your placement cell added.',
   'signIn.google': 'Sign in with Google',
+  'signIn.notOnList': "This Google account isn't on any organization's list. Ask your placement cell to add it.",
+  'signIn.unavailable': 'Your account cannot sign in right now. Ask your placement cell.',
   'signIn.failed': 'Sign-in did not finish. Check your connection and try again.',
   'signIn.chooseOrg': 'Choose the organization to sign in to',
   'signIn.chooseOrgLead': 'Your account is on more than one list. You can switch later by signing in again.',

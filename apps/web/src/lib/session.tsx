@@ -10,14 +10,15 @@ import {
   type User,
 } from 'firebase/auth';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { api, ApiError } from './api';
+import { useQueryClient } from '@tanstack/react-query';
+import { api, ApiError, setWorkspaceOrg } from './api';
 import { installE2eHelpers } from './e2e';
 import { firebaseAuth } from './firebase';
 
 export type Session =
   | { status: 'loading' }
   | { status: 'signedOut' }
-  | { status: 'notOnList'; message: string }
+  | { status: 'notOnList'; code: string }
   | { status: 'chooseOrg'; orgs: Array<{ orgId: string; name: string }> }
   | { status: 'failed' }
   | { status: 'ready'; me: MeResponse };
@@ -39,6 +40,7 @@ const Ctx = createContext<SessionApi | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>({ status: 'loading' });
   const forceBootstrap = useRef(false);
+  const queryClient = useQueryClient();
 
   const resolve = useCallback(async (user: User, chosenOrgId?: string) => {
     try {
@@ -58,7 +60,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         e instanceof ApiError &&
         (e.code === 'NOT_ON_LIST' || e.code === 'ORG_SUSPENDED' || e.code === 'ACCOUNT_DISABLED')
       ) {
-        setSession({ status: 'notOnList', message: e.message });
+        setSession({ status: 'notOnList', code: e.code });
       } else {
         setSession({ status: 'failed' });
       }
@@ -96,6 +98,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (user) await resolve(user, orgId);
       },
       async signOut() {
+        // Nothing cached for this account may reach the next one on the same browser.
+        setWorkspaceOrg(null);
+        queryClient.clear();
         await fbSignOut(firebaseAuth());
       },
       async refresh() {
@@ -103,7 +108,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (user) await resolve(user);
       },
     }),
-    [session, resolve],
+    [session, resolve, queryClient],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
