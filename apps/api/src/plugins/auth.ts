@@ -51,7 +51,10 @@ export function registerAuth(
   deps: { auth: Auth; data: Data; entitlements?: EntitlementsService },
 ): void {
   app.addHook('onRequest', async (req) => {
-    const access = req.routeOptions.config.access ?? 'public';
+    // Fail closed: a /v1 route that forgot to declare its access is treated as admin-only.
+    const declared = req.routeOptions.config.access;
+    const matched = req.routeOptions.url !== undefined;
+    const access = declared ?? (matched && req.url.startsWith('/v1/') ? 'superAdmin' : 'public');
     if (access === 'public') return;
 
     const token = bearer(req);

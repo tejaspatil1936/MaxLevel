@@ -28,7 +28,8 @@ export async function createServer(config: Config, clock: Clock, logger?: Logger
     disableRequestLogging: true,
     genReqId: () => crypto.randomUUID(),
     requestIdHeader: 'x-request-id',
-    trustProxy: true,
+    // One hop: the Google front end (load balancer) appends the client address; anything earlier is client-supplied.
+    trustProxy: (_address: string, hop: number) => hop < 1,
     bodyLimit: 1024 * 1024,
   });
   app.setValidatorCompiler(validatorCompiler);
