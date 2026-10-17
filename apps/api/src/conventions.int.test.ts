@@ -198,3 +198,33 @@ describe('graceful shutdown', () => {
     expect(await exited).toBe(1);
   });
 });
+
+describe('route access', () => {
+  it('SEC-04 every /v1 route declares who may call it, and an undeclared one fails closed', async () => {
+    const { app } = await testApp();
+    const undeclared = app.routeTable.filter(
+      (r) => r.url.startsWith('/v1/') && !(r.config as { access?: string } | undefined)?.access,
+    );
+    expect(undeclared.map((r) => `${r.method} ${r.url}`)).toEqual([]);
+
+    const bare = await createServer({ ...loadConfig({}), logLevel: 'silent' }, new TestClock());
+    const { registerAuth } = await import('./plugins/auth');
+    const { initFirebase } = await import('./firebase');
+    const { createData } = await import('./data');
+    const fb = initFirebase();
+    registerAuth(bare, { auth: fb.auth, data: createData(fb.db) });
+    bare.get('/v1/forgot', { schema: { response: { 200: z.object({ ok: z.boolean() }) } } }, async () => ({
+      ok: true,
+    }));
+    expect((await bare.inject({ method: 'GET', url: '/v1/forgot' })).statusCode).toBe(401);
+  });
+
+  it('API-01 an empty settings change is a validation error, not a server error', async () => {
+    const { app } = await testApp();
+    const { asClaims } = await import('./test-support/tokens');
+    const fb = (await import('./firebase')).initFirebase();
+    const headers = await asClaims(fb.auth, 'admin1@a.test', { role: 'admin', orgId: 'org-a' });
+    const res = await app.inject({ method: 'PATCH', url: '/v1/org/settings', payload: {}, headers });
+    expect(res.statusCode).toBe(400);
+  });
+});

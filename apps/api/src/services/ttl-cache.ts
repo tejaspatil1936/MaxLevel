@@ -14,8 +14,10 @@ export class TtlCache<V> {
     const hit = this.entries.get(key);
     if (hit && hit.expiresAt > now) return hit.value;
     const value = load();
-    this.entries.set(key, { value, expiresAt: now + this.ttlMs });
-    value.catch(() => this.entries.delete(key)); // never cache a failure
+    const entry = { value, expiresAt: now + this.ttlMs };
+    this.entries.set(key, entry);
+    // Never cache a failure, but leave a newer entry for the same key alone.
+    value.catch(() => this.entries.get(key) === entry && this.entries.delete(key));
     return value;
   }
 

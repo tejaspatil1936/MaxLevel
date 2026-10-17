@@ -28,3 +28,18 @@ describe('TtlCache', () => {
     expect(await cache.get('c', async () => 'C')).toBe('C');
   });
 });
+
+describe('TtlCache failures', () => {
+  it('PERF-02 a late failure does not evict a newer entry for the same key', async () => {
+    const clock = new TestClock();
+    clock.set(0);
+    const cache = new TtlCache<string>(clock, 1000);
+    let fail!: (e: Error) => void;
+    const first = cache.get('k', () => new Promise<string>((_, rej) => (fail = rej)));
+    clock.advance(1000);
+    expect(await cache.get('k', async () => 'fresh')).toBe('fresh');
+    fail(new Error('slow failure'));
+    await expect(first).rejects.toThrow('slow failure');
+    expect(await cache.get('k', async () => 'reloaded')).toBe('fresh');
+  });
+});
