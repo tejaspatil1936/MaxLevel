@@ -22,3 +22,6 @@ Unattended build driven by docs/prompts/00-oneshot.md on branch build/all.
 ## Phase 0
 
 PHASE 0 START 394563f76d813680052bb2201bd4ca963b9c65a8
+Note: while a locked phase is incomplete, `verify.sh feature` fails its coverage step (every REQ of a locked phase
+needs a test). A feature counts as done when status.json shows it true and coverage is the only failed step.
+F-0.01 done — token unit tests: contrast in light, dark and high contrast; spacing, radius, shadow, motion; no decorative effects
