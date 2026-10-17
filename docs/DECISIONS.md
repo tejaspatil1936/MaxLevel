@@ -51,3 +51,6 @@ docs/OPEN_QUESTIONS.md; build choices are the agent's own under decision policy 
 - 2026-10-17 | build | Worker verifies Cloud Tasks OIDC tokens with google-auth-library (audience TASKS_AUDIENCE, email TASKS_SERVICE_ACCOUNT); open only outside production | 11.5, SEC-03 | rule 4
 - 2026-10-17 | build | scripts/emulators.sh runs the Firebase CLI with the proxy variables cleared, because firebase-tools ignores NO_PROXY and sent emulator calls on 127.0.0.1 to the session proxy | TEST_ENV | rule 2
 - 2026-10-17 | build | Rules tests (@firebase/rules-unit-testing, firebase client SDK as a dev dependency) live in apps/api/src/rules and run with the API's integration config | DATA-08, DATA-09, DATA-10 | rule 2
+- 2026-10-17 | build | @playwright/test pinned to 1.56.1 to match the pre-installed Chromium 141 (revision 1194) in /opt/pw-browsers | 9.4, TEST_ENV | rule 2
+- 2026-10-17 | build | Playwright projects by tag: desktop (default), @exam 1024 px, @phone 390 px, @lockdown headed under xvfb | TEST_ENV | rule 2
+- 2026-10-17 | build | scripts/serve-web.mjs serves the static export with vercel.json headers (local API and emulator origins added to connect-src), instead of a static-server dependency | WEB-04 | rule 2

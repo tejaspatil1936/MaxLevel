@@ -4,7 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "out/**", ".next/**", "!.next/cache/**", "storybook-static/**"]
+      "outputs": ["dist/**", "out/**", ".next/**", "!.next/cache/**", "storybook-static/**"],
+      "env": ["NEXT_PUBLIC_*"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],

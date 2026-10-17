@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs the Firebase CLI for the local emulators.
 #   scripts/emulators.sh start          start all emulators in the background (no-op if already up); waits until ready
+#   scripts/emulators.sh run            run them in the foreground (Playwright webServer)
 #   scripts/emulators.sh stop           stop them
 #   scripts/emulators.sh status         print which emulator ports are open
 #   scripts/emulators.sh exec "<cmd>"   run a command with the emulators up, then stop them
@@ -27,6 +28,9 @@ case "${1:-status}" in
       read -r -t 0.5 <> <(:) || true
     done
     echo "Emulators did not become ready in 120 s"; tail -20 "$LOG"; exit 1 ;;
+  run)
+    exec env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy \
+      firebase --project demo-mitaoe emulators:start --only auth,firestore,database,storage ;;
   stop)
     if [ -f "$PIDFILE" ]; then kill "$(cat "$PIDFILE")" 2>/dev/null || true; rm -f "$PIDFILE"; fi
     echo "Emulators stopped" ;;
@@ -34,5 +38,5 @@ case "${1:-status}" in
     for p in "${PORTS[@]}"; do (exec 3<>"/dev/tcp/127.0.0.1/$p") 2>/dev/null && echo "$p open" || echo "$p closed"; done ;;
   exec)
     shift; fb emulators:exec --only auth,firestore,database,storage "$*" ;;
-  *) echo 'usage: scripts/emulators.sh start | stop | status | exec "<cmd>"'; exit 1 ;;
+  *) echo 'usage: scripts/emulators.sh start | run | stop | status | exec "<cmd>"'; exit 1 ;;
 esac
