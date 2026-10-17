@@ -1,8 +1,3 @@
-import js from '@eslint/js';
-import globals from 'globals';
+import { base } from '@mitaoe/config/eslint';
 
-export default [
-  { ignores: ['legacy/**', '**/node_modules/**', '**/dist/**', '**/out/**', '**/.next/**', '.verify/**'] },
-  js.configs.recommended,
-  { languageOptions: { globals: { ...globals.node } } },
-];
+export default [...base];

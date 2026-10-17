@@ -1,6 +1,1 @@
-/** @type {import('prettier').Config} */
-export default {
-  printWidth: 120,
-  singleQuote: true,
-  trailingComma: 'all',
-};
+export { default } from '@mitaoe/config/prettier';

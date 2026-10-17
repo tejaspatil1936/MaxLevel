@@ -40,3 +40,7 @@ docs/OPEN_QUESTIONS.md; build choices are the agent's own under decision policy 
 - 2026-10-17 | Q33 Coding questions with code execution? | out of v1. | none (non-goal 1.2) | AUTO-DECIDED
 
 ## Build choices
+- 2026-10-17 | build | TypeScript 6.0.3, not 7.x: typescript-eslint supports TypeScript below 6.1 only | 9.4 | rule 2
+- 2026-10-17 | build | ESLint 9.39, not 10: eslint-plugin-react (needed for react/jsx-no-literals) supports ESLint up to 9 | A11Y-23 | rule 2
+- 2026-10-17 | build | New dev dependencies for linting: typescript-eslint, eslint-plugin-react, eslint-plugin-react-hooks, @next/eslint-plugin-next, eslint-config-prettier, globals | 9.4 | rule 4
+- 2026-10-17 | build | Lint rule no-restricted-properties forbids Date.now() outside clock.ts, tests and scripts | CLAUDE.md | rule 2
