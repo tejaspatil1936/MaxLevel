@@ -9,7 +9,7 @@ let env: RulesTestEnvironment;
 
 beforeAll(async () => {
   env = await initializeTestEnvironment({
-    projectId: 'demo-mitaoe',
+    projectId: process.env.GCLOUD_PROJECT ?? 'demo-mitaoe',
     firestore: { rules: readFileSync(new URL('firestore.rules', root), 'utf8'), host: '127.0.0.1', port: 8080 },
     storage: { rules: readFileSync(new URL('storage.rules', root), 'utf8'), host: '127.0.0.1', port: 9199 },
   });
