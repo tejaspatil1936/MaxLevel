@@ -95,9 +95,9 @@
 
 :root {
   /* Typography (13.4) */
-  --font-display: 'Big Shoulders Display Variable', 'Big Shoulders Display', 'Arial Narrow', sans-serif;
-  --font-text: 'Atkinson Hyperlegible Next Variable', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
-  --font-code: 'Atkinson Hyperlegible Mono Variable', 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
+  --font-display: var(--font-display-face), 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-text: var(--font-text-face), 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  --font-code: var(--font-code-face), 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
   --text-display-1: clamp(4.5rem, 3rem + 6vw, 8rem);
   --text-display-2: clamp(3rem, 2.2rem + 3vw, 4.5rem);
   --text-timer: 2.75rem;
