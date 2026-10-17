@@ -2,7 +2,15 @@ packages:
   - apps/*
   - packages/*
 
-# Packages allowed to run install scripts. Both only pick their platform binary.
+# Install scripts: esbuild and lefthook only pick their platform binary; the others are optional steps the app
+# does not need.
 allowBuilds:
   esbuild: true
   lefthook: true
+  '@firebase/util': false
+  protobufjs: false
+
+minimumReleaseAgeExclude:
+  - lucide-react@1.59.0
+  - '@tanstack/query-core@5.104.4'
+  - '@tanstack/react-query@5.104.4'
