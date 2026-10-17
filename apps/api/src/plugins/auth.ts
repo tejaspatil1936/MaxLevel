@@ -15,6 +15,9 @@ export interface AuthUser {
   orgId: string | null;
   studentId: string | null;
   attemptId: string | null;
+  /** Google confirmed the email address (bootstrap resolves roles only for verified Google accounts). */
+  emailVerified: boolean;
+  signInProvider: string | null;
 }
 
 declare module 'fastify' {
@@ -72,6 +75,8 @@ export function registerAuth(
       orgId: claims?.orgId ?? null,
       studentId: claims?.studentId ?? null,
       attemptId: claims?.attemptId ?? null,
+      emailVerified: decoded.email_verified === true,
+      signInProvider: decoded.firebase?.sign_in_provider ?? null,
     };
     const user = req.user;
 

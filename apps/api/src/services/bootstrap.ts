@@ -10,11 +10,14 @@ import type { Data } from '../data';
  */
 export async function bootstrapSession(
   deps: { auth: Auth; data: Data },
-  user: { uid: string; email: string },
+  user: { uid: string; email: string; emailVerified: boolean; signInProvider: string | null },
   chosenOrgId?: string,
 ): Promise<BootstrapResponse> {
   const { data } = deps;
-  if (!user.email) throw new AppError(403, 'NOT_ON_LIST', NOT_ON_LIST_MESSAGE);
+  // Lists are keyed by email, so only an address Google has verified may claim a role (AUTH-01, AUTH-02).
+  if (!user.email || !user.emailVerified || user.signInProvider !== 'google.com') {
+    throw new AppError(403, 'NOT_ON_LIST', NOT_ON_LIST_MESSAGE);
+  }
 
   const done = async (claims: Claims): Promise<BootstrapResponse> => {
     await setClaims(deps.auth, user.uid, claims);
