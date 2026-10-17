@@ -1,3 +1,4 @@
+import type { OrgSummary } from '@mitaoe/shared';
 import type { Firestore } from 'firebase-admin/firestore';
 import { emailKey, normalizeEmail } from './keys';
 
@@ -63,6 +64,20 @@ export function identityData(db: Firestore) {
             ]
           : [],
       );
+    },
+
+    /** Summaries of the orgs an email belongs to, for the org choice at sign-in. */
+    async orgSummaries(orgIds: string[]): Promise<OrgSummary[]> {
+      const snaps = await Promise.all(orgIds.map((id) => db.doc(`organizations/${id}`).get()));
+      return snaps
+        .filter((s) => s.exists)
+        .map((s) => ({
+          id: s.id,
+          name: s.get('name'),
+          slug: s.get('slug'),
+          timezone: s.get('timezone'),
+          status: s.get('status'),
+        }));
     },
 
     async linkSuperAdminUid(id: string, uid: string): Promise<void> {

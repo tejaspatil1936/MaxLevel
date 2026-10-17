@@ -40,7 +40,7 @@ export async function bootstrapSession(
   }
 
   const orgIds = await data.identity.orgIdsForEmail(user.email);
-  const orgs = await data.orgs.getOrgs(orgIds);
+  const orgs = await data.identity.orgSummaries(orgIds);
   const active = new Set(orgs.filter((o) => o.status === 'active').map((o) => o.id));
   type Pick<T> = { match: T } | { choose: BootstrapResponse } | null;
   const pick = <T extends { orgId: string }>(matches: T[]): Pick<T> => {
