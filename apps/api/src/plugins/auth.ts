@@ -1,0 +1,102 @@
+import { claimsSchema, roleSchema, type Role } from '@mitaoe/shared';
+import type { Auth } from 'firebase-admin/auth';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+import { AppError } from '../errors';
+import type { Data } from '../data';
+
+/** Who may call a route (PLAN section 3). Every /v1 route declares one in its config. */
+export type Access = 'public' | 'signedIn' | 'superAdmin' | 'admin' | 'student' | 'device';
+
+export interface AuthUser {
+  uid: string;
+  email: string;
+  role: Role | null;
+  orgId: string | null;
+  studentId: string | null;
+  attemptId: string | null;
+}
+
+declare module 'fastify' {
+  interface FastifyContextConfig {
+    access?: Access;
+    /** Check token revocation; defaults to true for admin and super-admin writes (AUTH-05). */
+    checkRevoked?: boolean;
+  }
+  interface FastifyRequest {
+    user?: AuthUser;
+  }
+}
+
+const unauthenticated = () => new AppError(401, 'UNAUTHENTICATED', 'Your sign-in has expired. Sign in again.');
+const forbidden = () => new AppError(403, 'FORBIDDEN', 'Your account cannot use this.');
+
+export function bearer(req: FastifyRequest): string | null {
+  const h = req.headers.authorization;
+  return h?.startsWith('Bearer ') ? h.slice(7).trim() || null : null;
+}
+
+/**
+ * Verifies the Firebase ID token on every non-public route (AUTH-05), reads role and orgId from its claims (ORG-02),
+ * and enforces the route's access. Admin routes accept the org's admin, or a super admin naming the org in
+ * X-Org-Id (ORG-11, API-04). Resources are then looked up under request.orgId only, so other orgs' records are 404.
+ */
+export function registerAuth(app: FastifyInstance, deps: { auth: Auth; data: Data }): void {
+  app.addHook('onRequest', async (req) => {
+    const access = req.routeOptions.config.access ?? 'public';
+    if (access === 'public') return;
+
+    const token = bearer(req);
+    if (!token) throw unauthenticated();
+    const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+    const checkRevoked =
+      req.routeOptions.config.checkRevoked ?? ((access === 'admin' || access === 'superAdmin') && isWrite);
+    let decoded;
+    try {
+      decoded = await deps.auth.verifyIdToken(token, checkRevoked);
+    } catch {
+      throw unauthenticated();
+    }
+    const parsed = claimsSchema.safeParse(decoded);
+    const role = roleSchema.safeParse(decoded.role).success ? (decoded.role as Role) : null;
+    const claims = parsed.success ? parsed.data : null;
+    req.user = {
+      uid: decoded.uid,
+      email: (decoded.email ?? '').toLowerCase(),
+      role,
+      orgId: claims?.orgId ?? null,
+      studentId: claims?.studentId ?? null,
+      attemptId: claims?.attemptId ?? null,
+    };
+    const user = req.user;
+
+    switch (access) {
+      case 'signedIn':
+        return;
+      case 'superAdmin':
+        if (user.role !== 'superAdmin') throw forbidden();
+        return;
+      case 'student':
+      case 'device':
+        if (user.role !== access || !user.orgId) throw forbidden();
+        req.orgId = user.orgId;
+        return;
+      case 'admin': {
+        if (user.role === 'admin' && user.orgId) {
+          // An admin always acts in the org of their claim; X-Org-Id cannot move them elsewhere.
+          req.orgId = user.orgId;
+          return;
+        }
+        if (user.role === 'superAdmin') {
+          const orgId = req.headers['x-org-id'];
+          if (typeof orgId !== 'string' || !orgId) {
+            throw new AppError(400, 'ORG_REQUIRED', 'Choose an organization to work in.', { header: 'X-Org-Id' });
+          }
+          if (!(await deps.data.orgs.getOrg(orgId))) throw new AppError(404, 'NOT_FOUND', 'Organization not found.');
+          req.orgId = orgId;
+          return;
+        }
+        throw forbidden();
+      }
+    }
+  });
+}
