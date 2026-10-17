@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+@import '@mitaoe/ui/tokens.css';
+@import '@mitaoe/ui/theme.css';
+
+@layer base {
+  html {
+    background: var(--sheet);
+    color: var(--ink);
+    font-family: var(--font-text);
+    font-size: 100%;
+  }
+  body {
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+}

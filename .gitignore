@@ -26,3 +26,5 @@ firestore-debug.log*
 !.env.example
 !.env.test
 *service-account*.json
+*.tsbuildinfo
+apps/web/next-env.d.ts

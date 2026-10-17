@@ -62,7 +62,7 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 - What: pick the domains (OPEN_QUESTIONS 2, default `app.<domain>` and `api.<domain>`). Create a global external
   Application Load Balancer with a serverless NEG for the `api` Cloud Run service, a Google-managed certificate for
   `api.<domain>`, and a Cloud Armor policy with a per-IP rate limit. Point DNS at the load balancer IP.
-- Where: Network services → Load balancing; Cloud Armor; your DNS provider.
+- Where: Network services → Load balancing; Cloud Armor; your DNS provider. Then replace `https://api.mitaoe.example` in `apps/web/vercel.json` (CSP connect-src) with the real API origin.
 - Confirm: `curl -I https://api.<domain>/health` returns 200 with an `X-Server-Time` header.
 - Unblocks: API-06 (per-IP part), SEC-05, CI-01.
 

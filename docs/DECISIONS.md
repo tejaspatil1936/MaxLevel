@@ -44,3 +44,7 @@ docs/OPEN_QUESTIONS.md; build choices are the agent's own under decision policy 
 - 2026-10-17 | build | ESLint 9.39, not 10: eslint-plugin-react (needed for react/jsx-no-literals) supports ESLint up to 9 | A11Y-23 | rule 2
 - 2026-10-17 | build | New dev dependencies for linting: typescript-eslint, eslint-plugin-react, eslint-plugin-react-hooks, @next/eslint-plugin-next, eslint-config-prettier, globals | 9.4 | rule 4
 - 2026-10-17 | build | Lint rule no-restricted-properties forbids Date.now() outside clock.ts, tests and scripts | CLAUDE.md | rule 2
+- 2026-10-17 | build | Next.js 16 static export with trailingSlash, so every route is a folder with index.html that any static host serves | WEB-01 | rule 2
+- 2026-10-17 | build | Fonts self-hosted through next/font/local from @fontsource-variable packages (Big Shoulders Display, Atkinson Hyperlegible Next and Mono); no Google Fonts request at build or run time | 13.4 | rule 4
+- 2026-10-17 | build | vercel.json CSP names the API as https://api.mitaoe.example until the owner picks the domain (OWNER_SETUP 0.7 replaces it) | WEB-04, SEC-05 | rule 2
+- 2026-10-17 | build | Translation layer: typed English catalogue in apps/web/src/i18n with t(); react/jsx-no-literals enforces it | A11Y-23 | rule 2
