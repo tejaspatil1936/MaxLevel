@@ -1,3 +1,3 @@
-import { base } from '@mitaoe/config/eslint';
+import { base, react } from '@mitaoe/config/eslint';
 
-export default [...base];
+export default [...base, ...react];

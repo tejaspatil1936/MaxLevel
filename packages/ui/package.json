@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css",
-    "./theme.css": "./src/theme.css"
+    "./theme.css": "./src/theme.css",
+    "./base.css": "./src/base.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -15,8 +17,22 @@
   "devDependencies": {
     "@mitaoe/config": "workspace:*",
     "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "typescript": "6.0.3",
     "vitest": "5.0.5"
+  },
+  "dependencies": {
+    "clsx": "2.1.1",
+    "lucide-react": "1.59.0",
+    "radix-ui": "1.8.1",
+    "sonner": "2.0.8"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
