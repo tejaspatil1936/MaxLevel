@@ -10,3 +10,15 @@ coverage/
 playwright-report/
 test-results/
 storybook-static/
+storybook-static/
+test-results/
+playwright-report/
+.emulators.log
+tests/fixtures/
+apps/web/next-env.d.ts
+# Kit files owned by the owner (not reformatted)
+.claude/
+lefthook.yml
+scripts/check-commit.mjs
+scripts/locks.mjs
+scripts/req-coverage.mjs
