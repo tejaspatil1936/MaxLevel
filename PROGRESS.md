@@ -26,3 +26,4 @@ Note: while a locked phase is incomplete, `verify.sh feature` fails its coverage
 needs a test). A feature counts as done when status.json shows it true and coverage is the only failed step.
 F-0.01 done — token unit tests: contrast in light, dark and high contrast; spacing, radius, shadow, motion; no decorative effects
 F-0.04 done — error shape, X-Server-Time, schema route table and stripping, CORS, structured hashed logs, SIGTERM drain
+F-0.03 done — repo-rule tests: static export, no dynamic segments, vercel headers, org-scoped query keys, jsx-no-literals, axe in CI, no keys, pinned deps, Renovate
