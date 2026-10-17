@@ -121,6 +121,7 @@ export async function seedBase(db: Firestore, now: number): Promise<void> {
         graduationYear: i % 2 === 0 ? 2027 : 2026,
         status: 'registered',
         accommodations: {},
+        consentAt: now,
         createdAt: now,
         updatedAt: now,
       });
