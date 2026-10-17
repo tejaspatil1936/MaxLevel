@@ -1,0 +1,68 @@
+/* Tailwind v4 theme: exposes the tokens in tokens.css as utilities (UI-13). Import after tailwindcss. */
+@theme inline {
+  --color-*: initial;
+  --color-sheet: var(--sheet);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-graphite: var(--graphite);
+  --color-rule: var(--rule);
+  --color-dropout: var(--dropout);
+  --color-dropout-faint: var(--dropout-faint);
+  --color-ballpoint: var(--ballpoint);
+  --color-ballpoint-wash: var(--ballpoint-wash);
+  --color-highlighter: var(--highlighter);
+  --color-highlighter-ink: var(--highlighter-ink);
+  --color-redpen: var(--redpen);
+  --color-redpen-wash: var(--redpen-wash);
+  --color-tick: var(--tick);
+  --color-tick-wash: var(--tick-wash);
+  --color-on-ballpoint: var(--on-ballpoint);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-text);
+  --font-mono: var(--font-code);
+
+  --text-display-1: var(--text-display-1);
+  --text-display-1--line-height: 0.9;
+  --text-display-2: var(--text-display-2);
+  --text-display-2--line-height: 0.95;
+  --text-timer: var(--text-timer);
+  --text-timer--line-height: 1;
+  --text-heading-1: var(--text-heading-1);
+  --text-heading-1--line-height: 1.05;
+  --text-heading-2: var(--text-heading-2);
+  --text-heading-2--line-height: 1.25;
+  --text-heading-3: var(--text-heading-3);
+  --text-heading-3--line-height: 1.3;
+  --text-question: var(--text-question);
+  --text-question--line-height: 1.6;
+  --text-body: var(--text-body);
+  --text-body--line-height: 1.6;
+  --text-body-small: var(--text-body-small);
+  --text-body-small--line-height: 1.5;
+  --text-caption: var(--text-caption);
+  --text-caption--line-height: 1.4;
+
+  /* 4 px base: p-1 4, p-2 8, p-3 12, p-4 16, p-6 24, p-8 32, p-12 48, p-16 64, p-24 96 (UI-07) */
+  --spacing: 4px;
+  --container-admin: var(--width-admin);
+  --container-student: var(--width-student);
+  --container-measure: var(--measure-body);
+  --container-question: var(--measure-question);
+
+  --radius-*: initial;
+  --radius-sheet: var(--radius-sheet);
+  --radius-control: var(--radius-control);
+  --radius-panel: var(--radius-panel);
+  --radius-full: var(--radius-full);
+
+  --shadow-*: initial;
+  --shadow-overlay: var(--shadow-overlay);
+
+  --ease-standard: var(--ease-standard);
+  --default-transition-duration: var(--duration-standard);
+  --default-transition-timing-function: var(--ease-standard);
+}
