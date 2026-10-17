@@ -18,6 +18,7 @@ import { healthRoutes } from './routes/health';
 import { orgRoutes } from './routes/org';
 import { sessionRoutes } from './routes/session';
 import { auditWriter } from './services/audit';
+import { entitlementsService } from './services/entitlements';
 import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
 
 /** A Fastify instance with the API's conventions: Zod schemas, error shape, server time, CORS, logging. */
@@ -56,9 +57,10 @@ export async function createServer(config: Config, clock: Clock, logger?: Logger
 export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInstance> {
   const app = await createServer(deps.config, deps.clock, logger);
   const data = createData(deps.firebase.db);
-  registerAuth(app, { auth: deps.firebase.auth, data });
+  const entitlements = entitlementsService(data, deps.clock);
+  registerAuth(app, { auth: deps.firebase.auth, data, entitlements });
   await app.register(healthRoutes);
-  await app.register(sessionRoutes({ ...deps, data }));
+  await app.register(sessionRoutes({ ...deps, data, entitlements }));
   await app.register(orgRoutes({ ...deps, data, audit: auditWriter(data, deps.clock) }));
   // Test-only API: never registered outside NODE_ENV=test with a TEST_API_SECRET.
   if (testApiEnabled(deps)) await app.register(testOnlyRoutes(deps));

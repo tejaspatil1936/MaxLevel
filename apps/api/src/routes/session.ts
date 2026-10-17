@@ -2,10 +2,15 @@ import { bootstrapRequestSchema, bootstrapResponseSchema, meResponseSchema, NOT_
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { Data } from '../data';
 import type { Deps } from '../deps';
+import type { EntitlementsService } from '../services/entitlements';
 import { AppError } from '../errors';
 import { bootstrapSession } from '../services/bootstrap';
 
-export function sessionRoutes(deps: Deps & { data: Data }): FastifyPluginAsyncZod {
+export function sessionRoutes(deps: Deps & { data: Data; entitlements: EntitlementsService }): FastifyPluginAsyncZod {
+  const effective = async (orgId: string) => {
+    const e = await deps.entitlements.get(orgId);
+    return e ? { features: e.features, limits: e.limits } : null;
+  };
   return async (app) => {
     app.post(
       '/v1/session/bootstrap',
@@ -29,6 +34,7 @@ export function sessionRoutes(deps: Deps & { data: Data }): FastifyPluginAsyncZo
           orgId: u.orgId,
           studentId: u.studentId,
           org: u.orgId ? await deps.data.orgs.getOrg(u.orgId) : null,
+          entitlements: u.orgId ? await effective(u.orgId) : null,
         };
       },
     );

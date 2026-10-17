@@ -1,8 +1,9 @@
-import { claimsSchema, roleSchema, type Role } from '@mitaoe/shared';
+import { claimsSchema, roleSchema, type FeatureFlag, type Role } from '@mitaoe/shared';
 import type { Auth } from 'firebase-admin/auth';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { AppError } from '../errors';
 import type { Data } from '../data';
+import type { EntitlementsService } from '../services/entitlements';
 
 /** Who may call a route (PLAN section 3). Every /v1 route declares one in its config. */
 export type Access = 'public' | 'signedIn' | 'superAdmin' | 'admin' | 'student' | 'device';
@@ -21,6 +22,8 @@ declare module 'fastify' {
     access?: Access;
     /** Check token revocation; defaults to true for admin and super-admin writes (AUTH-05). */
     checkRevoked?: boolean;
+    /** Feature flag the route belongs to; 403 FEATURE_DISABLED when it is off for the org (FF-02, ORG-13). */
+    feature?: FeatureFlag;
   }
   interface FastifyRequest {
     user?: AuthUser;
@@ -40,7 +43,10 @@ export function bearer(req: FastifyRequest): string | null {
  * and enforces the route's access. Admin routes accept the org's admin, or a super admin naming the org in
  * X-Org-Id (ORG-11, API-04). Resources are then looked up under request.orgId only, so other orgs' records are 404.
  */
-export function registerAuth(app: FastifyInstance, deps: { auth: Auth; data: Data }): void {
+export function registerAuth(
+  app: FastifyInstance,
+  deps: { auth: Auth; data: Data; entitlements?: EntitlementsService },
+): void {
   app.addHook('onRequest', async (req) => {
     const access = req.routeOptions.config.access ?? 'public';
     if (access === 'public') return;
@@ -98,5 +104,13 @@ export function registerAuth(app: FastifyInstance, deps: { auth: Auth; data: Dat
         throw forbidden();
       }
     }
+  });
+
+  // Feature gate after the org is known; applies to super admins in the org's workspace as well (ORG-13).
+  app.addHook('preHandler', async (req) => {
+    const feature = req.routeOptions.config.feature;
+    if (!feature) return;
+    if (!req.orgId || !deps.entitlements) throw forbidden();
+    await deps.entitlements.requireFeature(req.orgId, feature);
   });
 }
