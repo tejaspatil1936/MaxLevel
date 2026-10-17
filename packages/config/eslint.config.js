@@ -45,7 +45,15 @@ export const base = [
     },
   },
   {
-    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', 'tests/**', 'scripts/**', '**/clock.ts'],
+    files: [
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
+      'tests/**',
+      'scripts/**',
+      '**/test-support/**',
+      '**/clock.ts',
+    ],
     rules: { 'no-restricted-properties': 'off' },
   },
   prettier,
