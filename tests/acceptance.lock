@@ -1,0 +1,8 @@
+{
+  "phases": {
+    "0": {
+      "tests/acceptance/phase-0/F-0.02.spec.ts": "f987d8ba963948286e2a7ff50db1f34cc2b874bb93fa2676f7ff58c1ca1e624d",
+      "tests/acceptance/phase-0/F-0.10.spec.ts": "3ad5830aee4b50469b8d9df53d7fd76078f7543c49a97efac6b01d9a341d324d"
+    }
+  }
+}
