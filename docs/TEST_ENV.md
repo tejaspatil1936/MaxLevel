@@ -33,6 +33,7 @@ TASK_QUEUE=local
 WORKER_URL=http://127.0.0.1:4001
 APP_ORIGINS=http://localhost:3000
 LLM_PROVIDER=mock
+METADATA_SERVER_DETECTION=none
 ```
 
 Web build variables for tests (`NEXT_PUBLIC_*` are inlined at build time):

@@ -11,8 +11,9 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "test:int": "turbo run test:int --concurrency=1",
-    "prepare": "lefthook install"
+    "test:int": "scripts/with-emulators.sh turbo run test:int --concurrency=1",
+    "prepare": "lefthook install",
+    "seed": "scripts/with-emulators.sh pnpm --filter @mitaoe/api run build && pnpm --filter @mitaoe/api run seed"
   },
   "devDependencies": {
     "@mitaoe/config": "workspace:*",
