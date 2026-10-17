@@ -113,9 +113,14 @@ All on the emulators, created by `pnpm seed` (and by `POST /__test/reset`):
 | Org A invited | `invited01@a.test` … `invited05@a.test` | Whitelisted, never signed in; `invited01` has PRN `A-PRN-901` on its entry |
 | Org B | ID `org-b`, slug `coep`, name "College of Engineering Pune", timezone Asia/Kolkata | Departments Computer, Civil |
 | Org B admins | `admin1@b.test`, `admin2@b.test` | |
-| Org B students | `student01@b.test` … `student20@b.test` | Registered, consent given, PRNs `B220101NN` |
+| Org B students | `student01@b.test` … `student20@b.test` | Registered, profiles complete, consent given, same names, departments (Computer, Civil) and years pattern as org A, PRNs `B220101NN` |
 | In both orgs | `multi@both.test` | Whitelisted (invited) in A and B |
 | Nobody | `nobody@outside.test` | On no list |
+
+Display names: admins are "Admin 1" and "Admin 2" in each org; students 01 to 20 in both orgs are, in order, Aarav Kulkarni,
+Ishita Deshmukh, Rohan Patil, Sneha Joshi, Vihaan Shinde, Ananya Pawar, Arjun Jadhav, Kavya Gaikwad, Siddharth More,
+Pooja Chavan, Aditya Bhosale, Riya Kale, Omkar Sawant, Tanvi Mane, Pranav Kadam, Shruti Naik, Yash Salunkhe, Neha Wagh,
+Kunal Thorat and Aditi Bendre. Student IDs are `stu-<orgId>-NN`; department IDs `dept-<orgId>-<lowercase name>`.
 
 ## External services
 

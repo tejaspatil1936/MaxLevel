@@ -54,3 +54,6 @@ docs/OPEN_QUESTIONS.md; build choices are the agent's own under decision policy 
 - 2026-10-17 | build | @playwright/test pinned to 1.56.1 to match the pre-installed Chromium 141 (revision 1194) in /opt/pw-browsers | 9.4, TEST_ENV | rule 2
 - 2026-10-17 | build | Playwright projects by tag: desktop (default), @exam 1024 px, @phone 390 px, @lockdown headed under xvfb | TEST_ENV | rule 2
 - 2026-10-17 | build | scripts/serve-web.mjs serves the static export with vercel.json headers (local API and emulator origins added to connect-src), instead of a static-server dependency | WEB-04 | rule 2
+- 2026-10-17 | build | Buttons use the 120 ms small-feedback transition for colour changes (UI-10); reduced motion makes it 0 ms | UI-10, UI-12 | rule 2
+- 2026-10-17 | build | Custom claim role values are `superAdmin`, `admin`, `student` and `device`; admin and super-admin records store the linked `uid` | ORG-02, AUTH-02 | rule 2
+- 2026-10-17 | build | The DPDP consent notice (SEC-08) is shown to students at first sign-in; admins and super admins are staff whose data the institution already holds | SEC-08 | rule 2
