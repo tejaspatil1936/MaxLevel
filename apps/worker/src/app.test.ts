@@ -1,4 +1,4 @@
-import { systemClock } from '@mitaoe/shared';
+import { systemClock, TestClock } from '@mitaoe/shared';
 import { describe, expect, it } from 'vitest';
 import { buildWorker } from './app';
 import { loadConfig } from './config';
@@ -33,5 +33,28 @@ describe('worker skeleton', () => {
     await expect(buildWorker({ clock: systemClock, config: loadConfig({ NODE_ENV: 'production' }) })).rejects.toThrow(
       /TASKS_AUDIENCE/,
     );
+  });
+});
+
+describe('worker test clock', () => {
+  it('is set by the API in test mode and absent otherwise', async () => {
+    const clock = new TestClock();
+    const test = await buildWorker({
+      clock,
+      config: { ...loadConfig({ NODE_ENV: 'test', TEST_API_SECRET: 's' }), logLevel: 'silent' },
+    });
+    const res = await test.inject({
+      method: 'POST',
+      url: '/__test/clock',
+      payload: { nowMs: 5000 },
+      headers: { 'x-test-secret': 's' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(clock.now()).toBe(5000);
+    const dev = await buildWorker({
+      clock,
+      config: { ...loadConfig({ NODE_ENV: 'development' }), logLevel: 'silent' },
+    });
+    expect((await dev.inject({ method: 'POST', url: '/__test/clock', payload: { nowMs: 1 } })).statusCode).toBe(404);
   });
 });

@@ -1,6 +1,7 @@
-import type { Clock } from '@mitaoe/shared';
+import { TestClock, type Clock } from '@mitaoe/shared';
+import { z } from 'zod';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { WorkerConfig } from './config';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 
@@ -37,6 +38,20 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
   );
 
   app.get('/health', async () => ({ ok: true }));
+
+  // Test-only: the API forwards clock changes here (PLAN section 6). Absent unless NODE_ENV=test with a secret.
+  const { clock, config } = deps;
+  if (config.env === 'test' && config.testApiSecret && clock instanceof TestClock) {
+    app
+      .withTypeProvider<ZodTypeProvider>()
+      .post('/__test/clock', { schema: { body: z.object({ nowMs: z.number().int() }) } }, async (req, reply) => {
+        if (req.headers['x-test-secret'] !== config.testApiSecret) {
+          return reply.status(403).send({ error: { code: 'FORBIDDEN', message: 'Test secret missing.', details: {} } });
+        }
+        clock.set(req.body.nowMs);
+        return { nowMs: clock.now() };
+      });
+  }
 
   await app.register(
     async (tasks) => {
