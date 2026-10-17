@@ -13,3 +13,8 @@ Unattended build driven by docs/prompts/00-oneshot.md on branch build/all.
 - Harness self-test (in a clone under /tmp/harness-test, deleted afterwards):
   - Breaking `TestClock.now()` in packages/shared made `scripts/verify.sh fast` print `VERIFY fast FAIL`
     (the unit step failed).
+  - After `build(harness): freeze verification harness`, changing one character of a locked harness file in a fresh
+    clone made `node scripts/locks.mjs harness check` print `HARNESS CHANGED` and exit 1. The clone was deleted.
+- Setup gates: `VERIFY fast PASS 64521e8` and `VERIFY full PASS 64521e8` before the lock.
+- Skipped from prompt 02 per 00-oneshot overrides: the build/setup branch (all work is on build/all) and the pull
+  request plus CI watch (one pull request at the end, section D).
