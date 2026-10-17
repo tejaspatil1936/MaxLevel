@@ -47,3 +47,14 @@ export async function revokeAfter(uid: string, validSinceSec: number): Promise<v
   });
   if (!res.ok) throw new Error(`revoke failed: ${res.status} ${await res.text()}`);
 }
+
+/** Signs an account in with the given claims and returns a bearer header for it. */
+export async function asClaims(
+  auth: Auth,
+  email: string,
+  claims: Record<string, string>,
+): Promise<{ authorization: string }> {
+  const user = await signIn(auth, email);
+  await auth.setCustomUserClaims(user.uid, claims);
+  return { authorization: `Bearer ${await user.token()}` };
+}

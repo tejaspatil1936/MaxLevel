@@ -6,7 +6,7 @@ run by a person.
 
 | REQ | Kind | Phase | Check | Who | When |
 | --- | --- | --- | --- | --- | --- |
-| ORG-03 | static | 0 | Reviewer reads apps/api/src/data/*: every exported function has orgId as its first parameter; the type-level test apps/api/src/data/org-scope.test-d.ts also fails if not. | spec-reviewer | every phase PR |
+| ORG-03 | static | 0 | Reviewer reads apps/api/src/data/*: every exported function has orgId as its first parameter; the unit test apps/api/src/data/org-scope.test.ts also fails if not. | spec-reviewer | every phase PR |
 | AUD-05 | static (proposed) | 8 | Proposed, not built. Confirm retention once approved. | owner | phase 8 |
 | WEB-01 | static | 0 | verify.sh full checks next.config output export and images.unoptimized, and that apps/web has no route.ts, middleware.ts or "use server". | verify.sh full | every run |
 | WEB-02 | static | 0 | verify.sh full fails if any folder under apps/web/app is a dynamic segment ([id], [...slug]). | verify.sh full | every run |
