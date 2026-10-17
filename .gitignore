@@ -31,3 +31,4 @@ apps/web/next-env.d.ts
 .emulators.log
 .emulators.pid
 .stack/
+storybook-static/
