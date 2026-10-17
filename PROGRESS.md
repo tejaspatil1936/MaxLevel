@@ -25,3 +25,4 @@ PHASE 0 START 394563f76d813680052bb2201bd4ca963b9c65a8
 Note: while a locked phase is incomplete, `verify.sh feature` fails its coverage step (every REQ of a locked phase
 needs a test). A feature counts as done when status.json shows it true and coverage is the only failed step.
 F-0.01 done — token unit tests: contrast in light, dark and high contrast; spacing, radius, shadow, motion; no decorative effects
+F-0.04 done — error shape, X-Server-Time, schema route table and stripping, CORS, structured hashed logs, SIGTERM drain
