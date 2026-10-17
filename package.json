@@ -11,13 +11,15 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "test:int": "turbo run test:int --concurrency=1"
+    "test:int": "turbo run test:int --concurrency=1",
+    "prepare": "lefthook install"
   },
   "devDependencies": {
+    "@mitaoe/config": "workspace:*",
     "eslint": "9.39.5",
+    "lefthook": "2.2.2",
     "prettier": "3.9.10",
     "turbo": "2.11.9",
-    "typescript": "6.0.3",
-    "@mitaoe/config": "workspace:*"
+    "typescript": "6.0.3"
   }
 }
