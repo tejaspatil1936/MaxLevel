@@ -109,11 +109,11 @@ All on the emulators, created by `pnpm seed` (and by `POST /__test/reset`):
 | Super admin | `super@platform.test` | |
 | Org A | ID `org-a`, slug `mitaoe`, name "MIT Academy of Engineering", timezone Asia/Kolkata | Departments Computer, IT, ENTC, Mechanical |
 | Org A admins | `admin1@a.test`, `admin2@a.test` | |
-| Org A students | `student01@a.test` … `student20@a.test` | Registered, profiles complete, departments and graduation years 2026 and 2027 mixed |
+| Org A students | `student01@a.test` … `student20@a.test` | Registered, profiles complete, consent already given (SEC-08), departments cycle through the list in order, odd numbers graduate 2026 and even 2027, PRNs `220101NN` |
 | Org A invited | `invited01@a.test` … `invited05@a.test` | Whitelisted, never signed in; `invited01` has PRN `A-PRN-901` on its entry |
 | Org B | ID `org-b`, slug `coep`, name "College of Engineering Pune", timezone Asia/Kolkata | Departments Computer, Civil |
 | Org B admins | `admin1@b.test`, `admin2@b.test` | |
-| Org B students | `student01@b.test` … `student20@b.test` | Registered |
+| Org B students | `student01@b.test` … `student20@b.test` | Registered, consent given, PRNs `B220101NN` |
 | In both orgs | `multi@both.test` | Whitelisted (invited) in A and B |
 | Nobody | `nobody@outside.test` | On no list |
 
