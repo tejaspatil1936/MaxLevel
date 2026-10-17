@@ -105,6 +105,29 @@ describe('session bootstrap', () => {
     expect((await auth.getUser(user.uid)).customClaims ?? {}).toEqual({});
   });
 
+  it('AUTH-02 only verified Google accounts are resolved; other sign-in methods get no role', async () => {
+    const { app } = await testApp();
+    for (const [email, opts] of [
+      [SEED.superAdmin, { emailVerified: false }],
+      ['admin1@a.test', { provider: 'password' }],
+      ['student02@a.test', { provider: 'anonymous' }],
+    ] as const) {
+      const user = await signIn(auth, email);
+      const token = await idTokenFor(auth, user.uid, opts);
+      const res = await app.inject({
+        method: 'POST',
+        url: '/v1/session/bootstrap',
+        headers: bearer(token),
+        payload: {},
+      });
+      expect(res.statusCode, email).toBe(403);
+      expect(res.json().error.code).toBe('NOT_ON_LIST');
+      expect((await auth.getUser(user.uid)).customClaims ?? {}).toEqual({});
+    }
+    expect((await db.doc('superAdmins/sa-1').get()).get('uid')).toBeNull();
+    expect((await db.doc(`organizations/${SEED.orgA}/admins/adm-org-a-1`).get()).get('uid')).toBeNull();
+  });
+
   it('AUTH-02 a disabled whitelist entry is refused like an unlisted email', async () => {
     await db.doc(`organizations/${SEED.orgA}/whitelist/${emailKey('student05@a.test')}`).update({ status: 'disabled' });
     const { res } = await bootstrap('student05@a.test');

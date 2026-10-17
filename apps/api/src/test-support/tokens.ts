@@ -10,7 +10,11 @@ const project = () => process.env.GCLOUD_PROJECT ?? 'demo-mitaoe';
 export const uidFor = (email: string) => `g-${createHash('sha1').update(email).digest('hex').slice(0, 16)}`;
 
 /** An ID token for the user as it stands now, including their current custom claims (like a token refresh). */
-export async function idTokenFor(auth: Auth, uid: string, opts: { authTimeSec?: number } = {}): Promise<string> {
+export async function idTokenFor(
+  auth: Auth,
+  uid: string,
+  opts: { authTimeSec?: number; emailVerified?: boolean; provider?: string } = {},
+): Promise<string> {
   const user = await auth.getUser(uid);
   // Real clock on purpose: the Admin SDK checks expiry against the machine's time, not the test clock.
   const now = Math.floor(Date.now() / 1000);
@@ -24,8 +28,8 @@ export async function idTokenFor(auth: Auth, uid: string, opts: { authTimeSec?: 
     iat: now - 5,
     exp: now + 3600,
     email: user.email,
-    email_verified: true,
-    firebase: { identities: { email: [user.email] }, sign_in_provider: 'google.com' },
+    email_verified: opts.emailVerified ?? true,
+    firebase: { identities: { email: [user.email] }, sign_in_provider: opts.provider ?? 'google.com' },
     ...user.customClaims,
   })}.`;
 }
