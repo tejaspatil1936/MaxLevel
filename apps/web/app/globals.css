@@ -1,16 +1,7 @@
 @import 'tailwindcss';
 @import '@mitaoe/ui/tokens.css';
 @import '@mitaoe/ui/theme.css';
+@import '@mitaoe/ui/base.css';
 
-@layer base {
-  html {
-    background: var(--sheet);
-    color: var(--ink);
-    font-family: var(--font-text);
-    font-size: 100%;
-  }
-  body {
-    font-size: var(--text-body);
-    line-height: 1.6;
-  }
-}
+/* packages/ui is linked into node_modules, which Tailwind skips by default. */
+@source '../../../packages/ui/src';

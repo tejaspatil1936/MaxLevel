@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Providers } from '@/features/shell/Providers';
+import { SkipLink } from '@/features/shell/SkipLink';
 import { t } from '@/i18n';
 import { code, display, text } from './fonts';
 import './globals.css';
@@ -14,7 +16,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       data-motion="system"
       className={`${display.variable} ${text.variable} ${code.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <SkipLink />
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
