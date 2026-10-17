@@ -18,3 +18,7 @@ Unattended build driven by docs/prompts/00-oneshot.md on branch build/all.
 - Setup gates: `VERIFY fast PASS 64521e8` and `VERIFY full PASS 64521e8` before the lock.
 - Skipped from prompt 02 per 00-oneshot overrides: the build/setup branch (all work is on build/all) and the pull
   request plus CI watch (one pull request at the end, section D).
+
+## Phase 0
+
+PHASE 0 START 394563f76d813680052bb2201bd4ca963b9c65a8
