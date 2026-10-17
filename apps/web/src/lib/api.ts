@@ -1,0 +1,55 @@
+import { firebaseAuth } from './firebase';
+import { config } from './config';
+
+/** An API failure in the shared error shape (API-01), carrying the stable code the UI maps to copy. */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string,
+    readonly details: Record<string, unknown> = {},
+  ) {
+    super(message);
+  }
+}
+
+let workspaceOrgId: string | null = null;
+/** Super admins act inside an organization by sending X-Org-Id (API-04); set by the org switcher. */
+export function setWorkspaceOrg(orgId: string | null): void {
+  workspaceOrgId = orgId;
+}
+
+let clockOffsetMs = 0;
+/** Server time minus device time, measured from X-Server-Time (API-03, EX-06). */
+export const serverClockOffset = () => clockOffsetMs;
+
+export interface ApiOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  body?: unknown;
+  headers?: Record<string, string>;
+}
+
+export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
+  const user = firebaseAuth().currentUser;
+  const headers: Record<string, string> = { ...opts.headers };
+  if (user) headers.authorization = `Bearer ${await user.getIdToken()}`;
+  if (workspaceOrgId) headers['x-org-id'] = workspaceOrgId;
+  if (opts.body !== undefined) headers['content-type'] = 'application/json';
+  // Device time is what the offset corrects, so this is the one place the client reads it directly.
+  // eslint-disable-next-line no-restricted-properties
+  const sentAt = Date.now();
+  const res = await fetch(`${config.apiUrl}${path}`, {
+    method: opts.method ?? 'GET',
+    headers,
+    body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+  });
+  const serverTime = Number(res.headers.get('x-server-time'));
+  // eslint-disable-next-line no-restricted-properties
+  if (serverTime) clockOffsetMs = serverTime - (sentAt + Date.now()) / 2;
+  const json = res.status === 204 ? null : await res.json().catch(() => null);
+  if (!res.ok) {
+    const e = json?.error;
+    throw new ApiError(res.status, e?.code ?? 'INTERNAL', e?.message ?? 'Request failed', e?.details ?? {});
+  }
+  return json as T;
+}
