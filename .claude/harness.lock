@@ -1,0 +1,13 @@
+{
+  "files": {
+    "scripts/verify.sh": "0007848897f253ce2270f47e48f8ad5304dc15bf4939fbfee1dffd3a9610aca3",
+    "scripts/req-coverage.mjs": "0acadcf6cc34357126131d052c702577f52de73d2a5e51a017444964645e37aa",
+    "scripts/locks.mjs": "e7384aba2c4c9740782735ba43d5654d8ca6a219e370b011720e6a22cde130e1",
+    "scripts/check-commit.mjs": "beb704b017ef1461ccc8d777e717be34b5c7097f9892edd39cbe14fed7c68eba",
+    "scripts/loop.sh": "5f9014679e94f2be9ec18d0c6472e00f64905e3c5f133050520a6f76a076c134",
+    "scripts/session-start.sh": "c5752e5aacdfb625d76cb241443fc68fbe1ab1a13d2e6892221babbbaf9e4147",
+    "lefthook.yml": "f08958d9a7cc622f202a905217438716a43ea077143a86cb2fd55a1f8375d617",
+    "docs/req-matrix.json": "3166ad72979a79598be8e2f2864a8fa99b6eb2526c48b989904536a547ad6e13",
+    ".github/workflows/ci.yml": "6cf7557bda6679c0c4aa049316fea4d7eaf49506293cdf9d10c2d0261df98de4"
+  }
+}
