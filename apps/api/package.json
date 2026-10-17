@@ -22,10 +22,12 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
     "@mitaoe/config": "workspace:*",
     "@types/node": "24.19.2",
     "esbuild": "0.28.2",
     "eslint": "9.39.5",
+    "firebase": "13.0.0",
     "typescript": "6.0.3",
     "vitest": "5.0.5"
   }
