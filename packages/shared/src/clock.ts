@@ -30,6 +30,12 @@ export class TestClock implements Clock {
     this.frozenAt = this.now() + ms;
   }
 
+  /** Back to real time with no offset. */
+  reset(): void {
+    this.offsetMs = 0;
+    this.frozenAt = null;
+  }
+
   followReal(): void {
     if (this.frozenAt !== null) this.offsetMs = this.frozenAt - this.real.now();
     this.frozenAt = null;

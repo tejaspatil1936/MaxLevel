@@ -34,3 +34,14 @@ describe('TestClock', () => {
     expect(clock.now()).toBe(10_000);
   });
 });
+
+describe('TestClock.reset', () => {
+  it('returns to real time with no offset', () => {
+    const real = fakeReal(1000);
+    const clock = new TestClock(real);
+    clock.set(99_000);
+    clock.followReal();
+    clock.reset();
+    expect(clock.now()).toBe(1000);
+  });
+});
