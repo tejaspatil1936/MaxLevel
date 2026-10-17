@@ -1,7 +1,10 @@
-import { systemClock } from '@mitaoe/shared';
+import { systemClock, TestClock } from '@mitaoe/shared';
 import { buildApp } from './app';
 import { loadConfig } from './config';
+import { initFirebase } from './firebase';
 
 const config = loadConfig();
-const app = await buildApp({ clock: systemClock, config });
+// The settable clock exists only in test mode; production always uses system time.
+const clock = config.env === 'test' ? new TestClock() : systemClock;
+const app = await buildApp({ clock, config, firebase: initFirebase() });
 await app.listen({ port: config.port, host: config.host });

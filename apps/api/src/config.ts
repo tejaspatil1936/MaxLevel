@@ -7,6 +7,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   APP_ORIGINS: z.string().default('http://localhost:3000'),
   TEST_API_SECRET: z.string().optional(),
+  WORKER_URL: z.string().default('http://127.0.0.1:4001'),
 });
 
 export type Config = {
@@ -16,6 +17,7 @@ export type Config = {
   logLevel: z.infer<typeof envSchema>['LOG_LEVEL'];
   appOrigins: string[];
   testApiSecret?: string;
+  workerUrl: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -25,6 +27,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port: e.PORT,
     host: e.HOST,
     logLevel: e.LOG_LEVEL,
+    workerUrl: e.WORKER_URL,
     appOrigins: e.APP_ORIGINS.split(',')
       .map((s) => s.trim())
       .filter(Boolean),

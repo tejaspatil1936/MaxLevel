@@ -4,6 +4,7 @@ import type { Deps } from './deps';
 import { registerErrorHandling } from './plugins/errors';
 import { registerServerTime } from './plugins/server-time';
 import { healthRoutes } from './routes/health';
+import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
 
 export async function buildApp(deps: Deps): Promise<FastifyInstance> {
   const app = Fastify({
@@ -17,5 +18,7 @@ export async function buildApp(deps: Deps): Promise<FastifyInstance> {
   registerErrorHandling(app);
   registerServerTime(app, deps.clock);
   await app.register(healthRoutes);
+  // Test-only API: never registered outside NODE_ENV=test with a TEST_API_SECRET.
+  if (testApiEnabled(deps)) await app.register(testOnlyRoutes(deps));
   return app;
 }
