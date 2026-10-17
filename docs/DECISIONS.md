@@ -48,3 +48,4 @@ docs/OPEN_QUESTIONS.md; build choices are the agent's own under decision policy 
 - 2026-10-17 | build | Fonts self-hosted through next/font/local from @fontsource-variable packages (Big Shoulders Display, Atkinson Hyperlegible Next and Mono); no Google Fonts request at build or run time | 13.4 | rule 4
 - 2026-10-17 | build | vercel.json CSP names the API as https://api.mitaoe.example until the owner picks the domain (OWNER_SETUP 0.7 replaces it) | WEB-04, SEC-05 | rule 2
 - 2026-10-17 | build | Translation layer: typed English catalogue in apps/web/src/i18n with t(); react/jsx-no-literals enforces it | A11Y-23 | rule 2
+- 2026-10-17 | build | Worker verifies Cloud Tasks OIDC tokens with google-auth-library (audience TASKS_AUDIENCE, email TASKS_SERVICE_ACCOUNT); open only outside production | 11.5, SEC-03 | rule 4
