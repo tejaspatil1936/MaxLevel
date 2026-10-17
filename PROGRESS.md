@@ -28,3 +28,6 @@ F-0.01 done — token unit tests: contrast in light, dark and high contrast; spa
 F-0.04 done — error shape, X-Server-Time, schema route table and stripping, CORS, structured hashed logs, SIGTERM drain
 F-0.03 done — repo-rule tests: static export, no dynamic segments, vercel headers, org-scoped query keys, jsx-no-literals, axe in CI, no keys, pinned deps, Renovate
 F-0.05 done — token verification with revocation on admin writes, bootstrap order super admin > admin > whitelist with claims and uid links, org choice, /v1/me, X-Org-Id for super admins
+F-0.06 done — admin guard (org admin or super admin + X-Org-Id), route-table parity and 404 isolation tests with per-route samples, orgId-first data layer check, GET /v1/org and PATCH /v1/org/settings
+F-0.08 done — append-only audit log written in the same batch as the change, with actor, target, scrubbed before/after, IP, user agent, request ID
+F-0.09 done — Firestore and Storage deny-all rules tests (from setup); infrastructure items are owner checks
