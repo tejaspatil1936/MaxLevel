@@ -32,7 +32,9 @@ function headersFor(path) {
   const out = {};
   for (const r of rules) if (r.re.test(path)) for (const { key, value } of r.headers) out[key] = value;
   if (out['Content-Security-Policy']) {
-    out['Content-Security-Policy'] = out['Content-Security-Policy'].replace('connect-src ', `connect-src ${LOCAL} `);
+    out['Content-Security-Policy'] = out['Content-Security-Policy']
+      .replace('connect-src ', `connect-src ${LOCAL} `)
+      .replace('frame-src ', 'frame-src http://127.0.0.1:9099 ');
   }
   delete out['Strict-Transport-Security']; // plain HTTP locally
   return out;
