@@ -14,3 +14,7 @@ minimumReleaseAgeExclude:
   - lucide-react@1.59.0
   - '@tanstack/query-core@5.104.4'
   - '@tanstack/react-query@5.104.4'
+
+# Security fixes for transitive dependencies (pnpm audit --prod).
+overrides:
+  '@grpc/grpc-js': 1.14.6
