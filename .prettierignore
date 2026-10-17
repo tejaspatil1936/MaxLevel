@@ -1,0 +1,12 @@
+legacy/
+pnpm-lock.yaml
+docs/
+*.md
+.verify/
+out/
+.next/
+dist/
+coverage/
+playwright-report/
+test-results/
+storybook-static/
