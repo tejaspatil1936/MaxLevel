@@ -28,3 +28,5 @@ firestore-debug.log*
 *service-account*.json
 *.tsbuildinfo
 apps/web/next-env.d.ts
+.emulators.log
+.emulators.pid
