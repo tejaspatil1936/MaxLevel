@@ -8,3 +8,4 @@ export * from './components/PageHeader';
 export * from './components/Status';
 export * from './components/Tabs';
 export * from './components/Toast';
+export * from './components/Table';
