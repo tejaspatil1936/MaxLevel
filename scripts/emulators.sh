@@ -15,10 +15,18 @@ LOG=.emulators.log
 PIDFILE=.emulators.pid
 fb() { env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy firebase --project demo-mitaoe "$@"; }
 up() { for p in "${PORTS[@]}"; do (exec 3<>"/dev/tcp/127.0.0.1/$p") 2>/dev/null || return 1; done; }
+# Emulator JVMs can outlive a killed CLI and keep their ports; stop them all by name.
+kill_all() {
+  # Bracketed first letters keep the patterns from matching a shell whose command line merely contains them.
+  pkill -f '[f]irebase --project demo-mitaoe emulators:start' 2>/dev/null || true
+  pkill -f '[e]mulators/(cloud-firestore-emulator|firebase-database-emulator|cloud-storage-rules-runtime)' 2>/dev/null || true
+  rm -f "$PIDFILE"
+}
 
 case "${1:-status}" in
   start)
     if up; then echo "Emulators already running"; exit 0; fi
+    kill_all
     nohup env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy \
       firebase --project demo-mitaoe emulators:start --only auth,firestore,database,storage > "$LOG" 2>&1 &
     echo $! > "$PIDFILE"
@@ -32,7 +40,7 @@ case "${1:-status}" in
     exec env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy \
       firebase --project demo-mitaoe emulators:start --only auth,firestore,database,storage ;;
   stop)
-    if [ -f "$PIDFILE" ]; then kill "$(cat "$PIDFILE")" 2>/dev/null || true; rm -f "$PIDFILE"; fi
+    kill_all
     echo "Emulators stopped" ;;
   status)
     for p in "${PORTS[@]}"; do (exec 3<>"/dev/tcp/127.0.0.1/$p") 2>/dev/null && echo "$p open" || echo "$p closed"; done ;;
