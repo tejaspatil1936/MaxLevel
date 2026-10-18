@@ -17,6 +17,7 @@ import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
 import { createAnswerSync, type AnswerSync, type PendingAnswer, type Rejection, type SyncStatus } from './answer-sync';
 import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
+import { installLockdown } from './lockdown';
 import { examReducer, initialExamState, resumeTimedState, type ExamState } from './exam-state';
 import { ExamScreen } from './ExamScreen';
 import {
@@ -266,6 +267,13 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
       return refusal(e) !== null;
     },
   });
+  // Browser lockdown (PR-04 to PR-06): fullscreen, focus, developer tools keys and the clipboard, reported as above.
+  const { report } = proctor;
+  const { fullscreenRequired, devtoolsPolicy } = payload.settings;
+  useEffect(
+    () => installLockdown({ win: window, doc: document, report, fullscreenRequired, devtoolsPolicy }),
+    [report, fullscreenRequired, devtoolsPolicy],
+  );
   // Each timed question is reported as served when it shows (Q-12); until the server answers, its countdown runs from
   // the time it showed here (QuestionTimer).
   const [served, setServed] = useState<Record<string, number>>(payload.questionServedAt);
@@ -403,6 +411,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         state={state}
         dispatch={dispatch}
         forwardOnly={timed}
+        lockdown
         questionTimer={
           currentLimit !== undefined && !state.locked[currentId] ? (
             <QuestionTimer

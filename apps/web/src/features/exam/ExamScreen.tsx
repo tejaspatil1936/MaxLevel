@@ -40,6 +40,8 @@ export interface ExamScreenProps {
   forwardOnly?: boolean;
   /** The current question's own countdown, beside its heading (Q-11). */
   questionTimer?: ReactNode;
+  /** Attempts only (PR-06): question text and options can't be selected, and nothing of the exam prints. */
+  lockdown?: boolean;
 }
 
 const SHORTCUT_KEYS = [
@@ -81,6 +83,7 @@ export function ExamScreen({
   onTimeKey,
   forwardOnly = false,
   questionTimer,
+  lockdown = false,
 }: ExamScreenProps) {
   const groups = useMemo(() => paletteGroups(exam), [exam]);
   const total = exam.questions.length;
@@ -158,7 +161,7 @@ export function ExamScreen({
   }, [dispatch, goTo, closeDrawer]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-sheet">
+    <div className={cx('flex min-h-dvh flex-col bg-sheet', lockdown && 'print:hidden')}>
       <header className="sticky top-0 z-20 flex min-h-16 flex-wrap items-center gap-x-6 gap-y-2 border-b border-rule bg-surface px-6 py-2">
         <h1 className="font-display text-heading-1 font-bold">{title}</h1>
         {bar}
@@ -177,7 +180,12 @@ export function ExamScreen({
               </Button>
             </div>
             {notice}
-            <article className="flex rounded-sheet border border-dropout bg-surface">
+            <article
+              className={cx(
+                'flex rounded-sheet border border-dropout bg-surface',
+                lockdown && 'select-none [&_*]:select-none',
+              )}
+            >
               <TimingTrack
                 count={total}
                 current={state.index}
