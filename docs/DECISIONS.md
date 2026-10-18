@@ -62,3 +62,4 @@ docs/OPEN_QUESTIONS.md; build choices are the agent's own under decision policy 
 - 2026-10-17 | build | superAdmins/ and organizations/{orgId}/admins/ use generated IDs with `email` and `uid` fields (spec 10.1 keys them by uid); see Q5 | ORG-08, AUTH-02 | rule 3
 - 2026-10-17 | build | Bootstrap resolves roles only for ID tokens with email_verified and sign_in_provider google.com, so a second sign-in method can never claim a listed email | AUTH-01, AUTH-02 | rule 2
 - 2026-10-17 | build | API trusts one proxy hop for the client IP (the Google front end); /v1 routes without a declared access fail closed | AUD-01, SEC-04 | rule 2
+- 2026-10-18 | build | exceljs 4.4.0 as a root dev dependency so acceptance tests can generate XLSX upload fixtures; the web app uses ExcelJS and Papa Parse for client-side whitelist parsing (Q11) | WL-02 | rule 4
