@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint --max-warnings=0 .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:int": "vitest run --config vitest.int.config.ts"
   },
   "dependencies": {
     "@mitaoe/shared": "workspace:*",
