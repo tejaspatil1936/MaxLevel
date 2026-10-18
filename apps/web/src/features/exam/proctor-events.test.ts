@@ -114,4 +114,11 @@ describe('proctor event reporter', () => {
     await h.settle();
     expect(h.timers).toHaveLength(1);
   });
+
+  it('PR-11 reports clientTs in whole milliseconds when the corrected clock is fractional', () => {
+    const h = harness();
+    h.advance(0.6);
+    h.reporter.report('window_blur');
+    expect(h.sent[0]!.clientTs).toBe(1_000_001);
+  });
 });

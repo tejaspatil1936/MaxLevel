@@ -101,7 +101,8 @@ export function createProctorReporter(deps: ProctorDeps): ProctorReporter {
   return {
     report(type, details = {}) {
       if (disposed || finished) return;
-      const now = deps.now();
+      // `clientTs` is whole milliseconds (the schema takes an int); the offset-corrected clock may be fractional.
+      const now = Math.round(deps.now());
       const report: AttemptEventReport = { type, clientTs: now, details };
       if (isStrikeEvent(type, deps.devtoolsPolicy) && countsAsNewStrike(lastIncidentAt, now)) {
         lastIncidentAt = now;
