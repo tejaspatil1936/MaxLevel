@@ -23,6 +23,8 @@ import {
 } from '@mitaoe/shared';
 import type { Database } from 'firebase-admin/database';
 import type { Data } from '../data';
+import type { SeriesRecord } from '../data/series';
+import type { StudentRecord } from '../data/students';
 import type { TestRecord } from '../data/tests';
 import { AppError, notFound } from '../errors';
 import { asEligibility } from './eligibility';
@@ -33,6 +35,29 @@ const REFUSALS = {
   WINDOW_NOT_OPEN: "This test hasn't opened yet.",
   WINDOW_CLOSED: 'The last start time for this test has passed.',
 } as const;
+
+/**
+ * The checks of a start (EX-03, SER-08), shared with phone pairing before Start (PR-13): a scheduled test with its
+ * settings snapshot (else 404), in an active series (else 404), for a student its stored series and test rules admit
+ * (else 403 NOT_ELIGIBLE). Returns the test's settings.
+ */
+export function admitStudent(
+  test: TestRecord | null,
+  series: SeriesRecord | null,
+  student: StudentRecord | null,
+): { settings: Settings; student: StudentRecord } {
+  if (!test || test.status !== 'scheduled' || !test.resolved) throw notFound('Test');
+  if (!series || series.status !== 'active') throw notFound('Test');
+  if (!student || !isEligible(asEligibility(student), series.eligibility, test.eligibility))
+    throw new AppError(403, 'NOT_ELIGIBLE', "This test isn't open to you.");
+  return { settings: test.resolved, student };
+}
+
+/** The start window of the test's timing mode at `now` (spec 5.5): 409 WINDOW_NOT_OPEN or WINDOW_CLOSED outside it. */
+export function assertStartWindow(settings: Settings, now: number): void {
+  const open = canStart(settings, now);
+  if (!open.ok) throw new AppError(409, open.code, REFUSALS[open.code]);
+}
 
 const finishedError = () =>
   new AppError(409, 'ATTEMPT_FINISHED', 'This attempt is finished and takes no more answers.');
@@ -144,24 +169,20 @@ export function attemptService(deps: AttemptDeps) {
     ): Promise<{ payload: AttemptPayload; created: boolean }> {
       const test = await data.tests.getTest(orgId, testId);
       if (!test || test.status !== 'scheduled' || !test.resolved) throw notFound('Test');
-      const settings = test.resolved;
-      const [series, student, dayLabel, set] = await Promise.all([
+      const [series, stored, dayLabel, set] = await Promise.all([
         data.series.getSeries(orgId, test.seriesId),
         data.students.getStudent(orgId, who.studentId),
         dayLabelOf(orgId, test),
         published.questions(orgId, test),
       ]);
-      if (!series || series.status !== 'active') throw notFound('Test');
-      if (!student || !isEligible(asEligibility(student), series.eligibility, test.eligibility))
-        throw new AppError(403, 'NOT_ELIGIBLE', "This test isn't open to you.");
+      const { settings, student } = admitStudent(test, series, stored);
 
       const now = clock.now();
       const { attempt, created } = await data.attempts.startAttempt(
         orgId,
         { testId, studentId: who.studentId, firstStart: !test.attemptsStarted },
         (id) => {
-          const open = canStart(settings, now);
-          if (!open.ok) throw new AppError(409, open.code, REFUSALS[open.code]);
+          assertStartWindow(settings, now);
           return {
             id,
             orgId,
