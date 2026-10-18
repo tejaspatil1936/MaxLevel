@@ -1,5 +1,6 @@
 import { NOT_ON_LIST_MESSAGE, type BootstrapResponse, type Claims } from '@mitaoe/shared';
 import type { Auth } from 'firebase-admin/auth';
+import type { Firestore } from 'firebase-admin/firestore';
 import { AppError } from '../errors';
 import type { Data } from '../data';
 
@@ -9,7 +10,7 @@ import type { Data } from '../data';
  * An email whitelisted in several orgs chooses one (AUTH-04).
  */
 export async function bootstrapSession(
-  deps: { auth: Auth; data: Data },
+  deps: { auth: Auth; data: Data; db: Firestore; now: number },
   user: { uid: string; email: string; emailVerified: boolean; signInProvider: string | null },
   chosenOrgId?: string,
 ): Promise<BootstrapResponse> {
@@ -82,12 +83,42 @@ export async function bootstrapSession(
   if (entryPick && 'choose' in entryPick) return choose(entryPick.choose);
   if (entryPick) {
     const entry = entryPick.match;
-    if (entry.studentId) await data.students.linkStudentUid(entry.orgId, entry.studentId, user.uid);
-    return done({ role: 'student', orgId: entry.orgId, ...(entry.studentId ? { studentId: entry.studentId } : {}) });
+    let studentId = entry.studentId;
+    if (studentId) await data.students.linkStudentUid(entry.orgId, studentId, user.uid);
+    else {
+      // DATA-01: a whitelisted student's record (and studentId) is created at first sign-in; the profile comes next.
+      const batch = deps.db.batch();
+      studentId = data.students.createStudent(entry.orgId, batch, {
+        uid: user.uid,
+        email: user.email,
+        name: null,
+        prn: entry.prn,
+        departmentId: null,
+        graduationYear: null,
+        status: 'invited',
+        consentAt: null,
+        createdAt: deps.now,
+        updatedAt: deps.now,
+      });
+      data.whitelist.updateWhitelistEntry(entry.orgId, batch, user.email, { studentId });
+      await batch.commit();
+    }
+    return done({ role: 'student', orgId: entry.orgId, studentId });
   }
 
   if (orgIds.length && !active.size) {
-    throw new AppError(403, 'ORG_SUSPENDED', 'Your organization is not available right now. Ask your placement cell.');
+    const archived = orgs.length > 0 && orgs.every((o) => o.status === 'archived');
+    throw archived
+      ? new AppError(
+          403,
+          'ORG_ARCHIVED',
+          "This organization is archived, so you can't sign in. Ask your placement cell for help.",
+        )
+      : new AppError(
+          403,
+          'ORG_SUSPENDED',
+          "This organization is suspended, so you can't sign in. Ask your placement cell for help.",
+        );
   }
   throw new AppError(403, 'NOT_ON_LIST', NOT_ON_LIST_MESSAGE);
 }

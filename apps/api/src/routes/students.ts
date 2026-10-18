@@ -39,7 +39,14 @@ export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
 
   const withDepartments = async (orgId: string, list: StudentRecord[]): Promise<Student[]> => {
     const depts = new Map((await data.departments.listDepartments(orgId)).map((d) => [d.id, d.name]));
-    return list.map(({ consentAt: _c, ...s }) => ({ ...s, departmentName: depts.get(s.departmentId) ?? '' }));
+    return list.map(({ consentAt: _c, ...s }) => ({
+      ...s,
+      name: s.name ?? '',
+      prn: s.prn ?? '',
+      departmentId: s.departmentId ?? '',
+      graduationYear: s.graduationYear ?? 0,
+      departmentName: (s.departmentId && depts.get(s.departmentId)) || '',
+    }));
   };
   const prnFree = async (orgId: string, prn: string, self?: string) => {
     const other = await data.students.findStudentByPrn(orgId, prn);
@@ -61,13 +68,16 @@ export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       async (req) => {
         const { cursor, limit, q, departmentId, graduationYear, status: st, sort, dir } = req.query;
         const orgId = req.orgId!;
+        // The directory lists student records with a profile; a first sign-in without one appears only on the whitelist.
         let list = await withDepartments(
           orgId,
-          await data.students.listStudents(orgId, {
-            ...(departmentId ? { departmentId } : {}),
-            ...(graduationYear ? { graduationYear } : {}),
-            ...(st ? { status: st } : {}),
-          }),
+          await data.students
+            .listStudents(orgId, {
+              ...(departmentId ? { departmentId } : {}),
+              ...(graduationYear ? { graduationYear } : {}),
+              ...(st ? { status: st } : {}),
+            })
+            .then((all) => all.filter((x) => x.name !== null)),
         );
         if (q) {
           const n = q.toLowerCase();
@@ -150,7 +160,8 @@ export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         if (!s) throw notFound('Student');
         const [student] = await withDepartments(orgId, [s]);
         const history = await data.audit.listAudit(orgId, { target: s.id });
-        return { student: student!, attempts: [], history };
+        const attempts = (await data.attempts.listAttemptsForStudent(orgId, s.id)).map(({ testId: _t, ...a }) => a);
+        return { student: student!, attempts, history };
       },
     );
 

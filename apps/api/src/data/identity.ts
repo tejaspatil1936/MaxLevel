@@ -18,6 +18,7 @@ export interface WhitelistMatch {
   orgId: string;
   status: 'invited' | 'registered' | 'disabled';
   studentId: string | null;
+  prn: string | null;
 }
 
 export function identityData(db: Firestore) {
@@ -60,6 +61,7 @@ export function identityData(db: Firestore) {
                 orgId: orgIds[i]!,
                 status: s.get('status') as WhitelistMatch['status'],
                 studentId: (s.get('studentId') as string | null) ?? null,
+                prn: (s.get('prn') as string | null) ?? null,
               },
             ]
           : [],

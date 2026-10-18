@@ -7,10 +7,11 @@ export interface StudentRecord {
   id: string;
   uid: string | null;
   email: string;
-  name: string;
-  prn: string;
-  departmentId: string;
-  graduationYear: number;
+  /** Profile fields are empty between first sign-in and profile completion. */
+  name: string | null;
+  prn: string | null;
+  departmentId: string | null;
+  graduationYear: number | null;
   status: WhitelistStatus;
   consentAt: number | null;
   createdAt: number;

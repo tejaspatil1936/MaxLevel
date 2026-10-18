@@ -13,7 +13,8 @@ export function sessionRoutes(deps: Deps & { data: Data; entitlements: Entitleme
   };
   const studentComplete = async (orgId: string | null, studentId: string | null) => {
     if (!orgId || !studentId) return false;
-    return !!(await deps.data.students.getStudent(orgId, studentId))?.consentAt;
+    const s = await deps.data.students.getStudent(orgId, studentId);
+    return !!s?.consentAt && !!s.name && !!s.prn && !!s.departmentId && !!s.graduationYear;
   };
   return async (app) => {
     app.post(
@@ -22,7 +23,12 @@ export function sessionRoutes(deps: Deps & { data: Data; entitlements: Entitleme
         config: { access: 'signedIn' },
         schema: { body: bootstrapRequestSchema, response: { 200: bootstrapResponseSchema } },
       },
-      async (req) => bootstrapSession({ auth: deps.firebase.auth, data: deps.data }, req.user!, req.body.orgId),
+      async (req) =>
+        bootstrapSession(
+          { auth: deps.firebase.auth, data: deps.data, db: deps.firebase.db, now: deps.clock.now() },
+          req.user!,
+          req.body.orgId,
+        ),
     );
 
     app.get(
