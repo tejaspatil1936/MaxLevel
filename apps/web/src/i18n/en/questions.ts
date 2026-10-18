@@ -1,0 +1,27 @@
+// English messages (A11Y-23). The test editor's Questions tab (docs/testids/phase-2.md, "Questions tab").
+export const questions = {
+  'questions.list': 'Questions',
+  'questions.add': 'Add question',
+  'questions.importJson': 'Import JSON',
+  'questions.empty': 'No questions yet. Add the first question.',
+  'questions.number': 'Question {n}',
+  'questions.status.approved': 'Approved',
+  'questions.status.draft': 'Draft',
+  'questions.status.flagged': 'Flagged',
+  'questions.edit': 'Edit',
+  'questions.delete': 'Delete',
+  'questions.forQuestion': ' question {n}',
+  'questions.reorderName': 'Reorder question {n}',
+  'questions.reorderHelp':
+    'To move a question with the keyboard, press Space on its reorder handle, then the up and down arrow keys, then Space to drop it or Escape to cancel.',
+  'questions.pickedUp':
+    'Picked up question {n}. Use the up and down arrow keys to move it, Space to drop, Escape to cancel.',
+  'questions.moved': 'Question moved to position {n} of {total}.',
+  'questions.dropped': 'Question dropped at position {n} of {total}.',
+  'questions.cancelled': 'Move cancelled. The question is back at position {n}.',
+  'questions.reorderFailed': "Couldn't save the new order. {reason}",
+  'questions.deleteTitle': 'Delete question {n}?',
+  'questions.deleteBody': 'The question is removed from this test. The other questions keep their order.',
+  'questions.deleteConfirm': 'Delete question',
+  'questions.deleted': 'Question deleted',
+} as const;
