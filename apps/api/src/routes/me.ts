@@ -103,7 +103,7 @@ export function meRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
             field: 'prn',
           });
         }
-        const other = await data.students.findStudentByPrn(orgId, b.prn);
+        const other = await data.students.findStudentByPrn(orgId, b.prn, student.id);
         if (other && other.id !== student.id) {
           throw new AppError(
             409,

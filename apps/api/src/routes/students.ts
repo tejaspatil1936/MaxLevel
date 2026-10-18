@@ -34,7 +34,7 @@ export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
     }));
   };
   const prnFree = async (orgId: string, prn: string, self?: string) => {
-    const other = await data.students.findStudentByPrn(orgId, prn);
+    const other = await data.students.findStudentByPrn(orgId, prn, self);
     if (other && other.id !== self)
       throw new AppError(409, 'PRN_TAKEN', 'Another student in this organization already has this PRN.', {
         field: 'prn',

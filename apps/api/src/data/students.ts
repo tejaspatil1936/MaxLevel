@@ -54,9 +54,11 @@ export function studentsData(db: Firestore) {
       return d.exists ? toStudent(d) : null;
     },
 
-    async findStudentByPrn(orgId: string, prn: string): Promise<StudentRecord | null> {
-      const snap = await col(orgId).where('prn', '==', prn.trim()).limit(1).get();
-      return snap.docs[0] ? toStudent(snap.docs[0]) : null;
+    /** A student holding this PRN other than `exceptId` (STU-02: PRNs are unique within an org). */
+    async findStudentByPrn(orgId: string, prn: string, exceptId?: string): Promise<StudentRecord | null> {
+      const snap = await col(orgId).where('prn', '==', prn.trim()).limit(2).get();
+      const other = snap.docs.find((d) => d.id !== exceptId);
+      return other ? toStudent(other) : null;
     },
 
     async findStudentByEmail(orgId: string, email: string): Promise<StudentRecord | null> {
