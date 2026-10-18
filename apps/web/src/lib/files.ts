@@ -24,9 +24,14 @@ export function downloadText(filename: string, text: string, type = 'text/csv'):
   URL.revokeObjectURL(url);
 }
 
-/** One CSV field, quoted when it holds a comma, quote or line break (RFC 4180). */
+/**
+ * One CSV field, quoted when it holds a comma, quote or line break (RFC 4180). A cell that a spreadsheet would run as
+ * a formula (leading =, +, -, @, tab or carriage return) gets a leading single quote, so uploaded PRNs or notes can
+ * never carry a formula into an export (SEC-06).
+ */
 export function csvField(v: unknown): string {
-  const s = v === null || v === undefined ? '' : typeof v === 'string' ? v : JSON.stringify(v);
+  const raw = v === null || v === undefined ? '' : typeof v === 'string' ? v : JSON.stringify(v);
+  const s = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 export const csvLine = (values: unknown[]) => values.map(csvField).join(',');

@@ -19,7 +19,6 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 
 - Audit filters for Actor, Action and Target match by substring and also match `target.type`; the contract says exact.
 - `listAudit` and `listAuditAcrossOrgs` read the newest 2,000 entries and filter in memory; large logs and CSV exports can miss older entries. Move filters into Firestore queries with indexes.
-- CSV exports do not neutralise cells that start with `=`, `+`, `-` or `@` (spreadsheet formula injection from uploaded PRNs or notes).
 - The merge route does not check that the target department is active.
 - First-sign-in student creation in bootstrap is a batch, not a transaction; two simultaneous first sign-ins could create two records.
 - Org admins see the IP and user agent of super-admin actions in their audit log and the student change history.
