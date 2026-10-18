@@ -1,8 +1,13 @@
 import { optionName, BASIC_QUESTIONS } from '../fixtures/authoring';
 import { expectNoMediaSent, installWakeLockSpy, recordTraffic, wakeLockRequests } from '../fixtures/devices';
+import { expectNoSeriousA11yViolations } from '../fixtures/axe';
+import { storedTest } from '../fixtures/authoring';
 import {
   advanceExamTime,
   expectApiError,
+  expectEventsSoon,
+  postStart,
+  strikeNumbersOf,
   PAIRING,
   PAIRING_LINK,
   startAttempt,
@@ -13,12 +18,13 @@ import {
 import { EXAM_HEADING } from '../fixtures/exam-session';
 import { scrollsHorizontally } from '../fixtures/layout';
 import { controllableRtdb } from '../fixtures/rtdb';
-import { accounts, ORG_A, studentOfA } from '../fixtures/seed';
+import { accounts, departmentId, ORG_A, ORG_B, studentOfA } from '../fixtures/seed';
 import { expect, test } from '../fixtures/test';
 import type { ApiClient } from '../fixtures/api';
 import { ExamScreen } from '../pages/exam-screen';
 import { BASIC_CHECKS, PairingRegion, PreflightPage } from '../pages/exam-flow';
 import { PhonePage } from '../pages/phone-page';
+import { StudentTestPage } from '../pages/student-pages';
 
 // F-3.13 Phone pairing and presence (PR-13, PR-15, PR-16, PR-17, DATA-06, REL-05, US-ST-04; PR-14 checked on the
 // redeem response). Contract: docs/testids/phase-3.md, "Rules" (phone pairing), "Phone pairing page" and "On the
@@ -26,6 +32,11 @@ import { PhonePage } from '../pages/phone-page';
 
 const phoneCamera = { overrides: { secondCamera: true } };
 const MIN = 60_000;
+
+/** `POST /v1/tests/{testId}/pairing-token`: the rules screen's code, reserving the attempt ID before Start. */
+function reserve(api: ApiClient, testId: string) {
+  return api.post<PairingToken & { attemptId: string }>(`/v1/tests/${testId}/pairing-token`, {});
+}
 
 interface PairingToken {
   token: string;
@@ -133,6 +144,7 @@ test.describe('F-3.13 phone pairing on the laptop @exam', () => {
     await expect(exam.reconnect.getByText(PAIRING.reconnect, { exact: true })).toBeVisible();
     const fresh = new PairingRegion(exam.reconnect);
     await expect(fresh.qr).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
     const freshLink = await fresh.url();
     expect(freshLink).toMatch(PAIRING_LINK);
     expect(freshLink, 'a new code').not.toBe(first.url);
@@ -143,8 +155,14 @@ test.describe('F-3.13 phone pairing on the laptop @exam', () => {
     const warning = exam.strikeWarning(1, 3);
     await expect(warning.getByText(STRIKE_REASONS.phone_disconnected, { exact: true })).toBeVisible();
     await warning.getByRole('button', { name: 'I understand', exact: true }).click();
-    const events = await storedEvents(emulators, ORG_A.id, attempt.id);
-    expect(events.filter((e) => e.data.type === 'phone_disconnected').map((e) => e.data.strikeNumber)).toEqual([1]);
+    const events = await expectEventsSoon(
+      emulators,
+      ORG_A.id,
+      attempt.id,
+      (evs) => strikeNumbersOf(evs, 'phone_disconnected').includes(1),
+      'phone_disconnected stored as strike 1',
+    );
+    expect(strikeNumbersOf(events, 'phone_disconnected')).toEqual([1]);
 
     const again = new PhonePage(await newPhone());
     await again.open(freshLink);
@@ -235,6 +253,7 @@ test.describe('F-3.13 phone page @phone', () => {
     await expect(phone.help).toBeVisible();
     expect(await wakeLockRequests(page), 'screen wake lock requested').toBeGreaterThan(0);
     expect(await scrollsHorizontally(page), 'no sideways scroll at 390 px').toBe(false);
+    await expectNoSeriousA11yViolations(page);
     const redeem = await redeemed;
     expect(redeem.status()).toBe(200);
     const body = (await redeem.json()) as { customToken: string; attemptId: string; orgId: string };
@@ -294,5 +313,107 @@ test.describe('F-3.13 phone page @phone', () => {
 
     expectApiError(await (await apiAs(studentOfA(2))).post(`/v1/attempts/${attempt.id}/pairing-token`, {}), 404);
     expectApiError(await (await apiAs(accounts.adminA)).post(`/v1/attempts/${attempt.id}/pairing-token`, {}), 403);
+  });
+});
+
+test.describe('F-3.13 pairing before the start API', () => {
+  test('PR-13 ORG-05 ORG-11 SER-08 a pairing code before Start is refused like a start, and a refusal stores nothing', async ({
+    testApi,
+    apiAs,
+    emulators,
+    rtdb,
+  }) => {
+    const live = await testApi.seedExamTest({ orgId: ORG_A.id, ...phoneCamera });
+    const otherOrg = await testApi.seedExamTest({ orgId: ORG_B.id, title: 'COEP aptitude', ...phoneCamera });
+    const unpublished = await testApi.seedExamTest({
+      orgId: ORG_A.id,
+      title: 'Unpublished test',
+      publish: false,
+      ...phoneCamera,
+    });
+    const mech = await testApi.seedExamTest({
+      orgId: ORG_A.id,
+      title: 'Mechanical design',
+      eligibility: { departmentIds: [departmentId(ORG_A, 'Mechanical')] },
+      ...phoneCamera,
+    });
+    const upcoming = await testApi.seedExamTest({
+      orgId: ORG_A.id,
+      title: 'Later test',
+      opensInMin: 60,
+      ...phoneCamera,
+    });
+    const late = await testApi.seedExamTest({
+      orgId: ORG_A.id,
+      title: 'Late entry test',
+      opensInMin: -20,
+      ...phoneCamera,
+    });
+    const student = await apiAs(accounts.studentA);
+
+    expectApiError(await reserve(student, otherOrg.testId), 404);
+    expectApiError(await reserve(student, unpublished.testId), 404);
+    expectApiError(await reserve(student, mech.testId), 403, 'NOT_ELIGIBLE');
+    expectApiError(await reserve(student, upcoming.testId), 409, 'WINDOW_NOT_OPEN');
+    expectApiError(await reserve(student, late.testId), 409, 'WINDOW_CLOSED');
+    expectApiError(await reserve(await apiAs(accounts.adminA), live.testId), 403);
+    expectApiError(await reserve(await apiAs(accounts.superAdmin, { orgId: ORG_A.id }), live.testId), 403);
+    expectApiError(await reserve(await apiAs(accounts.superAdmin), live.testId), 403);
+
+    for (const orgId of [ORG_A.id, ORG_B.id]) {
+      expect(await emulators.count(`organizations/${orgId}`, 'attemptIndex'), `attempt index in ${orgId}`).toBe(0);
+      expect(await emulators.count(`organizations/${orgId}`, 'attempts'), `attempts in ${orgId}`).toBe(0);
+    }
+    expect(await rtdb.get('attemptOwners'), 'no attempt owner written').toBeNull();
+
+    const first = await reserve(student, live.testId);
+    expect(first.status, JSON.stringify(first.body)).toBe(200);
+    expect(first.body.url).toMatch(PAIRING_LINK);
+    const again = await reserve(student, live.testId);
+    expect(again.body.attemptId, 'a repeat keeps the reserved attempt').toBe(first.body.attemptId);
+    expect(again.body.token, 'with a new code').not.toBe(first.body.token);
+  });
+
+  test('PR-13 TST-06 a reservation is not a started attempt: no lock, no Resume test, and Start then uses the reserved attempt', async ({
+    page,
+    signInAs,
+    testApi,
+    apiAs,
+    emulators,
+  }) => {
+    const reservedOnly = await testApi.seedExamTest({ orgId: ORG_A.id, title: 'Reserved only', ...phoneCamera });
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id, ...phoneCamera });
+    await signInAs(accounts.studentA);
+    const student = await apiAs(accounts.studentA);
+    const admin = await apiAs(accounts.adminA);
+    const overrides = async (testId: string) =>
+      (await storedTest(emulators, ORG_A.id, testId)).overrides as Record<string, unknown>;
+
+    expect((await reserve(student, reservedOnly.testId)).status).toBe(200);
+    const unlocked = await admin.patch(`/v1/tests/${reservedOnly.testId}`, {
+      overrides: { ...(await overrides(reservedOnly.testId)), maxStrikes: 5 },
+    });
+    expect(unlocked.status, `a reservation does not lock the test: ${JSON.stringify(unlocked.body)}`).toBe(200);
+    const storedReserved = await storedTest(emulators, ORG_A.id, reservedOnly.testId);
+    expect(storedReserved.attemptsStarted ?? false, 'attemptsStarted after a reservation').toBe(false);
+    expect(storedReserved.overrides).toMatchObject({ maxStrikes: 5 });
+
+    const reserved = await reserve(student, t.testId);
+    expect(reserved.status).toBe(200);
+    expect(await emulators.count(`organizations/${ORG_A.id}`, 'attempts'), 'no attempt record yet').toBe(0);
+    const testPage = new StudentTestPage(page);
+    await testPage.goto(t.testId, EXAM_HEADING);
+    await expect(testPage.checkDevice).toBeVisible();
+    await expect(testPage.resume).toHaveCount(0);
+
+    const started = await postStart(student, t.testId);
+    expect([200, 201], JSON.stringify(started.body)).toContain(started.status);
+    expect(started.body.attempt.id, 'Start uses the reserved attempt ID').toBe(reserved.body.attemptId);
+    expect((await reserve(student, t.testId)).body.attemptId, 'and pairing keeps it').toBe(reserved.body.attemptId);
+    expectApiError(
+      await admin.patch(`/v1/tests/${t.testId}`, { overrides: { ...(await overrides(t.testId)), maxStrikes: 5 } }),
+      409,
+      'TEST_LOCKED',
+    );
   });
 });
