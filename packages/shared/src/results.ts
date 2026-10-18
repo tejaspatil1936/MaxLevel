@@ -37,12 +37,32 @@ export const reviewItemSchema = z.object({
 });
 export type ReviewItem = z.infer<typeof reviewItemSchema>;
 
+/** Released-only keys of the student result: none of them is sent unless `release` is `released` (RES-01). */
+export const RELEASED_RESULT_KEYS = [
+  'detail',
+  'score',
+  'max',
+  'pct',
+  'durationSec',
+  'rank',
+  'rankNote',
+  'sections',
+  'review',
+] as const;
+
+/**
+ * Why a released result has no rank line with numbers (RES-02, LB-04, PR-10): `after_close` while a flexible window is
+ * still open, `not_ranked` for a terminated attempt. Only sent while the test leaderboard is on.
+ */
+export const RANK_NOTES = ['after_close', 'not_ranked'] as const;
+
 /**
  * `GET /v1/student/results/{attemptId}`. The score keys are present only when `release` is `released`; `review` only
  * for a released full review. `title`, `dayLabel`, `resultRelease` and `windowEnd` let the page name the test and say
- * when results come.
+ * when results come. The refinement makes the response schema refuse an answer key outside a released full review, so
+ * a bug upstream fails the request instead of leaking it (DATA-05).
  */
-export const studentResultSchema = z.object({
+const studentResultShape = z.object({
   attemptId: z.string(),
   testId: z.string(),
   title: z.string(),
@@ -60,10 +80,22 @@ export const studentResultSchema = z.object({
   pct: z.number().optional(),
   durationSec: z.number().int().optional(),
   rank: z.object({ rank: z.number().int().min(1), total: z.number().int().min(1) }).optional(),
+  rankNote: z.enum(RANK_NOTES).optional(),
   sections: z.array(resultSectionSchema).optional(),
   review: z.array(reviewItemSchema).optional(),
 });
-export type StudentResult = z.infer<typeof studentResultSchema>;
+export const studentResultSchema = studentResultShape.superRefine((r, ctx) => {
+  const leaked =
+    r.release === 'released'
+      ? [
+          ...(r.detail === 'score' && r.sections ? ['sections'] : []),
+          ...(r.detail !== 'full' && r.review ? ['review'] : []),
+        ]
+      : RELEASED_RESULT_KEYS.filter((k) => r[k] !== undefined);
+  for (const key of leaked)
+    ctx.addIssue({ code: 'custom', path: [key], message: `${key} is not sent with this release state and detail.` });
+});
+export type StudentResult = z.infer<typeof studentResultShape>;
 
 /**
  * A published test as the admin results pages list it (US-AD-10): its release setting and state, the window end, and

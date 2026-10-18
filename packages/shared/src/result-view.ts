@@ -1,6 +1,6 @@
 import type { AttemptRecord } from './attempt';
 import { resolveMarks, type MarkLevel } from './marks';
-import { manualReleaseRefusal, resultReleaseState, type ReleaseInput } from './release';
+import { manualReleaseRefusal, resultReleaseState, resultsPublic, type ReleaseInput } from './release';
 import { OTHER_QUESTIONS, type ResultSection, type ReviewItem, type StudentResult } from './results';
 import { NO_SECTION_KEY } from './scoring';
 import type { Settings } from './settings';
@@ -17,7 +17,10 @@ export interface ReviewQuestion extends MarkLevel {
 }
 
 export interface StudentResultInput {
-  attempt: Pick<AttemptRecord, 'id' | 'testId' | 'status' | 'terminationReason' | 'strikesCount' | 'result' | 'draw'>;
+  attempt: Pick<
+    AttemptRecord,
+    'id' | 'testId' | 'studentId' | 'status' | 'terminationReason' | 'strikesCount' | 'result' | 'draw'
+  >;
   test: {
     title: string;
     dayLabel: string | null;
@@ -26,6 +29,11 @@ export interface StudentResultInput {
   settings: Settings;
   release: Omit<ReleaseInput, 'settings'>;
   now: number;
+  /**
+   * The stored test board (LB-01), when the test leaderboard is on for students (`public_leaderboards` and the test's
+   * `testLeaderboard`); `rows` is null while the board has not been computed. Absent means no rank line.
+   */
+  board?: { rows: ReadonlyArray<{ studentId: string; rank: number }> | null; total: number };
   /** Needed only when `resultDetailShown` is `full`: the questions and the student's answers. */
   review?: {
     questions: ReadonlyMap<string, ReviewQuestion>;
@@ -97,6 +105,19 @@ function reviewItems(input: StudentResultInput): ReviewItem[] {
   });
 }
 
+/**
+ * RES-02, LB-04, PR-10: the rank from the stored test board once the board is open (results public), with the number of
+ * ranked rows; a note instead for a terminated attempt (never ranked) or while a flexible window is still open.
+ */
+function rankLine(input: StudentResultInput): Pick<StudentResult, 'rank' | 'rankNote'> {
+  const { attempt, board, settings, release, now } = input;
+  if (!board) return {};
+  if (attempt.status === 'terminated') return { rankNote: 'not_ranked' };
+  if (!resultsPublic({ settings, ...release }, now)) return { rankNote: 'after_close' };
+  const row = board.rows?.find((r) => r.studentId === attempt.studentId);
+  return row ? { rank: { rank: row.rank, total: board.total } } : {};
+}
+
 /** The student's result as the API serves it (RES-01 to RES-03, RES-05, RES-06, DATA-05). */
 export function studentResult(input: StudentResultInput): StudentResult {
   const { attempt, test, settings, release, now } = input;
@@ -124,6 +145,7 @@ export function studentResult(input: StudentResultInput): StudentResult {
     max: result.max,
     pct: result.pct,
     durationSec: result.durationSec,
+    ...rankLine(input),
     ...(detail !== 'score' ? { sections: sectionScores(input) } : {}),
     ...(detail === 'full' ? { review: reviewItems(input) } : {}),
   };

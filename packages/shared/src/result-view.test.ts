@@ -17,6 +17,7 @@ const input = (s: Partial<Settings> = {}, release: StudentResultInput['release']
   attempt: {
     id: 'att-1',
     testId: 't1',
+    studentId: 'stu-1',
     status: 'submitted',
     strikesCount: 1,
     draw: {
@@ -148,5 +149,47 @@ describe('studentResult', () => {
     expect(body.detail).toBe('sections');
     expect(hasKey(body)).toBe(false);
     expect(resultDetailShown(open.settings, open.release, window.end)).toBe('full');
+  });
+
+  it('RES-02 LB-01 the rank is the student row of the stored test board, out of its ranked rows', () => {
+    const board = {
+      rows: [
+        { studentId: 'stu-2', rank: 1 },
+        { studentId: 'stu-1', rank: 2 },
+      ],
+      total: 2,
+    };
+    expect(studentResult({ ...input({ resultDetail: 'score' }), board })).toMatchObject({
+      rank: { rank: 2, total: 2 },
+    });
+    for (const b of [undefined, { rows: null, total: 0 }, { rows: [board.rows[0]!], total: 1 }]) {
+      const body = studentResult({ ...input({ resultDetail: 'score' }), ...(b ? { board: b } : {}) });
+      expect('rank' in body || 'rankNote' in body).toBe(false);
+    }
+    const pending = studentResult({ ...input({ resultRelease: 'manual' }), board });
+    expect('rank' in pending || 'rankNote' in pending, 'nothing before release').toBe(false);
+  });
+
+  it('RES-06 PR-10 LB-04 a terminated attempt is not ranked, and a flexible window still open defers the rank', () => {
+    const board = { rows: [{ studentId: 'stu-1', rank: 1 }], total: 1 };
+    const ended = input({ resultDetail: 'score' });
+    ended.attempt = { ...ended.attempt, status: 'terminated', terminationReason: 'max_strikes' };
+    const body = studentResult({ ...ended, board });
+    expect(body.rankNote).toBe('not_ranked');
+    expect('rank' in body).toBe(false);
+    const open = { ...input({ timingMode: 'flexible', resultDetail: 'score' }), board, now: window.end - 1 };
+    expect(studentResult(open)).toMatchObject({ rankNote: 'after_close' });
+    expect('rank' in studentResult(open)).toBe(false);
+  });
+
+  it('DATA-05 the result schema refuses released-only keys before release and a review below full detail', () => {
+    const full = studentResult(input());
+    expect(studentResultSchema.safeParse(full).success).toBe(true);
+    expect(studentResultSchema.safeParse({ ...full, detail: 'sections' }).success).toBe(false);
+    expect(studentResultSchema.safeParse({ ...full, detail: 'score', review: undefined }).success).toBe(false);
+    const pending = studentResult(input({ resultRelease: 'manual' }));
+    expect(studentResultSchema.safeParse(pending).success).toBe(true);
+    for (const extra of [{ score: 1 }, { review: [] }, { rank: { rank: 1, total: 1 } }])
+      expect(studentResultSchema.safeParse({ ...pending, ...extra }).success, JSON.stringify(extra)).toBe(false);
   });
 });
