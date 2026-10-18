@@ -8,6 +8,7 @@ import {
   seriesCreateSchema,
   seriesPatchSchema,
   seriesSchema,
+  resolveSettings,
   settingsProblems,
   type Series,
   type SeriesDefaults,
@@ -24,7 +25,7 @@ const admin = { access: 'admin' as const };
 const idParams = z.object({ id: z.string().min(1).max(128) });
 
 /** SER-09: a flexible window with a full review released on submit would leak answers. */
-function refuseLeakyDefaults(defaults: SeriesDefaults): void {
+function refuseLeakyDefaults(defaults: Partial<SeriesDefaults>): void {
   if (settingsProblems(defaults).length)
     throw new AppError(400, 'FULL_REVIEW_BEFORE_CLOSE', FULL_REVIEW_BEFORE_CLOSE_MESSAGE, { field: 'resultRelease' });
 }
@@ -91,6 +92,18 @@ export function seriesRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         if ((patch.endDate ?? before.endDate) < (patch.startDate ?? before.startDate))
           throw new AppError(400, 'VALIDATION', "The end date can't be before the start date.", { field: 'endDate' });
         if (patch.defaults) refuseLeakyDefaults(patch.defaults);
+        // SER-09: new defaults or a new daily window must not put any of the series' tests into the leaky combination.
+        if (patch.defaults || patch.dailyWindow) {
+          const [tests, org] = await Promise.all([data.tests.listTests(orgId, before.id), data.orgs.getOrg(orgId)]);
+          const series = {
+            defaults: patch.defaults ?? before.defaults,
+            dailyWindow: patch.dailyWindow ?? before.dailyWindow,
+          };
+          for (const test of tests) {
+            const resolved = resolveSettings({ series, test, timezone: org?.timezone ?? 'Asia/Kolkata' });
+            refuseLeakyDefaults(resolved);
+          }
+        }
         const batch = db.batch();
         data.series.updateSeries(orgId, batch, before.id, { ...patch, updatedAt: clock.now() });
         const statusChange = patch.status !== undefined && patch.status !== before.status;
