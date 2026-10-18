@@ -84,3 +84,5 @@ F-3.01 done — timing (canStart, lastStartAt, attemptDeadline, sectionDeadline)
 F-3.02 done — student dashboard (live, upcoming, completed) with server-clock countdowns and timezone, test page, exam-test seed scenario
 F-3.03 done — POST /v1/attempts with eligibility and window checks, seeded draw, deadline, auto-submit task, Idempotency-Key replay, resume payload without answer keys, TST-06 lock, published-test cache
 F-3.04 built — preflight checks with fix lines, self-hosted MediaPipe face detector, rules screen with Start (2 tests wait on F-3.05 and F-3.10-3.12)
+F-3.05 done — attempt mode at /exam/?attempt=, palette states by shape with legend, timing track, drawer below 1,280 px, keyboard shortcuts, resume from saved answers; answer sync route, basic timer and submit summary landed early because the F-3.05 test needs them
+Checkpoint after 5 features: spec review runs on the phase 3 diff in parallel with F-3.06; QA runs at the phase end on the finished exam flow (the stack conflicts with feature verify runs).
