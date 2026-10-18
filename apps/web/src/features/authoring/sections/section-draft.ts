@@ -164,3 +164,12 @@ export function durationText(s: Section): string {
   if (s.durationMin === undefined) return t('sections.testTimer');
   return t(s.durationMin === 1 ? 'tests.minute' : 'tests.minutes', { n: formatCount(s.durationMin) });
 }
+/** The list with section `id` moved one place up (-1) or down (+1); unchanged at either end. */
+export function moved<T extends { id: string }>(list: readonly T[], id: string, by: -1 | 1): T[] {
+  const i = list.findIndex((s) => s.id === id);
+  const j = i + by;
+  if (i < 0 || j < 0 || j >= list.length) return [...list];
+  const out = [...list];
+  [out[i], out[j]] = [out[j]!, out[i]!];
+  return out;
+}

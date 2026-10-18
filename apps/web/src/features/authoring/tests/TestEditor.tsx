@@ -13,6 +13,7 @@ import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
 import { seriesUrl } from '../series/SeriesList';
 import { QuestionsTab } from '../questions/QuestionsTab';
+import { SectionsTab } from '../sections/SectionsTab';
 import { SeriesNotFound } from '../series/SeriesNotFound';
 import { TestDetailsDialog } from './TestDetailsDialog';
 import { TestEligibility } from './TestEligibility';
@@ -78,6 +79,7 @@ function EditorPage({ test }: { test: TestDetail }) {
   const loading = <Skeleton className="h-64 w-full" />;
   const panel = (value: string) => {
     if (value === 'questions') return <QuestionsTab test={test} />;
+    if (value === 'sections') return <SectionsTab test={test} />;
     if (value === 'settings')
       return series.data ? <TestSettings key={stamp} test={test} series={series.data} /> : loading;
     if (value === 'eligibility')

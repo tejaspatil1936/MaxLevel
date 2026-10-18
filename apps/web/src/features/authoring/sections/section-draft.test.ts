@@ -5,6 +5,7 @@ import {
   drawText,
   durationText,
   mixText,
+  moved,
   sectionDraft,
   sectionErrors,
   sectionFromDraft,
@@ -93,5 +94,13 @@ describe('sections table', () => {
     expect([drawText(mixed), mixText(mixed)]).toEqual(['5', '2 easy, 2 medium, 1 hard']);
     const { durationMin: _d, ...untimed } = quant;
     expect([drawText({ ...quant, drawCount: 3 }), durationText(untimed)]).toEqual(['3', 'Test timer']);
+  });
+
+  it('Q-03 moving a section swaps it with its neighbour and stops at either end', () => {
+    const list = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    expect(moved(list, 'b', -1).map((s) => s.id)).toEqual(['b', 'a', 'c']);
+    expect(moved(list, 'b', 1).map((s) => s.id)).toEqual(['a', 'c', 'b']);
+    expect(moved(list, 'a', -1).map((s) => s.id)).toEqual(['a', 'b', 'c']);
+    expect(moved(list, 'c', 1).map((s) => s.id)).toEqual(['a', 'b', 'c']);
   });
 });
