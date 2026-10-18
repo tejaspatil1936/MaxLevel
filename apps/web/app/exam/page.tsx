@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { ExamPreviewRoute } from '@/features/exam/ExamPreview';
+import { ExamRoute } from '@/features/exam/ExamRoute';
 import { t } from '@/i18n';
 
-export const metadata: Metadata = { title: t('preview.title') };
+export const metadata: Metadata = { title: t('attempt.title') };
 
-// The exam screen, full screen outside the admin shell. The test travels in ?preview= (WEB-02); phase 3 adds the
-// student's attempt mode to this route.
+// The exam screen, full screen outside any shell. The attempt travels in ?attempt= and an admin's preview in
+// ?preview= (WEB-02).
 export default function ExamPage() {
   return (
     <Suspense>
-      <ExamPreviewRoute />
+      <ExamRoute />
     </Suspense>
   );
 }

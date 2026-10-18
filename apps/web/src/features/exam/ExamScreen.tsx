@@ -12,8 +12,12 @@ import { QuestionPrompt, QuestionText } from './QuestionView';
 /** Unavailable moves stay focusable (aria-disabled), so focus never drops to the page when the last one is reached. */
 const DIM = 'aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
 
-/** A question on the sheet; the preview's carry their answer key. */
-export type ExamQuestion = StudentQuestion & { correctOptionIds?: string[]; explanation?: string };
+/** A question on the sheet (an attempt's name no section as `null`); the preview's carry their answer key. */
+export type ExamQuestion = Omit<StudentQuestion, 'sectionId'> & {
+  sectionId?: string | null;
+  correctOptionIds?: string[];
+  explanation?: string;
+};
 
 export interface ExamScreenProps {
   exam: Omit<ExamPayload, 'questions'> & { questions: readonly ExamQuestion[] };
