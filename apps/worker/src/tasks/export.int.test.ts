@@ -1,4 +1,5 @@
-import { TestClock, type LeaderboardRow } from '@mitaoe/shared';
+import { TestClock, type LeaderboardRow, type SeriesLeaderboardRow } from '@mitaoe/shared';
+import ExcelJS from 'exceljs';
 import type { FastifyInstance } from 'fastify';
 import { getApps } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
@@ -121,6 +122,15 @@ const csvRows = (b: Buffer) =>
     .trimEnd()
     .split('\r\n')
     .map((l) => l.split(','));
+const sheets = async (b: Buffer) => {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(b as unknown as ArrayBuffer);
+  return wb.worksheets.map((ws) => ({
+    name: ws.name,
+    rows: (ws.getSheetValues() as unknown[][]).filter(Boolean).map((r) => r.slice(1)),
+  }));
+};
+
 describe('/tasks/export', () => {
   it('EXP-01 EXP-03 REL-04 writes the test CSV with every column, ranks matching rankTest, and a second run is a no-op', async () => {
     await sat('t1', 1, 1);
@@ -162,6 +172,53 @@ describe('/tasks/export', () => {
     const [after] = await bucket.file('organizations/org-a/exports/e1').getMetadata();
     expect(after.generation, 'the file is not written again').toBe(before.generation);
     expect((await stored('e1')).readyAt).toBe(START + 3_600_000);
+  });
+
+  it('EXP-01 SEC-06 the test XLSX has one Results sheet with numbers as number cells and formula-safe text', async () => {
+    await sat('t1', 1, 1);
+    await sat('t1', 4, 2);
+    await task('leaderboard', { orgId: 'org-a', testId: 't1', seriesId: 's1' });
+    await requestExport('e2', 'test', 't1', 'xlsx');
+    expect(await task('export', { orgId: 'org-a', exportId: 'e2' })).toBe('stored');
+    const [results, ...more] = await sheets(await file('e2'));
+    expect(more).toEqual([]);
+    expect(results!.name).toBe('Results');
+    expect(results!.rows[1]!.slice(0, 10)).toEqual([
+      ...[`'=HYPERLINK("x")`, 's4@a.test', "'+22014", 'Computer Engineering', 2026, 'Submitted'],
+      ...[2, 3, 66.67, 1],
+    ]);
+  });
+
+  it('EXP-02 the series export ranks students as rankSeries does, and the XLSX adds a sheet per test', async () => {
+    await sat('t1', 1, 3);
+    await sat('t1', 2, 2);
+    await sat('t1', 3, 2, 'terminated');
+    await sat('t2', 1, 1);
+    await sat('t2', 4, 2);
+    for (const testId of ['t1', 't2']) await task('leaderboard', { orgId: 'org-a', testId, seriesId: 's1' });
+    const board = (await org.collection('leaderboards').doc('series_s1').get()).get('rows') as SeriesLeaderboardRow[];
+    await requestExport('e3', 'series', 's1', 'csv');
+    await requestExport('e4', 'series', 's1', 'xlsx');
+    expect(await task('export', { orgId: 'org-a', exportId: 'e3' })).toBe('stored');
+    expect(await task('export', { orgId: 'org-a', exportId: 'e4' })).toBe('stored');
+
+    const rows = csvRows(await file('e3'));
+    expect(rows[0]!.slice(5)).toEqual(['Day 1: Quantitative aptitude', 'Day 2: Verbal ability', 'Total', 'Rank']);
+    expect(rows.slice(1).map((r) => [r[0], ...r.slice(5)])).toEqual([
+      ['Asha', '3', '1', '4', '1'],
+      [`"'=HYPERLINK(""x"")"`, '', '2', '2', '2'],
+      ['Bina', '2', '', '2', '2'],
+      ['Chirag', '', '', '0', ''],
+    ]);
+    expect(rows.slice(1, 4).map((r) => [r[1], r[8]])).toEqual(
+      board.map((r) => [r.studentId.replace('stu-', 's') + '@a.test', String(r.rank)]),
+    );
+    const book = await sheets(await file('e4'));
+    expect(book.map((s) => s.name)).toEqual(['Series', 'Day 1 Quantitative aptitude', 'Day 2 Verbal ability']);
+    expect(book[0]!.rows[1]!.slice(5)).toEqual([3, 1, 4, 1]);
+    expect(book[1]!.rows[0]).toContain('Quant score');
+    expect(book[1]!.rows.slice(1).map((r) => r[0])).toEqual(['Asha', 'Bina', 'Chirag']);
+    expect(book[2]!.rows.slice(1).map((r) => r[9])).toEqual([1, 2]);
   });
 
   it('EXP-03 ORG-03 a missing test or series marks the export failed and stores no file', async () => {
