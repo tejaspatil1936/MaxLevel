@@ -151,8 +151,9 @@ export function workerData(db: Firestore) {
 
     /**
      * LB-03, DATA-04: stores a board as `leaderboards/{boardId}` with `computedAt`, `total` and its first page of rows;
-     * a board above `LEADERBOARD_PAGE_ROWS` rows keeps further pages in `leaderboards/{boardId}/pages/{n}` (n from 1),
-     * and pages left over from a larger board are deleted. One batch, so readers never see a half-written board.
+     * a board above one page (`leaderboardPages`: 5,000 rows or about 900 KB) keeps further pages in
+     * `leaderboards/{boardId}/pages/{n}` (n from 1), and pages left over from a larger board are deleted. One batch, so
+     * readers never see a half-written board.
      */
     async putLeaderboard(orgId: string, boardId: string, computedAt: number, rows: StoredBoardRow[]): Promise<void> {
       const ref = org(orgId).collection('leaderboards').doc(boardId);

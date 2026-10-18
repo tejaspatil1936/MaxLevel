@@ -230,12 +230,65 @@ export function studentBoardView<T extends { studentId: string }>(
   return { rows: rows.slice(0, top), me: rows.find((r) => r.studentId === studentId) ?? null };
 }
 
-/** DATA-04: rows per stored page, so a page stays well under Firestore's 1 MiB record limit. */
+/** DATA-04: the most rows on one stored page. */
 export const LEADERBOARD_PAGE_ROWS = 5000;
 
-/** DATA-04: the rows in order, in pages of at most `LEADERBOARD_PAGE_ROWS`; always at least one (possibly empty) page. */
-export function leaderboardPages<T>(rows: ReadonlyArray<T>): T[][] {
-  const pages: T[][] = [];
-  for (let i = 0; i < rows.length; i += LEADERBOARD_PAGE_ROWS) pages.push(rows.slice(i, i + LEADERBOARD_PAGE_ROWS));
-  return pages.length ? pages : [[]];
+/**
+ * DATA-04: the most estimated bytes of rows on one stored page. Firestore refuses a record above 1 MiB (1,048,576
+ * bytes); this leaves room for the record's path and its `computedAt`, `total` and `pageCount` fields.
+ */
+export const LEADERBOARD_PAGE_BYTES = 900_000;
+
+/** UTF-8 length without encoding; an unpaired surrogate counts 4, never less than it takes. */
+function utf8Bytes(s: string): number {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c <= 0xdbff) {
+      n += 4;
+      i++;
+    } else n += 3;
+  }
+  return n;
+}
+
+/**
+ * Firestore's stored size of a value (firebase.google.com/docs/firestore/storage-size): a string is its UTF-8 length
+ * plus 1, a number 8, null or a boolean 1, an array the sum of its values, a map the sum of each key (as a string) and
+ * value. Undefined fields are not stored.
+ */
+export function firestoreValueBytes(v: unknown): number {
+  if (v === undefined) return 0;
+  if (v === null || typeof v === 'boolean') return 1;
+  if (typeof v === 'number') return 8;
+  if (typeof v === 'string') return utf8Bytes(v) + 1;
+  if (Array.isArray(v)) return v.reduce((sum: number, x) => sum + firestoreValueBytes(x), 0);
+  let sum = 0;
+  for (const [k, x] of Object.entries(v as object))
+    if (x !== undefined) sum += utf8Bytes(k) + 1 + firestoreValueBytes(x);
+  return sum;
+}
+
+/**
+ * DATA-04: the rows in order, in pages of at most `LEADERBOARD_PAGE_ROWS` rows and `LEADERBOARD_PAGE_BYTES` estimated
+ * bytes, so wide series rows (a score per test) and non-Latin names still fit a record; always at least one (possibly
+ * empty) page.
+ */
+export function leaderboardPages<T>(rows: ReadonlyArray<T>, maxBytes: number = LEADERBOARD_PAGE_BYTES): T[][] {
+  const pages: T[][] = [[]];
+  let bytes = 0;
+  for (const row of rows) {
+    const size = firestoreValueBytes(row);
+    const page = pages[pages.length - 1]!;
+    if (page.length > 0 && (page.length >= LEADERBOARD_PAGE_ROWS || bytes + size > maxBytes)) {
+      pages.push([row]);
+      bytes = size;
+    } else {
+      page.push(row);
+      bytes += size;
+    }
+  }
+  return pages;
 }
