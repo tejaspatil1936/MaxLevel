@@ -18,6 +18,7 @@ import { healthRoutes } from './routes/health';
 import { orgRoutes } from './routes/org';
 import { sessionRoutes } from './routes/session';
 import { auditWriter } from './services/audit';
+import { accountStatusService } from './services/account-status';
 import { entitlementsService } from './services/entitlements';
 import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
 
@@ -59,7 +60,8 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
   const app = await createServer(deps.config, deps.clock, logger);
   const data = createData(deps.firebase.db);
   const entitlements = entitlementsService(data, deps.clock);
-  registerAuth(app, { auth: deps.firebase.auth, data, entitlements });
+  const status = accountStatusService(data, deps.clock);
+  registerAuth(app, { auth: deps.firebase.auth, data, entitlements, status });
   await app.register(healthRoutes);
   await app.register(sessionRoutes({ ...deps, data, entitlements }));
   await app.register(orgRoutes({ ...deps, data, audit: auditWriter(data, deps.clock) }));

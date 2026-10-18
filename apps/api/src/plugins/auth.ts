@@ -3,6 +3,7 @@ import type { Auth } from 'firebase-admin/auth';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { AppError } from '../errors';
 import type { Data } from '../data';
+import type { AccountStatusService } from '../services/account-status';
 import type { EntitlementsService } from '../services/entitlements';
 
 /** Who may call a route (PLAN section 3). Every /v1 route declares one in its config. */
@@ -51,7 +52,7 @@ export function bearer(req: FastifyRequest): string | null {
  */
 export function registerAuth(
   app: FastifyInstance,
-  deps: { auth: Auth; data: Data; entitlements?: EntitlementsService },
+  deps: { auth: Auth; data: Data; entitlements?: EntitlementsService; status?: AccountStatusService },
 ): void {
   app.addHook('onRequest', async (req) => {
     // Fail closed: a /v1 route that forgot to declare its access is treated as admin-only.
@@ -121,6 +122,12 @@ export function registerAuth(
   });
 
   // Feature gate after the org is known; applies to super admins in the org's workspace as well (ORG-13).
+  // Account and org status (AUTH-06, ORG-07), after the org is known.
+  app.addHook('preHandler', async (req) => {
+    if (!deps.status || !req.user || !req.orgId) return;
+    await deps.status.assert(req.user, req.orgId, !['GET', 'HEAD', 'OPTIONS'].includes(req.method));
+  });
+
   app.addHook('preHandler', async (req) => {
     const feature = req.routeOptions.config.feature;
     if (!feature) return;
