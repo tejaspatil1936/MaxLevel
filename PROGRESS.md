@@ -98,3 +98,7 @@ F-3.13 done — phone pairing on the rules screen (QR, 5-minute single-use token
 Checkpoints: mid-phase review found 1 blocking issue (palette drawer hiding focus) plus the idempotency-before-account-check order; release-gate review and QA found 4 blocking issues (API waiting on RTDB writes during an outage, RTDB never reconnecting in the browser because the CSP blocked long-polling, Tab past the last control counting as a strike, admin editor sideways scroll at 320 px) plus worker task auth defaulting open and unbounded event details; a production-mode crash from the local dispatcher was fixed too. Each fixed after a regression test; minor findings in docs/BACKLOG.md.
 VERIFY full PASS 02e05bc44edf6760eac215c1cbc0397eb4b669f3 (docs/verification/phase-3.md)
 PHASE 3 DONE 13/13 features
+
+## Phase 4
+
+PHASE 4 START 6903f950a6771bd580414b3936e31b97a3fcd385
