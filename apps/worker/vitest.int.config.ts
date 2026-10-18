@@ -19,6 +19,7 @@ export default defineConfig({
       NODE_ENV: 'test',
       GCLOUD_PROJECT: project,
       FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080',
+      FIREBASE_STORAGE_EMULATOR_HOST: '127.0.0.1:9199',
       METADATA_SERVER_DETECTION: 'none',
     },
   },
