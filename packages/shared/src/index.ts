@@ -10,6 +10,7 @@ export * from './preferences';
 export * from './platform';
 export * from './eligibility';
 export * from './draw';
+export * from './exam';
 export * from './marks';
 export * from './day-labels';
 export * from './settings';

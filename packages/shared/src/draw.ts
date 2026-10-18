@@ -169,3 +169,37 @@ export function testDrawPools(
   const loose = approved.filter((q) => q.sectionId === null || !ids.has(q.sectionId));
   return loose.length ? [...pools, { sectionId: null, questions: strip(loose) }] : pools;
 }
+
+/** The draw stored on an attempt (PLAN Attempt.draw): questions in exam order, each one's option order, per pool. */
+export interface AttemptDraw {
+  questionIds: string[];
+  optionOrder: Record<string, string[]>;
+  sections: Array<{ sectionId: string | null; questionIds: string[] }>;
+}
+
+/**
+ * One attempt's draw (Q-04, Q-06, spec 5.4): the pools drawn in order, then with shuffle questions on the questions of
+ * each pool shuffled (sections keep their order), and with shuffle options on each question's options shuffled. The
+ * same seed always gives the same draw; the exam preview passes a fresh seed each time it opens (Q-13).
+ */
+export function drawAttempt(
+  pools: ReadonlyArray<DrawPool>,
+  options: Readonly<Record<string, ReadonlyArray<string>>>,
+  shuffle: { shuffleQuestions: boolean; shuffleOptions: boolean },
+  seed: string,
+): AttemptDraw {
+  const sections = drawQuestions(pools, seed).map((s) => ({
+    sectionId: s.sectionId,
+    questionIds: shuffle.shuffleQuestions
+      ? seededShuffle(s.questionIds, `${seed}:order:${s.sectionId ?? ''}`)
+      : s.questionIds,
+  }));
+  const questionIds = sections.flatMap((s) => s.questionIds);
+  const optionOrder = Object.fromEntries(
+    questionIds.map((id) => {
+      const ids = options[id] ?? [];
+      return [id, shuffle.shuffleOptions ? seededShuffle(ids, `${seed}:options:${id}`) : [...ids]];
+    }),
+  );
+  return { questionIds, optionOrder, sections };
+}

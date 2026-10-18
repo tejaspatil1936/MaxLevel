@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  drawAttempt,
   drawProblems,
   drawQuestions,
   drawSize,
@@ -189,5 +190,49 @@ describe('testDrawPools', () => {
     expect(pools.flatMap(drawProblems)).toEqual([
       { code: 'DRAW_TOO_LARGE', sectionId: 's1', drawCount: 3, available: 2 },
     ]);
+  });
+});
+
+describe('drawAttempt', () => {
+  const pools: DrawPool[] = [
+    { sectionId: 'quant', questions: hundred.slice(0, 10), drawCount: 4 },
+    { sectionId: 'verbal', questions: hundred.slice(10, 20), drawCount: 3 },
+  ];
+  const options = Object.fromEntries(hundred.slice(0, 20).map((q) => [q.id, ['a', 'b', 'c', 'd']]));
+  const off = { shuffleQuestions: false, shuffleOptions: false };
+  const on = { shuffleQuestions: true, shuffleOptions: true };
+
+  it('Q-04 US-AD-08 sections stay in order with each draw count, and the same seed gives the same draw', () => {
+    const draw = drawAttempt(pools, options, on, 'preview-1');
+    expect(draw.sections.map((s) => [s.sectionId, s.questionIds.length])).toEqual([
+      ['quant', 4],
+      ['verbal', 3],
+    ]);
+    expect(draw.questionIds).toEqual(draw.sections.flatMap((s) => s.questionIds));
+    expect(draw.questionIds.slice(0, 4).every((id) => ids(pools[0]!).has(id))).toBe(true);
+    expect(draw.questionIds.slice(4).every((id) => ids(pools[1]!).has(id))).toBe(true);
+    expect(drawAttempt(pools, options, on, 'preview-1')).toEqual(draw);
+  });
+
+  it('Q-06 with shuffles off the questions keep the pool order and the options their stored order', () => {
+    const draw = drawAttempt([{ sectionId: null, questions: hundred.slice(0, 5) }], options, off, 'x');
+    expect(draw.questionIds).toEqual(['q1', 'q2', 'q3', 'q4', 'q5']);
+    expect(Object.values(draw.optionOrder).every((o) => o.join() === 'a,b,c,d')).toBe(true);
+  });
+
+  it("Q-06 US-AD-08 with shuffles on, seeds reorder the questions within a section and each question's options", () => {
+    const all = [{ sectionId: null, questions: hundred.slice(0, 8) }];
+    const draws = ['s1', 's2', 's3', 's4', 's5'].map((seed) => drawAttempt(all, options, on, seed));
+    for (const d of draws) {
+      expect([...d.questionIds].sort()).toEqual(
+        hundred
+          .slice(0, 8)
+          .map((q) => q.id)
+          .sort(),
+      );
+      for (const order of Object.values(d.optionOrder)) expect([...order].sort()).toEqual(['a', 'b', 'c', 'd']);
+    }
+    expect(new Set(draws.map((d) => d.questionIds.join())).size).toBeGreaterThan(1);
+    expect(new Set(draws.map((d) => d.optionOrder.q1!.join())).size).toBeGreaterThan(1);
   });
 });
