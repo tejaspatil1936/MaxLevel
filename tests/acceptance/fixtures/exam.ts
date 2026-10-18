@@ -320,3 +320,31 @@ export async function expectAttemptSoon(
     .toBe(true);
   return last;
 }
+
+/**
+ * Waits until the stored events of an attempt satisfy `check` (the event report may still be in flight when a warning
+ * shows), then returns them.
+ */
+export async function expectEventsSoon(
+  e: Emulators,
+  orgId: string,
+  attemptId: string,
+  check: (events: StoredDoc[]) => boolean,
+  message: string,
+): Promise<StoredDoc[]> {
+  let last: StoredDoc[] = [];
+  await expect
+    .poll(
+      async () => {
+        last = await storedEvents(e, orgId, attemptId);
+        return check(last);
+      },
+      { message, timeout: 20_000 },
+    )
+    .toBe(true);
+  return last;
+}
+
+/** Strike numbers of the stored events of one type, in order (undefined for events that did not count). */
+export const strikeNumbersOf = (events: StoredDoc[], type: string) =>
+  events.filter((ev) => ev.data.type === type).map((ev) => ev.data.strikeNumber);

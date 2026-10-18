@@ -250,37 +250,81 @@ export async function leaveTabAndReturn(page: Page): Promise<void> {
   });
 }
 
+/**
+ * The exam window losing focus and getting it back, with the page staying visible (PR-05: for example a click on
+ * another application's window). Sends `blur` then `focus` on `window` and no `visibilitychange`; see leaveTabAndReturn
+ * for why the events are sent rather than produced by the window manager.
+ */
+export async function blurWindowAndReturn(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    window.dispatchEvent(new FocusEvent('blur'));
+    window.dispatchEvent(new FocusEvent('focus'));
+  });
+}
+
 /** The text the page has selected right now. */
 export async function selectedText(page: Page): Promise<string> {
   return page.evaluate(() => window.getSelection()?.toString() ?? '');
 }
 
 /**
- * Screenshots of each element with every colour forced to black on white (text, backgrounds, borders, outlines, SVG
- * fills and strokes), so what is left to tell them apart is shape, pattern, icon or words (A11Y-14, UI-02).
+ * Screenshots of each element with every colour reduced to black or white, so what is left to tell them apart is
+ * shape, fill pattern, icon or words (A11Y-14, UI-02). Painted areas (non-transparent backgrounds, also on ::before
+ * and ::after, and SVG fills and strokes) become black when darker than mid-luminance, like ink (ballpoint, red pen,
+ * tick), and white when pale, like paper or highlighter; partly transparent paint is judged over white; transparent
+ * paint stays transparent. Text, borders and outlines become black.
  */
 export async function colourBlindShots(page: Page, elements: Locator): Promise<Buffer[]> {
+  const total = await elements.count();
+  // Read the original colours before any override can change `currentColor`.
+  for (let i = 0; i < total; i++) {
+    await elements.nth(i).evaluate((root) => {
+      /** '#000', '#fff', or null for transparent. */
+      const ink = (c: string): string | null => {
+        const m = c.match(/rgba?\(([^)]+)\)/);
+        if (!m) return c === 'transparent' || c === 'none' ? null : '#000';
+        const [r, g, b, a = 1] = m[1]!
+          .split(/[\s,/]+/)
+          .filter(Boolean)
+          .map(Number) as number[];
+        if (a === 0) return null;
+        const lin = (v: number) => {
+          const x = (a * v + (1 - a) * 255) / 255;
+          return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+        };
+        const luminance = 0.2126 * lin(r!) + 0.7152 * lin(g!) + 0.0722 * lin(b!);
+        return luminance < 0.4 ? '#000' : '#fff';
+      };
+      root.setAttribute('data-colour-neutral', '');
+      for (const node of [root, ...Array.from(root.querySelectorAll('*'))]) {
+        const el = node as HTMLElement | SVGElement;
+        const cs = getComputedStyle(el);
+        const bg = ink(cs.backgroundColor);
+        if (bg) el.style.setProperty('background-color', bg, 'important');
+        for (const pseudo of ['before', 'after'] as const) {
+          const ps = getComputedStyle(el, `::${pseudo}`);
+          const pbg = ps.content !== 'none' && ps.content !== 'normal' ? ink(ps.backgroundColor) : null;
+          if (pbg) el.setAttribute(`data-colour-neutral-${pseudo}`, pbg === '#000' ? 'dark' : 'light');
+        }
+        if (el instanceof SVGElement) {
+          const fill = cs.fill.startsWith('url(') ? '#000' : ink(cs.fill);
+          const stroke = cs.stroke.startsWith('url(') ? '#000' : ink(cs.stroke);
+          if (fill) el.style.setProperty('fill', fill, 'important');
+          if (stroke) el.style.setProperty('stroke', stroke, 'important');
+        }
+      }
+    });
+  }
   await page.addStyleTag({
     content: `[data-colour-neutral], [data-colour-neutral] *, [data-colour-neutral]::before, [data-colour-neutral]::after,
       [data-colour-neutral] *::before, [data-colour-neutral] *::after {
-        color: #000 !important; background-color: #fff !important; border-color: #000 !important;
-        outline-color: #000 !important; text-decoration-color: #000 !important; caret-color: #000 !important;
-        transition: none !important; animation: none !important; }`,
+        color: #000 !important; border-color: #000 !important; outline-color: #000 !important;
+        text-decoration-color: #000 !important; caret-color: #000 !important;
+        transition: none !important; animation: none !important; }
+      [data-colour-neutral-before=dark]::before, [data-colour-neutral-after=dark]::after { background-color: #000 !important; }
+      [data-colour-neutral-before=light]::before, [data-colour-neutral-after=light]::after { background-color: #fff !important; }`,
   });
-  const count = await elements.count();
   const shots: Buffer[] = [];
-  for (let i = 0; i < count; i++) {
-    const el = elements.nth(i);
-    await el.evaluate((root) => {
-      root.setAttribute('data-colour-neutral', '');
-      for (const node of [root, ...Array.from(root.querySelectorAll('*'))]) {
-        if (!(node instanceof SVGElement)) continue;
-        const cs = getComputedStyle(node);
-        if (cs.fill !== 'none') node.style.setProperty('fill', '#000', 'important');
-        if (cs.stroke !== 'none') node.style.setProperty('stroke', '#000', 'important');
-      }
-    });
-    shots.push(await el.screenshot({ animations: 'disabled' }));
-  }
+  for (let i = 0; i < total; i++) shots.push(await elements.nth(i).screenshot({ animations: 'disabled' }));
   return shots;
 }
