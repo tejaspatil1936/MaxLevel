@@ -9,3 +9,4 @@ export * from './people';
 export * from './preferences';
 export * from './platform';
 export * from './eligibility';
+export * from './draw';
