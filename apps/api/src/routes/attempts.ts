@@ -37,9 +37,9 @@ export const studentOf = (req: FastifyRequest) => {
  * admin route here.
  */
 export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
-  const attempts = attemptService({ ...ctx, rtdb: ctx.firebase.rtdb });
-
   return async (app) => {
+    const attempts = attemptService({ ...ctx, rtdb: ctx.firebase.rtdb, log: app.log });
+
     app.post(
       '/v1/attempts',
       {

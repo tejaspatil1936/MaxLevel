@@ -23,15 +23,16 @@ const REDEEM_RATE_LIMIT: RateLimitOptions = { max: 30, timeWindow: 60_000 };
  * rules screen (before Start) or during the attempt, and the phone redeems it for a device sign-in.
  */
 export function pairingRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
-  const pairing = pairingService({
-    data: ctx.data,
-    clock: ctx.clock,
-    rtdb: ctx.firebase.rtdb,
-    auth: ctx.firebase.auth,
-    webOrigin: ctx.config.appOrigins[0] ?? 'http://localhost:3000',
-  });
-
   return async (app) => {
+    const pairing = pairingService({
+      data: ctx.data,
+      clock: ctx.clock,
+      rtdb: ctx.firebase.rtdb,
+      auth: ctx.firebase.auth,
+      webOrigin: ctx.config.appOrigins[0] ?? 'http://localhost:3000',
+      log: app.log,
+    });
+
     // PR-13: pairing on the rules screen reserves the attempt ID without starting the clock.
     app.post(
       '/v1/tests/:testId/pairing-token',

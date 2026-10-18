@@ -14,6 +14,7 @@ import type { Data } from '../data';
 import { AppError, notFound } from '../errors';
 import { ORG_ID } from '../plugins/auth';
 import { admitStudent, assertStartWindow } from './attempts';
+import { withinLimit, type WarnLogger } from './rtdb-writes';
 
 export interface PairingDeps {
   data: Data;
@@ -22,6 +23,8 @@ export interface PairingDeps {
   auth: Auth;
   /** The web app's origin; pairing links open `<origin>/pair/?token=<token>`. */
   webOrigin: string;
+  /** Where a failed or late `attemptOwners/…` write is logged (REL-05). */
+  log: WarnLogger;
 }
 
 const finished = () => new AppError(409, 'ATTEMPT_FINISHED', "You've already finished this test.");
@@ -34,7 +37,7 @@ const keyOf = (secret: string) => createHash('sha256').update(secret).digest('he
  * signed in, find the token under its own organization (ORG-03), and the secret (32 random bytes) is what proves it.
  */
 export function pairingService(deps: PairingDeps) {
-  const { data, clock, rtdb, auth, webOrigin } = deps;
+  const { data, clock, rtdb, auth, webOrigin, log } = deps;
 
   async function issue(
     orgId: string,
@@ -52,7 +55,8 @@ export function pairingService(deps: PairingDeps) {
     /**
      * POST /v1/tests/{testId}/pairing-token: pairing on the rules screen, before Start. Checked like a start (404,
      * 403 NOT_ELIGIBLE, the start window), it reserves the attempt ID Start will use (or returns the started attempt's)
-     * and writes the attempt's owner for the Realtime Database rules; a refusal stores nothing.
+     * and writes the attempt's owner for the Realtime Database rules (waiting at most OWNER_WRITE_LIMIT_MS, REL-05); a
+     * refusal stores nothing.
      */
     async reserve(orgId: string, who: { uid: string; studentId: string }, testId: string): Promise<PairingReservation> {
       const test = await data.tests.getTest(orgId, testId);
@@ -69,7 +73,7 @@ export function pairingService(deps: PairingDeps) {
         () => assertStartWindow(settings, now),
       );
       if (status && isFinishedAttempt(status)) throw finished();
-      await rtdb.ref(`attemptOwners/${attemptId}`).set(who.uid);
+      await withinLimit(rtdb.ref(`attemptOwners/${attemptId}`).set(who.uid), log, `attemptOwners/${attemptId}`);
       return { attemptId, ...(await issue(orgId, { testId, attemptId, ...who })) };
     },
 

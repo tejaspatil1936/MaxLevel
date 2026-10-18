@@ -30,6 +30,7 @@ import { AppError, notFound } from '../errors';
 import { asEligibility } from './eligibility';
 import { attemptGrader } from './grading';
 import type { PublishedQuestions, PublishedTestCache } from './published-tests';
+import { fireAndForget, withinLimit, type WarnLogger } from './rtdb-writes';
 
 const REFUSALS = {
   WINDOW_NOT_OPEN: "This test hasn't opened yet.",
@@ -68,6 +69,8 @@ export interface AttemptDeps {
   queue: TaskQueue;
   rtdb: Database;
   published: PublishedTestCache;
+  /** Where failed or late Realtime Database writes are logged (REL-05). */
+  log: WarnLogger;
 }
 
 /**
@@ -75,7 +78,7 @@ export interface AttemptDeps {
  * built from the attempt's stored draw and the cached published questions, never with an answer key (DATA-05).
  */
 export function attemptService(deps: AttemptDeps) {
-  const { data, clock, queue, rtdb, published } = deps;
+  const { data, clock, queue, rtdb, published, log } = deps;
   const grader = attemptGrader(deps);
 
   /** Everything the exam screen needs in one response (PERF-03); the response schema strips any answer key. */
@@ -216,10 +219,14 @@ export function attemptService(deps: AttemptDeps) {
       const [answers] = await Promise.all([
         created ? Promise.resolve({}) : data.attempts.getAnswers(orgId, attempt.id),
         queue.enqueue(autoSubmitTask(orgId, attempt.id, attempt.deadlineAt)),
-        rtdb.ref().update({
-          [`attemptOwners/${attempt.id}`]: who.uid,
-          ...(created ? { [`live/${orgId}/${testId}/${attempt.id}`]: live } : {}),
-        }),
+        withinLimit(
+          rtdb.ref().update({
+            [`attemptOwners/${attempt.id}`]: who.uid,
+            ...(created ? { [`live/${orgId}/${testId}/${attempt.id}`]: live } : {}),
+          }),
+          log,
+          `attemptOwners/${attempt.id}`,
+        ),
       ]);
       return { payload: payload(test, dayLabel, settings, set, attempt, answers), created };
     },
@@ -282,10 +289,9 @@ export function attemptService(deps: AttemptDeps) {
       );
       if (verdicts.some((v) => v.verdict === 'ATTEMPT_FINISHED')) throw finishedError();
       const sync = { backlog: batch.backlog, clockOffsetMs: batch.clockOffsetMs, at: now };
-      await Promise.all([
-        data.attempts.recordSync(orgId, attempt.id, sync),
-        rtdb.ref(`live/${orgId}/${attempt.testId}/${attempt.id}`).update({ backlog: batch.backlog, updatedAt: now }),
-      ]);
+      const livePath = `live/${orgId}/${attempt.testId}/${attempt.id}`;
+      fireAndForget(rtdb.ref(livePath).update({ backlog: batch.backlog, updatedAt: now }), log, livePath);
+      await data.attempts.recordSync(orgId, attempt.id, sync);
       const result: AnswerBatchResult = { saved: [], stale: [], rejected: [], serverTime: now };
       for (const { questionId, verdict } of verdicts) {
         if (verdict === 'saved' || verdict === 'late_sync') result.saved.push(questionId);
@@ -325,7 +331,7 @@ export function attemptService(deps: AttemptDeps) {
     /**
      * POST /v1/attempts/{id}/events (PR-07, PR-08, PR-10, PR-11, spec 11.2): every report is logged; shared
      * `strikeVerdict` decides in the transaction, from the stored count and the server clock, whether it is a new
-     * strike. A counted strike is mirrored to `live/…`; the strike that reaches the maximum ends the attempt as
+     * strike. A counted strike is mirrored to `live/…` without waiting (REL-05); the strike that reaches the maximum ends the attempt as
      * `terminated` (`max_strikes`) and grades it once. The response carries the server's count.
      */
     async reportEvent(
@@ -353,10 +359,10 @@ export function attemptService(deps: AttemptDeps) {
       if (!done) throw notFound('Attempt');
       if (done === 'ATTEMPT_FINISHED') throw finishedError();
       const { verdict } = done;
-      if (verdict.counted)
-        await rtdb
-          .ref(`live/${orgId}/${attempt.testId}/${attempt.id}`)
-          .update({ strikes: done.attempt.strikesCount, updatedAt: now });
+      if (verdict.counted) {
+        const livePath = `live/${orgId}/${attempt.testId}/${attempt.id}`;
+        fireAndForget(rtdb.ref(livePath).update({ strikes: done.attempt.strikesCount, updatedAt: now }), log, livePath);
+      }
       const status = verdict.terminates
         ? (await grader.finish(orgId, done.attempt, 'terminated', { terminationReason: 'max_strikes' })).status
         : done.attempt.status;
