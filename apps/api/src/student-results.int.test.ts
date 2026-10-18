@@ -145,4 +145,42 @@ describe('student result', () => {
     const admin = await asClaims(auth, 'admin1@a.test', { role: 'admin', orgId: SEED.orgA });
     expect((await result(id, admin)).status).toBe(403);
   });
+
+  it('RES-02 RES-06 LB-01 the rank reads the stored test board, and a terminated attempt is not ranked', async () => {
+    const t = await api.examTest({
+      overrides: { resultRelease: 'immediate', resultDetail: 'score', testLeaderboard: true },
+    });
+    const id = await sit(t.testId, t.questionIds);
+    const before = await result(id, await student(1));
+    expect('rank' in before.body || 'rankNote' in before.body, 'no rank before the board is computed').toBe(false);
+    const me = `stu-${SEED.orgA}-01`;
+    const row = (studentId: string, rank: number) => ({
+      studentId,
+      name: 'x',
+      departmentId: 'd',
+      score: 1,
+      rank,
+      timeSec: 1,
+    });
+    await db.doc(`${org}/leaderboards/test_${t.testId}`).set({
+      computedAt: NOW,
+      total: 2,
+      pageCount: 1,
+      rows: [row(`stu-${SEED.orgA}-02`, 1), row(me, 2)],
+    });
+    expect((await result(id, await student(1))).body).toMatchObject({ rank: { rank: 2, total: 2 } });
+
+    await setTest(t.testId, { 'resolved.testLeaderboard': false });
+    expect('rank' in (await result(id, await student(1))).body, 'test leaderboard off').toBe(false);
+
+    await setTest(t.testId, { 'resolved.testLeaderboard': true });
+    await db.doc(`${org}/attempts/${id}`).update({ status: 'terminated', terminationReason: 'max_strikes' });
+    const ended = await result(id, await student(1));
+    expect(ended.body).toMatchObject({
+      status: 'terminated',
+      terminationReason: 'max_strikes',
+      rankNote: 'not_ranked',
+    });
+    expect('rank' in ended.body).toBe(false);
+  });
 });

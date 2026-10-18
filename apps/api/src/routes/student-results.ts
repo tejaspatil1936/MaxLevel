@@ -1,4 +1,11 @@
-import { dayLabels, resultDetailShown, studentResult, studentResultSchema, type StudentResult } from '@mitaoe/shared';
+import {
+  dayLabels,
+  resultDetailShown,
+  studentResult,
+  studentResultSchema,
+  testBoardId,
+  type StudentResult,
+} from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../errors';
@@ -12,10 +19,18 @@ const params = z.object({ attemptId: z.string().min(1).max(128) });
  * GET /v1/student/results/{attemptId} (US-ST-07, RES-01 to RES-03, RES-05, RES-06, DATA-05): the caller's own finished
  * attempt with what the test's release state and detail level allow, read on every request so a changed release
  * setting takes effect at once (TST-06). The answer key and explanations are read, and sent, only for a released full
- * review; the response schema strips everything else.
+ * review; the response schema strips everything else. The rank reads the stored test board (LB-01), so it matches the
+ * leaderboard the student can open.
  */
 export function studentResultRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
-  const { data, clock, published } = ctx;
+  const { data, clock, published, entitlements } = ctx;
+
+  /** RES-02, LB-04: the stored test board while the test leaderboard is on for students, else undefined. */
+  async function testBoard(orgId: string, testId: string, on: boolean) {
+    if (!on || !(await entitlements.get(orgId))?.features.public_leaderboards) return undefined;
+    const board = await data.leaderboards.getLeaderboard(orgId, testBoardId(testId));
+    return { rows: board?.rows ?? null, total: board?.total ?? 0 };
+  }
 
   return async (app) => {
     app.get(
@@ -36,11 +51,13 @@ export function studentResultRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           resultsWithdrawn: test.resultsWithdrawn === true,
         };
         const now = clock.now();
-        const full = resultDetailShown(settings, release, now) === 'full';
-        const [list, set, answers] = await Promise.all([
+        const shown = resultDetailShown(settings, release, now);
+        const full = shown === 'full';
+        const [list, set, answers, board] = await Promise.all([
           data.tests.listTests(orgId, test.seriesId),
           full ? published.questions(orgId, test) : null,
           full ? data.attempts.getAnswers(orgId, attempt.id) : null,
+          testBoard(orgId, test.id, shown !== null && settings.testLeaderboard),
         ]);
         return studentResult({
           attempt,
@@ -48,6 +65,7 @@ export function studentResultRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           settings,
           release,
           now,
+          ...(board ? { board } : {}),
           ...(set && answers ? { review: { questions: set.byId, answers } } : {}),
         });
       },
