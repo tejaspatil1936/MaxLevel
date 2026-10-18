@@ -62,3 +62,4 @@ PHASE 1 DONE 13/13 features
 ## Phase 2
 
 PHASE 2 START c5c79f0b796d1131f2ea80243bd1ead0b7da03e5
+Tests: 55 phase 2 acceptance tests by test-author (23 e2e REQs; unit/integration REQs specified in the contract), reviewed twice (first FAIL: legacy JSON import; second PASS), locked.
