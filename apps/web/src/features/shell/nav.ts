@@ -47,4 +47,9 @@ export const STUDENT_NAV: Array<{ label: MessageKey; href: string; current: (pat
     current: (path) => path === '/student/' || path.startsWith('/student/test/'),
   },
   { label: 'nav.history', href: '/student/history/', current: (path) => path.startsWith('/student/history/') },
+  {
+    label: 'nav.leaderboards',
+    href: '/student/leaderboards/',
+    current: (path) => path.startsWith('/student/leaderboards/'),
+  },
 ];
