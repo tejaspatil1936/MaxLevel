@@ -6,7 +6,7 @@ import { t } from '@/i18n';
 import { code, display, text } from './fonts';
 import './globals.css';
 
-export const metadata: Metadata = { title: t('app.name') };
+export const metadata: Metadata = { title: { default: t('app.name'), template: `%s – ${t('app.name')}` } };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

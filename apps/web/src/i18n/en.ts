@@ -10,9 +10,16 @@ export const en = {
   'signIn.google': 'Sign in with Google',
   'signIn.notOnList': "This Google account isn't on any organization's list. Ask your placement cell to add it.",
   'signIn.unavailable': 'Your account cannot sign in right now. Ask your placement cell.',
+  'signIn.signingIn': 'Signing you in…',
   'signIn.failed': 'Sign-in did not finish. Check your connection and try again.',
   'signIn.chooseOrg': 'Choose the organization to sign in to',
   'signIn.chooseOrgLead': 'Your account is on more than one list. You can switch later by signing in again.',
+
+  'session.unreachable': "We can't reach the server. Check your connection, then try again.",
+  'session.retry': 'Try again',
+  'notFound.title': 'Page not found',
+  'notFound.lead': 'This address does not match any page. Check the link, or go back to your home page.',
+  'notFound.home': 'Go to your home page',
 
   'nav.main': 'Main',
   'nav.overview': 'Overview',
