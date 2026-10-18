@@ -134,11 +134,16 @@ describe('student result', () => {
     expect(leaks(lowered.raw)).toEqual([]);
   });
 
-  it('ORG-05 DATA-05 an attempt in progress is 409, another student or org is 404, and staff tokens are 403', async () => {
+  it('US-ST-07 ORG-05 DATA-05 an attempt in progress is 409 with its test heading, another student or org is 404, and staff tokens are 403', async () => {
     const t = await api.examTest({ overrides: { resultRelease: 'immediate' } });
     const id = await sit(t.testId, t.questionIds, false);
     const res = await result(id, await student(1));
     expect([res.status, errorCode(res)]).toEqual([409, 'ATTEMPT_IN_PROGRESS']);
+    expect(JSON.parse(res.raw).error.details, 'the heading of the test to resume').toEqual({
+      testId: t.testId,
+      title: 'Quantitative aptitude',
+      dayLabel: 'Day 1',
+    });
     expect((await result(id, await student(2))).status).toBe(404);
     expect((await result(id, await student(1, SEED.orgB))).status).toBe(404);
     expect((await result('nope', await student(1))).status).toBe(404);
