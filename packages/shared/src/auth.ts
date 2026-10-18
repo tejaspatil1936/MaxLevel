@@ -58,5 +58,7 @@ export const meResponseSchema = z.object({
   preferences: preferencesSchema,
   /** Students must finish their profile (and consent) before anything else (STU-01, SEC-08). */
   profileComplete: z.boolean(),
+  /** The email is listed in more than one organization, so the account menu offers a switch (AUTH-04). */
+  canSwitchOrg: z.boolean(),
 });
 export type MeResponse = z.infer<typeof meResponseSchema>;

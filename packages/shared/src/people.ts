@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { pageQuerySchema } from './page';
+import { auditEntrySchema } from './audit';
+import { pageOf, pageQuerySchema } from './page';
 
 // Departments, whitelist and students (spec 4).
 
@@ -37,6 +38,9 @@ export const whitelistEntrySchema = z.object({
   addedAt: z.number(),
 });
 export type WhitelistEntry = z.infer<typeof whitelistEntrySchema>;
+
+/** A page of the whitelist plus the org's total number of entries, whatever the filter (WL-04). */
+export const whitelistPageSchema = pageOf(whitelistEntrySchema).extend({ total: z.number().int().nonnegative() });
 
 export const whitelistListQuerySchema = pageQuerySchema.extend({
   status: whitelistStatusSchema.optional(),
@@ -133,6 +137,24 @@ export const studentSchema = z.object({
   updatedAt: z.number(),
 });
 export type Student = z.infer<typeof studentSchema>;
+
+export const attemptSummarySchema = z.object({
+  id: z.string(),
+  testTitle: z.string(),
+  status: z.string(),
+  score: z.number().nullable(),
+  max: z.number().nullable(),
+  strikes: z.number().int(),
+  startedAt: z.number(),
+});
+
+/** GET /v1/students/:id: the profile, the student's attempts and their audit trail, newest first (STU-10). */
+export const studentDetailSchema = z.object({
+  student: studentSchema,
+  attempts: z.array(attemptSummarySchema),
+  history: z.array(auditEntrySchema),
+});
+export type StudentDetail = z.infer<typeof studentDetailSchema>;
 
 export const STUDENT_SORTS = ['name', 'email', 'prn', 'graduationYear', 'status', 'department'] as const;
 export const studentListQuerySchema = pageQuerySchema.extend({
