@@ -7,6 +7,7 @@ import { ExamScreen } from '../pages/exam-screen';
 import { ALL_CHECKS, BASIC_CHECKS, CAMERA_CHECKS, PreflightPage, RulesPage } from '../pages/exam-flow';
 import { pathPattern } from '../pages/paths';
 import { StudentTestPage, TestNotAvailable } from '../pages/student-pages';
+import { count } from '../pages/ui';
 
 // F-3.04 Preflight and rules screens (EX-01, EX-02, PERF-05, US-ST-04). Contract: docs/testids/phase-3.md,
 // "Preflight" and "Rules".
@@ -39,7 +40,7 @@ test.describe('F-3.04 preflight @lockdown', () => {
       await preflight.expectCheck(name, 'Passed');
       await expect(preflight.check(name)).not.toContainText(FIX_LINES[name]);
     }
-    await expect(preflight.check('Screen width')).toContainText('1024 px wide');
+    await expect(preflight.check('Screen width')).toContainText(`${count(1024)} px wide`);
     await expect(preflight.check('Connection')).toContainText(/Round trip \d+ ms/);
     await expect(preflight.check('Clock')).toContainText(/Clock offset \d+ s/);
     await expect(preflight.continueToRules).toBeEnabled();
