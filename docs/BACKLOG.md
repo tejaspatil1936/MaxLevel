@@ -100,3 +100,11 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Reloading during one continuous no-face spell gives a second no_face strike.
 - At 640 px wide (200% zoom) the fixed bottom bar hides the last option.
 - A zero-gap double click on Submit test while offline starts two submits with different Idempotency-Keys (the server finishes once).
+- putLeaderboard writes every page in one batch; a board above about 10 MiB (over 11 pages, e.g. 2,000 students with 170+ public tests in a series) would pass Firestore's request size limit.
+
+## Phase 4 checkpoint review
+
+- Changing resultRelease to after_close after the window has closed queues no release task; results stay pending until an admin releases them. Queue releaseResultsTask when release settings change.
+- History links to the result page, which shows the score even when Show past scores is off (DECISIONS allows it; flag to the owner against RES-04's intent).
+- History and leaderboard day labels are computed over listTests including drafts; check they match the student dashboard labels.
+- boardLines finds the student's own row by matching field values; a mine flag on the served row would be more robust.
