@@ -48,3 +48,34 @@ export function isStrikeEvent(type: ProctorEventType, devtoolsPolicy: Settings['
 export function countsAsNewStrike(lastStrikeAt: number | undefined, now: number): boolean {
   return lastStrikeAt === undefined || now - lastStrikeAt >= STRIKE_DEDUPE_MS;
 }
+
+/** What one reported event does to an attempt's strikes (PR-07, PR-08, PR-10). */
+export interface StrikeVerdict {
+  /** The event is a new incident and adds one strike. */
+  counted: boolean;
+  /** The attempt's strike count with this event, when it counted. */
+  strikeNumber?: number;
+  /** The attempt has reached its maximum and ends: with this strike, or already before it. */
+  terminates: boolean;
+}
+
+/**
+ * Decides an event against the attempt's stored strikes, never the client's count (PR-08): a strike event counts when
+ * it is a new incident on the server clock (PR-07) and the maximum is not yet reached; the strike that reaches
+ * `maxStrikes` ends the attempt (PR-10). An attempt already at its maximum counts nothing more and still ends, so a
+ * termination that did not finish is completed by the next event.
+ */
+export function strikeVerdict(input: {
+  type: ProctorEventType;
+  devtoolsPolicy: Settings['devtoolsPolicy'];
+  maxStrikes: number;
+  strikesCount: number;
+  lastStrikeAt: number | undefined;
+  now: number;
+}): StrikeVerdict {
+  const atMax = input.strikesCount >= input.maxStrikes;
+  if (atMax || !isStrikeEvent(input.type, input.devtoolsPolicy) || !countsAsNewStrike(input.lastStrikeAt, input.now))
+    return { counted: false, terminates: atMax };
+  const strikeNumber = input.strikesCount + 1;
+  return { counted: true, strikeNumber, terminates: strikeNumber >= input.maxStrikes };
+}
