@@ -36,3 +36,7 @@ F-0.10 done — Google popup and emulator sign-in, bootstrap and token refresh, 
 F-0.02 done — Radix-based core components, Storybook catalogue in light, dark and high contrast, reduced motion instant
 QA and spec review: 4 blocking findings fixed with regression tests (verified-Google-only bootstrap, Table component, same-account sign-in retry, page titles); minor findings fixed or in docs/BACKLOG.md
 PHASE 0 DONE 10/10 features
+
+## Phase 1
+
+PHASE 1 START eefa9ba9a2b10e15c781dcc6cfb2c07986cebf01
