@@ -10,3 +10,4 @@ export * from './preferences';
 export * from './platform';
 export * from './eligibility';
 export * from './draw';
+export * from './marks';
