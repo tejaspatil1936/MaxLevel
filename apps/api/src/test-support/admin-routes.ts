@@ -69,6 +69,25 @@ const withTest = async (db: Firestore) => {
   return { params: { id: await testIn(db, 'org-a', 'test-org-a') } };
 };
 
+/** The sample test in each org, published with a manual release, its results released when `released`. */
+const withPublishedTest = async (db: Firestore, released = false) => {
+  const resolved = {
+    timingMode: 'fixed',
+    window: { start: 0, end: 3_600_000 },
+    resultRelease: 'manual',
+    resultDetail: 'score',
+    maxStrikes: 3,
+  };
+  const fields = { status: 'scheduled', resolved, ...(released ? { resultsReleasedAt: 1 } : {}) };
+  const { params } = await withTest(db);
+  for (const [orgId, id] of [
+    ['org-a', params.id],
+    ['org-b', 'test-org-b'],
+  ] as const)
+    await db.doc(`organizations/${orgId}/tests/${id}`).update(fields);
+  return { params, body: {} };
+};
+
 /** A question with a fixed ID in each org's sample test; `n` makes a fresh one for routes that delete. */
 const questionIn = async (db: Firestore, orgId: string, id: string) => {
   const testId = await testIn(db, orgId, `test-${orgId}`);
@@ -235,6 +254,11 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'POST /v1/tests/:id/publish': {
     foreignParams: { id: 'test-org-b' },
     fresh: async (db) => ({ ...(await withTest(db)), body: {} }),
+  },
+  'POST /v1/tests/:id/release': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
+  'POST /v1/tests/:id/withdraw-results': {
+    foreignParams: { id: 'test-org-b' },
+    fresh: (db) => withPublishedTest(db, true),
   },
   'GET /v1/tests/:id/questions': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'GET /v1/tests/:id/preview': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
