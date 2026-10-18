@@ -6,7 +6,10 @@ import {
   startAttempt,
   storedAttempt,
   storedEvents,
+  leaksAnswerKey,
+  type ExamPayload,
 } from '../fixtures/exam';
+import { BASIC_QUESTIONS } from '../fixtures/authoring';
 import { accounts, ORG_A, ORG_B, studentOfA } from '../fixtures/seed';
 import { expect, test } from '../fixtures/test';
 
@@ -54,7 +57,7 @@ test.describe('F-3.10 proctoring events API', () => {
     expectApiError(await student.get(`/v1/attempts/${attempt.id}/events`), 403);
   });
 
-  test('PR-10 the strike that reaches the maximum ends and grades the attempt, and nothing more is accepted', async ({
+  test('PR-10 DATA-05 the strike that reaches the maximum ends and grades the attempt, and nothing more is accepted', async ({
     testApi,
     apiAs,
     emulators,
@@ -82,6 +85,16 @@ test.describe('F-3.10 proctoring events API', () => {
     );
     expectApiError(await postEvent(student, attempt.id, 'tab_hidden', now + 9_000), 409, 'ATTEMPT_FINISHED');
     expect((await storedAttempt(emulators, ORG_A.id, attempt.id)).strikesCount).toBe(2);
+    const graded = await student.get<ExamPayload>(`/v1/attempts/${attempt.id}`);
+    expect(graded.status).toBe(200);
+    expect(graded.body.attempt.status).toBe('terminated');
+    expect(
+      leaksAnswerKey(
+        graded.body,
+        BASIC_QUESTIONS.flatMap((q) => (q.explanation ? [q.explanation] : [])),
+      ),
+      'answer keys after termination',
+    ).toEqual([]);
   });
 
   test('ORG-05 ORG-14 PR-11 the event timeline is open to admins of the attempt org and to super admins, and to nobody else', async ({
