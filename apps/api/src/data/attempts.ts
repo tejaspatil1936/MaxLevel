@@ -1,5 +1,6 @@
 import type { AnswerRecord, AnswerVerdict, AttemptRecord, AttemptStatus } from '@mitaoe/shared';
 import {
+  FieldPath,
   FieldValue,
   type DocumentReference,
   type DocumentSnapshot,
@@ -181,6 +182,30 @@ export function attemptsData(db: Firestore) {
         const fields = finish(attempt, await answersOf(tx, ref, attempt));
         tx.update(ref, fields);
         return { attempt: { ...attempt, ...fields }, finalized: true };
+      });
+    },
+
+    /**
+     * Q-12: the first serve time of a question, stored in the attempt's `questionServedAt` in one transaction; a later
+     * call returns the stored time and writes nothing. `ATTEMPT_FINISHED` once the attempt is no longer in progress,
+     * null when there is no attempt.
+     */
+    async serveQuestion(
+      orgId: string,
+      attemptId: string,
+      questionId: string,
+      now: number,
+    ): Promise<{ servedAt: number } | 'ATTEMPT_FINISHED' | null> {
+      const ref = attempts(orgId).doc(attemptId);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return null;
+        const attempt = toAttempt(snap);
+        if (attempt.status !== 'in_progress') return 'ATTEMPT_FINISHED';
+        const stored = attempt.questionServedAt[questionId];
+        if (stored !== undefined) return { servedAt: stored };
+        tx.update(ref, new FieldPath('questionServedAt', questionId), now);
+        return { servedAt: now };
       });
     },
 

@@ -211,6 +211,24 @@ describe('attempt data access', () => {
     expect(await data.attempts.finalizeAttempt('org-b', attempt.id, finish('submitted', 1))).toBeNull();
   });
 
+  it('Q-12 ORG-03 stores a question’s first serve time once, and not on a finished, missing or other-org attempt', async () => {
+    await putAtt1();
+    const runs = await Promise.all([
+      data.attempts.serveQuestion('org-a', 'att1', 'q1', 2000),
+      data.attempts.serveQuestion('org-a', 'att1', 'q1', 2001),
+    ]);
+    const first = (runs[0] as { servedAt: number }).servedAt;
+    expect(runs, 'concurrent serves agree on one time').toEqual([{ servedAt: first }, { servedAt: first }]);
+    expect(await data.attempts.serveQuestion('org-a', 'att1', 'q1', 3000)).toEqual({ servedAt: first });
+    expect(await data.attempts.serveQuestion('org-a', 'att1', 'q.2', 3000)).toEqual({ servedAt: 3000 });
+    expect((await data.attempts.getAttempt('org-a', 'att1'))?.questionServedAt).toEqual({ q1: first, 'q.2': 3000 });
+
+    expect(await data.attempts.serveQuestion('org-b', 'att1', 'q1', 3000)).toBeNull();
+    await db.doc('organizations/org-a/attempts/att1').update({ status: 'submitted' });
+    expect(await data.attempts.serveQuestion('org-a', 'att1', 'q3', 3000)).toBe('ATTEMPT_FINISHED');
+    expect((await data.attempts.getAttempt('org-a', 'att1'))?.questionServedAt).toEqual({ q1: first, 'q.2': 3000 });
+  });
+
   it('EX-11 EX-17 DATA-03 an answer saved while the attempt is finalized is graded or refused, never stored after grading', async () => {
     const ids = ['race1', 'race2', 'race3', 'race4', 'race5', 'race6'];
     await Promise.all(
