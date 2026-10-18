@@ -110,6 +110,44 @@ export function attemptsData(db: Firestore) {
       });
     },
 
+    /**
+     * PR-13: the attempt ID that phone pairing before Start uses, in one transaction on the attempt index. An active
+     * attempt that was not reset is returned with its status; otherwise `check` runs (it may throw to refuse, and then
+     * nothing is stored) and the reserved ID is returned, reserving a new one when there is none. A reservation is
+     * only `reservedAttemptId` on the index entry: no attempt record and no `attemptsStarted` (TST-06).
+     */
+    async reserveAttempt(
+      orgId: string,
+      input: { testId: string; studentId: string },
+      check: () => void,
+    ): Promise<{ attemptId: string; status?: AttemptStatus }> {
+      const ref = indexRef(orgId, input.testId, input.studentId);
+      return db.runTransaction(async (tx) => {
+        const index = await tx.get(ref);
+        const activeId = index.get('activeAttemptId') as string | null | undefined;
+        if (activeId) {
+          const active = await tx.get(attempts(orgId).doc(activeId));
+          const status = active.get('status') as AttemptStatus | undefined;
+          if (active.exists && status !== 'reset') return { attemptId: activeId, status: status! };
+        }
+        check();
+        const reserved = index.get('reservedAttemptId') as string | undefined;
+        if (reserved) return { attemptId: reserved };
+        const attemptId = attempts(orgId).doc().id;
+        tx.set(
+          ref,
+          {
+            testId: input.testId,
+            studentId: input.studentId,
+            reservedAttemptId: attemptId,
+            attemptCount: (index.get('attemptCount') as number | undefined) ?? 0,
+          },
+          { merge: true },
+        );
+        return { attemptId };
+      });
+    },
+
     async getAttempt(orgId: string, attemptId: string): Promise<AttemptRecord | null> {
       const d = await attempts(orgId).doc(attemptId).get();
       return d.exists ? toAttempt(d) : null;

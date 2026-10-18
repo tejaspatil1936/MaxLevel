@@ -106,6 +106,48 @@ describe('attempt data access', () => {
     expect((await ref.get()).get('attemptCount')).toBe(2);
   });
 
+  it('PR-13 TST-06 a reservation keeps one attempt ID on the index, stores no attempt and refuses with nothing stored', async () => {
+    const ref = db.doc('organizations/org-a/attemptIndex/t1_stu-1');
+    const reserve = (check = () => {}) =>
+      data.attempts.reserveAttempt('org-a', { testId: 't1', studentId: 'stu-1' }, check);
+    await expect(
+      reserve(() => {
+        throw new AppError(409, 'WINDOW_NOT_OPEN', 'Not yet.');
+      }),
+    ).rejects.toMatchObject({ code: 'WINDOW_NOT_OPEN' });
+    expect((await ref.get()).exists, 'a refusal stores no index entry').toBe(false);
+
+    const reservations = await Promise.all(Array.from({ length: 5 }, () => reserve()));
+    const [{ attemptId }] = reservations as [{ attemptId: string }];
+    expect(new Set(reservations.map((r) => r.attemptId)).size, 'one reserved ID for every call').toBe(1);
+    expect((await ref.get()).data()).toEqual({
+      testId: 't1',
+      studentId: 'stu-1',
+      reservedAttemptId: attemptId,
+      attemptCount: 0,
+    });
+    expect((await db.collection('organizations/org-a/attempts').get()).size).toBe(0);
+    await expect(
+      reserve(() => {
+        throw new AppError(409, 'WINDOW_CLOSED', 'Closed.');
+      }),
+    ).rejects.toMatchObject({ code: 'WINDOW_CLOSED' });
+
+    const started = await start(undefined, false);
+    expect(started.attempt.id, 'Start uses the reserved ID').toBe(attemptId);
+    const refuse = () => {
+      throw new AppError(409, 'WINDOW_CLOSED', 'Closed.');
+    };
+    expect(await reserve(refuse), 'a started attempt is returned without the check').toEqual({
+      attemptId,
+      status: 'in_progress',
+    });
+    await db.doc(`organizations/org-a/attempts/${attemptId}`).update({ status: 'reset' });
+    const next = await reserve();
+    expect(next.attemptId).not.toBe(attemptId);
+    expect((await ref.get()).data()).toMatchObject({ reservedAttemptId: next.attemptId, attemptCount: 1 });
+  });
+
   it('EX-05 ORG-03 reads an attempt and its saved answers in its own org only', async () => {
     const { attempt } = await start(undefined, false);
     await db

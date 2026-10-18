@@ -8,6 +8,7 @@ import { eventsData } from './events';
 import { idempotencyData } from './idempotency';
 import { identityData } from './identity';
 import { orgsData } from './orgs';
+import { pairingData } from './pairing';
 import { platformData } from './platform';
 import { preferencesData } from './preferences';
 import { questionsData } from './questions';
@@ -27,6 +28,7 @@ export function createData(db: Firestore) {
     attempts: attemptsData(db),
     audit: auditData(db),
     events: eventsData(db),
+    pairing: pairingData(db),
     students: studentsData(db),
     entitlements: entitlementsData(db),
     departments: departmentsData(db),
