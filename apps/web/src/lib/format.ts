@@ -4,6 +4,15 @@ import { t } from '@/i18n';
 const numbers = new Intl.NumberFormat('en-IN');
 export const formatCount = (n: number) => numbers.format(n);
 
+const scores = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });
+/** A score or mark count: en-IN, at most two decimals, the minus sign U+2212 when negative (`2.75`, `−0.5`). */
+export const formatScore = (n: number) => {
+  const text = scores.format(Math.abs(n));
+  return n < 0 && text !== '0' ? `\u2212${text}` : text;
+};
+/** Marks gained or lost on one question: `+1`, `−0.25` or `0`. */
+export const formatMarks = (n: number) => (n > 0 && formatScore(n) !== '0' ? `+${formatScore(n)}` : formatScore(n));
+
 export function formatDateTime(ms: number, timeZone = 'Asia/Kolkata'): string {
   return new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(ms);
 }

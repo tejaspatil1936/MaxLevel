@@ -5,6 +5,8 @@ import {
   formatQuestionTimer,
   formatDay,
   formatMarking,
+  formatMarks,
+  formatScore,
   formatMinutes,
   formatWindow,
   formatZonedDay,
@@ -72,5 +74,19 @@ describe('student formats', () => {
     expect(formatMarking({ marks: 1, negativeMarks: 0 })).toBe(
       '+1 for a correct answer, 0 for a wrong answer, 0 for no answer',
     );
+  });
+});
+
+describe('result formats', () => {
+  it('RES-02 RES-03 scores have en-IN grouping, at most two decimals and U+2212 for a negative; marks carry a sign', () => {
+    expect(formatScore(2.75)).toBe('2.75');
+    expect(formatScore(10)).toBe('10');
+    expect(formatScore(1234.5)).toBe('1,234.5');
+    expect(formatScore(33.3333)).toBe('33.33');
+    expect(formatScore(-0.5)).toBe('\u22120.5');
+    expect(formatScore(-0)).toBe('0');
+    expect(formatMarks(1)).toBe('+1');
+    expect(formatMarks(-0.25)).toBe('\u22120.25');
+    expect(formatMarks(0)).toBe('0');
   });
 });
