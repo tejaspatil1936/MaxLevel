@@ -43,6 +43,11 @@ export interface AnswerSync {
   setOnline(online: boolean): void;
   /** Answers not yet accepted by the server. */
   waiting(): number;
+  /**
+   * Resolves once no answer waits and no batch is in flight (EX-15: the submit goes after every answer). Retries keep
+   * their backoff; an answer the server refuses no longer waits.
+   */
+  flush(): Promise<void>;
   dispose(): void;
 }
 
@@ -69,9 +74,12 @@ export function createAnswerSync(
   let failures = 0;
   let cancelRetry: (() => void) | null = null;
   let disposed = false;
+  const idleWaiters: Array<() => void> = [];
+  const idle = () => !inFlight && pending.size === 0;
 
   const emit = () => {
     if (disposed) return;
+    if (idle()) idleWaiters.splice(0).forEach((resolve) => resolve());
     if (inFlight) deps.onStatus({ kind: 'saving' });
     else if (pending.size === 0) deps.onStatus(online ? { kind: 'saved' } : { kind: 'offline', waiting: 0 });
     else if (failures > 0 || !online) deps.onStatus({ kind: 'offline', waiting: pending.size });
@@ -147,6 +155,7 @@ export function createAnswerSync(
       } else emit();
     },
     waiting: () => pending.size,
+    flush: () => (idle() ? Promise.resolve() : new Promise<void>((resolve) => idleWaiters.push(resolve))),
     dispose() {
       disposed = true;
       cancelRetry?.();

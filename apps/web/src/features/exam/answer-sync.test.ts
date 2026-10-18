@@ -190,4 +190,22 @@ describe('answer sync', () => {
     h.sync.dispose();
     expect(h.timers).toHaveLength(0);
   });
+  it('EX-15 flush resolves once every waiting answer is saved and no batch is in flight, retries included', async () => {
+    const h = harness();
+    await h.sync.flush();
+    h.sync.record('q1', 'a', false);
+    let flushed = false;
+    void h.sync.flush().then(() => (flushed = true));
+    h.replies[0]!.fail();
+    await h.settle();
+    h.sync.record('q2', 'b', false);
+    expect(flushed, 'waiting for the retry').toBe(false);
+    h.timers[0]!.fn();
+    await h.settle();
+    expect(flushed, 'the retry is in flight').toBe(false);
+    h.replies[1]!.ok([{ questionId: 'q2', code: 'QUESTION_TIME_UP' }]);
+    await h.settle();
+    expect(flushed, 'a refused answer no longer waits').toBe(true);
+    expect(h.sync.waiting()).toBe(0);
+  });
 });
