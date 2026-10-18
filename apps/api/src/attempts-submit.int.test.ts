@@ -177,6 +177,9 @@ describe('submitting an attempt', () => {
     const dashboard = await ctx.app.inject({ method: 'GET', url: '/v1/student/dashboard', headers: s1 });
     expect(dashboard.json().completed).toHaveLength(1);
     bodies.push(dashboard.body);
+    const history = await ctx.app.inject({ method: 'GET', url: '/v1/student/history', headers: s1 });
+    expect(history.json().series).toHaveLength(1);
+    bodies.push(history.body);
     for (const raw of bodies) expect(leaks(raw)).toEqual([]);
   });
 });

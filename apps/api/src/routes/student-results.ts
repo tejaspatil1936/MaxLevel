@@ -1,9 +1,12 @@
 import {
   dayLabels,
   resultDetailShown,
+  studentHistory,
+  studentHistorySchema,
   studentResult,
   studentResultSchema,
   testBoardId,
+  type StudentHistory,
   type StudentResult,
 } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -33,6 +36,33 @@ export function studentResultRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   }
 
   return async (app) => {
+    /**
+     * GET /v1/student/history (US-ST-08, RES-04, DATA-05): the caller's finished attempts in their organization by series
+     * and day, with the score only where the release state and Show past scores allow, read on every request (TST-06).
+     */
+    app.get(
+      '/v1/student/history',
+      { config: student, schema: { response: { 200: studentHistorySchema } } },
+      async (req): Promise<StudentHistory> => {
+        const orgId = req.orgId!;
+        const attempts = await data.attempts.listFinishedAttempts(orgId, studentOf(req).studentId);
+        const seriesIds = [...new Set(attempts.map((a) => a.seriesId))];
+        const [series, lists] = await Promise.all([
+          Promise.all(seriesIds.map((id) => data.series.getSeries(orgId, id))),
+          Promise.all(seriesIds.map((id) => data.tests.listTests(orgId, id))),
+        ]);
+        return studentHistory({
+          attempts,
+          series: seriesIds.flatMap((id, i) => {
+            const s = series[i];
+            if (!s) return [];
+            const tests = (lists[i] ?? []).map((t) => ({ ...t, settings: t.resolved ?? null }));
+            return [{ id, title: s.title, startDate: s.startDate, tests }];
+          }),
+        });
+      },
+    );
+
     app.get(
       '/v1/student/results/:attemptId',
       { config: student, schema: { params, response: { 200: studentResultSchema } } },
