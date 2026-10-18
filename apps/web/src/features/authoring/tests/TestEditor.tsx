@@ -14,6 +14,7 @@ import { useWorkspace } from '@/lib/workspace';
 import { seriesUrl } from '../series/SeriesList';
 import { SeriesNotFound } from '../series/SeriesNotFound';
 import { TestDetailsDialog } from './TestDetailsDialog';
+import { TestSettings } from './TestSettings';
 import { TestStatus } from './TestStatus';
 import { testHeading } from './test-view';
 
@@ -70,6 +71,14 @@ function EditorPage({ test }: { test: TestDetail }) {
   const window = test.effective.window;
   const when = window ? formatWindow(window, org?.timezone ?? 'Asia/Kolkata') : formatDay(test.scheduledDate);
   const canPublish = test.status === 'approved' && !readOnly;
+  // Remounted when the test or its series is saved, so each tab starts from the stored values.
+  const stamp = `${test.updatedAt}:${series.data?.updatedAt}`;
+  const loading = <Skeleton className="h-64 w-full" />;
+  const panel = (value: string) => {
+    if (value === 'settings')
+      return series.data ? <TestSettings key={stamp} test={test} series={series.data} /> : loading;
+    return null;
+  };
 
   return (
     <>
@@ -119,7 +128,7 @@ function EditorPage({ test }: { test: TestDetail }) {
         tabs={TABS.map((x) => ({
           value: x.value,
           label: t(x.label),
-          content: <p className="text-graphite">{t('tests.tabPending')}</p>,
+          content: panel(x.value) ?? <p className="text-graphite">{t('tests.tabPending')}</p>,
         }))}
       />
       {editing && series.data ? (
