@@ -6,8 +6,11 @@ import type { Data } from '../data';
 import type { AccountStatusService } from '../services/account-status';
 import type { EntitlementsService } from '../services/entitlements';
 
-/** Who may call a route (PLAN section 3). Every /v1 route declares one in its config. */
-export type Access = 'public' | 'signedIn' | 'superAdmin' | 'admin' | 'student' | 'device';
+/**
+ * Who may call a route (PLAN section 3). Every /v1 route declares one in its config. `adminOrStudent` serves one
+ * resource to both sides (leaderboards): a student in their claim org, otherwise exactly as `admin`.
+ */
+export type Access = 'public' | 'signedIn' | 'superAdmin' | 'admin' | 'student' | 'device' | 'adminOrStudent';
 
 export interface AuthUser {
   uid: string;
@@ -65,7 +68,8 @@ export function registerAuth(
     if (!token) throw unauthenticated();
     const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
     const checkRevoked =
-      req.routeOptions.config.checkRevoked ?? ((access === 'admin' || access === 'superAdmin') && isWrite);
+      req.routeOptions.config.checkRevoked ??
+      ((access === 'admin' || access === 'adminOrStudent' || access === 'superAdmin') && isWrite);
     let decoded;
     try {
       decoded = await deps.auth.verifyIdToken(token, checkRevoked);
@@ -87,7 +91,8 @@ export function registerAuth(
     };
     const user = req.user;
 
-    switch (access) {
+    const effective = access === 'adminOrStudent' ? (user.role === 'student' ? 'student' : 'admin') : access;
+    switch (effective) {
       case 'signedIn':
         return;
       case 'superAdmin':
@@ -95,7 +100,7 @@ export function registerAuth(
         return;
       case 'student':
       case 'device':
-        if (user.role !== access || !user.orgId) throw forbidden();
+        if (user.role !== effective || !user.orgId) throw forbidden();
         req.orgId = user.orgId;
         return;
       case 'admin': {

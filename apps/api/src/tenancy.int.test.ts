@@ -20,9 +20,12 @@ const tokens = async () => ({
   student: await asClaims(auth, 'student01@a.test', { role: 'student', orgId: SEED.orgA, studentId: 'stu-org-a-01' }),
 });
 
+const accessOf = (r: { config: unknown }) => (r.config as { access?: string } | undefined)?.access;
+
+/** Routes an admin may call: admin-only ones, and those serving admins and students alike (leaderboards). */
 async function adminRoutes() {
   const { app } = await testApp();
-  const routes = app.routeTable.filter((r) => (r.config as { access?: string } | undefined)?.access === 'admin');
+  const routes = app.routeTable.filter((r) => accessOf(r) === 'admin' || accessOf(r) === 'adminOrStudent');
   return { app, routes };
 }
 
@@ -63,7 +66,8 @@ describe('admin route table', () => {
     for (const r of routes) {
       const base = ADMIN_ROUTE_SAMPLES[`${r.method} ${r.url}`] ?? {};
       const sample = { ...base, ...(base.fresh ? await base.fresh(db, 900 + routes.indexOf(r)) : {}) };
-      for (const headers of [t.student, device, { ...t.student, 'x-org-id': SEED.orgA }]) {
+      const refused = accessOf(r) === 'admin' ? [t.student, device, { ...t.student, 'x-org-id': SEED.orgA }] : [device];
+      for (const headers of refused) {
         const res = await app.inject({
           method: r.method as 'GET',
           url: fillPath(r.url, sample.params),

@@ -184,6 +184,37 @@ describe('claims drive the request context', () => {
     expect(me.statusCode).toBe(403);
   });
 
+  it('ORG-11 LB-05 a route for admins or students puts a student in their claim org and treats others as admin', async () => {
+    const app = await createServer({ ...loadConfig({}), logLevel: 'silent' }, new TestClock());
+    registerAuth(app, { auth, data: createData(db) });
+    const out = z.object({ orgId: z.string() });
+    app.get('/v1/both', { config: { access: 'adminOrStudent' }, schema: { response: { 200: out } } }, async (req) => ({
+      orgId: req.orgId!,
+    }));
+    const as = async (email: string, claims: Record<string, string>, headers: Record<string, string> = {}) => {
+      const user = await signIn(auth, email);
+      await auth.setCustomUserClaims(user.uid, claims);
+      const res = await app.inject({
+        method: 'GET',
+        url: '/v1/both',
+        headers: { ...bearer(await user.token()), ...headers },
+      });
+      return [res.statusCode, res.statusCode === 200 ? res.json().orgId : res.json().error.code];
+    };
+    const studentA = { role: 'student', orgId: SEED.orgA, studentId: 'stu-org-a-01' };
+    expect(await as('student01@a.test', studentA, { 'x-org-id': SEED.orgB })).toEqual([200, SEED.orgA]);
+    expect(await as('admin1@a.test', { role: 'admin', orgId: SEED.orgA }, { 'x-org-id': SEED.orgB })).toEqual([
+      200,
+      SEED.orgA,
+    ]);
+    expect(await as(SEED.superAdmin, { role: 'superAdmin' }, { 'x-org-id': SEED.orgB })).toEqual([200, SEED.orgB]);
+    expect(await as(SEED.superAdmin, { role: 'superAdmin' })).toEqual([400, 'ORG_REQUIRED']);
+    expect(await as('phone@device.test', { role: 'device', orgId: SEED.orgA, attemptId: 'a' })).toEqual([
+      403,
+      'FORBIDDEN',
+    ]);
+  });
+
   it('API-04 admins act in their claim org and super admins in the org named by X-Org-Id', async () => {
     const app = await createServer({ ...loadConfig({}), logLevel: 'silent' }, new TestClock());
     registerAuth(app, { auth, data: createData(db) });
