@@ -12,7 +12,12 @@ export interface ExamState {
 }
 
 export type ExamAction =
-  { type: 'choose'; optionId: string } | { type: 'clear' } | { type: 'toggleMark' } | { type: 'goTo'; index: number };
+  | { type: 'choose'; optionId: string }
+  | { type: 'clear' }
+  | { type: 'toggleMark' }
+  | { type: 'goTo'; index: number }
+  /** Per-question timers (Q-11): the current question's time ran out or Save and next left it; it locks, next opens. */
+  | { type: 'lock' };
 
 /** The palette states of EX-07; the locked ones come from per-question timers. */
 export type QuestionState =
@@ -46,6 +51,34 @@ export function initialExamState(
   return { index: 0, answers, marked, visited, locked: {} };
 }
 
+/**
+ * Where a timed attempt reopens (Q-11, forward-only): on the latest question served, with every question before it
+ * locked; when that question's time is up (`timeUpAt` at or before `now`) it is locked too and the next one opens.
+ */
+export function resumeTimedState(
+  state: ExamState,
+  questionIds: readonly string[],
+  servedAt: Readonly<Record<string, number>>,
+  timeUpAt: (questionId: string, servedAt: number) => number | undefined,
+  now: number,
+): ExamState {
+  const latest = questionIds.findLastIndex((id) => servedAt[id] !== undefined);
+  if (latest < 0) return state;
+  const locked: Record<string, true> = { ...state.locked };
+  const visited: Record<string, true> = { ...state.visited };
+  for (const id of questionIds.slice(0, latest + 1)) visited[id] = true;
+  for (const id of questionIds.slice(0, latest)) locked[id] = true;
+  const id = questionIds[latest]!;
+  const upAt = timeUpAt(id, servedAt[id]!);
+  let index = latest;
+  if (upAt !== undefined && upAt <= now) {
+    locked[id] = true;
+    if (latest + 1 < questionIds.length) index = latest + 1;
+  }
+  visited[questionIds[index]!] = true;
+  return { ...state, index, locked, visited };
+}
+
 const without = <T>(map: Readonly<Record<string, T>>, key: string) => {
   const { [key]: _gone, ...rest } = map;
   return rest;
@@ -57,8 +90,15 @@ export function examReducer(questionIds: readonly string[]) {
     const current = questionIds[state.index];
     if (action.type === 'goTo') {
       const id = questionIds[action.index];
-      if (!id || action.index === state.index) return state;
+      if (!id || action.index === state.index || state.locked[id]) return state;
       return { ...state, index: action.index, visited: { ...state.visited, [id]: true } };
+    }
+    if (action.type === 'lock') {
+      if (!current) return state;
+      const locked = state.locked[current] ? state.locked : { ...state.locked, [current]: true as const };
+      const next = questionIds[state.index + 1];
+      if (!next) return locked === state.locked ? state : { ...state, locked };
+      return { ...state, locked, index: state.index + 1, visited: { ...state.visited, [next]: true } };
     }
     if (!current || state.locked[current]) return state;
     if (action.type === 'choose') {

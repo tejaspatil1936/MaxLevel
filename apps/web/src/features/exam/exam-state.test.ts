@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { examReducer, initialExamState, questionState, shortcutFor, type ExamAction } from './exam-state';
+import {
+  examReducer,
+  initialExamState,
+  questionState,
+  resumeTimedState,
+  shortcutFor,
+  type ExamAction,
+} from './exam-state';
 
 const ids = ['q1', 'q2', 'q3'];
 const run = (...actions: ExamAction[]) => actions.reduce(examReducer(ids), initialExamState(ids));
@@ -50,6 +57,31 @@ describe('exam state', () => {
     expect(s.index).toBe(0);
     expect(ids.map((id) => questionState(s, id))).toEqual(['notAnswered', 'answeredMarked', 'marked']);
     expect(s.answers).toEqual({ q2: 'b' });
+  });
+
+  it('Q-11 lock locks the current question and opens the next; a locked question cannot be opened again', () => {
+    const s = run({ type: 'choose', optionId: 'a' }, { type: 'lock' });
+    expect(s.index).toBe(1);
+    expect(ids.map((id) => questionState(s, id))).toEqual(['lockedAnswered', 'notAnswered', 'notVisited']);
+    expect([{ type: 'goTo', index: 0 } as const].reduce(examReducer(ids), s)).toBe(s);
+    const end = run({ type: 'lock' }, { type: 'lock' }, { type: 'lock' });
+    expect(end.index, 'the last question stays open once locked').toBe(2);
+    expect(Object.keys(end.locked)).toEqual(ids);
+    expect([{ type: 'lock' } as const].reduce(examReducer(ids), end)).toBe(end);
+  });
+
+  it('Q-11 a timed attempt reopens on its latest served question, or the next one once that one’s time is up', () => {
+    const upAt = (_id: string, served: number) => served + 20_000;
+    const start = initialExamState(ids);
+    expect(resumeTimedState(start, ids, {}, upAt, 0)).toBe(start);
+    const mid = resumeTimedState(start, ids, { q1: 0, q2: 30_000 }, upAt, 40_000);
+    expect(mid.index).toBe(1);
+    expect(ids.map((id) => questionState(mid, id))).toEqual(['lockedNotAnswered', 'notAnswered', 'notVisited']);
+    const up = resumeTimedState(start, ids, { q1: 0, q2: 30_000 }, upAt, 50_000);
+    expect(up.index).toBe(2);
+    expect(ids.map((id) => questionState(up, id))).toEqual(['lockedNotAnswered', 'lockedNotAnswered', 'notAnswered']);
+    const untimed = resumeTimedState(start, ids, { q3: 0 }, () => undefined, 99_000);
+    expect([untimed.index, Object.keys(untimed.locked)]).toEqual([2, ['q1', 'q2']]);
   });
 
   it('EX-07 a locked question shows locked, answered or not, and takes no more changes', () => {
