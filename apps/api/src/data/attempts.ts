@@ -1,3 +1,4 @@
+import type { AttemptStatus } from '@mitaoe/shared';
 import { FieldPath, type Firestore } from 'firebase-admin/firestore';
 
 export interface AttemptSummary {
@@ -9,6 +10,16 @@ export interface AttemptSummary {
   max: number | null;
   strikes: number;
   startedAt: number;
+}
+
+/** What the student dashboard and test page need of an attempt (US-ST-03): never its draw, answers or result. */
+export interface StudentAttemptRef {
+  id: string;
+  testId: string;
+  seriesId: string | null;
+  status: AttemptStatus;
+  startedAt: number;
+  submittedAt: number | null;
 }
 
 export function attemptsData(db: Firestore) {
@@ -28,6 +39,25 @@ export function attemptsData(db: Firestore) {
           .get(),
       ]);
       return !attempts.empty || !index.empty;
+    },
+
+    /** A student's attempts in their organization, newest start first, read with only the fields listed above. */
+    async listStudentAttempts(orgId: string, studentId: string): Promise<StudentAttemptRef[]> {
+      const snap = await db
+        .collection(`organizations/${orgId}/attempts`)
+        .where('studentId', '==', studentId)
+        .select('testId', 'seriesId', 'status', 'startedAt', 'submittedAt')
+        .get();
+      return snap.docs
+        .map((d) => ({
+          id: d.id,
+          testId: d.get('testId') as string,
+          seriesId: (d.get('seriesId') as string | undefined) ?? null,
+          status: d.get('status') as AttemptStatus,
+          startedAt: (d.get('startedAt') as number | undefined) ?? 0,
+          submittedAt: (d.get('submittedAt') as number | undefined) ?? null,
+        }))
+        .sort((a, b) => b.startedAt - a.startedAt);
     },
 
     /** A student's attempts, newest first, with their test titles (STU-10). */
