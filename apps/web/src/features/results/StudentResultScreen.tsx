@@ -112,10 +112,15 @@ export function StudentResultScreen() {
         {back}
       </div>
     );
-  if (error?.code === 'ATTEMPT_IN_PROGRESS')
+  if (error?.code === 'ATTEMPT_IN_PROGRESS') {
+    const { title, dayLabel } = error.details;
     return (
       <div className="flex flex-col items-start gap-4">
-        <h1 className={h1}>{t('result.title')}</h1>
+        <h1 className={h1}>
+          {typeof title === 'string'
+            ? testHeading({ title, dayLabel: typeof dayLabel === 'string' ? dayLabel : null })
+            : t('result.title')}
+        </h1>
         <p>{t('result.inProgress')}</p>
         <Link href={`/exam/?attempt=${encodeURIComponent(attemptId)}`} className={link}>
           {t('result.resume')}
@@ -123,6 +128,7 @@ export function StudentResultScreen() {
         {back}
       </div>
     );
+  }
   if (query.isError)
     return (
       <div className="flex flex-col items-start gap-4">
