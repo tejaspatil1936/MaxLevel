@@ -4,6 +4,7 @@ import { exam } from './en/exam';
 import { examEntry } from './en/exam-entry';
 import { authoring } from './en/authoring';
 import { people } from './en/people';
+import { phone } from './en/phone';
 import { platform } from './en/platform';
 import { questions } from './en/questions';
 import { sections } from './en/sections';
@@ -124,6 +125,7 @@ export const en = {
   ...sections,
   ...exam,
   ...examEntry,
+  ...phone,
 } as const;
 
 export type MessageKey = keyof typeof en;
