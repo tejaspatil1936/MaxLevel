@@ -24,3 +24,4 @@ export * from './timing';
 export * from './scoring';
 export * from './strikes';
 export * from './sync';
+export * from './attempt';
