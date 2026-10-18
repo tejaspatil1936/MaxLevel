@@ -1,12 +1,14 @@
 'use client';
 
-import type { AttemptPayload, StudentTestPage } from '@mitaoe/shared';
+import type { AttemptPayload, PairingReservation, StudentTestPage } from '@mitaoe/shared';
 import { Button, Checkbox, InlineMessage, PageHeader, Skeleton } from '@mitaoe/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useId, useState } from 'react';
+import { PairingCode, usePairingCode } from '@/features/phone/PairingCode';
+import { usePhoneLink } from '@/features/phone/presence';
 import { TestNotAvailable } from '@/features/student/TestNotAvailable';
 import { sectionsLine, testHeading } from '@/features/student/test-heading';
 import { useStudentTest } from '@/features/student/use-student-test';
@@ -58,6 +60,7 @@ function Rules({ page, orgId }: { page: StudentTestPage; orgId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const reasonId = useId();
+  const pairId = useId();
   const [checksOk] = useState(() => checksPassed(page.testId));
   const [agreed, setAgreed] = useState(false);
   // One key per visit: a double press or a retry after a lost response replays the same start (API-02).
@@ -76,13 +79,24 @@ function Rules({ page, orgId }: { page: StudentTestPage; orgId: string }) {
     },
   });
 
-  // The phone (second camera) is paired on this screen (F-3.13); until then such a test waits for it here.
-  const block = startBlock({
-    checksPassed: checksOk,
-    agreed,
-    secondCamera: page.exam.secondCamera,
-    phoneConnected: false,
-  });
+  // The phone (second camera) is paired here, before Start (PR-13): the code reserves the attempt ID the phone signs
+  // in for, and Start waits until that attempt's phone presence is online.
+  const { secondCamera } = page.exam;
+  const pairing = usePairingCode(
+    qk.orgItem(orgId, 'pairing', page.testId),
+    () =>
+      api<PairingReservation>(`/v1/tests/${encodeURIComponent(page.testId)}/pairing-token`, {
+        method: 'POST',
+        body: {},
+      }),
+    secondCamera,
+  );
+  const reservedId = pairing.code?.attemptId;
+  const { phoneOnline } = usePhoneLink(
+    secondCamera && reservedId ? { orgId, testId: page.testId, attemptId: reservedId } : null,
+  );
+  const phoneConnected = phoneOnline === true;
+  const block = startBlock({ checksPassed: checksOk, agreed, secondCamera, phoneConnected });
   const onStart = () => {
     if (block || start.isPending) return;
     // Fullscreen needs the click's user activation, so it is requested before the API call (PR-04).
@@ -117,6 +131,21 @@ function Rules({ page, orgId }: { page: StudentTestPage; orgId: string }) {
         <ShieldCheck aria-hidden size={20} className="mt-1 shrink-0 text-tick" />
         <span>{t('rules.privacy')}</span>
       </p>
+      {secondCamera ? (
+        <section aria-labelledby={pairId} className="mt-8 max-w-measure border-t border-rule pt-6">
+          <h2 id={pairId} className="text-heading-2 font-bold">
+            {t('pairing.region')}
+          </h2>
+          <p className="mt-2 text-graphite">{t('pairing.lead')}</p>
+          <div className="mt-4">
+            <PairingCode pairing={pairing} timezone={page.timezone} />
+          </div>
+          <p role="status" className="mt-4 flex items-center gap-2 font-bold">
+            <Smartphone aria-hidden size={20} className={phoneConnected ? 'text-tick' : 'text-graphite'} />
+            <span>{phoneConnected ? t('pairing.status.connected') : t('pairing.status.waiting')}</span>
+          </p>
+        </section>
+      ) : null}
       <div className="mt-8 flex max-w-measure flex-col items-start gap-4">
         <Checkbox label={t('rules.agreement')} checked={agreed} onCheckedChange={setAgreed} />
         <Button
