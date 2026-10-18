@@ -60,3 +60,22 @@ export function sectionDeadline(
   if (sectionDurationMin === undefined) return attemptDeadline;
   return Math.min(sectionStartedAt + sectionDurationMin * MIN, attemptDeadline);
 }
+
+/**
+ * A question's own time limit in seconds under the test's question time mode (Q-10, Q-11): the test's limit for every
+ * question with `same`, the question's own limit with `each`, and none with `none` (or a question without one).
+ */
+export function questionTimeLimit(
+  s: Pick<Settings, 'questionTimeMode' | 'questionTimeLimitSec'>,
+  question: { timeLimitSec?: number },
+): number | undefined {
+  if (s.questionTimeMode === 'same') return s.questionTimeLimitSec;
+  if (s.questionTimeMode === 'each') return question.timeLimitSec;
+  return undefined;
+}
+
+/**
+ * When a timed question's time ends (Q-11): its first serve time plus its limit. The exam screen locks it then; the
+ * server still takes answers for `QUESTION_TIME_GRACE_MS` more (Q-12, `answerVerdict`).
+ */
+export const questionTimeUpAt = (servedAt: number, timeLimitSec: number): number => servedAt + timeLimitSec * 1000;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attemptDeadline, canStart, lastStartAt, sectionDeadline } from './timing';
+import { attemptDeadline, canStart, lastStartAt, questionTimeLimit, questionTimeUpAt, sectionDeadline } from './timing';
 
 const MIN = 60_000;
 const start = Date.UTC(2026, 10, 2, 4, 30); // 2 Nov 2026, 10:00 IST
@@ -93,5 +93,20 @@ describe('sectionDeadline', () => {
 
   it('TST-08 a section without a duration runs to the attempt deadline', () => {
     expect(sectionDeadline(start + 10 * MIN, undefined, deadline)).toBe(deadline);
+  });
+});
+
+describe('questionTimeLimit and questionTimeUpAt', () => {
+  it('Q-10 Q-11 the limit is the test’s with same, the question’s own with each, and none without timers', () => {
+    expect(questionTimeLimit({ questionTimeMode: 'same', questionTimeLimitSec: 20 }, { timeLimitSec: 90 })).toBe(20);
+    expect(questionTimeLimit({ questionTimeMode: 'each', questionTimeLimitSec: 20 }, { timeLimitSec: 90 })).toBe(90);
+    expect(questionTimeLimit({ questionTimeMode: 'each' }, {})).toBeUndefined();
+    expect(questionTimeLimit({ questionTimeMode: 'none', questionTimeLimitSec: 20 }, { timeLimitSec: 90 })).toBe(
+      undefined,
+    );
+  });
+
+  it('Q-11 a timed question’s time ends its limit after it was first served', () => {
+    expect(questionTimeUpAt(start, 20)).toBe(start + 20_000);
   });
 });

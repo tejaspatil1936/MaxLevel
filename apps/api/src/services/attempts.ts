@@ -7,6 +7,7 @@ import {
   drawAttempt,
   isEligible,
   isFinishedAttempt,
+  questionTimeLimit,
   type AnswerBatch,
   type AnswerBatchResult,
   type AnswerRecord,
@@ -28,14 +29,6 @@ const REFUSALS = {
   WINDOW_NOT_OPEN: "This test hasn't opened yet.",
   WINDOW_CLOSED: 'The last start time for this test has passed.',
 } as const;
-
-/** A question's own time limit under the test's question time mode (Q-11), or none. */
-const timeLimitOf = (settings: Settings, q: { timeLimitSec?: number }) =>
-  settings.questionTimeMode === 'same'
-    ? settings.questionTimeLimitSec
-    : settings.questionTimeMode === 'each'
-      ? q.timeLimitSec
-      : undefined;
 
 const finishedError = () =>
   new AppError(409, 'ATTEMPT_FINISHED', 'This attempt is finished and takes no more answers.');
@@ -70,7 +63,7 @@ export function attemptService(deps: AttemptDeps) {
       const q = set.byId.get(id);
       if (!q) return [];
       const options = new Map(q.options.map((o) => [o.id, o]));
-      const timeLimitSec = timeLimitOf(settings, q);
+      const timeLimitSec = questionTimeLimit(settings, q);
       return [
         {
           id,
@@ -247,7 +240,7 @@ export function attemptService(deps: AttemptDeps) {
       const now = clock.now();
       const verdicts = await Promise.all(
         batch.answers.map(async (a) => {
-          const timeLimitSec = timeLimitOf(settings, set.byId.get(a.questionId) ?? {});
+          const timeLimitSec = questionTimeLimit(settings, set.byId.get(a.questionId) ?? {});
           const verdict = await data.attempts.saveAnswer(orgId, attempt.id, a, now, (storedSeq, stored) =>
             answerVerdict({
               seq: a.seq,
