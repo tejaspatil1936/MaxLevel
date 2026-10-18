@@ -86,3 +86,4 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Used and expired phone pairing tokens are never deleted; add a Firestore TTL policy on `pairingTokens` (spec 10.1 has no such collection yet).
 - Reloading the phone page needs a new code (the link is single use and the device sign-in is in memory); it could keep the sign-in for the tab.
 - Laptop presence `lastSeen` changes only on connect, fullscreen and visibility changes; the live view (phase 6) may want a periodic heartbeat.
+- (Phase 3) TASK_QUEUE has only the local adapter; production needs the Cloud Tasks adapter (OIDC to the worker) before launch. The in-process dispatcher no longer starts in production.
