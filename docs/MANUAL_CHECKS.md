@@ -51,3 +51,4 @@ run by a person.
 | All three roles sign in on staging | Staging project and Vercel preview (OWNER_SETUP 0.1, 0.8, 0.10) | AUTH-01, CI-01 | Owner runs after setup |
 | Real 30-page PDF import | Provider key and a real PDF (OWNER_SETUP 6.1, 6.2) | IMP-03 | Owner runs in staging |
 | Pilot exam with one college | Production (OWNER_SETUP 8.2) | phase 8 | Owner |
+| A real tab switch or window minimize during an attempt records a strike | A desktop browser on a laptop (Playwright keeps every tab visible; acceptance tests send blur and visibilitychange instead) | PR-05 | Owner runs once per release in staging |
