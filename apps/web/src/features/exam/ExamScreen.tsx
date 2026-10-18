@@ -80,6 +80,11 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
     setDrawerOpen(false);
     toggleRef.current?.focus();
   }, []);
+  // Focus leaving the drawer closes it without pulling focus back, so the drawer never covers the focused control
+  // (A11Y-15, WCAG 2.4.11). The toggle closes it by itself.
+  const leaveDrawer = useCallback((to: Element | null) => {
+    if (to !== toggleRef.current) setDrawerOpen(false);
+  }, []);
   const goTo = useCallback(
     (index: number) => {
       dispatch({ type: 'goTo', index });
@@ -186,6 +191,7 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
             onGoTo={goTo}
             open={drawerOpen}
             onClose={closeDrawer}
+            onFocusLeave={leaveDrawer}
             currentRef={currentBubble}
           />
         </div>

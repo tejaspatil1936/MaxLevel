@@ -28,7 +28,8 @@ const stateName = (i: number, state: QuestionState) =>
 
 /**
  * The question palette (13.6, A11Y-08, A11Y-15): numbered bubbles grouped by section, with a legend. From 1,280 px it
- * is the right rail; below that it is a drawer that is hidden until `open`.
+ * is the right rail; below that it is a drawer that is hidden until `open`. Focus leaving the open drawer calls
+ * `onFocusLeave` with where it went, so the screen can close it before it covers the focused control (WCAG 2.4.11).
  */
 export function QuestionPalette({
   groups,
@@ -37,6 +38,7 @@ export function QuestionPalette({
   onGoTo,
   open,
   onClose,
+  onFocusLeave,
   currentRef,
 }: {
   groups: readonly PaletteGroup[];
@@ -45,6 +47,7 @@ export function QuestionPalette({
   onGoTo: (index: number) => void;
   open: boolean;
   onClose: () => void;
+  onFocusLeave?: (to: Element | null) => void;
   currentRef?: Ref<HTMLButtonElement>;
 }) {
   const id = useId();
@@ -56,6 +59,12 @@ export function QuestionPalette({
         'max-xl:fixed max-xl:inset-y-0 max-xl:right-0 max-xl:z-30 max-xl:w-72 max-xl:overflow-y-auto max-xl:rounded-none max-xl:border-y-0 max-xl:border-r-0 max-xl:shadow-overlay',
         open ? 'flex' : 'hidden',
       )}
+      onBlur={(e) => {
+        const to = e.relatedTarget instanceof Element ? e.relatedTarget : null;
+        // Focus moving inside the drawer, or the whole window losing focus, keeps it open.
+        if (!open || (to && e.currentTarget.contains(to)) || (!to && !document.hasFocus())) return;
+        onFocusLeave?.(to);
+      }}
     >
       <div className="flex items-center justify-between gap-2 xl:hidden">
         <p className="font-bold">{t('exam.palette')}</p>
