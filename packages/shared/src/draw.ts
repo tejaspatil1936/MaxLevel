@@ -130,3 +130,42 @@ export function drawQuestions(
     return { sectionId: pool.sectionId, questionIds: picked.map((q) => q.id) };
   });
 }
+
+/** What testDrawPools reads from a test: its sections (in order) and its whole-test draw count. */
+export interface PoolConfig {
+  sections: ReadonlyArray<{
+    id: string;
+    drawCount?: number;
+    difficultyMix?: { easy: number; medium: number; hard: number };
+  }>;
+  drawCount?: number;
+}
+
+/**
+ * A test's pools (Q-03, Q-04): without sections, one whole-test pool of every approved question with the test's draw
+ * count; with sections, one pool per section of its approved questions, in section order, then a pool of approved
+ * questions in no section (only when there are some), drawn in full because the whole-test draw applies only to a
+ * test without sections.
+ */
+export function testDrawPools(
+  test: PoolConfig,
+  questions: ReadonlyArray<{ id: string; status: string; sectionId?: string | null; difficulty?: Difficulty }>,
+): DrawPool[] {
+  const approved = questions
+    .filter((q) => q.status === 'approved')
+    .map((q) => ({ id: q.id, sectionId: q.sectionId ?? null, ...(q.difficulty ? { difficulty: q.difficulty } : {}) }));
+  const strip = (qs: typeof approved) => qs.map(({ sectionId: _s, ...q }) => q);
+  if (test.sections.length === 0) {
+    const drawCount = test.drawCount !== undefined ? { drawCount: test.drawCount } : {};
+    return [{ sectionId: null, questions: strip(approved), ...drawCount }];
+  }
+  const ids = new Set(test.sections.map((s) => s.id));
+  const pools: DrawPool[] = test.sections.map((s) => ({
+    sectionId: s.id,
+    questions: strip(approved.filter((q) => q.sectionId === s.id)),
+    ...(s.drawCount !== undefined ? { drawCount: s.drawCount } : {}),
+    ...(s.difficultyMix ? { difficultyMix: s.difficultyMix } : {}),
+  }));
+  const loose = approved.filter((q) => q.sectionId === null || !ids.has(q.sectionId));
+  return loose.length ? [...pools, { sectionId: null, questions: strip(loose) }] : pools;
+}

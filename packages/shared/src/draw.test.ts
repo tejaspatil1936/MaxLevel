@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { drawProblems, drawQuestions, drawSize, seededShuffle, type Difficulty, type DrawPool } from './draw';
+import {
+  drawProblems,
+  drawQuestions,
+  drawSize,
+  seededShuffle,
+  testDrawPools,
+  type Difficulty,
+  type DrawPool,
+} from './draw';
 
 const hundred = Array.from({ length: 100 }, (_, i) => ({ id: `q${i + 1}` }));
 const ids = (pool: DrawPool) => new Set(pool.questions.map((q) => q.id));
@@ -109,5 +117,77 @@ describe('drawProblems', () => {
         drawCount: 5,
       }),
     ).toEqual([]);
+  });
+});
+
+describe('testDrawPools', () => {
+  const q = (id: string, sectionId: string | null, difficulty?: Difficulty, status = 'approved') => ({
+    id,
+    sectionId,
+    status,
+    ...(difficulty ? { difficulty } : {}),
+  });
+  const questions = [
+    q('a', 's1', 'easy'),
+    q('b', 's1', 'hard'),
+    q('c', 's2'),
+    q('d', 's1', 'easy', 'draft'),
+    q('e', null, 'medium'),
+    q('f', 'gone'),
+  ];
+
+  it('Q-04 US-AD-07 without sections the whole-test pool holds every approved question and the test draw count', () => {
+    expect(testDrawPools({ sections: [], drawCount: 3 }, questions)).toEqual([
+      {
+        sectionId: null,
+        questions: [
+          { id: 'a', difficulty: 'easy' },
+          { id: 'b', difficulty: 'hard' },
+          { id: 'c' },
+          { id: 'e', difficulty: 'medium' },
+          { id: 'f' },
+        ],
+        drawCount: 3,
+      },
+    ]);
+  });
+
+  it('Q-03 Q-05 with sections each section pools its approved questions with its own draw and mix', () => {
+    const mix = { easy: 1, medium: 0, hard: 1 };
+    const pools = testDrawPools(
+      {
+        sections: [
+          { id: 's2', drawCount: 1 },
+          { id: 's1', difficultyMix: mix },
+        ],
+        drawCount: 9,
+      },
+      questions,
+    );
+    expect(pools).toEqual([
+      { sectionId: 's2', questions: [{ id: 'c' }], drawCount: 1 },
+      {
+        sectionId: 's1',
+        questions: [
+          { id: 'a', difficulty: 'easy' },
+          { id: 'b', difficulty: 'hard' },
+        ],
+        difficultyMix: mix,
+      },
+      { sectionId: null, questions: [{ id: 'e', difficulty: 'medium' }, { id: 'f' }] },
+    ]);
+    expect(pools.flatMap(drawProblems)).toEqual([]);
+  });
+
+  it('US-AD-07 a section draw above its approved questions is a problem; no loose pool when every question has a section', () => {
+    const pools = testDrawPools({ sections: [{ id: 's1', drawCount: 3 }] }, [
+      q('a', 's1'),
+      q('b', 's1'),
+      q('d', 's1', 'easy', 'draft'),
+    ]);
+    expect(pools).toHaveLength(1);
+    expect(pools.flatMap(drawProblems)).toEqual([
+      { code: 'DRAW_TOO_LARGE', sectionId: 's1', drawCount: 3, available: 2 },
+    ]);
   });
 });
