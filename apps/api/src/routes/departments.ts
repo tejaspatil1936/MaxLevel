@@ -57,8 +57,13 @@ export function departmentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         }
         const batch = db.batch();
         data.departments.updateDepartment(orgId, batch, before.id, req.body);
+        const statusChange = req.body.status && req.body.status !== before.status;
         audit(req, batch, {
-          action: 'department.update',
+          action: statusChange
+            ? req.body.status === 'archived'
+              ? 'department.archive'
+              : 'department.restore'
+            : 'department.update',
           target: { type: 'department', id: before.id },
           before,
           after: req.body,

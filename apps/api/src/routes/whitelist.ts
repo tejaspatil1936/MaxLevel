@@ -66,13 +66,16 @@ export function whitelistRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
             { limit: 'max_students', value: report.limit },
           );
         }
+        if (req.body.source === 'single' && report.existing.length) {
+          throw new AppError(409, 'EMAIL_EXISTS', 'This email is already on the whitelist.', { field: 'email' });
+        }
         const now = clock.now();
-        // Each entry is two writes (entry and email index); batches stay under Firestore's 500-write limit.
-        // The audit entry rides in the last batch, so the log never claims an import that did not finish.
-        for (let i = 0; i < accepted.length || i === 0; i += 200) {
-          const chunk = accepted.slice(i, i + 200);
+        const single = req.body.source === 'single' && accepted.length === 1;
+        // Each entry is two writes (entry and email index); batches stay under Firestore's 500-write limit. The audit
+        // entry rides in the last batch, so the log never claims an import that did not finish.
+        for (let i = 0; i === 0 || i < accepted.length; i += 200) {
           const batch = db.batch();
-          for (const r of chunk) {
+          for (const r of accepted.slice(i, i + 200)) {
             data.whitelist.putWhitelistEntry(orgId, batch, {
               email: r.email,
               prn: r.prn ?? null,
@@ -85,9 +88,11 @@ export function whitelistRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           }
           if (i + 200 >= accepted.length) {
             audit(req, batch, {
-              action: 'whitelist.import',
-              target: { type: 'whitelist', id: orgId },
-              after: { added: accepted.length, source: req.body.source, skipped: report.total - accepted.length },
+              action: single ? 'whitelist.add' : 'whitelist.import',
+              target: { type: 'whitelist', id: single ? accepted[0]!.email : 'bulk' },
+              after: single
+                ? accepted[0]
+                : { added: accepted.length, source: req.body.source, skipped: report.total - accepted.length },
             });
           }
           await batch.commit();
@@ -102,44 +107,52 @@ export function whitelistRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       { config: admin, schema: { body: whitelistBulkSchema, response: { 200: bulkResultSchema } } },
       async (req) => {
         const orgId = req.orgId!;
+        const { action } = req.body;
         const emails = [...new Set(req.body.emails.map(normalizeEmail))];
         const entries = await data.whitelist.getWhitelistEntries(orgId, emails);
+        // Every email must be on this org's list, or nothing changes (another org's entries are 404, ORG-05).
+        if (emails.some((e) => !entries.has(e)))
+          throw new AppError(404, 'NOT_FOUND', 'Some of these emails are not on the whitelist.');
         const now = clock.now();
         const revoke: string[] = [];
-        const batch = db.batch();
         let updated = 0;
-        for (const email of emails) {
-          const e = entries.get(email);
-          if (!e) continue;
-          const student = e.studentId ? await data.students.getStudent(orgId, e.studentId) : null;
-          if (req.body.action === 'enable') {
-            if (e.status !== 'disabled') continue;
-            const back = student?.consentAt || student?.uid ? 'registered' : 'invited';
-            data.whitelist.updateWhitelistEntry(orgId, batch, email, { status: back });
-            if (student) data.students.updateStudent(orgId, batch, student.id, { status: back, updatedAt: now });
-          } else {
-            if (req.body.action === 'disable' && e.status === 'disabled') continue;
-            if (req.body.action === 'remove')
-              data.whitelist.removeWhitelistEntry(
-                orgId,
-                batch,
-                email,
-                !!(await data.admins.findActiveAdminByEmail(orgId, email)),
-              );
-            else data.whitelist.updateWhitelistEntry(orgId, batch, email, { status: 'disabled' });
-            if (student) {
-              data.students.updateStudent(orgId, batch, student.id, { status: 'disabled', updatedAt: now });
-              if (student.uid) revoke.push(student.uid);
+        // Up to three writes per email: 150 emails per batch stays under Firestore's 500-write limit.
+        for (let i = 0; i < emails.length; i += 150) {
+          const batch = db.batch();
+          for (const email of emails.slice(i, i + 150)) {
+            const e = entries.get(email)!;
+            const student = e.studentId ? await data.students.getStudent(orgId, e.studentId) : null;
+            if (action === 'enable') {
+              if (e.status !== 'disabled') continue;
+              const back = student?.consentAt && student.name ? 'registered' : 'invited';
+              data.whitelist.updateWhitelistEntry(orgId, batch, email, { status: back });
+              if (student) data.students.updateStudent(orgId, batch, student.id, { status: back, updatedAt: now });
+            } else {
+              if (action === 'disable' && e.status === 'disabled') continue;
+              if (action === 'remove')
+                data.whitelist.removeWhitelistEntry(
+                  orgId,
+                  batch,
+                  email,
+                  !!(await data.admins.findActiveAdminByEmail(orgId, email)),
+                );
+              else data.whitelist.updateWhitelistEntry(orgId, batch, email, { status: 'disabled' });
+              if (student) {
+                data.students.updateStudent(orgId, batch, student.id, { status: 'disabled', updatedAt: now });
+                if (student.uid) revoke.push(student.uid);
+              }
             }
+            updated++;
           }
-          updated++;
+          if (i + 150 >= emails.length) {
+            audit(req, batch, {
+              action: `whitelist.${action}`,
+              target: { type: 'whitelist', id: emails.length === 1 ? emails[0]! : 'bulk' },
+              after: { emails, updated },
+            });
+          }
+          await batch.commit();
         }
-        audit(req, batch, {
-          action: `whitelist.${req.body.action}`,
-          target: { type: 'whitelist', id: orgId },
-          after: { emails, updated },
-        });
-        await batch.commit();
         await Promise.all(revoke.map((uid) => ctx.firebase.auth.revokeRefreshTokens(uid)));
         status.invalidate();
         return { updated, skipped: emails.length - updated };
