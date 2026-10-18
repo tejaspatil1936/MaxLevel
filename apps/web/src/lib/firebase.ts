@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, inMemoryPersistence, initializeAuth, type Auth } from 'firebase/auth';
-import { connectDatabaseEmulator, getDatabase, type Database } from 'firebase/database';
+import { connectDatabaseEmulator, getDatabase, onValue, ref, type Database } from 'firebase/database';
 import { config } from './config';
 
 let auth: Auth | null = null;
@@ -20,13 +20,30 @@ function withAuthEmulator(a: Auth): Auth {
   return a;
 }
 
+/**
+ * The SDK marks WebSocket as failed in localStorage whenever a connection attempt fails (for example while offline),
+ * and then reconnects by long-polling first. Clearing the mark makes the next attempt use WebSocket again (REL-05);
+ * long-polling stays the fallback, allowed by the CSP.
+ */
+function preferWebSockets(): void {
+  try {
+    localStorage.removeItem('firebase:previous_websocket_failure');
+  } catch {
+    // Storage blocked: the SDK keeps its in-memory choice.
+  }
+}
+
 /** Realtime Database for an app; on the emulator when NEXT_PUBLIC_DATABASE_EMULATOR_HOST is set at build time. */
 function databaseOf(of: FirebaseApp): Database {
+  preferWebSockets();
   const db = getDatabase(of);
   if (process.env.NEXT_PUBLIC_DATABASE_EMULATOR_HOST) {
     const [host, port] = process.env.NEXT_PUBLIC_DATABASE_EMULATOR_HOST.split(':');
     connectDatabaseEmulator(db, host!, Number(port));
   }
+  onValue(ref(db, '.info/connected'), (snap) => {
+    if (snap.val() !== true) preferWebSockets();
+  });
   return db;
 }
 
