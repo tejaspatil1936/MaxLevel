@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Database } from 'firebase-admin/database';
 import { initFirebase } from './firebase';
 import { testApp } from './test-support/app';
-import { attemptClient, NOW, studentOf } from './test-support/attempts';
+import { attemptClient, errorCode, NOW, studentOf } from './test-support/attempts';
 import { clearEmulators } from './test-support/emulators';
 import { SEED, seedBase } from './test-support/seed';
 import { asClaims } from './test-support/tokens';
@@ -107,5 +107,35 @@ describe('a Realtime Database outage never holds up an attempt', () => {
       down.app.inject({ method: 'POST', url: `/v1/tests/${t.testId}/pairing-token`, headers: s1, payload: {} }),
     );
     expect(res.statusCode, res.body).toBe(200);
+  });
+});
+
+describe('proctoring event details are bounded', () => {
+  it('PR-08 PR-11 API-06 POST /v1/attempts/{id}/events refuses oversized details with 400 VALIDATION and stores nothing', async () => {
+    const t = await api.examTest({ overrides: { maxStrikes: 5 } });
+    const s1 = await studentOf(auth, 4);
+    const start = await api.start(t.testId, s1);
+    expect(start.status, start.raw).toBe(201);
+    const id = start.body.attempt.id;
+    const post = (details: object) =>
+      ctx.app.inject({
+        method: 'POST',
+        url: `/v1/attempts/${id}/events`,
+        headers: s1,
+        payload: { type: 'context_menu', clientTs: NOW, details },
+      });
+
+    for (const details of [
+      { blob: 'x'.repeat(900_000) },
+      Object.fromEntries(Array.from({ length: 21 }, (_, i) => [`k${i}`, i])),
+      { nested: { deep: true } },
+    ]) {
+      const res = await post(details);
+      expect(res.statusCode, res.body.slice(0, 300)).toBe(400);
+      expect(errorCode({ raw: res.body })).toBe('VALIDATION');
+    }
+    const events = await db.collection(`organizations/${SEED.orgA}/attempts/${id}/events`).get();
+    expect(events.size, 'nothing stored').toBe(0);
+    expect((await post({ x: 1, source: 'menu' })).statusCode).toBe(200);
   });
 });
