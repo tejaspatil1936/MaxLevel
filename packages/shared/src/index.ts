@@ -12,6 +12,7 @@ export * from './eligibility';
 export * from './draw';
 export * from './exam';
 export * from './marks';
+export * from './approval';
 export * from './day-labels';
 export * from './settings';
 export * from './series';

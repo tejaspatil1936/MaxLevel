@@ -1,3 +1,5 @@
+import { drawSize, type DrawPool } from './draw';
+
 // Marks (spec 6.5, Q-07, Q-08). negativeMarks is the positive number taken off for a wrong answer (1 for −1).
 
 export interface MarkLevel {
@@ -35,4 +37,32 @@ export function presetFor(marks: number, negativeMarks: number): MarkingPreset {
     if (p.marks === marks && p.negativeMarks === negativeMarks) return id;
   }
   return 'custom';
+}
+
+/** What totalMarks reads from a pool's questions and sections: an ID and the marks set at that level. */
+type Marked = { id: string } & MarkLevel;
+
+/**
+ * The marks every student can score (Q-14): per pool, the drawn count times the pool's marks (question, then section,
+ * then test marks). A pool drawn in full adds up its questions' marks. A pool that draws fewer than it holds while its
+ * questions carry different marks would give students different totals: it is listed in `uneven` and adds nothing.
+ */
+export function totalMarks(
+  pools: ReadonlyArray<DrawPool>,
+  questions: ReadonlyArray<Marked>,
+  sections: ReadonlyArray<Marked>,
+  test: { marks: number; negativeMarks: number },
+): { total: number; uneven: Array<string | null> } {
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  const uneven: Array<string | null> = [];
+  let total = 0;
+  for (const pool of pools) {
+    const section = sections.find((s) => s.id === pool.sectionId);
+    const marks = pool.questions.map((q) => resolveMarks(byId.get(q.id) ?? {}, section, test).marks);
+    const drawn = Math.min(drawSize(pool), marks.length);
+    if (drawn === marks.length) total += marks.reduce((a, b) => a + b, 0);
+    else if (marks.every((m) => m === marks[0])) total += drawn * (marks[0] ?? 0);
+    else uneven.push(pool.sectionId);
+  }
+  return { total, uneven };
 }
