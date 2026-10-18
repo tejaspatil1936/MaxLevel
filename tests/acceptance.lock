@@ -18,6 +18,16 @@
       "tests/acceptance/phase-1/F-1.11.spec.ts": "6293908fb36ac10bc7139f779dcaf871620ea0fb16ebb41e5d93f7a916b34b54",
       "tests/acceptance/phase-1/F-1.12.spec.ts": "bde3abc5afa5c4d0eaebae340bac7d38588ef74b74adbe977157684a68817356",
       "tests/acceptance/phase-1/F-1.13.spec.ts": "3321ef156b24fb0f5c0277852d1a64ed6ecbe3b74ee5658507e2bcdc696e41e6"
+    },
+    "2": {
+      "tests/acceptance/phase-2/F-2.02.spec.ts": "a37445389e96ac8b68e62893c6db61e82c399076eb4a84aad61772ba81a6a184",
+      "tests/acceptance/phase-2/F-2.03.spec.ts": "ede3260806d3d401297a9d3183154052d8be3e52859f307ed333f8f1f693f3d0",
+      "tests/acceptance/phase-2/F-2.04.spec.ts": "9bfa4514d0ec27822f37a556fbfa9d8a0c3f7b5d84a10ae1360f8f813aa3e9d1",
+      "tests/acceptance/phase-2/F-2.05.spec.ts": "8696921d798667130030df2428d78e07f515fb3651e8cff027a6bf243efffa16",
+      "tests/acceptance/phase-2/F-2.06.spec.ts": "8e540b570d9eccf018d7ced0308dec541a59b20cecd576172f0efaafebff84b8",
+      "tests/acceptance/phase-2/F-2.07.spec.ts": "ba4bfee9a937c69de730735387a0ae26bd75b5645cf7feec5ccfcb714a57ac4f",
+      "tests/acceptance/phase-2/F-2.08.spec.ts": "91d94f6d78f3c50937802d11d09386b907fc6d19875fb67b0c2097d54a3bfc68",
+      "tests/acceptance/phase-2/F-2.09.spec.ts": "c6dcc712bad8465dd04f473ea617e62015076a0258a19eda98cb75ab522e7f75"
     }
   }
 }
