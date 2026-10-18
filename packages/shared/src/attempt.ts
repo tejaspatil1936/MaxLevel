@@ -177,6 +177,7 @@ export const attemptEventResultSchema = z.object({
   counted: z.boolean(),
   status: attemptStatusSchema,
 });
+export type AttemptEventResult = z.infer<typeof attemptEventResultSchema>;
 
 /** POST /v1/attempts/{id}/submit: `time_up` when the client submits because time ran out (EX-16). */
 export const attemptSubmitSchema = z.object({ reason: z.literal('time_up').optional() }).strict();
@@ -195,3 +196,4 @@ export const attemptEventSchema = z.object({
 });
 export type AttemptEvent = z.infer<typeof attemptEventSchema>;
 export const attemptEventListSchema = z.object({ items: z.array(attemptEventSchema) });
+export type AttemptEventList = z.infer<typeof attemptEventListSchema>;
