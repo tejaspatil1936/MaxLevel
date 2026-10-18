@@ -3,7 +3,14 @@ import { chromium, type Browser, type Page } from '@playwright/test';
 import { WEB_URL } from '../../env';
 import { BASIC_QUESTIONS, optionName } from '../fixtures/authoring';
 import { ALLOWED_HOSTS, cameraTracks, expectNoMediaSent, installCameraSpy, recordTraffic } from '../fixtures/devices';
-import { FIX_LINES, listEvents, startAttempt, storedAttempt, STRIKE_REASONS } from '../fixtures/exam';
+import {
+  expectAttemptSoon,
+  FIX_LINES,
+  listEvents,
+  startAttempt,
+  storedAttempt,
+  STRIKE_REASONS,
+} from '../fixtures/exam';
 import { EXAM_HEADING, openExam } from '../fixtures/exam-session';
 import { accounts, ORG_A } from '../fixtures/seed';
 import { expect, test } from '../fixtures/test';
@@ -99,6 +106,8 @@ test.describe('F-3.12 laptop camera @exam', () => {
     await exam.choose(optionName(BASIC_QUESTIONS[0]!, 0));
     await exam.expectSaved();
     await expect(exam.warnings).toHaveCount(0);
+    // The warning shows before the API answers, so wait for the stored strike before counting.
+    await expectAttemptSoon(emulators, ORG_A.id, attemptId, (a) => a.strikesCount === 1, 'one no-face strike stored');
     const admin = await apiAs(accounts.adminA);
     expect((await listEvents(admin, attemptId)).filter((e) => e.type === 'no_face')).toHaveLength(1);
     expect((await storedAttempt(emulators, ORG_A.id, attemptId)).strikesCount).toBe(1);

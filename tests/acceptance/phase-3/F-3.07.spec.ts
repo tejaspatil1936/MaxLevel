@@ -9,7 +9,7 @@ import {
   startAttempt,
   storedAnswers,
   storedAttempt,
-  storedEvents,
+  expectEventsSoon,
 } from '../fixtures/exam';
 import { openExam } from '../fixtures/exam-session';
 import { apiRequest, holdApiRequests } from '../fixtures/network';
@@ -218,8 +218,13 @@ test.describe('F-3.07 answer sync API', () => {
     const stored = await storedAnswers(emulators, ORG_A.id, attempt.id);
     expect(stored[questions[0]!.id]).toMatchObject({ optionId: 'a', lateSync: true });
     expect(stored[questions[1]!.id], 'the late-stamped answer is not stored').toBeUndefined();
-    const events = await storedEvents(emulators, ORG_A.id, attempt.id);
-    expect(events.map((e) => e.data.type)).toContain('late_sync');
+    await expectEventsSoon(
+      emulators,
+      ORG_A.id,
+      attempt.id,
+      (events) => events.some((e) => e.data.type === 'late_sync'),
+      'a late_sync event stored',
+    );
 
     // Rate limits are per user: a burst of answer saves and of event reports from one student.
     const busy = await apiAs(studentOfA(3));
