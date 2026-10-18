@@ -20,8 +20,13 @@ export function setWorkspaceOrg(orgId: string | null): void {
 }
 
 let clockOffsetMs = 0;
+let measured = false;
 /** Server time minus device time, measured from X-Server-Time (API-03, EX-06). */
 export const serverClockOffset = () => clockOffsetMs;
+/** An offset kept from an earlier visit, for an exam opened while the API can't be reached; a measurement wins. */
+export function restoreClockOffset(ms: number): void {
+  if (!measured) clockOffsetMs = ms;
+}
 
 export interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -44,8 +49,11 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   });
   const serverTime = Number(res.headers.get('x-server-time'));
-  // eslint-disable-next-line no-restricted-properties
-  if (serverTime) clockOffsetMs = serverTime - (sentAt + Date.now()) / 2;
+  if (serverTime) {
+    // eslint-disable-next-line no-restricted-properties
+    clockOffsetMs = serverTime - (sentAt + Date.now()) / 2;
+    measured = true;
+  }
   const json = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     const e = json?.error;

@@ -25,6 +25,8 @@ export interface ExamScreenProps {
   title: string;
   /** The mode's controls in the top bar: the preview's note, Show answers and Exit, or an attempt's timer and Submit. */
   bar: ReactNode;
+  /** A message above the answer sheet, for example answers the server refused. */
+  notice?: ReactNode;
   state: ExamState;
   dispatch: Dispatch<ExamAction>;
   /** Preview only: show the correct option and the explanation (Q-13). */
@@ -61,7 +63,16 @@ const dialogOpen = () => !!document.querySelector('[role="dialog"], [role="alert
  * below 1,280 px, A11Y-15) and the navigation along the bottom, with the EX-09 keys. The same screen serves the admin
  * preview and the student's attempt.
  */
-export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = false, onTimeKey }: ExamScreenProps) {
+export function ExamScreen({
+  exam,
+  title,
+  bar,
+  notice,
+  state,
+  dispatch,
+  showAnswers = false,
+  onTimeKey,
+}: ExamScreenProps) {
   const groups = useMemo(() => paletteGroups(exam), [exam]);
   const total = exam.questions.length;
   const question = exam.questions[state.index]!;
@@ -149,6 +160,7 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
                 {t('exam.palette')}
               </Button>
             </div>
+            {notice}
             <article className="flex rounded-sheet border border-dropout bg-surface">
               <TimingTrack count={total} current={state.index} stateOf={stateOf} onGoTo={goTo} />
               <div className="flex min-w-0 flex-1 flex-col gap-4 p-6">
