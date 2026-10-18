@@ -1,6 +1,7 @@
 'use client';
 
 import type { BootstrapResponse, MeResponse } from '@mitaoe/shared';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -10,13 +11,13 @@ import {
   type User,
 } from 'firebase/auth';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { api, ApiError, setWorkspaceOrg } from './api';
 import { installE2eHelpers } from './e2e';
 import { firebaseAuth } from './firebase';
 
 export type Session =
   | { status: 'loading' }
+  | { status: 'signingIn' }
   | { status: 'signedOut' }
   | { status: 'notOnList'; code: string }
   | { status: 'chooseOrg'; orgs: Array<{ orgId: string; name: string }> }
@@ -28,7 +29,8 @@ interface SessionApi {
   signInWithGoogle: () => Promise<void>;
   chooseOrg: (orgId: string) => Promise<void>;
   signOut: () => Promise<void>;
-  refresh: () => Promise<void>;
+  /** Tries again after a failure (for example the API was unreachable). */
+  retry: () => Promise<void>;
 }
 
 const Ctx = createContext<SessionApi | null>(null);
@@ -39,41 +41,49 @@ const Ctx = createContext<SessionApi | null>(null);
  */
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>({ status: 'loading' });
-  const forceBootstrap = useRef(false);
   const queryClient = useQueryClient();
+  // The latest resolution wins; an older one that finishes late does not overwrite it.
+  const generation = useRef(0);
 
-  const resolve = useCallback(async (user: User, chosenOrgId?: string) => {
+  const resolve = useCallback(async (user: User, opts: { bootstrap?: boolean; orgId?: string } = {}) => {
+    const mine = ++generation.current;
+    const set = (s: Session) => {
+      if (mine === generation.current) setSession(s);
+    };
     try {
       const claims = (await user.getIdTokenResult()).claims;
-      if (!claims.role || forceBootstrap.current || chosenOrgId) {
-        forceBootstrap.current = false;
+      if (!claims.role || opts.bootstrap || opts.orgId) {
         const res = await api<BootstrapResponse>('/v1/session/bootstrap', {
           method: 'POST',
-          body: chosenOrgId ? { orgId: chosenOrgId } : {},
+          body: opts.orgId ? { orgId: opts.orgId } : {},
         });
-        if (res.status === 'choose_org') return setSession({ status: 'chooseOrg', orgs: res.orgs });
         await user.getIdToken(true);
+        if (res.status === 'choose_org') return set({ status: 'chooseOrg', orgs: res.orgs });
       }
-      setSession({ status: 'ready', me: await api<MeResponse>('/v1/me') });
+      set({ status: 'ready', me: await api<MeResponse>('/v1/me') });
     } catch (e) {
-      if (
-        e instanceof ApiError &&
-        (e.code === 'NOT_ON_LIST' || e.code === 'ORG_SUSPENDED' || e.code === 'ACCOUNT_DISABLED')
-      ) {
-        setSession({ status: 'notOnList', code: e.code });
-      } else {
-        setSession({ status: 'failed' });
-      }
+      const listed = e instanceof ApiError && ['NOT_ON_LIST', 'ORG_SUSPENDED', 'ACCOUNT_DISABLED'].includes(e.code);
+      set(listed ? { status: 'notOnList', code: (e as ApiError).code } : { status: 'failed' });
     }
   }, []);
 
-  useEffect(() => installE2eHelpers(() => (forceBootstrap.current = true)), []);
+  // A fresh sign-in always bootstraps, even when Firebase reports the same user as before (no auth state change).
+  const afterSignIn = useCallback((user: User) => resolve(user, { bootstrap: true }), [resolve]);
+
+  useEffect(
+    () => installE2eHelpers({ before: () => setSession({ status: 'signingIn' }), after: afterSignIn }),
+    [afterSignIn],
+  );
 
   useEffect(
     () =>
       onAuthStateChanged(firebaseAuth(), (user) => {
-        if (!user) setSession({ status: 'signedOut' });
-        else void resolve(user);
+        if (!user) {
+          generation.current++;
+          setSession({ status: 'signedOut' });
+        } else if (generation.current === 0) {
+          void resolve(user); // page load with a remembered session
+        }
       }),
     [resolve],
   );
@@ -82,20 +92,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       async signInWithGoogle() {
-        forceBootstrap.current = true;
+        setSession({ status: 'signingIn' });
         const provider = new GoogleAuthProvider();
         try {
-          await signInWithPopup(firebaseAuth(), provider);
+          const cred = await signInWithPopup(firebaseAuth(), provider);
+          await afterSignIn(cred.user);
         } catch (e) {
+          const code = (e as { code?: string }).code;
           // Popups blocked: fall back to a full-page redirect (AUTH-01).
-          if ((e as { code?: string }).code === 'auth/popup-blocked')
-            await signInWithRedirect(firebaseAuth(), provider);
-          else if ((e as { code?: string }).code !== 'auth/popup-closed-by-user') setSession({ status: 'failed' });
+          if (code === 'auth/popup-blocked') await signInWithRedirect(firebaseAuth(), provider);
+          else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request')
+            setSession({ status: 'signedOut' });
+          else setSession({ status: 'failed' });
         }
       },
       async chooseOrg(orgId) {
         const user = firebaseAuth().currentUser;
-        if (user) await resolve(user, orgId);
+        if (!user) return;
+        setSession({ status: 'signingIn' });
+        await resolve(user, { orgId });
       },
       async signOut() {
         // Nothing cached for this account may reach the next one on the same browser.
@@ -103,12 +118,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         queryClient.clear();
         await fbSignOut(firebaseAuth());
       },
-      async refresh() {
+      async retry() {
         const user = firebaseAuth().currentUser;
-        if (user) await resolve(user);
+        if (!user) return setSession({ status: 'signedOut' });
+        setSession({ status: 'loading' });
+        await resolve(user, { bootstrap: true });
       },
     }),
-    [session, resolve, queryClient],
+    [session, resolve, afterSignIn, queryClient],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

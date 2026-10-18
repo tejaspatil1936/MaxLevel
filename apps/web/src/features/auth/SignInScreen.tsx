@@ -15,6 +15,7 @@ export function SignInScreen() {
     if (session.status === 'ready') router.replace(homeFor(session.me.role));
   }, [session, router]);
 
+  const busy = session.status === 'loading' || session.status === 'signingIn';
   const message =
     session.status === 'notOnList'
       ? t(session.code === 'NOT_ON_LIST' ? 'signIn.notOnList' : 'signIn.unavailable')
@@ -53,9 +54,17 @@ export function SignInScreen() {
         </section>
       ) : (
         <div className="mt-8">
-          <Button size="lg" onClick={() => void signInWithGoogle()} disabled={session.status === 'loading'}>
+          <Button
+            size="lg"
+            onClick={() => void signInWithGoogle()}
+            disabled={busy}
+            aria-describedby={busy ? 'sign-in-progress' : undefined}
+          >
             {t('signIn.google')}
           </Button>
+          <p id="sign-in-progress" role="status" className="mt-3 min-h-6 text-graphite">
+            {session.status === 'signingIn' ? t('signIn.signingIn') : null}
+          </p>
         </div>
       )}
       <div className="mt-6 max-w-measure">
