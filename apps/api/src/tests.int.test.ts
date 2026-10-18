@@ -141,4 +141,55 @@ describe('test routes', () => {
     ]);
     expect(await audit('test.update')).toEqual([]);
   });
+
+  it('TST-03 US-AD-05 PATCH overrides replaces the map, so a reset key goes back to the series value', async () => {
+    const { app } = await testApp();
+    const id = await add(app, { scheduledDate: '2026-11-02' });
+    await call(app, 'PATCH', `/v1/tests/${id}`, { overrides: { maxStrikes: 2, shuffleQuestions: false } });
+    const reset = await call(app, 'PATCH', `/v1/tests/${id}`, { overrides: { shuffleQuestions: false } });
+    expect(reset.json()).toMatchObject({ overrides: { shuffleQuestions: false }, effective: { maxStrikes: 4 } });
+    expect((await db.doc(`organizations/${orgA}/tests/${id}`).get()).data()?.overrides).toEqual({
+      shuffleQuestions: false,
+    });
+    const entries = await audit('test.settings.update');
+    expect(entries.map((e) => e.after)).toEqual(
+      expect.arrayContaining([{ maxStrikes: 2, shuffleQuestions: false }, { shuffleQuestions: false }]),
+    );
+  });
+
+  it('SER-06 SER-07 the test preview applies the test rules on top of the series rules and never widens them', async () => {
+    const { app } = await testApp();
+    await db.doc(`organizations/${orgA}/series/s1`).update({
+      eligibility: {
+        departmentIds: ['dept-org-a-computer', 'dept-org-a-it'],
+        graduationYears: [],
+        include: [],
+        exclude: [],
+      },
+    });
+    const id = await add(app, { scheduledDate: '2026-11-02' });
+    const preview = async (rules: object) => {
+      const res = await call(app, 'POST', `/v1/tests/${id}/eligibility/preview`, {
+        eligibility: { departmentIds: [], graduationYears: [], include: [], exclude: [], ...rules },
+      });
+      expect(res.statusCode).toBe(200);
+      return res.json() as { count: number; students: Array<{ id: string }> };
+    };
+    expect((await preview({})).count).toBe(10);
+    const narrowed = await preview({
+      departmentIds: ['dept-org-a-it'],
+      exclude: ['stu-org-a-02'],
+      include: ['stu-org-a-03'],
+    });
+    expect(narrowed.students.map((s) => s.id).sort()).toEqual([
+      'stu-org-a-06',
+      'stu-org-a-10',
+      'stu-org-a-14',
+      'stu-org-a-18',
+    ]);
+    const missing = await call(app, 'POST', '/v1/tests/missing/eligibility/preview', {
+      eligibility: { departmentIds: [], graduationYears: [], include: [], exclude: [] },
+    });
+    expect(missing.statusCode).toBe(404);
+  });
 });

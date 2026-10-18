@@ -1,6 +1,8 @@
 import {
   createdIdSchema,
   dayLabels,
+  eligibilityPreviewRequestSchema,
+  eligibilityPreviewResponseSchema,
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
   resolveSettings,
   settingsProblems,
@@ -41,7 +43,7 @@ function refuseDateOutside(series: SeriesRecord, date: string): void {
 
 /** Tests of a series with their day labels and status (TST-01, TST-02, TST-04, TST-07, SER-03). */
 export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
-  const { data, audit, clock } = ctx;
+  const { data, audit, clock, eligibility } = ctx;
   const db = ctx.firebase.db;
   const timezone = async (orgId: string) => (await data.orgs.getOrg(orgId))?.timezone ?? 'Asia/Kolkata';
   const settingsOf = (series: SeriesRecord, test: TestRecord, tz: string) =>
@@ -151,6 +153,27 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           });
         await batch.commit();
         return detail(orgId, before.id);
+      },
+    );
+
+    // SER-06, SER-07: the live count for a test's rules, applied on top of its series' stored rules.
+    app.post(
+      '/v1/tests/:id/eligibility/preview',
+      {
+        config: admin,
+        schema: {
+          params: idParams,
+          body: eligibilityPreviewRequestSchema,
+          response: { 200: eligibilityPreviewResponseSchema },
+        },
+      },
+      async (req) => {
+        const orgId = req.orgId!;
+        const test = await data.tests.getTest(orgId, req.params.id);
+        if (!test) throw notFound('Test');
+        const s = await series(orgId, test.seriesId);
+        const students = await eligibility.matchingStudents(orgId, s.eligibility, req.body.eligibility);
+        return { count: students.length, students };
       },
     );
   };

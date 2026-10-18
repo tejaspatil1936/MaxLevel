@@ -173,6 +173,10 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     foreignParams: { id: 'test-org-b' },
     fresh: async (db, n) => ({ ...(await withTest(db)), body: { title: `Renamed ${n}` } }),
   },
+  'POST /v1/tests/:id/eligibility/preview': {
+    foreignParams: { id: 'test-org-b' },
+    fresh: async (db) => ({ ...(await withTest(db)), body: { eligibility: noRules } }),
+  },
 
   'GET /v1/audit': {},
 };
