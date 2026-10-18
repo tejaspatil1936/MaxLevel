@@ -13,7 +13,7 @@ export function StudentShell({ me, children }: { me: MeResponse; children: React
   return (
     <div className="min-h-screen">
       <header className="border-b border-rule bg-surface">
-        <div className="mx-auto flex min-h-16 max-w-student flex-wrap items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex min-h-16 max-w-student flex-wrap items-center justify-between gap-4 px-4 py-3">
           <p className="font-display text-heading-1 font-bold">{me.org?.name ?? t('app.name')}</p>
           <nav aria-label={t('nav.main')}>
             <Link

@@ -30,7 +30,7 @@ export function AdminShell({ me, orgName, children }: { me: MeResponse; orgName:
         </ul>
       </nav>
       <div className="min-w-0">
-        <header className="flex min-h-16 items-center justify-between gap-4 border-b border-rule bg-surface px-6">
+        <header className="flex min-h-16 flex-wrap items-center justify-between gap-4 border-b border-rule bg-surface px-6 py-3">
           <p className="text-graphite">
             {orgName ? (
               <>
