@@ -21,6 +21,7 @@ import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
 import { createAnswerSync, type AnswerSync, type PendingAnswer, type Rejection, type SyncStatus } from './answer-sync';
 import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
+import { installFocusWrap } from './focus-wrap';
 import { installLockdown } from './lockdown';
 import { examReducer, initialExamState, resumeTimedState, type ExamState } from './exam-state';
 import { ExamScreen } from './ExamScreen';
@@ -278,6 +279,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
     () => installLockdown({ win: window, doc: document, report, fullscreenRequired, devtoolsPolicy }),
     [report, fullscreenRequired, devtoolsPolicy],
   );
+  // Tab past either end wraps round inside the page, so the keyboard never blurs the window (PR-05, A11Y-03).
+  useEffect(() => installFocusWrap(document), []);
   // The laptop camera (PR-01, PR-02): on for the whole exam, faces counted on the device, incidents reported as above.
   const { cameraRequired } = payload.settings;
   const cameraStream = useCameraWatch(cameraRequired, report);
