@@ -42,6 +42,8 @@ export interface ExamScreenProps {
   questionTimer?: ReactNode;
   /** Attempts only (PR-06): question text and options can't be selected, and nothing of the exam prints. */
   lockdown?: boolean;
+  /** Attempts with the laptop camera (PR-03): the self-view, above the answer sheet. */
+  camera?: ReactNode;
 }
 
 const SHORTCUT_KEYS = [
@@ -84,6 +86,7 @@ export function ExamScreen({
   forwardOnly = false,
   questionTimer,
   lockdown = false,
+  camera,
 }: ExamScreenProps) {
   const groups = useMemo(() => paletteGroups(exam), [exam]);
   const total = exam.questions.length;
@@ -169,10 +172,12 @@ export function ExamScreen({
       <main id="main" tabIndex={-1} className="flex flex-1 flex-col">
         <div className="mx-auto flex w-full max-w-admin flex-1 items-start gap-6 px-6 py-6">
           <div className="flex min-w-0 flex-1 flex-col gap-4">
-            <div className="flex justify-end xl:hidden">
+            <div className={cx('flex items-start justify-end gap-4', !camera && 'xl:hidden')}>
+              {camera ? <div className="mr-auto">{camera}</div> : null}
               <Button
                 ref={toggleRef}
                 variant="secondary"
+                className="xl:hidden"
                 aria-expanded={drawerOpen}
                 onClick={() => (drawerOpen ? closeDrawer() : setDrawerOpen(true))}
               >

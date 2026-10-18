@@ -50,6 +50,8 @@ export const exam = {
   'attempt.notSavedOne': "Your answer to question {n} couldn't be saved.",
   'attempt.notSavedMany': "Your answers to questions {list} couldn't be saved.",
   'attempt.strikes': 'Strikes {n} of {max}',
+  'attempt.cameraPreview': 'Camera preview',
+  'attempt.cameraView': 'Your camera',
   'strike.title': 'Strike {n} of {max}',
   'strike.left': '{n} strikes left before the test ends.',
   'strike.leftOne': '1 strike left before the test ends.',
