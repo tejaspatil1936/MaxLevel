@@ -102,3 +102,4 @@ PHASE 3 DONE 13/13 features
 ## Phase 4
 
 PHASE 4 START 6903f950a6771bd580414b3936e31b97a3fcd385
+Tests: 27 phase 4 acceptance tests by test-author for F-4.02 to F-4.06 (F-4.01 is unit-only), reviewed twice (3 blocking race fixes, then pass), locked.
