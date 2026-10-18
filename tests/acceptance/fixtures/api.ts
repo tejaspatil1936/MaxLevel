@@ -40,12 +40,14 @@ export class ApiClient {
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     path: string,
     data?: unknown,
+    headers: Record<string, string> = {},
   ): Promise<ApiResponse<T>> {
     const res = await this.request.fetch(`${API_URL}${path}`, {
       method,
       headers: {
         authorization: `Bearer ${this.idToken}`,
         ...(this.orgId ? { 'x-org-id': this.orgId } : {}),
+        ...headers,
       },
       ...(data === undefined ? {} : { data }),
     });
@@ -62,11 +64,11 @@ export class ApiClient {
   get<T = Record<string, unknown>>(path: string) {
     return this.call<T>('GET', path);
   }
-  post<T = Record<string, unknown>>(path: string, data: unknown = {}) {
-    return this.call<T>('POST', path, data);
+  post<T = Record<string, unknown>>(path: string, data: unknown = {}, headers?: Record<string, string>) {
+    return this.call<T>('POST', path, data, headers);
   }
-  put<T = Record<string, unknown>>(path: string, data: unknown) {
-    return this.call<T>('PUT', path, data);
+  put<T = Record<string, unknown>>(path: string, data: unknown, headers?: Record<string, string>) {
+    return this.call<T>('PUT', path, data, headers);
   }
   patch<T = Record<string, unknown>>(path: string, data: unknown) {
     return this.call<T>('PATCH', path, data);

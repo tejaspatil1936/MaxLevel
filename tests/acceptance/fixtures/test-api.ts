@@ -69,6 +69,44 @@ export class TestApi {
   async seedAuthoringTest(options: AuthoringTestSeed): Promise<AuthoringTestIds> {
     return this.seedScenario<AuthoringTestIds>('authoring-test', { ...options });
   }
+
+  /** Phase 3 scenario: a published test ready to sit, its window relative to the clock (docs/testids/phase-3.md). */
+  async seedExamTest(options: ExamTestSeed): Promise<ExamTestIds> {
+    return this.seedScenario<ExamTestIds>('exam-test', { ...options });
+  }
+}
+
+export interface ExamTestSeed {
+  orgId: string;
+  seriesId?: string;
+  title?: string;
+  company?: string;
+  questions?: 'none' | 'basic' | 'sectioned';
+  /** Window start in minutes after the clock's current time (default -2). */
+  opensInMin?: number;
+  /** Window length in minutes (default 60). */
+  windowMin?: number;
+  timingMode?: 'fixed' | 'flexible';
+  /** Flexible windows only (default 60). */
+  durationMin?: number;
+  /** Merged over the scenario's own overrides (window, timing, proctoring hardware off, shuffling off). */
+  overrides?: Record<string, unknown>;
+  eligibility?: Partial<{ departmentIds: string[]; graduationYears: number[]; include: string[]; exclude: string[] }>;
+  seriesEligibility?: Partial<{
+    departmentIds: string[];
+    graduationYears: number[];
+    include: string[];
+    exclude: string[];
+  }>;
+  seriesStatus?: 'draft' | 'active' | 'archived';
+  sectionDraws?: Record<string, number>;
+  testDraw?: number;
+  /** Default true: approved and published (`scheduled`). */
+  publish?: boolean;
+}
+
+export interface ExamTestIds extends AuthoringTestIds {
+  window: { start: number; end: number };
 }
 
 export interface SeriesSeed {

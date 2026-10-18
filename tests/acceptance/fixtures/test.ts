@@ -3,6 +3,7 @@ import { homeFor, type RoleHome } from '../pages/role-home';
 import { SignInPage } from '../pages/sign-in-page';
 import { signInToApi, type ApiClient } from './api';
 import { Emulators } from './emulators';
+import { Rtdb } from './rtdb';
 import type { SeedAccount } from './seed';
 import { TestApi } from './test-api';
 
@@ -13,6 +14,8 @@ interface Fixtures {
   testApi: TestApi;
   /** Read-only views of the Auth and Firestore emulators, for checking stored state. */
   emulators: Emulators;
+  /** Read-only view of the Realtime Database emulator (presence records). */
+  rtdb: Rtdb;
   /** Runs before every test: emulators cleared, clock on real time, `base` seed loaded (orgs A and B). */
   baseSeed: void;
   /**
@@ -33,6 +36,11 @@ interface Fixtures {
   /** A fresh browser context with nobody signed in. Closed at the end of the test. */
   newBrowser: () => Promise<Page>;
   /**
+   * A separate phone-sized browser context (390 x 844, touch) on the same browser, so it has the same fake camera
+   * (docs/TEST_ENV.md, "Phone pairing"). Nobody is signed in. Closed at the end of the test unless closed earlier.
+   */
+  newPhone: () => Promise<Page>;
+  /**
    * API client for the account with a real ID token (bootstrap done, claims refreshed). Pass `orgId` for a super
    * admin acting inside an organization (X-Org-Id). Sign the account in the browser first when a test uses both.
    */
@@ -47,6 +55,9 @@ export const test = base.extend<Fixtures>({
   },
   emulators: async ({ request }, provide) => {
     await provide(new Emulators(request));
+  },
+  rtdb: async ({ request }, provide) => {
+    await provide(new Rtdb(request));
   },
   baseSeed: [
     async ({ testApi }, provide) => {
@@ -78,6 +89,22 @@ export const test = base.extend<Fixtures>({
     const contexts: BrowserContext[] = [];
     await provide(async () => {
       const context = await browser.newContext();
+      contexts.push(context);
+      return context.newPage();
+    });
+    for (const c of contexts) await c.close();
+  },
+  newPhone: async ({ browser }, provide) => {
+    const contexts: BrowserContext[] = [];
+    await provide(async () => {
+      const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+        isMobile: true,
+        timezoneId: 'Asia/Kolkata',
+        locale: 'en-IN',
+        baseURL: 'http://localhost:3000',
+      });
       contexts.push(context);
       return context.newPage();
     });
