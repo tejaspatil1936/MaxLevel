@@ -79,3 +79,4 @@ PHASE 2 DONE 9/9 features
 ## Phase 3
 
 PHASE 3 START ebe9d7d435dfbabbb82bf751cee5577df8467d7a
+Tests: 59 phase 3 acceptance tests by test-author (36 e2e REQs; integration and unit REQs specified in the contract), reviewed twice (6 blocking, then 1 settled by a DECISIONS line), locked.
