@@ -23,6 +23,12 @@ import type { ApiContext } from './context';
 const orgParams = z.object({ orgId: z.string().regex(ORG_ID) });
 const sa = { access: 'superAdmin' as const };
 
+// DECISIONS Q9 refinement: an archived organization is read-only, except for restoring it.
+function refuseArchived(org: { status: string }): void {
+  if (org.status === 'archived')
+    throw new AppError(409, 'ORG_ARCHIVED', 'This organization is archived and read-only. Restore it to make changes.');
+}
+
 /** Super-admin console: organizations, their admins, entitlements, usage and the cross-org audit log (spec 2). */
 export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   const { data, audit, clock, entitlements, status, logos } = ctx;
@@ -191,12 +197,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const { orgId } = req.params;
         const org = await data.orgs.getOrgRecord(orgId);
         if (!org) throw notFound('Organization');
-        if (org.status === 'archived')
-          throw new AppError(
-            409,
-            'ORG_ARCHIVED',
-            'This organization is archived and read-only. Restore it to make changes.',
-          );
+        refuseArchived(org);
         if (await data.admins.findActiveAdminByEmail(orgId, req.body.email)) {
           throw new AppError(409, 'ADMIN_EXISTS', 'This email is already an admin of this organization.', {
             field: 'email',
@@ -235,6 +236,9 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       },
       async (req) => {
         const { orgId, adminId } = req.params;
+        const org = await data.orgs.getOrgRecord(orgId);
+        if (!org) throw notFound('Organization');
+        refuseArchived(org);
         const admin = await data.admins.getAdmin(orgId, adminId);
         if (!admin || admin.status !== 'active') throw notFound('Admin');
         const batch = db.batch();
@@ -271,6 +275,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const { orgId } = req.params;
         const org = await data.orgs.getOrgRecord(orgId);
         if (!org) throw notFound('Organization');
+        refuseArchived(org);
         const batch = db.batch();
         data.orgs.setEntitlements(orgId, batch, req.body);
         audit(
