@@ -2,11 +2,14 @@ import type { Locator, Page } from '@playwright/test';
 import { BASIC_QUESTIONS, optionName } from '../acceptance/fixtures/authoring';
 import { EXAM_HEADING, openExam, type ExamFixtures } from '../acceptance/fixtures/exam-session';
 import { startAttempt, storedAttempt, storedEvents } from '../acceptance/fixtures/exam';
+import { scrollsHorizontally } from '../acceptance/fixtures/layout';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
 import type { ApiClient } from '../acceptance/fixtures/api';
 import { ExamScreen } from '../acceptance/pages/exam-screen';
 import { PhonePage } from '../acceptance/pages/phone-page';
+import { SeriesPage } from '../acceptance/pages/series-pages';
+import { TestEditorPage } from '../acceptance/pages/test-editor';
 
 // Bugs found by the phase 3 release-gate QA. Each test failed before its fix.
 
@@ -142,5 +145,32 @@ test.describe('phase 3 QA: keyboard focus stays in the exam @lockdown', () => {
     await exam.expectSaved();
     await expect(exam.warnings).toHaveCount(0);
     expect((await storedAttempt(emulators, ORG_A.id, attemptId)).strikesCount).toBe(0);
+  });
+});
+
+test.describe('phase 3 QA: admin authoring pages reflow at 320 px', () => {
+  test('A11Y-15 the test editor and the series page never scroll sideways at 320 px, and the tabs still work by arrow keys', async ({
+    page,
+    signInAs,
+    testApi,
+  }) => {
+    const { seriesId, testId } = await testApi.seedAuthoringTest({ orgId: ORG_A.id });
+    await signInAs(accounts.adminA);
+    await page.setViewportSize({ width: 320, height: 640 });
+
+    const editor = new TestEditorPage(page);
+    await page.goto(TestEditorPage.url(testId));
+    await expect(editor.tablist).toBeVisible();
+    expect(await scrollsHorizontally(page), 'test editor at 320 px').toBe(false);
+    await editor.tab('Questions').focus();
+    for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowRight');
+    await expect(editor.tab('Preview')).toBeFocused();
+    await expect(editor.tab('Preview')).toBeInViewport({ ratio: 1 });
+    expect(await scrollsHorizontally(page), 'test editor at 320 px after arrowing through the tabs').toBe(false);
+
+    const series = new SeriesPage(page);
+    await page.goto(SeriesPage.url(seriesId));
+    await expect(series.addTest).toBeVisible();
+    expect(await scrollsHorizontally(page), 'series page at 320 px').toBe(false);
   });
 });
