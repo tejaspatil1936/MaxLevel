@@ -32,18 +32,21 @@ describe('admin route table', () => {
     expect(routes.length).toBeGreaterThan(0);
     const t = await tokens();
     const results: string[] = [];
+    let n = 0;
     for (const r of routes) {
       const key = `${r.method} ${r.url}`;
       const sample = ADMIN_ROUTE_SAMPLES[key];
       expect(sample, `add a sample for ${key} in test-support/admin-routes.ts`).toBeDefined();
-      const call = (headers: Record<string, string>) =>
-        app.inject({
+      const call = async (headers: Record<string, string>) => {
+        const fresh = sample!.fresh ? await sample!.fresh(db, n++) : {};
+        return app.inject({
           method: r.method as 'GET',
-          url: fillPath(r.url, sample!.params),
+          url: fillPath(r.url, fresh.params ?? sample!.params),
           query: sample!.query,
-          payload: sample!.body as object | undefined,
+          payload: (fresh.body ?? sample!.body) as object | undefined,
           headers,
         });
+      };
       const asAdmin = await call(t.adminA);
       const asSuper = await call({ ...t.superAdmin, 'x-org-id': SEED.orgA });
       results.push(`${key}: admin ${asAdmin.statusCode}, super admin ${asSuper.statusCode}`);
@@ -58,7 +61,8 @@ describe('admin route table', () => {
     const t = await tokens();
     const device = await asClaims(auth, 'phone@device.test', { role: 'device', orgId: SEED.orgA, attemptId: 'att-1' });
     for (const r of routes) {
-      const sample = ADMIN_ROUTE_SAMPLES[`${r.method} ${r.url}`] ?? {};
+      const base = ADMIN_ROUTE_SAMPLES[`${r.method} ${r.url}`] ?? {};
+      const sample = { ...base, ...(base.fresh ? await base.fresh(db, 900 + routes.indexOf(r)) : {}) };
       for (const headers of [t.student, device, { ...t.student, 'x-org-id': SEED.orgA }]) {
         const res = await app.inject({
           method: r.method as 'GET',
@@ -82,11 +86,12 @@ describe('admin route table', () => {
     const t = await tokens();
     for (const r of routes.filter((x) => x.url.includes(':'))) {
       const sample = ADMIN_ROUTE_SAMPLES[`${r.method} ${r.url}`];
+      const fresh = sample?.fresh ? await sample.fresh(db, 800 + routes.indexOf(r)) : {};
       expect(sample?.foreignParams, `add foreignParams (an org B resource) for ${r.method} ${r.url}`).toBeDefined();
       const res = await app.inject({
         method: r.method as 'GET',
         url: fillPath(r.url, sample!.foreignParams),
-        payload: sample!.body as object,
+        payload: (fresh.body ?? sample!.body) as object,
         headers: t.adminA,
       });
       expect(res.statusCode, `${r.method} ${r.url}`).toBe(404);
