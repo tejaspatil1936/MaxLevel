@@ -1,49 +1,24 @@
 'use client';
 
-import type { StudentTestPage } from '@mitaoe/shared';
 import { InlineMessage, PageHeader, Skeleton } from '@mitaoe/ui';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { t } from '@/i18n';
-import { api, ApiError } from '@/lib/api';
 import { formatCount, formatMarking, formatWindow, formatZonedDay, formatZonedTime } from '@/lib/format';
-import { qk } from '@/lib/query-keys';
-import { useSession } from '@/lib/session';
 import { Countdown } from './Countdown';
 import { TestNotAvailable } from './TestNotAvailable';
-import { testHeading } from './test-heading';
+import { sectionsLine, testHeading } from './test-heading';
+import { useStudentTest } from './use-student-test';
 
 const action = 'inline-flex min-h-12 items-center rounded-control bg-ballpoint px-6 font-bold text-on-ballpoint';
-
-const sectionsLine = (sections: StudentTestPage['sections']) =>
-  sections.length === 0
-    ? t('studentTest.sectionsNone')
-    : t('studentTest.sections', {
-        list: sections
-          .map((s) =>
-            s.questionCount === 1
-              ? t('studentTest.sectionOne', { name: s.name })
-              : t('studentTest.section', { name: s.name, n: formatCount(s.questionCount) }),
-          )
-          .join(', '),
-      });
 
 /**
  * The test page (spec 7.1 step 1, US-ST-03, UX-11): window, duration, questions, sections, marking and strikes, the
  * last start time and a countdown in the organization's timezone, then the one action that applies now.
  */
 export function StudentTestScreen() {
-  const id = useSearchParams().get('id') ?? '';
-  const { session } = useSession();
-  const orgId = session.status === 'ready' ? (session.me.orgId ?? '') : '';
-  const query = useQuery({
-    queryKey: qk.orgItem(orgId, 'student-test', id),
-    queryFn: () => api<StudentTestPage>(`/v1/student/tests/${encodeURIComponent(id)}`),
-    enabled: !!orgId && !!id,
-    retry: (n, e) => !(e instanceof ApiError && e.status === 404) && n < 1,
-  });
-  if (!id || (query.error instanceof ApiError && query.error.status === 404)) return <TestNotAvailable />;
+  const { query, notFound } = useStudentTest(useSearchParams().get('id') ?? '');
+  if (notFound) return <TestNotAvailable />;
   if (query.isError) return <InlineMessage>{t('common.loadFailed')}</InlineMessage>;
   const p = query.data;
   if (!p)
