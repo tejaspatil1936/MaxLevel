@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import type { AttemptStatus } from './attempt';
-import { parseBoardId, rankSeries, rankTest, seriesBoardId, testBoardId, type RankableAttempt } from './leaderboard';
+import {
+  LEADERBOARD_PAGE_ROWS,
+  boardResponseSchema,
+  leaderboardPages,
+  leaderboardRecordSchema,
+  parseBoardId,
+  rankSeries,
+  rankTest,
+  seriesBoardId,
+  studentBoardView,
+  testBoardId,
+  type RankableAttempt,
+} from './leaderboard';
 
 const T0 = 1_793_595_600_000;
 const att = (studentId: string, score: number, more: Partial<RankableAttempt> = {}): RankableAttempt => ({
@@ -121,12 +133,76 @@ describe('rankSeries', () => {
   });
 });
 
-describe('board ids', () => {
+describe('board size and paging', () => {
+  const rowsOf = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      studentId: `stu-org-a-${String(i).padStart(5, '0')}`,
+      name: `${'N'.repeat(54)}${String(i).padStart(6, '0')}`,
+      departmentId: 'dep-computer-engineering',
+      score: 123.75,
+      rank: i + 1,
+      timeSec: 3599,
+    }));
+
+  it('DATA-04 stores 2,000 rows with 60-character names in one record well under 1 MiB', () => {
+    const rows = rowsOf(2000);
+    expect(rows[0]!.name).toHaveLength(60);
+    const record = leaderboardRecordSchema.parse({ computedAt: T0, rows });
+    expect(Buffer.byteLength(JSON.stringify(record), 'utf8')).toBeLessThan(1_048_576);
+    expect(Buffer.byteLength(JSON.stringify({ computedAt: T0, rows: rowsOf(LEADERBOARD_PAGE_ROWS) }))).toBeLessThan(
+      1_048_576,
+    );
+  });
+
+  it('DATA-04 keeps up to a page of rows in one page and splits 12,001 rows into ordered pages of at most 5,000', () => {
+    expect(leaderboardPages([])).toEqual([[]]);
+    const one = rowsOf(LEADERBOARD_PAGE_ROWS);
+    expect(leaderboardPages(one)).toEqual([one]);
+    const many = rowsOf(12_001);
+    const pages = leaderboardPages(many);
+    expect(pages.map((p) => p.length)).toEqual([5000, 5000, 2001]);
+    expect(pages.flat()).toEqual(many);
+  });
+
+  it('DATA-04 LB-05 shows a student the first 50 rows and their own row wherever it is, or null', () => {
+    const rows = rowsOf(120);
+    const inside = studentBoardView(rows, rows[7]!.studentId);
+    expect(inside.rows).toEqual(rows.slice(0, 50));
+    expect(inside.me).toBe(rows[7]);
+    expect(studentBoardView(rows, rows[99]!.studentId).me).toBe(rows[99]);
+    expect(studentBoardView(rows, 'stu-missing').me).toBeNull();
+    expect(studentBoardView(rows, rows[0]!.studentId, 10).rows).toHaveLength(10);
+  });
+});
+
+describe('board ids and response', () => {
   it('LB-05 names boards test_<id> and series_<id> and parses them back', () => {
     expect(testBoardId('t1')).toBe('test_t1');
     expect(seriesBoardId('s_1')).toBe('series_s_1');
     expect(parseBoardId('series_s_1')).toEqual({ kind: 'series', refId: 's_1' });
     expect(parseBoardId('test_')).toBeNull();
     expect(parseBoardId('board_t1')).toBeNull();
+  });
+
+  it('LB-05 DATA-05 the board response carries no student IDs or answer keys', () => {
+    const row = {
+      rank: 1,
+      name: 'A',
+      department: 'Computer',
+      score: 2,
+      timeSec: 5,
+      studentId: 's',
+      correctOptionIds: ['x'],
+    };
+    const body = boardResponseSchema.parse({
+      boardId: 'test_t1',
+      kind: 'test',
+      title: 'T',
+      computedAt: null,
+      total: 1,
+      rows: [row],
+      me: row,
+    });
+    expect(JSON.stringify(body)).not.toMatch(/studentId|correctOptionIds/);
   });
 });

@@ -39,6 +39,29 @@ export const leaderboardRecordSchema = z.object({
 });
 export type LeaderboardRecord = z.infer<typeof leaderboardRecordSchema>;
 
+/** A row of `GET /v1/leaderboards/{boardId}`: the department's name, no student ID (DECISIONS Q28). */
+export const boardRowSchema = z.object({
+  rank: z.number().int().min(1),
+  name: z.string(),
+  department: z.string(),
+  score: z.number(),
+  timeSec: z.number().int().min(0),
+});
+export type BoardRow = z.infer<typeof boardRowSchema>;
+
+/** `GET /v1/leaderboards/{boardId}` (LB-05): students get the top 50 and `me`, admins every row and `me: null`. */
+export const boardResponseSchema = z.object({
+  boardId: z.string(),
+  kind: boardKindSchema,
+  title: z.string(),
+  computedAt: z.number().int().nullable(),
+  total: z.number().int().min(0),
+  max: z.number().optional(),
+  rows: z.array(boardRowSchema),
+  me: boardRowSchema.nullable(),
+});
+export type BoardResponse = z.infer<typeof boardResponseSchema>;
+
 export interface RankableAttempt {
   studentId: string;
   name: string;
@@ -144,4 +167,26 @@ export function rankSeries(
     timeSec: r.timeSec,
     scores: r.scores,
   }));
+}
+
+/** LB-05: how many ranked rows a student sees. */
+export const LEADERBOARD_STUDENT_ROWS = 50;
+
+/** LB-05: the first `top` rows, and the student's own row wherever it is (null when absent). */
+export function studentBoardView<T extends { studentId: string }>(
+  rows: ReadonlyArray<T>,
+  studentId: string,
+  top: number = LEADERBOARD_STUDENT_ROWS,
+): { rows: T[]; me: T | null } {
+  return { rows: rows.slice(0, top), me: rows.find((r) => r.studentId === studentId) ?? null };
+}
+
+/** DATA-04: rows per stored page, so a page stays well under Firestore's 1 MiB record limit. */
+export const LEADERBOARD_PAGE_ROWS = 5000;
+
+/** DATA-04: the rows in order, in pages of at most `LEADERBOARD_PAGE_ROWS`; always at least one (possibly empty) page. */
+export function leaderboardPages<T>(rows: ReadonlyArray<T>): T[][] {
+  const pages: T[][] = [];
+  for (let i = 0; i < rows.length; i += LEADERBOARD_PAGE_ROWS) pages.push(rows.slice(i, i + LEADERBOARD_PAGE_ROWS));
+  return pages.length ? pages : [[]];
 }
