@@ -23,3 +23,17 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - First-sign-in student creation in bootstrap is a batch, not a transaction; two simultaneous first sign-ins could create two records.
 - Org admins see the IP and user agent of super-admin actions in their audit log and the student change history.
 - Account-status invalidation clears only the local instance's cache; other instances keep the old status for up to 60 s (within AUTH-06).
+
+## Phase 1 (QA pass, minor)
+
+- Double clicks send duplicate requests (consent, whitelist save with two audit entries, student delete); the max_students check is not atomic under parallel single adds.
+- Focus falls back to the page after consent turns into the profile form, after a server error on profile save, and after deleting a student.
+- /platform/org/ without ?id= shows a skeleton forever instead of a not-found message.
+- When a super admin enters an org, the first GET /v1/org can go out without X-Org-Id (400 in the console) and the banner briefly reads "Working in" with no name.
+- Admins listed in two orgs have no account menu to switch; adding an existing super admin or a student email as an admin gives no warning; the whitelist accepts admin emails.
+- Toggling profile lock offline shows On with no pending notice until the request replays.
+- Student directory filters and sort are not kept in the URL; Back with the drawer open leaves the page.
+- Copy: the admin Add student form says "Enter your PRN."; a status filter with no results says "No students match your search."; the audit log shows raw JSON and department IDs.
+- After sign-out the sign-in page keeps the previous user's theme and text size.
+- axe reports aria-hidden-focus while the org switcher menu is open (the skip link is under the aria-hidden area).
+- The emulator Google popup often fails to hand back its result here because the auth iframe loads gapi from apis.google.com (AUTH-01 popup tests).
