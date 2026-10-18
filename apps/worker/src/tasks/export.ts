@@ -44,7 +44,8 @@ async function workbook(sheets: ReadonlyArray<{ name: string; table: ExportTable
 /**
  * /tasks/export (EXP-01 to EXP-03, REL-04): builds the requested test or series export from the stored attempts,
  * profiles and boards, saves it to Storage at the record's `filePath` and marks it `ready`. A ready or failed export
- * is left as it is, so a second run changes nothing; a test or series that no longer exists marks it `failed`.
+ * is left as it is, so a second run changes nothing; a test or series that no longer exists, or a build that throws,
+ * marks it `failed`.
  */
 export function exportHandler(deps: { exports: ExportData; files?: FileStore; clock: Clock }) {
   const { exports: data, clock } = deps;
@@ -96,7 +97,8 @@ export function exportHandler(deps: { exports: ExportData; files?: FileStore; cl
     const rec = await data.startExport(run.orgId, run.exportId, clock.now());
     if (!rec) return 'skipped';
     if (!deps.files) throw new Error('The export task needs a file store.');
-    const body = await build(rec);
+    // A build that throws marks the export failed, so the record never stays running and the task is not retried.
+    const body = await build(rec).catch(() => null);
     if (!body) {
       await data.endExport(rec.orgId, rec.id, 'failed', clock.now());
       return 'failed';

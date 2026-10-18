@@ -99,22 +99,22 @@ export function seriesExportColumns(testHeadings: ReadonlyArray<string>): string
   return ['Name', 'Email', 'PRN', 'Department', 'Graduation year', ...testHeadings, 'Total', 'Rank'];
 }
 
-/** EXP-02: an Excel sheet name from a test heading: `: \ / ? * [ ]` removed, spaces collapsed, at most 31 characters. */
+/**
+ * EXP-02: an Excel sheet name from a test heading: `: \ / ? * [ ]` removed, spaces collapsed, at most 31 characters,
+ * and no apostrophe at either end (Excel refuses those names).
+ */
 export function xlsxSheetName(heading: string): string {
-  return heading
-    .replace(/[:\\/?*[\]]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 31)
-    .trim();
+  const trim = (s: string) => s.replace(/^[\s']+|[\s']+$/g, '');
+  return trim(trim(heading.replace(/[:\\/?*[\]]/g, '').replace(/\s+/g, ' ')).slice(0, 31));
 }
 
 /**
  * Sheet names for these headings, each unique (Excel compares them ignoring case) and never one of `taken`: a repeat
- * gets ` (2)`, ` (3)` … within the 31 characters, and an empty name is `Test`.
+ * gets ` (2)`, ` (3)` … within the 31 characters, an empty name is `Test` and `History` is never used.
  */
 export function xlsxSheetNames(headings: ReadonlyArray<string>, taken: ReadonlyArray<string> = []): string[] {
-  const used = new Set(taken.map((n) => n.toLowerCase()));
+  // Excel reserves History for its own change tracking.
+  const used = new Set(['history', ...taken.map((n) => n.toLowerCase())]);
   return headings.map((h) => {
     const base = xlsxSheetName(h) || 'Test';
     let name = base;
