@@ -17,6 +17,15 @@ export function matchesSignature(type: LogoUpload['contentType'], bytes: Buffer)
   );
 }
 
+/** A stored file as a data URL, or null when it is missing. */
+export async function readDataUrl(firebase: FirebaseHandles, path: string): Promise<string | null> {
+  const file = firebase.bucket.file(path);
+  return file
+    .download()
+    .then(async ([bytes]) => `data:${(await file.getMetadata())[0].contentType};base64,${bytes.toString('base64')}`)
+    .catch(() => null);
+}
+
 /** Organization logos in Storage (organizations/{orgId}/logo.*), served to the console as data URLs. */
 export function logoStore(firebase: FirebaseHandles) {
   const cache = new Map<string, string | null>();
@@ -35,11 +44,7 @@ export function logoStore(firebase: FirebaseHandles) {
     async dataUrl(path: string | null): Promise<string | null> {
       if (!path) return null;
       if (cache.has(path)) return cache.get(path)!;
-      const file = firebase.bucket.file(path);
-      const url = await file
-        .download()
-        .then(async ([bytes]) => `data:${(await file.getMetadata())[0].contentType};base64,${bytes.toString('base64')}`)
-        .catch(() => null);
+      const url = await readDataUrl(firebase, path);
       cache.set(path, url);
       return url;
     },

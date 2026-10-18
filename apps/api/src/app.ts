@@ -31,6 +31,7 @@ import { accountStatusService } from './services/account-status';
 import { eligibilityService } from './services/eligibility';
 import { entitlementsService } from './services/entitlements';
 import { logoStore } from './services/logos';
+import { questionImageStore } from './services/question-images';
 import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
 
 /** A Fastify instance with the API's conventions: Zod schemas, error shape, server time, CORS, logging. */
@@ -83,6 +84,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     entitlements,
     status,
     logos: logoStore(deps.firebase),
+    questionImages: questionImageStore(deps.firebase),
   };
   await app.register(orgRoutes(ctx));
   for (const routes of [
