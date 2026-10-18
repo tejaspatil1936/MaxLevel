@@ -12,6 +12,7 @@ import { formatDay, formatWindow } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
 import { seriesUrl } from '../series/SeriesList';
+import { MarkingTab } from '../marking/MarkingTab';
 import { QuestionsTab } from '../questions/QuestionsTab';
 import { SectionsTab } from '../sections/SectionsTab';
 import { SeriesNotFound } from '../series/SeriesNotFound';
@@ -80,6 +81,7 @@ function EditorPage({ test }: { test: TestDetail }) {
   const panel = (value: string) => {
     if (value === 'questions') return <QuestionsTab test={test} />;
     if (value === 'sections') return <SectionsTab test={test} />;
+    if (value === 'marking') return series.data ? <MarkingTab key={stamp} test={test} series={series.data} /> : loading;
     if (value === 'settings')
       return series.data ? <TestSettings key={stamp} test={test} series={series.data} /> : loading;
     if (value === 'eligibility')
