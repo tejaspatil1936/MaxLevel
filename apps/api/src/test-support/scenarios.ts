@@ -219,6 +219,10 @@ const authoringTest: Scenario = async (db, now, body, queue) => {
   const sectionIds = Object.fromEntries(sections.map((s) => [s.name, s.id]));
   const overrides = (body.overrides ?? {}) as Record<string, unknown>;
   const scheduledDate = typeof body.scheduledDate === 'string' ? body.scheduledDate : '2026-11-02';
+  // Seeded in order on a frozen clock, a later test of the series is still created later, so day order (TST-02)
+  // follows seeding order instead of the random IDs.
+  const siblings = await db.collection(`organizations/${orgId}/tests`).where('seriesId', '==', seriesId).get();
+  const createdAt = Math.max(now, ...siblings.docs.map((d) => ((d.get('createdAt') as number | undefined) ?? 0) + 1));
   const batch = db.batch();
   const stored = questions.map((q, i) => {
     const qRef = ref.collection('questions').doc();
@@ -259,7 +263,7 @@ const authoringTest: Scenario = async (db, now, body, queue) => {
     questionSetVersion: 1,
     totalMarks: 0,
     attemptsStarted: false,
-    createdAt: now,
+    createdAt,
     updatedAt: now,
   };
   if (body.publish === true) {
