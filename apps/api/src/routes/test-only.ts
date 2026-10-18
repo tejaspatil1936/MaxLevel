@@ -3,6 +3,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { Deps } from '../deps';
 import { AppError } from '../errors';
+import { localTaskDispatcher } from '../tasks/dispatcher';
 import { localTaskQueue } from '../tasks/local-queue';
 import { clearEmulators } from '../test-support/emulators';
 import { SCENARIOS } from '../test-support/scenarios';
@@ -19,6 +20,7 @@ export interface ResettableCaches {
 
 export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCaches): FastifyPluginAsyncZod {
   const { clock, config } = deps;
+  const dispatcher = deps.dispatcher ?? localTaskDispatcher(deps.firebase.db, clock, { workerUrl: config.workerUrl });
   const clockBody = z.union([z.object({ nowMs: z.number().int() }), z.object({ advanceMs: z.number().int() })]);
   const clockReply = { 200: z.object({ nowMs: z.number() }) };
 
@@ -51,6 +53,13 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
       '/__test/tasks',
       { schema: { response: { 200: z.object({ tasks: z.array(pendingTaskSchema) }) } } },
       async () => ({ tasks: await localTaskQueue(deps.firebase.db, clock).pending() }),
+    );
+
+    // Runs every task due on the clock now and waits for them, so tests need not wait for the dispatcher's check.
+    app.post(
+      '/__test/tasks/run-due',
+      { schema: { response: { 200: z.object({ ran: z.array(z.string()) }) } } },
+      async () => ({ ran: await dispatcher.runDue() }),
     );
 
     app.post('/__test/clock/real', { schema: { response: clockReply } }, async () => {
