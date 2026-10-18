@@ -12,6 +12,8 @@ import { api, ApiError, serverNow } from '@/lib/api';
 import { formatMinutes, zoneName } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
+import { SeriesTimeline } from '../tests/SeriesTimeline';
+import { TestDetailsDialog } from '../tests/TestDetailsDialog';
 import { seriesDates } from './SeriesList';
 import { SeriesNotFound } from './SeriesNotFound';
 import { SeriesStatus } from './SeriesStatus';
@@ -40,12 +42,18 @@ export function SeriesView() {
 
 /**
  * SER-01, SER-02: the series with its dates, daily window and status; activate and archive from More actions.
- * F-2.03 adds Add test and the Tests by day timeline below the facts.
+ * SER-03: Add test and the Tests by day timeline below the facts.
  */
 function SeriesPage({ series }: { series: Series }) {
   const { orgId, org, readOnly } = useWorkspace();
   const qc = useQueryClient();
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const addTest = (
+    <Button onClick={() => setAdding(true)} disabled={readOnly}>
+      {t('tests.add')}
+    </Button>
+  );
   const zone = zoneName(org?.timezone ?? 'Asia/Kolkata', serverNow());
   const setStatus = useMutation({
     mutationFn: (status: Status) =>
@@ -102,6 +110,7 @@ function SeriesPage({ series }: { series: Series }) {
             >
               {t('series.edit')}
             </Link>
+            {addTest}
           </>
         }
       />
@@ -117,6 +126,8 @@ function SeriesPage({ series }: { series: Series }) {
         ) : null}
       </dl>
       {series.description ? <p className="mt-4 max-w-measure">{series.description}</p> : null}
+      <SeriesTimeline series={series} addTest={addTest} />
+      {adding ? <TestDetailsDialog series={series} onClose={() => setAdding(false)} /> : null}
       <ConfirmDialog
         open={confirmArchive}
         onOpenChange={setConfirmArchive}
