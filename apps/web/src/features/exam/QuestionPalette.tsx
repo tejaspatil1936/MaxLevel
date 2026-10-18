@@ -18,6 +18,8 @@ const SHAPE: Record<QuestionState, string> = {
   answered: 'border-2 border-ballpoint bg-ballpoint text-on-ballpoint',
   marked: 'border-2 border-ink bg-highlighter text-highlighter-ink',
   answeredMarked: 'border-2 border-ink bg-highlighter text-highlighter-ink',
+  lockedAnswered: 'border-2 border-ballpoint bg-ballpoint text-on-ballpoint',
+  lockedNotAnswered: 'border-2 border-graphite bg-surface-sunken text-ink',
 };
 
 function Bubble({ state, className, children }: { state: QuestionState; className?: string; children?: string }) {
@@ -130,4 +132,6 @@ const TRACK: Record<QuestionState, string> = {
   answered: 'bg-ballpoint',
   marked: 'bg-highlighter',
   answeredMarked: 'bg-highlighter border-r-2 border-ballpoint',
+  lockedAnswered: 'bg-ballpoint',
+  lockedNotAnswered: 'border border-graphite bg-surface-sunken',
 };
