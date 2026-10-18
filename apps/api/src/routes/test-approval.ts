@@ -4,6 +4,7 @@ import {
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
   publishResponseSchema,
   resolveSettings,
+  settingsGaps,
   settingsProblems,
 } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -82,6 +83,17 @@ export function testApprovalRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           throw new AppError(409, 'FULL_REVIEW_BEFORE_CLOSE', FULL_REVIEW_BEFORE_CLOSE_MESSAGE, {
             field: 'resultRelease',
           });
+        // Q-14: settings that changed since approval (a series default) are checked again before they are snapshotted.
+        const gaps = settingsGaps(settings, test.totalMarks ?? 0);
+        if (gaps.length)
+          throw new AppError(
+            409,
+            'CHECKLIST_FAILED',
+            "This test can't be published yet. Fix the items marked Failed.",
+            {
+              failed: [`Failed: ${gaps.join('; ')}`],
+            },
+          );
         const now = clock.now();
         const batch = db.batch();
         data.tests.updateTest(orgId, batch, test.id, { status: 'scheduled', resolved: settings, updatedAt: now });
