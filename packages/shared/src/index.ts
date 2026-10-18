@@ -30,3 +30,4 @@ export * from './student-tests';
 export * from './tasks';
 export * from './grading';
 export * from './pairing';
+export * from './leaderboard';
