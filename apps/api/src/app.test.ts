@@ -3,13 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { buildApp } from './app';
 import { loadConfig } from './config';
 import { initFirebase } from './firebase';
+import { localTaskQueue } from './tasks/local-queue';
+
+const deps = (clock: TestClock) => {
+  const firebase = initFirebase();
+  return { firebase, queue: localTaskQueue(firebase.db, clock) };
+};
 
 async function app() {
   const clock = new TestClock();
   clock.set(1_700_000_000_000);
   return {
     clock,
-    app: await buildApp({ clock, config: { ...loadConfig({}), logLevel: 'silent' }, firebase: initFirebase() }),
+    app: await buildApp({ clock, config: { ...loadConfig({}), logLevel: 'silent' }, ...deps(clock) }),
   };
 }
 
@@ -35,7 +41,7 @@ describe('test-only API', () => {
   it('is not registered outside test mode', async () => {
     const clock = new TestClock();
     const config = { ...loadConfig({ NODE_ENV: 'production', TEST_API_SECRET: 's' }), logLevel: 'silent' as const };
-    const a = await buildApp({ clock, config, firebase: initFirebase() });
+    const a = await buildApp({ clock, config, ...deps(clock) });
     expect(
       (await a.inject({ method: 'GET', url: '/__test/clock', headers: { 'x-test-secret': 's' } })).statusCode,
     ).toBe(404);
@@ -44,7 +50,7 @@ describe('test-only API', () => {
   it('needs the secret and moves the clock', async () => {
     const clock = new TestClock();
     const config = { ...loadConfig({ NODE_ENV: 'test', TEST_API_SECRET: 's' }), logLevel: 'silent' as const };
-    const a = await buildApp({ clock, config, firebase: initFirebase() });
+    const a = await buildApp({ clock, config, ...deps(clock) });
     expect((await a.inject({ method: 'GET', url: '/__test/clock' })).statusCode).toBe(403);
     const res = await a.inject({ method: 'POST', url: '/__test/clock/real', headers: { 'x-test-secret': 's' } });
     expect(res.statusCode).toBe(200);

@@ -4,6 +4,7 @@ import { buildApp } from '../app';
 import { loadConfig, type Config } from '../config';
 import { initFirebase } from '../firebase';
 import { createLogger } from '../logging';
+import { localTaskQueue } from '../tasks/local-queue';
 
 export const TEST_SECRET = 'local-test-secret';
 
@@ -29,7 +30,8 @@ export async function testApp(opts: { config?: Partial<Config>; withLogs?: boole
   };
   const sink = opts.withLogs ? logSink() : null;
   const firebase = initFirebase();
-  const app = await buildApp({ clock, config, firebase }, sink?.logger);
+  const queue = localTaskQueue(firebase.db, clock);
+  const app = await buildApp({ clock, config, firebase, queue }, sink?.logger);
   await app.ready();
-  return { app, clock, config, firebase, logs: sink?.lines ?? [] };
+  return { app, clock, config, firebase, queue, logs: sink?.lines ?? [] };
 }

@@ -1,8 +1,9 @@
-import { TestClock } from '@mitaoe/shared';
+import { pendingTaskSchema, TestClock } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { Deps } from '../deps';
 import { AppError } from '../errors';
+import { localTaskQueue } from '../tasks/local-queue';
 import { clearEmulators } from '../test-support/emulators';
 import { SCENARIOS } from '../test-support/scenarios';
 import { seedBase } from '../test-support/seed';
@@ -44,6 +45,13 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
       await forwardClockToWorker();
       return { nowMs: clock.now() };
     });
+
+    // The local queue's tasks not yet run (docs/TEST_ENV.md, "Test-only API").
+    app.get(
+      '/__test/tasks',
+      { schema: { response: { 200: z.object({ tasks: z.array(pendingTaskSchema) }) } } },
+      async () => ({ tasks: await localTaskQueue(deps.firebase.db, clock).pending() }),
+    );
 
     app.post('/__test/clock/real', { schema: { response: clockReply } }, async () => {
       clock.followReal();

@@ -8,6 +8,8 @@ const envSchema = z.object({
   APP_ORIGINS: z.string().default('http://localhost:3000'),
   TEST_API_SECRET: z.string().optional(),
   WORKER_URL: z.string().default('http://127.0.0.1:4001'),
+  // The cloud-tasks driver arrives with the deployment phase; until then every run uses the local queue.
+  TASK_QUEUE: z.enum(['local']).default('local'),
 });
 
 export type Config = {
@@ -18,6 +20,7 @@ export type Config = {
   appOrigins: string[];
   testApiSecret?: string;
   workerUrl: string;
+  taskQueue: 'local';
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -28,6 +31,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     host: e.HOST,
     logLevel: e.LOG_LEVEL,
     workerUrl: e.WORKER_URL,
+    taskQueue: e.TASK_QUEUE,
     appOrigins: e.APP_ORIGINS.split(',')
       .map((s) => s.trim())
       .filter(Boolean),
