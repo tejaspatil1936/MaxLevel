@@ -1,10 +1,11 @@
 'use client';
 
-import type { TestReleaseSummary } from '@mitaoe/shared';
+import { testBoardId, type TestReleaseSummary } from '@mitaoe/shared';
 import { InlineMessage, PageHeader, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { testHeading } from '@/features/authoring/tests/test-view';
+import { AdminLeaderboard } from '@/features/leaderboards/AdminLeaderboard';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
@@ -54,6 +55,7 @@ export function TestResults({ testId }: { testId: string }) {
     <>
       <PageHeader title={t('results.testHeading', { heading: testHeading(query.data) })} actions={back} />
       <ReleaseRegion summary={query.data} />
+      <AdminLeaderboard boardId={testBoardId(testId)} />
     </>
   );
 }
