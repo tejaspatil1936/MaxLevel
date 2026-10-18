@@ -164,3 +164,55 @@ describe('exam-test scenario', () => {
     expect(stored).not.toHaveProperty('resolved');
   });
 });
+
+describe('graded-attempts scenario', () => {
+  const NOW = Date.UTC(2026, 10, 2, 4, 0); // 2 Nov 2026, 09:30 IST
+  async function post(scenario: string, body: object) {
+    const { app, clock } = await testApp();
+    clock.set(NOW);
+    const res = await app.inject({
+      method: 'POST',
+      url: `/__test/seed/${scenario}`,
+      headers: { 'x-test-secret': TEST_SECRET },
+      payload: { orgId: SEED.orgA, ...body },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json() as Record<string, unknown>;
+  }
+
+  it('US-ST-08 writes finished graded attempts of the test with their index entries, in input order', async () => {
+    const t = (await post('exam-test', {})) as {
+      testId: string;
+      seriesId: string;
+      window: { start: number; end: number };
+    };
+    const { attemptIds } = (await post('graded-attempts', {
+      testId: t.testId,
+      attempts: [
+        { studentId: 'stu-org-a-01', score: 3, timeSec: 600, correct: 3, incorrect: 1 },
+        { studentId: 'stu-org-a-02', score: 1, timeSec: 300, status: 'terminated', strikesCount: 3 },
+      ],
+    })) as { attemptIds: string[] };
+    expect(attemptIds).toHaveLength(2);
+    const [a, b] = await Promise.all(
+      attemptIds.map(async (id) => (await org.collection('attempts').doc(id).get()).data()!),
+    );
+    expect(a).toMatchObject({
+      testId: t.testId,
+      seriesId: t.seriesId,
+      studentId: 'stu-org-a-01',
+      status: 'submitted',
+      startedAt: t.window.start,
+      submittedAt: t.window.start + 600_000,
+      deadlineAt: t.window.end,
+      strikesCount: 0,
+      result: { score: 3, max: 4, pct: 75, correct: 3, incorrect: 1, unanswered: 0, durationSec: 600, sections: {} },
+    });
+    expect(a!.draw.questionIds).toHaveLength(4);
+    expect(a!.draw.optionOrder[a!.draw.questionIds[0]]).toEqual(['a', 'b', 'c', 'd']);
+    expect(b).toMatchObject({ status: 'terminated', terminationReason: 'max_strikes', strikesCount: 3 });
+    const index = (await org.collection('attemptIndex').doc(`${t.testId}_stu-org-a-02`).get()).data();
+    expect(index).toMatchObject({ activeAttemptId: attemptIds[1] });
+    expect((await org.collection('tests').doc(t.testId).get()).get('attemptsStarted')).toBe(true);
+  });
+});

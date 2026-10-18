@@ -362,10 +362,90 @@ const examTest: Scenario = async (db, now, body, queue) => {
   return { ...ids, window };
 };
 
+const ATTEMPT_ENDS = ['submitted', 'auto_submitted', 'terminated'];
+
+/**
+ * Phase 4: finished, graded attempts of a published test written directly (docs/testids/phase-4.md,
+ * `graded-attempts`), with their attempt index entries; no answers, no audit entry, no leaderboard task.
+ */
+const gradedAttempts: Scenario = async (db, _now, body) => {
+  const orgId = String(body.orgId ?? '');
+  const testId = String(body.testId ?? '');
+  const org = db.doc(`organizations/${orgId}`);
+  const test = await org.collection('tests').doc(testId).get();
+  const window = test.get('resolved.window') as { start: number; end: number } | null | undefined;
+  if (!test.exists || !window) throw new AppError(404, 'NOT_FOUND', 'No such published test for the scenario.');
+  const questions = (await test.ref.collection('questions').get()).docs
+    .filter((d) => d.get('status') === 'approved')
+    .sort((a, b) => (a.get('order') as number) - (b.get('order') as number));
+  const questionIds = questions.map((q) => q.id);
+  const bySection = new Map<string | null, string[]>();
+  for (const q of questions) {
+    const key = (q.get('sectionId') as string | undefined) ?? null;
+    bySection.set(key, [...(bySection.get(key) ?? []), q.id]);
+  }
+  const draw = {
+    questionIds,
+    optionOrder: Object.fromEntries(
+      questions.map((q) => [q.id, (q.get('options') as Array<{ id: string }>).map((o) => o.id)]),
+    ),
+    sections: [...bySection].map(([sectionId, ids]) => ({ sectionId, questionIds: ids })),
+  };
+  const max = (test.get('totalMarks') as number | undefined) ?? 0;
+  const entries = Array.isArray(body.attempts) ? (body.attempts as Array<Record<string, unknown>>) : [];
+  const batch = db.batch();
+  const attemptIds = entries.map((e) => {
+    const studentId = String(e.studentId ?? '');
+    const status = ATTEMPT_ENDS.includes(String(e.status)) ? String(e.status) : 'submitted';
+    const score = num(e.score, 0);
+    const timeSec = num(e.timeSec, 0);
+    const ref = org.collection('attempts').doc();
+    batch.set(ref, {
+      orgId,
+      testId,
+      seriesId: test.get('seriesId'),
+      studentId,
+      uid: null,
+      status,
+      startedAt: window.start,
+      submittedAt: num(e.submittedAt, window.start + timeSec * 1000),
+      deadlineAt: window.end,
+      extraTimeSec: 0,
+      strikesCount: num(e.strikesCount, 0),
+      ...(status === 'terminated'
+        ? { terminationReason: typeof e.terminationReason === 'string' ? e.terminationReason : 'max_strikes' }
+        : {}),
+      draw,
+      questionServedAt: {},
+      result: {
+        score,
+        max,
+        pct: max ? (score / max) * 100 : 0,
+        sections: {},
+        correct: num(e.correct, 0),
+        incorrect: num(e.incorrect, 0),
+        unanswered: num(e.unanswered, 0),
+        durationSec: timeSec,
+      },
+    });
+    batch.set(org.collection('attemptIndex').doc(`${testId}_${studentId}`), {
+      testId,
+      studentId,
+      activeAttemptId: ref.id,
+      attemptCount: 1,
+    });
+    return ref.id;
+  });
+  batch.update(test.ref, { attemptsStarted: true });
+  await batch.commit();
+  return { attemptIds };
+};
+
 export const SCENARIOS: Record<string, Scenario> = {
   'empty-org': emptyOrg,
   'student-attempts': studentAttempts,
   'authoring-series': authoringSeries,
   'authoring-test': authoringTest,
   'exam-test': examTest,
+  'graded-attempts': gradedAttempts,
 };
