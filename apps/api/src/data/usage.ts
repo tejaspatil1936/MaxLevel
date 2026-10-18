@@ -19,12 +19,22 @@ export function usageData(db: Firestore) {
       });
     },
 
-    async getUsage(orgId: string, month: string): Promise<Record<UsageField, number>> {
+    async countStudents(orgId: string): Promise<number> {
+      return (await db.collection(`organizations/${orgId}/whitelist`).count().get()).data().count;
+    },
+
+    async countActiveAdmins(orgId: string): Promise<number> {
+      return (await db.collection(`organizations/${orgId}/admins`).where('status', '==', 'active').count().get()).data()
+        .count;
+    },
+
+    async getUsage(orgId: string, month: string): Promise<Record<UsageField | 'storageBytes', number>> {
       const s = await ref(orgId, month).get();
       return {
         aiImports: s.get('aiImports') ?? 0,
         aiReports: s.get('aiReports') ?? 0,
         testsRun: s.get('testsRun') ?? 0,
+        storageBytes: s.get('storageBytes') ?? 0,
       };
     },
   };
