@@ -28,10 +28,12 @@ import {
   putDeviceExam,
 } from './offline-store';
 import { createServeTracker, type ServeTracker } from './question-serves';
+import { StrikeWarning } from './StrikeWarning';
 import { QuestionTimer } from './QuestionTimer';
 import { createSubmission, type Submission, type SubmitPhase } from './submission';
 import { SubmitSummary, type SummaryRow } from './SubmitSummary';
 import { CLOCK_REFRESH_MS, timeLeftText, warningText } from './time-left';
+import { useProctorReporter } from './useProctorReporter';
 
 const backLink = 'inline-flex min-h-11 items-center font-bold text-ballpoint underline';
 const submittedUrl = (attemptId: string) => `/exam/submitted/?attempt=${encodeURIComponent(attemptId)}`;
@@ -255,6 +257,15 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
       router.replace(submittedUrl(attemptId));
     };
   }, [attemptId, router]);
+  // Proctoring reports (PR-08): lockdown (F-3.11), the camera (F-3.12) and the phone (F-3.13) call `proctor.report`.
+  // A strike warns at once; the strike that reaches the maximum ends the attempt and opens the submitted screen.
+  const proctor = useProctorReporter(payload, {
+    onFinished: () => finished.current(),
+    final: (e) => {
+      if (attemptFinished(e)) finished.current();
+      return refusal(e) !== null;
+    },
+  });
   // Each timed question is reported as served when it shows (Q-12); until the server answers, its countdown runs from
   // the time it showed here (QuestionTimer).
   const [served, setServed] = useState<Record<string, number>>(payload.questionServedAt);
@@ -417,7 +428,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
           <>
             <SyncStatusView status={status} />
             <div className="ml-auto flex flex-wrap items-center gap-x-6 gap-y-2">
-              <StrikeTally count={payload.attempt.strikesCount} max={payload.attempt.maxStrikes} />
+              <StrikeTally count={proctor.strikes} max={payload.attempt.maxStrikes} />
               <ExamTimer
                 deadlineAt={deadlineAt}
                 onWarning={(m) => announce(warningText(m))}
@@ -445,6 +456,15 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         phase={phase}
         offline={submitOffline}
         onConfirm={() => void submission.current?.submit()}
+      />
+      <StrikeWarning
+        warning={proctor.warning}
+        max={payload.attempt.maxStrikes}
+        onAcknowledge={(type) => {
+          proctor.acknowledge();
+          // The blocking overlay of PR-04: acknowledging a fullscreen exit enters fullscreen again.
+          if (type === 'fullscreen_exit') void document.documentElement.requestFullscreen?.().catch(() => undefined);
+        }}
       />
     </>
   );
