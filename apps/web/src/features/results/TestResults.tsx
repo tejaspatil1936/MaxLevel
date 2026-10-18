@@ -5,7 +5,7 @@ import { InlineMessage, PageHeader, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { testHeading } from '@/features/authoring/tests/test-view';
-import { AdminLeaderboard } from '@/features/leaderboards/AdminLeaderboard';
+import { AdminLeaderboard, useAdminBoard } from '@/features/leaderboards/AdminLeaderboard';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
@@ -24,6 +24,7 @@ export function TestResults({ testId }: { testId: string }) {
     queryFn: () => api<TestReleaseSummary>(`/v1/tests/${encodeURIComponent(testId)}/release`),
     retry: (n, e) => !(e instanceof ApiError && e.status < 500) && n < 2,
   });
+  const board = useAdminBoard(testBoardId(testId));
   const back = (
     <Link href={resultsUrl()} className={link}>
       {t('results.back')}
@@ -45,7 +46,7 @@ export function TestResults({ testId }: { testId: string }) {
         {back}
       </div>
     );
-  if (!query.data)
+  if (!query.data || board.isPending)
     return (
       <div role="status" aria-busy="true" aria-label={t('app.loading')}>
         <Skeleton className="h-12 w-80" />

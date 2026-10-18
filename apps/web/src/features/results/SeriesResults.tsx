@@ -4,7 +4,7 @@ import { seriesBoardId, type Series } from '@mitaoe/shared';
 import { InlineMessage, PageHeader, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { AdminLeaderboard } from '@/features/leaderboards/AdminLeaderboard';
+import { AdminLeaderboard, useAdminBoard } from '@/features/leaderboards/AdminLeaderboard';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
@@ -24,6 +24,7 @@ export function SeriesResults({ seriesId }: { seriesId: string }) {
     queryFn: () => api<Series>(`/v1/series/${encodeURIComponent(seriesId)}`),
     retry: (n, e) => !(e instanceof ApiError && e.status < 500) && n < 2,
   });
+  const board = useAdminBoard(seriesBoardId(seriesId));
   const back = (
     <Link href={resultsUrl()} className={link}>
       {t('results.back')}
@@ -45,7 +46,7 @@ export function SeriesResults({ seriesId }: { seriesId: string }) {
         {back}
       </div>
     );
-  if (!query.data)
+  if (!query.data || board.isPending)
     return (
       <div role="status" aria-busy="true" aria-label={t('app.loading')}>
         <Skeleton className="h-12 w-80" />
