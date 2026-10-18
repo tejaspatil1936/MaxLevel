@@ -36,6 +36,33 @@ describe('worker skeleton', () => {
     expect(ok.statusCode).toBe(200);
   });
 
+  it('refuses unsigned task requests when NODE_ENV is not set', async () => {
+    const app = await buildWorker({
+      ...stores,
+      clock: systemClock,
+      config: {
+        ...loadConfig({ TASKS_AUDIENCE: 'https://worker.example', TASKS_SERVICE_ACCOUNT: 'tasks@example.iam' }),
+        logLevel: 'silent',
+      },
+    });
+    expect((await app.inject({ method: 'POST', url: '/tasks/prewarm', payload: {} })).statusCode).toBe(401);
+    await expect(
+      buildWorker({ ...stores, clock: systemClock, config: { ...loadConfig({}), logLevel: 'silent' } }),
+      'no OIDC settings and no NODE_ENV: the worker does not start',
+    ).rejects.toThrow(/TASKS_AUDIENCE/);
+  });
+
+  it('accepts task requests without OIDC only when NODE_ENV is test or development', async () => {
+    for (const NODE_ENV of ['test', 'development']) {
+      const app = await buildWorker({
+        ...stores,
+        clock: systemClock,
+        config: { ...loadConfig({ NODE_ENV }), logLevel: 'silent' },
+      });
+      expect((await app.inject({ method: 'POST', url: '/tasks/prewarm', payload: {} })).statusCode, NODE_ENV).toBe(200);
+    }
+  });
+
   it('requires the OIDC audience and service account in production', async () => {
     await expect(
       buildWorker({ ...stores, clock: systemClock, config: loadConfig({ NODE_ENV: 'production' }) }),
