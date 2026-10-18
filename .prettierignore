@@ -16,6 +16,7 @@ playwright-report/
 .emulators.log
 tests/fixtures/
 apps/web/next-env.d.ts
+apps/web/public/mediapipe/
 # Kit files owned by the owner (not reformatted)
 .claude/
 lefthook.yml
