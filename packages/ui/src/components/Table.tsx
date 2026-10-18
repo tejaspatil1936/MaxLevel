@@ -28,6 +28,8 @@ export interface TableProps<Row> {
   /** The column whose cell holds the row's open button; the first column by default. */
   nameColumn?: string;
   selectedKey?: string | null;
+  /** The viewer's own row (a leaderboard's): `aria-current="true"` and the ballpoint-wash background. */
+  currentKey?: string | null;
   density?: 'comfortable' | 'compact';
   empty?: ReactNode;
   /** While the first page loads: aria-busy and skeleton rows (UX-07). */
@@ -129,10 +131,11 @@ export function Table<Row>(p: TableProps<Row>) {
                 key={key}
                 onClick={p.onRowClick ? () => p.onRowClick!(row) : undefined}
                 aria-selected={p.selectedKey === key || undefined}
+                aria-current={p.currentKey === key ? 'true' : undefined}
                 className={cx(
                   'border-b border-rule last:border-b-0',
                   p.onRowClick && 'cursor-pointer hover:bg-ballpoint-wash',
-                  p.selectedKey === key && 'bg-ballpoint-wash',
+                  (p.selectedKey === key || p.currentKey === key) && 'bg-ballpoint-wash',
                 )}
               >
                 {p.columns.map((c, i) => (

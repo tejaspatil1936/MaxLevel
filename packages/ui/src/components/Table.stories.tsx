@@ -44,6 +44,7 @@ export const States: StoryObj = {
           selectedKey={selected}
         />
         <Table caption="Students, compact" density="compact" columns={columns} rows={rows} rowKey={(r) => r.id} />
+        <Table caption="Own row" columns={columns} rows={rows} rowKey={(r) => r.id} currentKey="s3" />
         <Table
           caption="No students"
           columns={columns}
