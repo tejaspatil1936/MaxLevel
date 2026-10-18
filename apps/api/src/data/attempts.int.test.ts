@@ -162,4 +162,44 @@ describe('attempt data access', () => {
       { type: 'late_sync', details: { questionId: 'q1', seq: 1 }, clientTs: 50, serverTs: 70 },
     ]);
   });
+  it('EX-17 REL-04 finishes an attempt once from its stored answers; repeats, other orgs and missing ones change nothing', async () => {
+    const { attempt } = await start(undefined, false);
+    await db
+      .doc(`organizations/org-a/attempts/${attempt.id}/answers/q1`)
+      .set({ optionId: 'a', seq: 1, clientTs: 1, serverTs: 2 });
+    const result = {
+      score: 1,
+      max: 1,
+      pct: 100,
+      correct: 1,
+      incorrect: 0,
+      unanswered: 0,
+      sections: {},
+      durationSec: 4,
+    };
+    const seen: Array<Record<string, unknown>> = [];
+    const finish =
+      (status: 'submitted' | 'auto_submitted', submittedAt: number) =>
+      (_a: AttemptRecord, answers: Record<string, unknown>) => {
+        seen.push(answers);
+        return { status, submittedAt, result };
+      };
+
+    const runs = await Promise.all([
+      data.attempts.finalizeAttempt('org-a', attempt.id, finish('submitted', 6000)),
+      data.attempts.finalizeAttempt('org-a', attempt.id, finish('auto_submitted', 7000)),
+    ]);
+    expect(
+      runs.filter((r) => r?.finalized),
+      'concurrent runs finish it once',
+    ).toHaveLength(1);
+    const stored = await data.attempts.getAttempt('org-a', attempt.id);
+    expect(stored).toMatchObject({ status: runs.find((r) => r?.finalized)!.attempt.status, result });
+    expect(seen[0]).toEqual({ q1: { optionId: 'a', seq: 1, clientTs: 1, serverTs: 2 } });
+
+    const again = await data.attempts.finalizeAttempt('org-a', attempt.id, finish('auto_submitted', 9000));
+    expect(again).toEqual({ attempt: stored, finalized: false });
+    expect(await data.attempts.getAttempt('org-a', attempt.id)).toEqual(stored);
+    expect(await data.attempts.finalizeAttempt('org-b', attempt.id, finish('submitted', 1))).toBeNull();
+  });
 });

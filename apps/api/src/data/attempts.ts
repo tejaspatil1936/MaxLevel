@@ -22,6 +22,10 @@ export interface StudentAttemptRef {
   submittedAt: number | null;
 }
 
+/** What finishing an attempt stores (EX-17, PR-10). */
+export type FinishedFields = Required<Pick<AttemptRecord, 'status' | 'submittedAt' | 'result'>> &
+  Pick<AttemptRecord, 'terminationReason'>;
+
 /** The new attempt for an ID, built inside the start transaction; it may throw to refuse the start. */
 export type AttemptBuilder = (attemptId: string) => AttemptRecord;
 
@@ -130,6 +134,29 @@ export function attemptsData(db: Firestore) {
             serverTs,
           });
         return verdict;
+      });
+    },
+
+    /**
+     * EX-15 to EX-17, REL-04: finishes an attempt exactly once. In one transaction the attempt and its answers are read;
+     * an attempt still in progress gets the fields `finish` builds from them (status, submittedAt, graded result),
+     * while a finished one is returned as stored, so repeats and retries change nothing. Null when there is no attempt.
+     */
+    async finalizeAttempt(
+      orgId: string,
+      attemptId: string,
+      finish: (attempt: AttemptRecord, answers: Record<string, AnswerRecord>) => FinishedFields,
+    ): Promise<{ attempt: AttemptRecord; finalized: boolean } | null> {
+      const ref = attempts(orgId).doc(attemptId);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return null;
+        const attempt = toAttempt(snap);
+        if (attempt.status !== 'in_progress') return { attempt, finalized: false };
+        const answers = await tx.get(ref.collection('answers'));
+        const fields = finish(attempt, Object.fromEntries(answers.docs.map((d) => [d.id, d.data() as AnswerRecord])));
+        tx.update(ref, fields);
+        return { attempt: { ...attempt, ...fields }, finalized: true };
       });
     },
 
