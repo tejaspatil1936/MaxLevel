@@ -83,3 +83,6 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Preflight check results change without a live region (WCAG 4.1.3).
 - `_localTasks` is a top-level collection (dev/test driver only).
 - Two tabs on one attempt can collide on per-question seq counters; the newer change may come back stale.
+- Used and expired phone pairing tokens are never deleted; add a Firestore TTL policy on `pairingTokens` (spec 10.1 has no such collection yet).
+- Reloading the phone page needs a new code (the link is single use and the device sign-in is in memory); it could keep the sign-in for the tab.
+- Laptop presence `lastSeen` changes only on connect, fullscreen and visibility changes; the live view (phase 6) may want a periodic heartbeat.
