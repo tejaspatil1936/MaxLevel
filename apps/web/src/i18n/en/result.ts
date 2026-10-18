@@ -13,6 +13,8 @@ export const result = {
   'result.oneStrike': '1 strike',
   'result.strikes': '{n} strikes',
   'result.rank': 'Rank {rank} of {total}',
+  'result.rankAfterClose': 'Your rank will be shown after the window closes at {time}.',
+  'result.notRanked': 'Not ranked, because the test was ended.',
   'result.sections': 'Section scores',
   'result.colSection': 'Section',
   'result.colScore': 'Score',

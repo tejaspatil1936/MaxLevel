@@ -29,9 +29,19 @@ const timeTaken = (sec: number) =>
 const strikes = (n: number) =>
   n === 0 ? t('result.noStrikes') : n === 1 ? t('result.oneStrike') : t('result.strikes', { n });
 
-/** Released results (RES-02): score, percentage, time and strikes, rank, section scores and the full review. */
-function Released({ r }: { r: StudentResult }) {
+/**
+ * Released results (RES-02): score, percentage, time and strikes, the rank line (or why there is none yet), section
+ * scores and the full review.
+ */
+function Released({ r, zone }: { r: StudentResult; zone: string }) {
   const sections = r.sections ?? [];
+  const rank = r.rank
+    ? t('result.rank', { rank: r.rank.rank, total: r.rank.total })
+    : r.rankNote === 'not_ranked'
+      ? t('result.notRanked')
+      : r.rankNote === 'after_close' && r.windowEnd !== null
+        ? t('result.rankAfterClose', { time: formatZonedTime(r.windowEnd, zone) })
+        : null;
   return (
     <>
       <section aria-label={t('result.region')} className="flex flex-col gap-2 rounded-panel border border-rule p-5">
@@ -40,7 +50,7 @@ function Released({ r }: { r: StudentResult }) {
         </p>
         <p className="text-heading-3 font-bold">{t('result.pct', { pct: formatScore(r.pct ?? 0) })}</p>
         <p>{t('result.timeStrikes', { time: timeTaken(r.durationSec ?? 0), strikes: strikes(r.strikesCount) })}</p>
-        {r.rank ? <p>{t('result.rank', { rank: r.rank.rank, total: r.rank.total })}</p> : null}
+        {rank ? <p>{rank}</p> : null}
       </section>
       {sections.length ? (
         <Table
@@ -144,7 +154,7 @@ export function StudentResultScreen() {
           </p>
         </section>
       ) : null}
-      {r.release === 'released' ? <Released r={r} /> : null}
+      {r.release === 'released' ? <Released r={r} zone={zone} /> : null}
       {r.release === 'pending' ? (
         <p>
           {r.resultRelease === 'after_close' && r.windowEnd !== null
