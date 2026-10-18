@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logoUploadSchema } from './platform';
 import { difficultySchema } from './test-record';
 
 // Questions (spec 6.1). v1 is single correct answer; correctOptionIds stays an array (DECISIONS Q13).
@@ -62,7 +63,12 @@ export const questionSchema = z.object({
   problems: z.array(questionProblemSchema).default([]),
 });
 export type Question = z.infer<typeof questionSchema>;
-export const questionListSchema = z.object({ items: z.array(questionSchema) });
+/** GET /v1/tests/{id}/questions: in `order`, with each stored image path as a data URL for the admin's preview. */
+export const questionListSchema = z.object({
+  items: z.array(questionSchema),
+  imageUrls: z.record(z.string(), z.string()),
+});
+export type QuestionList = z.infer<typeof questionListSchema>;
 
 const uniqueOptionIds = (q: { options?: Array<{ id: string }> }) =>
   !q.options || new Set(q.options.map((o) => o.id)).size === q.options.length;
@@ -120,6 +126,16 @@ export type QuestionPatch = z.infer<typeof questionPatchSchema>;
 export const questionSavedSchema = z.object({ id: z.string(), status: questionStatusSchema });
 /** PUT /v1/tests/{id}/questions/order: every question ID of the test, in the new order. */
 export const questionOrderSchema = z.object({ ids: z.array(z.string().min(1).max(128)).min(1).max(1000) });
+
+/** POST /v1/tests/{id}/questions/import: questions parsed from a JSON file in the browser, appended in this order. */
+export const questionImportSchema = z.object({ questions: z.array(questionCreateSchema).min(1).max(1000) }).strict();
+export const questionImportedSchema = z.object({ count: z.number().int(), ids: z.array(z.string()) });
+
+/** POST /v1/tests/{id}/question-images: a PNG, JPEG or SVG up to 512 KB, checked by file signature (SEC-06). */
+export const questionImageUploadSchema = logoUploadSchema;
+export type QuestionImageUpload = z.infer<typeof questionImageUploadSchema>;
+/** The stored image's path (kept on the question) and a data URL to show it in the editor. */
+export const questionImageSavedSchema = z.object({ path: z.string(), url: z.string() });
 
 /**
  * A question as a student receives it during an attempt. It has no `correctOptionIds` and no `explanation`, and
