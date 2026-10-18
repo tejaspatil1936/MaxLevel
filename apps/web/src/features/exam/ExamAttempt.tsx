@@ -1,7 +1,7 @@
 'use client';
 
 import type { AnswerBatchResult, AttemptPayload } from '@mitaoe/shared';
-import { isFinishedAttempt } from '@mitaoe/shared';
+import { isFinishedAttempt, questionTimeUpAt } from '@mitaoe/shared';
 import { Button, InlineMessage, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
 import { createAnswerSync, type AnswerSync, type PendingAnswer, type Rejection, type SyncStatus } from './answer-sync';
 import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
-import { examReducer, initialExamState, type ExamState } from './exam-state';
+import { examReducer, initialExamState, resumeTimedState, type ExamState } from './exam-state';
 import { ExamScreen } from './ExamScreen';
 import {
   clearDeviceExam,
@@ -27,6 +27,8 @@ import {
   putDeviceAnswer,
   putDeviceExam,
 } from './offline-store';
+import { createServeTracker, type ServeTracker } from './question-serves';
+import { QuestionTimer } from './QuestionTimer';
 import { createSubmission, type Submission, type SubmitPhase } from './submission';
 import { SubmitSummary, type SummaryRow } from './SubmitSummary';
 import { CLOCK_REFRESH_MS, timeLeftText, warningText } from './time-left';
@@ -223,10 +225,20 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   const router = useRouter();
   const attemptId = payload.attempt.id;
   const ids = useMemo(() => payload.questions.map((q) => q.id), [payload]);
+  // Per-question timers (Q-11): forward-only, and a timed question locks when its time, from its first serve, ends.
+  const timed = payload.settings.questionTimeMode !== 'none';
+  const limits = useMemo(() => new Map(payload.questions.map((q) => [q.id, q.timeLimitSec])), [payload]);
+  const timeUpAt = (id: string, at: number) => {
+    const limit = limits.get(id);
+    return limit === undefined ? undefined : questionTimeUpAt(at, limit);
+  };
   const [state, dispatch] = useReducer(
     useMemo(() => examReducer(ids), [ids]),
     undefined,
-    () => initialExamState(ids, payload.answers),
+    () => {
+      const opened = initialExamState(ids, payload.answers);
+      return timed ? resumeTimedState(opened, ids, payload.questionServedAt, timeUpAt, serverNow()) : opened;
+    },
   );
 
   // Every answer change and mark goes to the sync queue with the question's whole state (EX-10).
@@ -243,19 +255,53 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
       router.replace(submittedUrl(attemptId));
     };
   }, [attemptId, router]);
+  // Each timed question is reported as served when it shows (Q-12); until the server answers, its countdown runs from
+  // the time it showed here (QuestionTimer).
+  const [served, setServed] = useState<Record<string, number>>(payload.questionServedAt);
+  const serves = useRef<ServeTracker | null>(null);
+  useEffect(() => {
+    const tracker = createServeTracker({
+      send: (questionId) =>
+        api<{ servedAt: number }>(`/v1/attempts/${encodeURIComponent(attemptId)}/navigate`, {
+          method: 'POST',
+          body: { questionId },
+        }),
+      schedule: (fn, ms) => {
+        const timer = setTimeout(fn, ms);
+        return () => clearTimeout(timer);
+      },
+      onServed: (id, at) => setServed((now) => (now[id] === at ? now : { ...now, [id]: at })),
+      final: (e) => {
+        if (attemptFinished(e)) finished.current();
+        return refusal(e) !== null;
+      },
+    });
+    serves.current = tracker;
+    return () => tracker.dispose();
+  }, [attemptId]);
+  const currentId = ids[state.index]!;
+  const currentTimed = timed && limits.get(currentId) !== undefined;
+  useEffect(() => {
+    if (currentTimed && !(currentId in payload.questionServedAt)) serves.current?.serve(currentId);
+  }, [currentId, currentTimed, payload]);
+  const currentLimit = timed ? limits.get(currentId) : undefined;
+
   const sync = useRef<AnswerSync | null>(null);
   useEffect(() => {
     const queue = createAnswerSync(
       savedSeqs(payload.answers),
       {
-        send: (batch) =>
-          api<AnswerBatchResult>(`/v1/attempts/${encodeURIComponent(attemptId)}/answers`, {
+        // An answer goes after the serve report of its question (Q-12).
+        send: async (batch) => {
+          await serves.current?.settled();
+          return api<AnswerBatchResult>(`/v1/attempts/${encodeURIComponent(attemptId)}/answers`, {
             method: 'PUT',
             body: batch,
           }).catch((e: unknown) => {
             if (attemptFinished(e)) finished.current();
             throw e;
-          }),
+          });
+        },
         now: serverNow,
         clockOffsetMs: serverClockOffset,
         schedule: (fn, ms) => {
@@ -345,6 +391,17 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         title={testHeading(payload.test)}
         state={state}
         dispatch={dispatch}
+        forwardOnly={timed}
+        questionTimer={
+          currentLimit !== undefined && !state.locked[currentId] ? (
+            <QuestionTimer
+              key={currentId}
+              servedAt={served[currentId]}
+              timeLimitSec={currentLimit}
+              onTimeUp={() => dispatch({ type: 'lock' })}
+            />
+          ) : null
+        }
         notice={
           <>
             <RefusedAnswers rejections={rejections} ids={ids} />
