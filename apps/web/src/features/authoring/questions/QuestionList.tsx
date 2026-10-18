@@ -75,7 +75,8 @@ function QuestionItem(p: ItemProps) {
           </p>
         ))}
       </div>
-      <div className="flex shrink-0 items-start gap-2 pt-1">
+      {/* A11Y-15: stacked below 640 px so the row fits a 320 px screen. */}
+      <div className="flex shrink-0 flex-col items-stretch gap-2 pt-1 sm:flex-row sm:items-start">
         {p.onEdit ? (
           <Button variant="secondary" onClick={p.onEdit} disabled={p.disabled}>
             {t('questions.edit')}
