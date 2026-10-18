@@ -1,5 +1,5 @@
 import type { AnswerRecord, AttemptRecord, AttemptStatus } from '@mitaoe/shared';
-import { FieldPath, FieldValue, type DocumentSnapshot, type Firestore } from 'firebase-admin/firestore';
+import { FieldValue, type DocumentSnapshot, type Firestore } from 'firebase-admin/firestore';
 
 export interface AttemptSummary {
   id: string;
@@ -95,20 +95,12 @@ export function attemptsData(db: Firestore) {
     },
 
     /**
-     * TST-06, Q-15: whether any attempt of the test exists, read from the attempts and the attempt index (phase 3
-     * writes both when an attempt starts; a test record's `attemptsStarted` flag is checked by the caller as well).
+     * TST-06, Q-15: whether any attempt of the test is stored. A pairing reservation on the attempt index is not an
+     * attempt (DECISIONS 2026-10-18); the caller checks the test's `attemptsStarted` flag as well.
      */
     async hasAttempts(orgId: string, testId: string): Promise<boolean> {
-      const [attempts, index] = await Promise.all([
-        db.collection(`organizations/${orgId}/attempts`).where('testId', '==', testId).limit(1).get(),
-        db
-          .collection(`organizations/${orgId}/attemptIndex`)
-          .where(FieldPath.documentId(), '>=', `${testId}_`)
-          .where(FieldPath.documentId(), '<', `${testId}_\uf8ff`)
-          .limit(1)
-          .get(),
-      ]);
-      return !attempts.empty || !index.empty;
+      const snap = await attempts(orgId).where('testId', '==', testId).limit(1).get();
+      return !snap.empty;
     },
 
     /** A student's attempts in their organization, newest start first, read with only the fields listed above. */

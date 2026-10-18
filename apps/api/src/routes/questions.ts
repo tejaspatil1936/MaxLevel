@@ -19,7 +19,7 @@ import type { QuestionRecord, QuestionUpdate } from '../data/questions';
 import type { TestRecord } from '../data/tests';
 import { AppError, notFound } from '../errors';
 import { questionImagePrefix } from '../services/question-images';
-import { editReturnsToReview } from '../services/test-review';
+import { attemptsStarted, returnsToReview, testLocked } from '../services/test-review';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
@@ -79,11 +79,12 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   });
   /**
    * A test whose question set is about to change, with whether the change sends it back to review: an approved or
-   * scheduled test with no attempts (Q-15).
+   * scheduled test (Q-15). Once an attempt has started the set is locked (TST-06).
    */
   const editedTest = async (orgId: string, testId: string) => {
     const test = await testOf(orgId, testId);
-    return { test, review: await editReturnsToReview(data, orgId, test) };
+    if (await attemptsStarted(data, orgId, test)) throw testLocked('questions');
+    return { test, review: returnsToReview(test, false) };
   };
   /**
    * The first question moves a draft test to review (TST-04), any change moves an approved one back (Q-15); every

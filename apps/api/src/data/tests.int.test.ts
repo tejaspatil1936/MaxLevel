@@ -87,12 +87,12 @@ describe('tests data access', () => {
     expect(after).not.toHaveProperty('approval');
   });
 
-  it('TST-06 Q-15 hasAttempts sees an attempt or an attempt index entry of the test, in its org only', async () => {
+  it('TST-06 Q-15 PR-13 hasAttempts sees a stored attempt of the test in its org, never a pairing reservation', async () => {
     expect(await data.attempts.hasAttempts('org-a', 't1')).toBe(false);
-    await db.doc('organizations/org-a/attemptIndex/t10_s1').set({ attemptCount: 1 });
+    await db.doc('organizations/org-a/attemptIndex/t1_s1').set({ reservedAttemptId: 'a9', attemptCount: 0 });
     await db.doc('organizations/org-b/attempts/a1').set({ testId: 't1' });
-    expect(await data.attempts.hasAttempts('org-a', 't1')).toBe(false);
-    await db.doc('organizations/org-a/attemptIndex/t1_s1').set({ activeAttemptId: 'a2', attemptCount: 1 });
+    expect(await data.attempts.hasAttempts('org-a', 't1'), 'a reservation is not an attempt').toBe(false);
+    await db.doc('organizations/org-a/attempts/a2').set({ testId: 't1' });
     expect(await data.attempts.hasAttempts('org-a', 't1')).toBe(true);
     expect(await data.attempts.hasAttempts('org-b', 't1')).toBe(true);
     expect(await data.attempts.hasAttempts('org-b', 't2')).toBe(false);

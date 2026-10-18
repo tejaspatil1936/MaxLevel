@@ -28,7 +28,7 @@ import type { QuestionRecord } from '../data/questions';
 import type { SeriesRecord } from '../data/series';
 import { BACK_TO_REVIEW, type TestRecord, type TestUpdate } from '../data/tests';
 import { AppError, notFound } from '../errors';
-import { editReturnsToReview } from '../services/test-review';
+import { attemptsStarted, returnsToReview, testLocked } from '../services/test-review';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
@@ -147,6 +147,35 @@ function lockedChange(before: TestRecord, body: TestPatch, sections: Section[] |
   );
 }
 
+/**
+ * TST-06: once an attempt has started, the first locked field this PATCH would change: any setting override but the
+ * five release and visibility keys, the window unless a flexible window only ends later, the sections, the draw or
+ * the date. A series window edited since publishing does not count: the test's snapshot keeps its own. Null when
+ * the change may be saved.
+ */
+function lockedAfterStart(
+  before: TestRecord,
+  body: TestPatch,
+  sections: Section[] | undefined,
+  windows: { before: Settings['window']; after: Settings['window'] | undefined; flexible: boolean },
+): string | null {
+  const { overrides } = body;
+  if (overrides) {
+    const keys = new Set([...Object.keys(before.overrides), ...Object.keys(overrides)]);
+    for (const k of keys)
+      if (!RELEASE_KEYS.has(k) && k !== 'window')
+        if (!same(before.overrides[k as keyof Settings], overrides[k as keyof Settings])) return k;
+    const [a, b] = [windows.before, windows.after];
+    const extended = windows.flexible && !!a && !!b && b.start === a.start && b.end > a.end;
+    const windowEdited = !same(before.overrides.window, overrides.window) && !same(a, b);
+    if (windowEdited && !extended) return 'window';
+  }
+  if (sections && !same(before.sections, sections)) return 'sections';
+  if ('drawCount' in body && (body.drawCount ?? undefined) !== before.drawCount) return 'drawCount';
+  if (body.scheduledDate && body.scheduledDate !== before.scheduledDate) return 'scheduledDate';
+  return null;
+}
+
 /** Tests of a series with their day labels and status (TST-01, TST-02, TST-04, TST-07, SER-03). */
 export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   const { data, audit, clock, eligibility } = ctx;
@@ -221,13 +250,21 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const s = await series(orgId, before.seriesId);
         const { overrides, sections, ...details } = req.body;
         if (details.scheduledDate) refuseDateOutside(s, details.scheduledDate);
+        const tz = await timezone(orgId);
         const fresh = overrides
           ? resolveSettings({
               series: s,
               test: { overrides, scheduledDate: details.scheduledDate ?? before.scheduledDate },
-              timezone: await timezone(orgId),
+              timezone: tz,
             })
           : undefined;
+        const started = await attemptsStarted(data, orgId, before);
+        const current = settingsOf(s, before, tz);
+        const extendsWindow =
+          started &&
+          !!fresh &&
+          !same(before.overrides.window, overrides?.window) &&
+          !same(current.window, fresh.window);
         if (fresh && settingsProblems(fresh).length)
           throw new AppError(400, 'FULL_REVIEW_BEFORE_CLOSE', FULL_REVIEW_BEFORE_CLOSE_MESSAGE, {
             field: 'resultRelease',
@@ -237,6 +274,11 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           id: x.id ?? data.tests.newSectionId(orgId),
           order: i + 1,
         }));
+        if (started) {
+          const windows = { before: current.window, after: fresh?.window, flexible: fresh?.timingMode === 'flexible' };
+          const field = lockedAfterStart(before, req.body, nextSections, windows);
+          if (field) throw testLocked('settings', field);
+        }
         // Draw checks (US-AD-07); a deleted section's questions move to no section (DECISIONS).
         let orphaned: string[] = [];
         if (nextSections || details.drawCount != null) {
@@ -250,9 +292,13 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           orphaned = questions.filter((q) => q.sectionId && !listed.has(q.sectionId)).map((q) => q.id);
         }
         const now = clock.now();
-        const review = lockedChange(before, req.body, nextSections) && (await editReturnsToReview(data, orgId, before));
+        const review = lockedChange(before, req.body, nextSections) && returnsToReview(before, started);
         // SER-09: a snapshot updated in place keeps its own timing, so the merged snapshot is what must not leak.
-        const snapshot = !review && fresh && before.resolved ? { ...before.resolved, ...releaseOf(fresh) } : undefined;
+        // TST-06: after a start, a flexible window's later end goes into the snapshot too.
+        const snapshot =
+          !review && fresh && before.resolved
+            ? { ...before.resolved, ...releaseOf(fresh), ...(extendsWindow ? { window: fresh.window } : {}) }
+            : undefined;
         if (snapshot && settingsProblems(snapshot).length)
           throw new AppError(400, 'FULL_REVIEW_BEFORE_CLOSE', FULL_REVIEW_BEFORE_CLOSE_MESSAGE, {
             field: 'resultRelease',

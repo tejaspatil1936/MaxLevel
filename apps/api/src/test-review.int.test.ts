@@ -135,15 +135,79 @@ describe('Q-15 editing an approved or scheduled test before attempts', () => {
     const stored = (await testDoc(t.testId).get()).data()!;
     expect(stored).toMatchObject({ status: 'scheduled', approval: before.approval, resolved: before.resolved });
   });
+});
 
-  it('TST-06 Q-15 once an attempt exists an edit leaves the status alone (the lock itself comes with attempts)', async () => {
+describe('TST-06 editing a test once an attempt has started', () => {
+  /** A stored attempt of the test, as POST /v1/attempts leaves it (the flag and the record). */
+  const started = async (testId: string) => {
+    await db.doc(`organizations/${orgA}/attempts/att-1`).set({ orgId: orgA, testId, status: 'in_progress' });
+    await testDoc(testId).update({ attemptsStarted: true });
+  };
+  const questionsOf = async (testId: string) =>
+    (await db.collection(`organizations/${orgA}/tests/${testId}/questions`).get()).docs.map((d) => d.data());
+
+  for (const [edit, request] of Object.entries(LOCKED))
+    it(`TST-06 ${edit} is 409 TEST_LOCKED and stores nothing`, async () => {
+      const { app } = await testApp();
+      const t = await seeded();
+      await started(t.testId);
+      const [beforeTest, beforeQuestions] = [(await testDoc(t.testId).get()).data(), await questionsOf(t.testId)];
+      const [method, url, body] = await request(t);
+      const res = await call(app, method, url, body);
+      expect(res.statusCode, res.body).toBe(409);
+      expect(res.json().error.code).toBe('TEST_LOCKED');
+      expect((await testDoc(t.testId).get()).data()).toEqual(beforeTest);
+      expect(await questionsOf(t.testId)).toEqual(beforeQuestions);
+    });
+
+  it('TST-06 release and visibility settings, details, eligibility and a later flexible window end still save', async () => {
+    const { app } = await testApp();
+    const now = Date.UTC(2026, 10, 2, 4, 0);
+    const t = await SCENARIOS['exam-test']!(db, now, { orgId: orgA, timingMode: 'flexible', windowMin: 180 });
+    const testId = String(t.testId);
+    await started(testId);
+    const overrides = (await testDoc(testId).get()).get('overrides') as Record<string, unknown>;
+    const window = overrides.window as { start: number; end: number };
+    const later = { ...overrides, window: { ...window, end: window.end + 30 * 60_000 }, resultRelease: 'manual' };
+    const ok = await call(app, 'PATCH', `/v1/tests/${testId}`, { overrides: later });
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect((await testDoc(testId).get()).data()).toMatchObject({
+      status: 'scheduled',
+      overrides: later,
+      resolved: { window: later.window, resultRelease: 'manual', timingMode: 'flexible' },
+    });
+    const details = {
+      title: 'Renamed',
+      eligibility: { departmentIds: [], graduationYears: [2027], include: [], exclude: [] },
+    };
+    expect((await call(app, 'PATCH', `/v1/tests/${testId}`, details)).statusCode).toBe(200);
+
+    for (const w of [
+      { ...later.window, end: window.end },
+      { start: window.start + 60_000, end: later.window.end + 60_000 },
+    ]) {
+      const res = await call(app, 'PATCH', `/v1/tests/${testId}`, { overrides: { ...later, window: w } });
+      expect(res.statusCode, `window ${JSON.stringify(w)}`).toBe(409);
+      expect(res.json().error).toMatchObject({ code: 'TEST_LOCKED', details: { field: 'window' } });
+    }
+    const fixed = await SCENARIOS['exam-test']!(db, now, { orgId: orgA, title: 'Fixed slot' });
+    await started(String(fixed.testId));
+    const fixedOverrides = (await testDoc(String(fixed.testId)).get()).get('overrides') as typeof overrides;
+    const slot = fixedOverrides.window as typeof window;
+    const res = await call(app, 'PATCH', `/v1/tests/${String(fixed.testId)}`, {
+      overrides: { ...fixedOverrides, window: { ...slot, end: slot.end + 60_000 } },
+    });
+    expect(res.statusCode, 'a fixed slot keeps its end').toBe(409);
+  });
+
+  it('TST-06 Q-15 PR-13 a pairing reservation alone is not a start: edits still return the test to review', async () => {
     const { app } = await testApp();
     const t = await seeded();
-    await db.doc(`organizations/${orgA}/attemptIndex/${t.testId}_s1`).set({ activeAttemptId: 'a1', attemptCount: 1 });
-    await call(app, 'PATCH', `/v1/tests/${t.testId}`, { overrides: { maxStrikes: 5 } });
-    await call(app, 'PATCH', `/v1/tests/${t.testId}/questions/${t.questionIds[0]}`, { prompt: 'Changed' });
-    const stored = (await testDoc(t.testId).get()).data()!;
-    expect(stored.status).toBe('scheduled');
-    expect(stored.resolved).toBeDefined();
+    await db
+      .doc(`organizations/${orgA}/attemptIndex/${t.testId}_s1`)
+      .set({ testId: t.testId, studentId: 's1', reservedAttemptId: 'att-9', attemptCount: 0 });
+    const res = await call(app, 'PATCH', `/v1/tests/${t.testId}`, { overrides: { maxStrikes: 5 } });
+    expect(res.statusCode, res.body).toBe(200);
+    expect((await testDoc(t.testId).get()).get('status')).toBe('in_review');
   });
 });
