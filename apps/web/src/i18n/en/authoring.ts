@@ -122,6 +122,8 @@ export const authoring = {
   'setting.minutesError': 'Enter a whole number of minutes, 1 or more.',
   'setting.fullReviewBlocked':
     "In a flexible window, a full review released on submit would show the answers to students who haven't started yet. Release results after the window closes, or choose a lower detail level.",
+  'setting.windowMissing': 'Enter a date and time.',
+  'setting.windowError': 'The window must end after it starts.',
   'eligibility.title.series': 'Students who can take this series',
   'eligibility.title.test': 'Students who can take this test',
   'eligibility.departments': 'Departments',
