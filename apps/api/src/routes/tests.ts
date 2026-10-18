@@ -251,6 +251,12 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         }
         const now = clock.now();
         const review = lockedChange(before, req.body, nextSections) && (await editReturnsToReview(data, orgId, before));
+        // SER-09: a snapshot updated in place keeps its own timing, so the merged snapshot is what must not leak.
+        const snapshot = !review && fresh && before.resolved ? { ...before.resolved, ...releaseOf(fresh) } : undefined;
+        if (snapshot && settingsProblems(snapshot).length)
+          throw new AppError(400, 'FULL_REVIEW_BEFORE_CLOSE', FULL_REVIEW_BEFORE_CLOSE_MESSAGE, {
+            field: 'resultRelease',
+          });
         const changes: TestUpdate = {
           ...details,
           ...('company' in details ? { company: details.company || null } : {}),
@@ -259,7 +265,7 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           ...(nextSections ? { sections: nextSections } : {}),
           // Q-15: back to review, or a release and visibility change written into the snapshot in place.
           ...(review ? BACK_TO_REVIEW : {}),
-          ...(!review && fresh && before.resolved ? { resolved: { ...before.resolved, ...releaseOf(fresh) } } : {}),
+          ...(snapshot ? { resolved: snapshot } : {}),
           updatedAt: now,
         };
         const batch = db.batch();
