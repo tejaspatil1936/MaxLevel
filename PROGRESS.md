@@ -55,3 +55,6 @@ F-1.10 done — profile completion with PRN from the list, profile lock with opt
 F-1.11 done — student directory with filters, sorting, columns, density; non-modal drawer with attempts and history
 F-1.12 done — org and platform audit logs with filters in the org timezone and CSV export
 F-1.13 done — accessibility panel saved to the account and applied before first paint, reading ruler
+Release gate: spec review found 3 blocking items (archived-org platform writes, removed-entry student re-enable, preferences recreating a deleted record); QA found 6 more (duplicate PRN from the whitelist, accessibility panel taller than the screen, menu focus ring, sticky bar covering a field, unnamed loading states) plus CSV formula cells (owner instruction). Each fixed after a regression test; minor findings in docs/BACKLOG.md.
+VERIFY full PASS 7c851a27fd45df6d0590fc38440c80eb9db16b48 (docs/verification/phase-1.md)
+PHASE 1 DONE 13/13 features
