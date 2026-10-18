@@ -67,3 +67,4 @@ F-2.01 done — eligibility, seeded draw, marks and presets, day labels, setting
 F-2.02 done — series API with SER-09 refusal and eligibility preview, student series listing service, series list, new/edit forms with settings controls and live eligibility count, series page with activate/archive
 F-2.03 done — tests API with derived live/closed status, authoring-test scenario, series timeline with day labels in the org timezone, Add test dialog, test editor shell
 F-2.04 done — test Settings tab with Inherited/Overridden groups and reset, test Eligibility tab narrowing the series rules with its own preview route
+F-2.05 done — question CRUD, reorder (drag and keyboard), image upload, JSON import (legacy and mitaoe-questions/1), editor with live Student view (markdown-it, KaTeX MathML, Shiki)
