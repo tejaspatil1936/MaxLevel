@@ -34,3 +34,4 @@ export * from './leaderboard';
 export * from './release';
 export * from './results';
 export * from './result-view';
+export * from './history';
