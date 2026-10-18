@@ -11,7 +11,8 @@ export interface MatchingStudent {
   graduationYear: number;
 }
 
-const asEligibility = (s: StudentRecord): EligibilityStudent => ({
+/** The fields of a student record the eligibility rules read. */
+export const asEligibility = (s: StudentRecord): EligibilityStudent => ({
   id: s.id,
   status: s.status,
   departmentId: s.departmentId,
