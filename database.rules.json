@@ -1,6 +1,45 @@
 {
   "rules": {
-    ".read": false,
-    ".write": false
+    ".read": "auth != null && auth.token.role === 'superAdmin'",
+    ".write": false,
+    "presence": {
+      "$orgId": {
+        ".read": "auth != null && auth.token.role === 'admin' && auth.token.orgId === $orgId",
+        "$testId": {
+          "$attemptId": {
+            "laptop": {
+              ".write": "auth != null && auth.token.role === 'student' && auth.token.orgId === $orgId && root.child('attemptOwners').child($attemptId).val() === auth.uid",
+              ".validate": "newData.hasChildren(['online', 'lastSeen', 'fullscreen', 'visible'])",
+              "online": { ".validate": "newData.isBoolean()" },
+              "lastSeen": { ".validate": "newData.isNumber() && newData.val() <= now" },
+              "fullscreen": { ".validate": "newData.isBoolean()" },
+              "visible": { ".validate": "newData.isBoolean()" },
+              "$other": { ".validate": false }
+            },
+            "phone": {
+              ".read": "auth != null && auth.token.role === 'student' && auth.token.orgId === $orgId && root.child('attemptOwners').child($attemptId).val() === auth.uid",
+              ".write": "auth != null && auth.token.role === 'device' && auth.token.orgId === $orgId && auth.token.attemptId === $attemptId",
+              ".validate": "newData.hasChildren(['online', 'lastSeen', 'cameraOn'])",
+              "online": { ".validate": "newData.isBoolean()" },
+              "lastSeen": { ".validate": "newData.isNumber() && newData.val() <= now" },
+              "cameraOn": { ".validate": "newData.isBoolean()" },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+      }
+    },
+    "live": {
+      "$orgId": {
+        ".read": "auth != null && auth.token.role === 'admin' && auth.token.orgId === $orgId"
+      }
+    },
+    "signals": {
+      "$orgId": {
+        "$attemptId": {
+          ".read": "auth != null && auth.token.role === 'student' && auth.token.orgId === $orgId && root.child('attemptOwners').child($attemptId).val() === auth.uid"
+        }
+      }
+    }
   }
 }
