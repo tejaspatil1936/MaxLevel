@@ -56,18 +56,10 @@ export interface QuestionViewImage {
 
 export const optionLetter = (i: number) => String.fromCharCode(65 + i);
 
-/** Prompt, images (named by their alt text) and lettered option rows, as on the exam sheet. */
-export function QuestionView({
-  prompt,
-  images,
-  options,
-}: {
-  prompt: string;
-  images: readonly QuestionViewImage[];
-  options: ReadonlyArray<{ id: string; text: string }>;
-}) {
+/** The prompt and its images, each named by its alt text. */
+export function QuestionPrompt({ prompt, images }: { prompt: string; images: readonly QuestionViewImage[] }) {
   return (
-    <div className="flex flex-col gap-4">
+    <>
       <QuestionText text={prompt} className="max-w-question text-question" />
       {images.map((img, i) =>
         img.src ? (
@@ -83,6 +75,23 @@ export function QuestionView({
           />
         ) : null,
       )}
+    </>
+  );
+}
+
+/** Prompt, images (named by their alt text) and lettered option rows, as on the exam sheet. */
+export function QuestionView({
+  prompt,
+  images,
+  options,
+}: {
+  prompt: string;
+  images: readonly QuestionViewImage[];
+  options: ReadonlyArray<{ id: string; text: string }>;
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <QuestionPrompt prompt={prompt} images={images} />
       <ol className="flex flex-col gap-2">
         {options.map((o, i) => (
           <li
