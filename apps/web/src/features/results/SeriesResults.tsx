@@ -9,12 +9,14 @@ import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
+import { ExportRegion } from './ExportRegion';
 import { resultsUrl } from './release-words';
 
 const link = 'inline-flex min-h-11 items-center font-bold text-ballpoint underline';
 const h1 = 'font-display text-display-2 font-bold';
 
-/** /admin/results/?series=<seriesId> (LB-05, US-AD-14): one series' results, its leaderboard with every row. */
+/** /admin/results/?series=<seriesId> (LB-05, US-AD-14): one series' results, its exports and its leaderboard with every
+ * row. */
 export function SeriesResults({ seriesId }: { seriesId: string }) {
   const { orgId, org } = useWorkspace();
   const query = useQuery({
@@ -53,6 +55,7 @@ export function SeriesResults({ seriesId }: { seriesId: string }) {
   return (
     <>
       <PageHeader title={t('results.testHeading', { heading: query.data.title })} actions={back} />
+      <ExportRegion scope="series" refId={seriesId} />
       <AdminLeaderboard boardId={seriesBoardId(seriesId)} />
     </>
   );

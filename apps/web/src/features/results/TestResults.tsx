@@ -10,6 +10,7 @@ import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
+import { ExportRegion } from './ExportRegion';
 import { ReleaseRegion } from './ReleaseRegion';
 import { resultsUrl } from './release-words';
 
@@ -55,6 +56,7 @@ export function TestResults({ testId }: { testId: string }) {
     <>
       <PageHeader title={t('results.testHeading', { heading: testHeading(query.data) })} actions={back} />
       <ReleaseRegion summary={query.data} />
+      <ExportRegion scope="test" refId={testId} />
       <AdminLeaderboard boardId={testBoardId(testId)} />
     </>
   );

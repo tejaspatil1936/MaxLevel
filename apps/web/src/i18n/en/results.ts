@@ -34,4 +34,11 @@ export const results = {
   'results.withdrawTitle': 'Withdraw results?',
   'results.withdrawBody': 'Students will see that their results are being reviewed until you release them again.',
   'results.withdrawnNotice': 'Results withdrawn',
+  'results.export': 'Export results',
+  'results.exportAs': 'Export {format}',
+  'results.exportPreparing': 'Preparing your export',
+  'results.exportReady': 'Your export is ready.',
+  'results.exportDownload': 'Download {format}',
+  'results.exportLinkNote': 'This link works for 15 minutes.',
+  'results.exportFailed': 'The export failed. Try again.',
 } as const;
