@@ -300,3 +300,11 @@ Answer: AUTO-DECIDED, yes; each is a docs/MANUAL_CHECKS.md entry with who runs i
 - Needed by: after v1
 
 Answer: AUTO-DECIDED, out of v1.
+### 34. Restoring an archived organization
+- Question: Q9's default says every mutation in an archived organization returns 409, but US-SA-05 requires archiving to be reversible. Contradiction.
+- REQ: ORG-07, US-SA-05
+- Proposed default: a super admin's status change on the organization itself is the one mutation allowed, so it can be restored.
+- Impact if wrong: archived organizations could never be restored.
+- Needed by: phase 1
+
+Answer: AUTO-DECIDED, a super admin's status change on the organization itself is the one mutation allowed, so it can be restored.

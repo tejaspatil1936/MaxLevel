@@ -63,3 +63,4 @@ docs/OPEN_QUESTIONS.md; build choices are the agent's own under decision policy 
 - 2026-10-17 | build | Bootstrap resolves roles only for ID tokens with email_verified and sign_in_provider google.com, so a second sign-in method can never claim a listed email | AUTH-01, AUTH-02 | rule 2
 - 2026-10-17 | build | API trusts one proxy hop for the client IP (the Google front end); /v1 routes without a declared access fail closed | AUD-01, SEC-04 | rule 2
 - 2026-10-18 | build | exceljs 4.4.0 as a root dev dependency so acceptance tests can generate XLSX upload fixtures; the web app uses ExcelJS and Papa Parse for client-side whitelist parsing (Q11) | WL-02 | rule 4
+- 2026-10-18 | build | Q9 refinement: in an archived organization every mutation returns 409 ORG_ARCHIVED except a super admin's status change on the organization itself (restore), so archiving stays reversible (US-SA-05) | ORG-07, US-SA-05 | rule 3
