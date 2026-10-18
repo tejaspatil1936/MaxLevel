@@ -21,11 +21,13 @@ import { departmentRoutes } from './routes/departments';
 import { meRoutes } from './routes/me';
 import { orgRoutes } from './routes/org';
 import { platformRoutes } from './routes/platform';
+import { seriesRoutes } from './routes/series';
 import { studentRoutes } from './routes/students';
 import { whitelistRoutes } from './routes/whitelist';
 import { sessionRoutes } from './routes/session';
 import { auditWriter } from './services/audit';
 import { accountStatusService } from './services/account-status';
+import { eligibilityService } from './services/eligibility';
 import { entitlementsService } from './services/entitlements';
 import { logoStore } from './services/logos';
 import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
@@ -76,12 +78,21 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     ...deps,
     data,
     audit: auditWriter(data, deps.clock),
+    eligibility: eligibilityService(data),
     entitlements,
     status,
     logos: logoStore(deps.firebase),
   };
   await app.register(orgRoutes(ctx));
-  for (const routes of [platformRoutes, departmentRoutes, whitelistRoutes, studentRoutes, auditRoutes, meRoutes])
+  for (const routes of [
+    platformRoutes,
+    departmentRoutes,
+    whitelistRoutes,
+    studentRoutes,
+    seriesRoutes,
+    auditRoutes,
+    meRoutes,
+  ])
     await app.register(routes(ctx));
   // Test-only API: never registered outside NODE_ENV=test with a TEST_API_SECRET.
   if (testApiEnabled(deps)) {

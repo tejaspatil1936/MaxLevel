@@ -21,6 +21,28 @@ const newDepartment = async (db: Firestore, n: number) => {
   return ref.id;
 };
 
+/** A series with a fixed ID in an org, so samples can name it in params. */
+const seriesIn = async (db: Firestore, orgId: string, id: string) => {
+  await db.doc(`organizations/${orgId}/series/${id}`).set({
+    orgId,
+    title: `Series ${id}`,
+    status: 'draft',
+    startDate: '2026-11-01',
+    endDate: '2026-11-30',
+    dailyWindow: { startMinutes: 600, endMinutes: 660 },
+    defaults: {},
+    eligibility: { departmentIds: [], graduationYears: [], include: [], exclude: [] },
+    createdAt: 0,
+    updatedAt: 0,
+  });
+  return id;
+};
+const withSeries = async (db: Firestore) => {
+  await seriesIn(db, 'org-b', 'series-org-b');
+  return { params: { id: await seriesIn(db, 'org-a', 'series-org-a') } };
+};
+const noRules = { departmentIds: [], graduationYears: [], include: [], exclude: [] };
+
 export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'GET /v1/org': {},
   'PATCH /v1/org/settings': { body: { profileLocked: false } },
@@ -82,6 +104,29 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
       });
       return { params: { id: ref.id } };
     },
+  },
+
+  'GET /v1/series': {},
+  'POST /v1/series': {
+    fresh: async (_db, n) => ({
+      body: {
+        title: `Series ${n}`,
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+        dailyWindow: { startMinutes: 600, endMinutes: 660 },
+        defaults: {},
+        eligibility: noRules,
+      },
+    }),
+  },
+  'GET /v1/series/:id': { foreignParams: { id: 'series-org-b' }, fresh: withSeries },
+  'PATCH /v1/series/:id': {
+    foreignParams: { id: 'series-org-b' },
+    fresh: async (db, n) => ({ ...(await withSeries(db)), body: { title: `Renamed ${n}` } }),
+  },
+  'POST /v1/series/:id/eligibility/preview': {
+    foreignParams: { id: 'series-org-b' },
+    fresh: async (db) => ({ ...(await withSeries(db)), body: { eligibility: noRules } }),
   },
 
   'GET /v1/audit': {},
