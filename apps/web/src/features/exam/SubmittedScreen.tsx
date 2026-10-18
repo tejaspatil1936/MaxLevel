@@ -1,12 +1,13 @@
 'use client';
 
-import type { AttemptPayload } from '@mitaoe/shared';
+import type { AttemptPayload, StudentResult } from '@mitaoe/shared';
 import { InlineMessage, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import { CircleCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+import { resultUrl } from '@/features/results/StudentResultScreen';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { formatZonedTime } from '@/lib/format';
@@ -47,6 +48,13 @@ export function SubmittedScreen() {
     retry: (n, e) => !(e instanceof ApiError && e.status < 500) && n < 2,
   });
   const status = query.data?.attempt.status;
+  // RES-01: the link to the result page appears whenever the result is released to the student.
+  const result = useQuery({
+    queryKey: qk.orgItem(orgId, 'result', attemptId),
+    queryFn: () => api<StudentResult>(`/v1/student/results/${encodeURIComponent(attemptId)}`),
+    enabled: !!orgId && !!attemptId && !!status && status !== 'in_progress',
+    retry: false,
+  });
   useEffect(() => {
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
   }, []);
@@ -92,6 +100,11 @@ export function SubmittedScreen() {
       {ended ? <p>{t('submitted.endedBody', { max: attempt.maxStrikes })}</p> : null}
       {attempt.status === 'auto_submitted' ? <p>{t('submitted.auto')}</p> : null}
       <p>{releaseLine(settings, me?.org?.timezone ?? 'Asia/Kolkata')}</p>
+      {result.data?.release === 'released' ? (
+        <Link href={resultUrl(attemptId)} className={backLink}>
+          {t('submitted.seeResult')}
+        </Link>
+      ) : null}
       {back}
     </div>
   );
