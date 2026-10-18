@@ -15,3 +15,5 @@ export * from './day-labels';
 export * from './settings';
 export * from './series';
 export * from './test-record';
+export * from './question';
+export * from './question-checks';
