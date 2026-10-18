@@ -4,3 +4,7 @@ export * from './auth';
 export * from './audit';
 export * from './org';
 export * from './entitlements';
+export * from './page';
+export * from './people';
+export * from './preferences';
+export * from './platform';
