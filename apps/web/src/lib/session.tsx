@@ -31,6 +31,10 @@ interface SessionApi {
   signOut: () => Promise<void>;
   /** Tries again after a failure (for example the API was unreachable). */
   retry: () => Promise<void>;
+  /** Back to the organization chooser, for an email listed in more than one org (AUTH-04). */
+  switchOrg: () => Promise<void>;
+  /** Fetches /v1/me again, for example after the profile is completed. */
+  refresh: () => Promise<void>;
 }
 
 const Ctx = createContext<SessionApi | null>(null);
@@ -62,7 +66,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
       set({ status: 'ready', me: await api<MeResponse>('/v1/me') });
     } catch (e) {
-      const listed = e instanceof ApiError && ['NOT_ON_LIST', 'ORG_SUSPENDED', 'ACCOUNT_DISABLED'].includes(e.code);
+      const listed =
+        e instanceof ApiError && ['NOT_ON_LIST', 'ORG_SUSPENDED', 'ORG_ARCHIVED', 'ACCOUNT_DISABLED'].includes(e.code);
       set(listed ? { status: 'notOnList', code: (e as ApiError).code } : { status: 'failed' });
     }
   }, []);
@@ -117,6 +122,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setWorkspaceOrg(null);
         queryClient.clear();
         await fbSignOut(firebaseAuth());
+      },
+      async switchOrg() {
+        const user = firebaseAuth().currentUser;
+        if (!user) return;
+        queryClient.clear();
+        setSession({ status: 'signingIn' });
+        await resolve(user, { bootstrap: true });
+      },
+      async refresh() {
+        const user = firebaseAuth().currentUser;
+        if (user) await resolve(user);
       },
       async retry() {
         const user = firebaseAuth().currentUser;

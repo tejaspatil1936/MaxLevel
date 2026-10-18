@@ -1,19 +1,23 @@
 'use client';
 
 import type { MeResponse } from '@mitaoe/shared';
-import { Button } from '@mitaoe/ui';
+import { Button, Menu } from '@mitaoe/ui';
+import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { t } from '@/i18n';
 import { useSession } from '@/lib/session';
+import { AccessibilityButton } from './AccessibilityPanel';
 
 /** Student shell (13.7): one top bar and centred content up to 1,120 px. */
 export function StudentShell({ me, children }: { me: MeResponse; children: ReactNode }) {
-  const { signOut } = useSession();
+  const { signOut, switchOrg } = useSession();
+  const router = useRouter();
   return (
     <div className="min-h-screen">
       <header className="border-b border-rule bg-surface">
-        <div className="mx-auto flex min-h-16 max-w-student flex-wrap items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex min-h-16 max-w-student flex-wrap items-center justify-between gap-4 px-4 py-2">
           <p className="font-display text-heading-1 font-bold">{me.org?.name ?? t('app.name')}</p>
           <nav aria-label={t('nav.main')}>
             <Link
@@ -23,9 +27,33 @@ export function StudentShell({ me, children }: { me: MeResponse; children: React
               {t('nav.tests')}
             </Link>
           </nav>
-          <Button variant="secondary" onClick={() => void signOut()}>
-            {t('app.signOut')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <AccessibilityButton />
+            <Menu
+              label={t('account.menu')}
+              trigger={
+                <Button variant="secondary" className="gap-2">
+                  <span>{me.email}</span>
+                  <ChevronDown aria-hidden size={18} />
+                </Button>
+              }
+              items={[
+                { label: t('account.profile'), onSelect: () => router.push('/profile/') },
+                ...(me.canSwitchOrg
+                  ? [
+                      {
+                        label: t('switcher.label'),
+                        onSelect: () => {
+                          router.push('/');
+                          void switchOrg();
+                        },
+                      },
+                    ]
+                  : []),
+                { label: t('app.signOut'), onSelect: () => void signOut() },
+              ]}
+            />
+          </div>
         </div>
       </header>
       <main id="main" tabIndex={-1} className="mx-auto max-w-student px-4 py-8">
