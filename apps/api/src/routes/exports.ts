@@ -36,7 +36,13 @@ export const originOf = (req: FastifyRequest) => `${req.protocol}://${req.host}`
 export function exportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   const { data, audit, clock, queue } = ctx;
   const db = ctx.firebase.db;
-  const links = exportLinks(ctx.config.exportLinkSecret, clock);
+  const secret = ctx.config.exportLinkSecret;
+  const signer = secret ? exportLinks(secret, clock) : null;
+  /** Production without EXPORT_LINK_SECRET has no shared key, so nothing is exported or downloaded (OWNER_SETUP 0.4). */
+  const links = () => {
+    if (!signer) throw new AppError(503, 'EXPORTS_UNAVAILABLE', 'Exports are not available right now.');
+    return signer;
+  };
 
   /** A published test or a series of the organization; anything else, another org's included, is 404 (ORG-05). */
   async function assertTarget(orgId: string, scope: 'test' | 'series', refId: string) {
@@ -52,6 +58,7 @@ export function exportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       async (req, reply) => {
         const orgId = req.orgId!;
         const { scope, refId, format } = req.body;
+        links();
         await assertTarget(orgId, scope, refId);
         const id = data.exports.newExportId(orgId);
         const filename = exportFilename(scope, refId, format);
@@ -93,7 +100,7 @@ export function exportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           status: rec.status,
           filename: rec.filename,
         };
-        return rec.status === 'ready' ? { ...info, ...links.issue(originOf(req), orgId, rec.id) } : info;
+        return rec.status === 'ready' ? { ...info, ...links().issue(originOf(req), orgId, rec.id) } : info;
       },
     );
 
@@ -104,7 +111,7 @@ export function exportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         schema: { params: idParams, querystring: linkQuery, response: { 200: z.custom<Buffer>() } },
       },
       async (req, reply) => {
-        const verdict = links.verify(req.params.id, req.query);
+        const verdict = links().verify(req.params.id, req.query);
         if (verdict === 'expired')
           throw new AppError(403, 'LINK_EXPIRED', 'This download link has expired. Export the results again.');
         if (verdict !== 'ok') throw new AppError(403, 'LINK_INVALID', 'This download link is not valid.');

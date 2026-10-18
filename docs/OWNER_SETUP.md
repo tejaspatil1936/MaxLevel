@@ -41,7 +41,7 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 - What: create secrets `llm-api-key` (phase 6), `sentry-dsn-api`, `sentry-dsn-worker`, and `export-link-secret`
   (at least 32 random bytes, e.g. `openssl rand -hex 32`). Mount them in Cloud Run as environment variables at deploy
   time; `export-link-secret` becomes `EXPORT_LINK_SECRET` on the `api` service, one value shared by every instance
-  (it signs export download links, EXP-03). The API refuses to start in production without it.
+  (it signs export download links, EXP-03). Without it the production API logs an error at startup and every export route answers 503.
 - Where: Security → Secret Manager.
 - Confirm: `gcloud secrets list` shows them; the services start with the secret values present.
 - Unblocks: SEC-02, OBS-02, IMP-07, EXP-03.

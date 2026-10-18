@@ -7,6 +7,8 @@ import { localTaskDispatcher } from './tasks/dispatcher';
 import { localTaskQueue } from './tasks/local-queue';
 
 const config = loadConfig();
+if (!config.exportLinkSecret)
+  console.error('EXPORT_LINK_SECRET is not set: results exports answer 503 (OWNER_SETUP 0.4).');
 // The settable clock exists only in test mode; production always uses system time.
 const clock = config.env === 'test' ? new TestClock() : systemClock;
 const firebase = initFirebase();
