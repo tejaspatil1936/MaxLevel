@@ -166,6 +166,44 @@ describe('board size and paging', () => {
     expect(pages.flat()).toEqual(many);
   });
 
+  // Firestore's stored-size rules (firebase.google.com/docs/firestore/storage-size), written out independently here.
+  const fsBytes = (v: unknown): number => {
+    if (v === null || typeof v === 'boolean') return 1;
+    if (typeof v === 'number') return 8;
+    if (typeof v === 'string') return Buffer.byteLength(v, 'utf8') + 1;
+    if (Array.isArray(v)) return v.reduce((s: number, x) => s + fsBytes(x), 0);
+    return Object.entries(v as object).reduce((s, [k, x]) => s + fsBytes(k) + fsBytes(x), 0);
+  };
+  const docBytes = (path: string, fields: object) =>
+    path.split('/').reduce((s, seg) => s + Buffer.byteLength(seg, 'utf8') + 1, 16) + fsBytes(fields) + 32;
+  const MIB = 1_048_576;
+  /** Every stored record of a board (head with its metadata, then `pages/{n}`) stays under 1 MiB. */
+  const expectPagesFit = (rows: object[]) => {
+    const pages = leaderboardPages(rows);
+    const head = `organizations/${'o'.repeat(128)}/leaderboards/series_${'s'.repeat(128)}`;
+    const sizes = pages.map((page, n) =>
+      n === 0
+        ? docBytes(head, { computedAt: T0, total: rows.length, pageCount: pages.length, rows: page })
+        : docBytes(`${head}/pages/${n}`, { rows: page }),
+    );
+    for (const size of sizes) expect(size).toBeLessThan(MIB);
+    expect(pages.flat()).toEqual(rows);
+    for (const page of pages) expect(page.length).toBeLessThanOrEqual(LEADERBOARD_PAGE_ROWS);
+    return pages;
+  };
+
+  it('DATA-04 LB-02 LB-03 pages 2,000 series rows with 30 tests each so every record stays under 1 MiB', () => {
+    const testIds = Array.from({ length: 30 }, (_, t) => `t${String(t).padStart(19, '0')}`);
+    const rows = rowsOf(2000).map((r) => ({ ...r, scores: Object.fromEntries(testIds.map((t) => [t, 12.5])) }));
+    expect(expectPagesFit(rows).length).toBeGreaterThan(1);
+  });
+
+  it('DATA-04 LB-03 pages 5,000 test rows with 60-character Devanagari names so every record stays under 1 MiB', () => {
+    const rows = rowsOf(5000).map((r) => ({ ...r, name: 'देवनागरी'.repeat(8).slice(0, 60) }));
+    expect(Buffer.byteLength(rows[0]!.name, 'utf8')).toBe(180);
+    expect(expectPagesFit(rows).length).toBeGreaterThan(1);
+  });
+
   it('DATA-04 LB-05 shows a student the first 50 rows and their own row wherever it is, or null', () => {
     const rows = rowsOf(120);
     const inside = studentBoardView(rows, rows[7]!.studentId);
