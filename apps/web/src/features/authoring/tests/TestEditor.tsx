@@ -14,6 +14,7 @@ import { useWorkspace } from '@/lib/workspace';
 import { seriesUrl } from '../series/SeriesList';
 import { SeriesNotFound } from '../series/SeriesNotFound';
 import { TestDetailsDialog } from './TestDetailsDialog';
+import { TestEligibility } from './TestEligibility';
 import { TestSettings } from './TestSettings';
 import { TestStatus } from './TestStatus';
 import { testHeading } from './test-view';
@@ -77,6 +78,8 @@ function EditorPage({ test }: { test: TestDetail }) {
   const panel = (value: string) => {
     if (value === 'settings')
       return series.data ? <TestSettings key={stamp} test={test} series={series.data} /> : loading;
+    if (value === 'eligibility')
+      return series.data ? <TestEligibility key={stamp} test={test} series={series.data} /> : loading;
     return null;
   };
 
