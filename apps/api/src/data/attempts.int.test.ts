@@ -202,4 +202,41 @@ describe('attempt data access', () => {
     expect(await data.attempts.getAttempt('org-a', attempt.id)).toEqual(stored);
     expect(await data.attempts.finalizeAttempt('org-b', attempt.id, finish('submitted', 1))).toBeNull();
   });
+
+  it('EX-11 EX-17 DATA-03 an answer saved while the attempt is finalized is graded or refused, never stored after grading', async () => {
+    const ids = ['race1', 'race2', 'race3', 'race4', 'race5', 'race6'];
+    await Promise.all(
+      ids.map((id) => {
+        const { id: _id, ...fields } = record(id, {
+          draw: {
+            questionIds: ['q1', 'q2'],
+            optionOrder: { q1: ['a', 'b'], q2: ['a', 'b'] },
+            sections: [{ sectionId: null, questionIds: ['q1', 'q2'] }],
+          },
+        });
+        return db.doc(`organizations/org-a/attempts/${id}`).set(fields);
+      }),
+    );
+    const result = { score: 0, max: 2, pct: 0, correct: 0, incorrect: 0, unanswered: 2, sections: {}, durationSec: 4 };
+    const graded: Record<string, Record<string, unknown>> = {};
+    const finalize = (id: string) =>
+      data.attempts.finalizeAttempt('org-a', id, (_a, answers) => {
+        graded[id] = answers;
+        return { status: 'submitted', submittedAt: 6000, result };
+      });
+    const save = (id: string, questionId: string) =>
+      data.attempts
+        .saveAnswer('org-a', id, { questionId, optionId: 'a', seq: 1, clientTs: 4000 }, 4500, () => 'saved')
+        .catch((e: unknown) => e);
+
+    // The finalize and the save run together; another save arrives just after the attempt is finished.
+    await Promise.all(ids.map((id) => Promise.all([finalize(id), save(id, 'q1')])));
+    const late = await Promise.all(ids.map((id) => save(id, 'q2')));
+    expect(late, 'a save after finishing is refused').not.toContain('saved');
+
+    for (const id of ids)
+      expect(await data.attempts.getAnswers('org-a', id), `${id}: stored answers are the graded ones`).toEqual(
+        graded[id],
+      );
+  });
 });
