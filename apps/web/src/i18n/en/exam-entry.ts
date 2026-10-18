@@ -1,0 +1,32 @@
+// English messages (A11Y-23). Preflight and the rules screen (docs/testids/phase-3.md, "Preflight" and "Rules").
+export const examEntry = {
+  'preflight.title': 'Check your device',
+  'preflight.lead':
+    'This computer needs to pass each check before the test. Fix anything that fails, then check again.',
+  'preflight.checks': 'Device checks',
+  'preflight.checkAgain': 'Check again',
+  'preflight.continue': 'Continue to rules',
+  'preflight.loadFailed': "Can't reach the exam server. Check your internet connection, then reload this page.",
+  'preflight.cameraView': 'Your camera',
+  'preflight.status.checking': 'Checking',
+  'preflight.status.passed': 'Passed',
+  'preflight.status.failed': 'Failed',
+  'preflight.check.screen': 'Screen width',
+  'preflight.check.fullscreen': 'Fullscreen',
+  'preflight.check.camera': 'Camera',
+  'preflight.check.face': 'Face detection',
+  'preflight.check.connection': 'Connection',
+  'preflight.check.clock': 'Clock',
+  'preflight.check.browser': 'Browser',
+  'preflight.detail.screen': '{n} px wide',
+  'preflight.detail.connection': 'Round trip {n} ms',
+  'preflight.detail.clock': 'Clock offset {n} s',
+  'preflight.fix.screen': 'Use a screen at least 1,024 px wide. If you zoomed in, zoom out until this check passes.',
+  'preflight.fix.fullscreen': "Your browser can't go fullscreen. Use current Chrome, Edge or Firefox.",
+  'preflight.fix.camera': 'Connect a camera and allow this site to use it, then press Check again.',
+  'preflight.fix.face': "Face detection didn't load. Reload the page, or use current Chrome or Edge.",
+  'preflight.fix.connection': "Can't reach the exam server. Check your internet connection, then press Check again.",
+  'preflight.fix.clock':
+    "Your computer's clock is off by more than 5 minutes. Set it to update automatically, then press Check again.",
+  'preflight.fix.browser': 'Use current Chrome, Edge or Firefox, or Safari 17 or later.',
+} as const;
