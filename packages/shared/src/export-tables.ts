@@ -1,6 +1,12 @@
 import type { AttemptResult, AttemptStatus } from './attempt';
 import { csvLine } from './csv';
-import { EXPORT_STATUS_WORDS, exportDateTime, TERMINATION_WORDS, testExportColumns } from './exports';
+import {
+  EXPORT_STATUS_WORDS,
+  exportDateTime,
+  seriesExportColumns,
+  TERMINATION_WORDS,
+  testExportColumns,
+} from './exports';
 
 // The tables of the results exports (EXP-01, EXP-02), built from stored records by the worker and written as CSV here
 // or as XLSX by the worker. Rows follow the stored boards' ranks (LB-01, LB-02).
@@ -98,6 +104,43 @@ export function testExportTable(input: TestExportInput): ExportTable {
         a.strikesCount,
         terminated ? (TERMINATION_WORDS[a.terminationReason ?? ''] ?? a.terminationReason ?? null) : null,
         a.extraTimeSec / 60,
+      ];
+    }),
+  };
+}
+
+export interface SeriesExportInput {
+  /** The series' tests in scheduled order, with their headings. */
+  tests: ReadonlyArray<{ id: string; heading: string }>;
+  /** The stored series board rows: total, rank and each test's counted score (null = not counted). */
+  board: ReadonlyArray<{ studentId: string; rank: number; score: number; scores?: Record<string, number | null> }>;
+  /** Every student with a finished attempt in the series. */
+  finished: Iterable<string>;
+  students: ReadonlyMap<string, ExportStudent>;
+}
+
+/**
+ * EXP-02: one row per student with a finished attempt in the series, board rows first in rank order, then the others
+ * by name, with each test's counted score, the total (a test not taken counting 0) and the series rank.
+ */
+export function seriesExportTable(input: SeriesExportInput): ExportTable {
+  const onBoard = new Map(input.board.map((r) => [r.studentId, r]));
+  const ids = [...new Set([...input.board.map((r) => r.studentId), ...input.finished])];
+  const student = (sid: string) => input.students.get(sid) ?? NO_STUDENT;
+  const ordered = boardOrder(
+    ids,
+    (sid) => onBoard.get(sid)?.rank ?? null,
+    (sid) => student(sid).name,
+  );
+  return {
+    columns: seriesExportColumns(input.tests.map((t) => t.heading)),
+    rows: ordered.map((sid) => {
+      const row = onBoard.get(sid);
+      return [
+        ...person(student(sid)),
+        ...input.tests.map((t) => row?.scores?.[t.id] ?? null),
+        row?.score ?? 0,
+        row?.rank ?? null,
       ];
     }),
   };
