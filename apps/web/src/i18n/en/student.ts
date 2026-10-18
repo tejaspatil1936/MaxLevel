@@ -1,0 +1,27 @@
+// English messages (A11Y-23). Student consent notice and profile.
+export const student = {
+  'consent.title': 'Your data and privacy',
+  'consent.collect':
+    'To run your placement tests, your placement cell keeps your name, email, PRN, department, graduation year, your test answers and the proctoring events recorded while you take a test.',
+  'consent.why':
+    'They are used only to run and grade tests, to check that tests are taken fairly, and to show your results to you and your placement cell. They are never sold or shared for advertising.',
+  'consent.rights':
+    'Under the Digital Personal Data Protection Act, 2023, you can ask your placement cell to see, correct or delete your data at any time.',
+  'consent.agree': 'I agree and continue',
+  'profile.title': 'Your profile',
+  'profile.complete': 'Complete your profile',
+  'profile.name': 'Full name',
+  'profile.prn': 'PRN',
+  'profile.department': 'Department',
+  'profile.year': 'Graduation year',
+  'profile.choose': 'Choose…',
+  'profile.prnFromList': 'Your placement cell added this PRN, so it cannot be changed here.',
+  'profile.saveContinue': 'Save and continue',
+  'profile.saved': 'Your profile is saved.',
+  'profile.locked': 'Your profile is locked. Ask your placement cell to make changes.',
+  'profile.nameMissing': 'Enter your full name.',
+  'profile.prnMissing': 'Enter your PRN.',
+  'profile.departmentMissing': 'Choose your department.',
+  'profile.yearMissing': 'Choose your graduation year.',
+  'profile.prnTaken': 'This PRN is already registered. Check it, or ask your placement cell for help.',
+} as const;
