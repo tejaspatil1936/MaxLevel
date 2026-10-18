@@ -16,7 +16,8 @@ export class PhonePage {
     this.connection = page.getByRole('status').filter({ hasText: /^\s*(Connecting|Connected|Reconnecting)\s*$/ });
     this.help = page.getByRole('heading', { level: 2, name: 'Position your phone', exact: true });
     this.video = page.locator('video');
-    this.refusal = page.getByRole('alert');
+    // In main: Next.js keeps its own empty route announcer (role alert) at the end of every page.
+    this.refusal = this.main.getByRole('alert');
   }
 
   /** Opens a pairing link (the text of the laptop's `pairing-link`). */
