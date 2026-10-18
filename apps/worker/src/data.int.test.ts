@@ -85,4 +85,86 @@ describe('worker data access', () => {
       createdAt: 5_000,
     });
   });
+
+  it('LB-01 LB-02 ORG-03 reads the finished attempts of a test with names, and the published tests of a series', async () => {
+    const org = db.doc('organizations/org-a');
+    await org.collection('students').doc('stu-1').set({ name: 'Asha', departmentId: 'd1' });
+    const attempt = (status: string, studentId: string, extra: object = {}) => ({
+      orgId: 'org-a',
+      testId: 't1',
+      studentId,
+      status,
+      startedAt: 1_000,
+      submittedAt: 61_000,
+      result: { score: 3, durationSec: 60, max: 4 },
+      ...extra,
+    });
+    await org.collection('attempts').doc('a1').set(attempt('submitted', 'stu-1'));
+    await org.collection('attempts').doc('a2').set(attempt('terminated', 'stu-2'));
+    await org
+      .collection('attempts')
+      .doc('a3')
+      .set(attempt('in_progress', 'stu-3', { result: null }));
+    await org
+      .collection('attempts')
+      .doc('a4')
+      .set(attempt('submitted', 'stu-4', { testId: 't2' }));
+    await org
+      .collection('tests')
+      .doc('t1')
+      .set({ seriesId: 's1', resolved: { resultRelease: 'immediate' } });
+    await org.collection('tests').doc('t3').set({ seriesId: 's1' });
+
+    const rows = await data.listRankableAttempts('org-a', 't1');
+    expect(rows.sort((a, b) => a.studentId.localeCompare(b.studentId))).toEqual([
+      {
+        studentId: 'stu-1',
+        name: 'Asha',
+        departmentId: 'd1',
+        status: 'submitted',
+        score: 3,
+        timeSec: 60,
+        submittedAt: 61_000,
+      },
+      {
+        studentId: 'stu-2',
+        name: '',
+        departmentId: '',
+        status: 'terminated',
+        score: 3,
+        timeSec: 60,
+        submittedAt: 61_000,
+      },
+    ]);
+    expect(await data.listRankableAttempts('org-b', 't1')).toEqual([]);
+    expect(
+      (await data.listSeriesReleaseTests('org-a', 's1')).map((t) => t.id),
+      'published only',
+    ).toEqual(['t1']);
+  });
+
+  it('LB-03 DATA-04 stores a board with its total, and pages above 5,000 rows that a smaller board removes', async () => {
+    const row = (n: number) => ({
+      studentId: `s${n}`,
+      name: `S ${n}`,
+      departmentId: 'd',
+      score: 1,
+      rank: 1,
+      timeSec: 0,
+    });
+    const board = db.doc('organizations/org-a/leaderboards/test_t1');
+    await data.putLeaderboard(
+      'org-a',
+      'test_t1',
+      5,
+      Array.from({ length: 5_001 }, (_, i) => row(i)),
+    );
+    expect((await board.get()).data()).toMatchObject({ computedAt: 5, total: 5_001, pageCount: 2 });
+    expect((await board.get()).get('rows')).toHaveLength(5_000);
+    expect((await board.collection('pages').doc('1').get()).get('rows')).toEqual([row(5_000)]);
+
+    await data.putLeaderboard('org-a', 'test_t1', 6, [row(1)]);
+    expect((await board.get()).data()).toEqual({ computedAt: 6, total: 1, pageCount: 1, rows: [row(1)] });
+    expect((await board.collection('pages').doc('1').get()).exists).toBe(false);
+  });
 });

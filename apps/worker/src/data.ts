@@ -1,4 +1,13 @@
-import type { AnswerRecord, AttemptRecord, GradingQuestion, Section, Settings } from '@mitaoe/shared';
+import {
+  FINISHED_ATTEMPT_STATUSES,
+  leaderboardPages,
+  type AnswerRecord,
+  type AttemptRecord,
+  type GradingQuestion,
+  type RankableAttempt,
+  type Section,
+  type Settings,
+} from '@mitaoe/shared';
 import type { DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 
 // The worker's data access (ORG-03: every function takes orgId first). It reads and writes the same records as the
@@ -44,6 +53,19 @@ const toAttempt = (d: DocumentSnapshot): AttemptRecord => {
   };
 };
 
+/** A stored leaderboard row (spec 10.1); series rows also keep each test's counted score. */
+export interface StoredBoardRow {
+  studentId: string;
+  name: string;
+  departmentId: string;
+  score: number;
+  rank: number;
+  timeSec: number;
+  scores?: Record<string, number | null>;
+}
+
+const FINISHED: ReadonlySet<string> = new Set(FINISHED_ATTEMPT_STATUSES);
+
 export function workerData(db: Firestore) {
   const org = (orgId: string) => db.doc(`organizations/${orgId}`);
 
@@ -88,6 +110,59 @@ export function workerData(db: Firestore) {
         tx.update(ref, { resultsReleasedAt: now });
         return true;
       });
+    },
+
+    /** LB-02: the published tests of a series with their release state. */
+    async listSeriesReleaseTests(orgId: string, seriesId: string): Promise<ReleaseTest[]> {
+      const snap = await org(orgId).collection('tests').where('seriesId', '==', seriesId).get();
+      return snap.docs.filter((d) => d.get('resolved')).map(toReleaseTest);
+    },
+
+    /**
+     * LB-01: the finished attempts of a test (`submitted`, `auto_submitted`, `terminated`) with the student's name and
+     * department, as ranking reads them. Ranking itself leaves terminated attempts out.
+     */
+    async listRankableAttempts(orgId: string, testId: string): Promise<RankableAttempt[]> {
+      const snap = await org(orgId)
+        .collection('attempts')
+        .where('testId', '==', testId)
+        .select('studentId', 'status', 'result.score', 'result.durationSec', 'submittedAt', 'startedAt')
+        .get();
+      const done = snap.docs.filter(
+        (d) => FINISHED.has(d.get('status') as string) && d.get('result.score') !== undefined,
+      );
+      const ids = [...new Set(done.map((d) => d.get('studentId') as string))];
+      const students = ids.length ? await db.getAll(...ids.map((id) => org(orgId).collection('students').doc(id))) : [];
+      const who = new Map(students.map((d) => [d.id, d]));
+      return done.map((d) => {
+        const studentId = d.get('studentId') as string;
+        const student = who.get(studentId);
+        return {
+          studentId,
+          name: (student?.get('name') as string | null | undefined) ?? '',
+          departmentId: (student?.get('departmentId') as string | null | undefined) ?? '',
+          status: d.get('status') as RankableAttempt['status'],
+          score: d.get('result.score') as number,
+          timeSec: (d.get('result.durationSec') as number | undefined) ?? 0,
+          submittedAt: (d.get('submittedAt') as number | undefined) ?? (d.get('startedAt') as number | undefined) ?? 0,
+        };
+      });
+    },
+
+    /**
+     * LB-03, DATA-04: stores a board as `leaderboards/{boardId}` with `computedAt`, `total` and its first page of rows;
+     * a board above `LEADERBOARD_PAGE_ROWS` rows keeps further pages in `leaderboards/{boardId}/pages/{n}` (n from 1),
+     * and pages left over from a larger board are deleted. One batch, so readers never see a half-written board.
+     */
+    async putLeaderboard(orgId: string, boardId: string, computedAt: number, rows: StoredBoardRow[]): Promise<void> {
+      const ref = org(orgId).collection('leaderboards').doc(boardId);
+      const pages = leaderboardPages(rows);
+      const before = ((await ref.get()).get('pageCount') as number | undefined) ?? 1;
+      const batch = db.batch();
+      batch.set(ref, { computedAt, total: rows.length, pageCount: pages.length, rows: pages[0] });
+      pages.slice(1).forEach((page, i) => batch.set(ref.collection('pages').doc(String(i + 1)), { rows: page }));
+      for (let n = pages.length; n < before; n++) batch.delete(ref.collection('pages').doc(String(n)));
+      await batch.commit();
     },
 
     /** The answer key and own marks of the named questions of a test (EX-17); missing questions are left out. */
