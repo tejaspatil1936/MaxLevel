@@ -95,3 +95,6 @@ F-3.11 done — lockdown: fullscreen exit, tab hidden and window blur strikes, d
 F-3.12 done — camera reopened on the exam, on-device face checks every 500 ms, no_face after 5 s and multiple_faces after 2 s as one incident, collapsible self-view keeps the camera on
 F-3.04 done — PERF-05 passes now that the no_face warning exists (no MediaPipe refetch after preflight)
 F-3.13 done — phone pairing on the rules screen (QR, 5-minute single-use token, device custom token), phone page with heartbeat and camera, Reconnect your phone after 15 s and strike after 60 s, REL-05 suspension, Realtime Database rules with tests
+Checkpoints: mid-phase review found 1 blocking issue (palette drawer hiding focus) plus the idempotency-before-account-check order; release-gate review and QA found 4 blocking issues (API waiting on RTDB writes during an outage, RTDB never reconnecting in the browser because the CSP blocked long-polling, Tab past the last control counting as a strike, admin editor sideways scroll at 320 px) plus worker task auth defaulting open and unbounded event details; a production-mode crash from the local dispatcher was fixed too. Each fixed after a regression test; minor findings in docs/BACKLOG.md.
+VERIFY full PASS 02e05bc44edf6760eac215c1cbc0397eb4b669f3 (docs/verification/phase-3.md)
+PHASE 3 DONE 13/13 features
