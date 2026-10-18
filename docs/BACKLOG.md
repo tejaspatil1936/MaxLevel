@@ -87,3 +87,16 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Reloading the phone page needs a new code (the link is single use and the device sign-in is in memory); it could keep the sign-in for the tab.
 - Laptop presence `lastSeen` changes only on connect, fullscreen and visibility changes; the live view (phase 6) may want a periodic heartbeat.
 - (Phase 3) TASK_QUEUE has only the local adapter; production needs the Cloud Tasks adapter (OIDC to the worker) before launch. The in-process dispatcher no longer starts in production.
+
+## Phase 3 (release-gate review and QA, minor)
+
+- RTDB rules for phone and laptop presence do not pin $testId to an owner record.
+- Phone strike timing runs in the laptop tab and restarts on reload; time it on the server from presence data.
+- Start does not check on the server that the phone is paired (strikes during the exam still cover it).
+- API-06 rate limits use the in-memory store per instance, not per user across instances.
+- submit with reason time_up before the deadline stores auto_submitted; store submitted when the server time is before deadlineAt.
+- offline-store: a refused answer with a higher seq blocks keeping a later lower-seq answer on the device.
+- Closing Keyboard shortcuts with Escape sends focus to the page instead of where it was.
+- Reloading during one continuous no-face spell gives a second no_face strike.
+- At 640 px wide (200% zoom) the fixed bottom bar hides the last option.
+- A zero-gap double click on Submit test while offline starts two submits with different Idempotency-Keys (the server finishes once).
