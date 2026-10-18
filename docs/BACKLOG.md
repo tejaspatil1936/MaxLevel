@@ -108,3 +108,11 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - History links to the result page, which shows the score even when Show past scores is off (DECISIONS allows it; flag to the owner against RES-04's intent).
 - History and leaderboard day labels are computed over listTests including drafts; check they match the student dashboard labels.
 - boardLines finds the student's own row by matching field values; a mine flag on the served row would be more robust.
+
+## Phase 4 (release-gate review, minor)
+
+- POST /v1/exports commits the record before queue.enqueue; a failed enqueue leaves the export queued with no retry.
+- The public /v1/exports/{id}/file route has no rate limit (signatures cannot be guessed, but each request runs an HMAC).
+- XLSX text cells keep a visible leading apostrophe from the owner's formula rule (e.g. `'-Rahul`), since ExcelJS writes literal strings; owner may relax the rule for XLSX.
+- refId accepts `/`, so `a/b` makes getTest throw a 500 instead of 404; restrict IDs to a Firestore ID pattern.
+- ExportRegion polls without a ceiling; a stuck export shows Preparing indefinitely.
