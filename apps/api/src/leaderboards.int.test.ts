@@ -146,3 +146,50 @@ describe('leaderboard board', () => {
     }
   });
 });
+
+describe('open leaderboards list', () => {
+  const list = async (headers: Record<string, string>, app = ctx.app) => {
+    const res = await app.inject({ method: 'GET', url: '/v1/student/leaderboards', headers });
+    return { status: res.statusCode, raw: res.body, boards: (res.json() as { boards?: unknown[] }).boards };
+  };
+
+  it('US-ST-09 LB-04 lists the boards open to the student, the series board before its test boards', async () => {
+    const t = await api.examTest({ overrides: { resultRelease: 'manual', testLeaderboard: true } });
+    const student = await studentOf(auth);
+    expect((await list(student)).boards, 'nothing released yet').toEqual([]);
+    await db.doc(`organizations/${SEED.orgA}/series/${t.seriesId}`).update({ 'defaults.seriesLeaderboard': true });
+    await db.doc(`organizations/${SEED.orgA}/tests/${t.testId}`).update({ resultsReleasedAt: NOW });
+    const open = await list(student);
+    expect(open.boards).toEqual([
+      { boardId: `series_${t.seriesId}`, kind: 'series', title: 'Placement 2026' },
+      { boardId: `test_${t.testId}`, kind: 'test', title: expect.stringMatching(/^Day 1: /) },
+    ]);
+    expect((await list(await studentOf(auth, 1, SEED.orgB))).boards, 'another org').toEqual([]);
+    expect((await list(await adminA())).status, 'students only').toBe(403);
+  });
+
+  it('LB-04 a series the student no longer sees still lists its boards when they have an attempt on it', async () => {
+    const t = await api.examTest({
+      overrides: { resultRelease: 'immediate', testLeaderboard: true },
+      seriesEligibility: { exclude: ['stu-org-a-02'] },
+    });
+    expect((await list(await studentOf(auth, 2))).boards).toEqual([]);
+    await db.collection(`organizations/${SEED.orgA}/attempts`).add({
+      orgId: SEED.orgA,
+      testId: t.testId,
+      seriesId: t.seriesId,
+      studentId: 'stu-org-a-02',
+      status: 'auto_submitted',
+    });
+    expect((await list(await studentOf(auth, 2))).boards).toEqual([
+      { boardId: `test_${t.testId}`, kind: 'test', title: expect.stringMatching(/^Day 1: /) },
+    ]);
+  });
+
+  it('FF-02 with public_leaderboards off the list answers 403 FEATURE_DISABLED', async () => {
+    await db.doc(`organizations/${SEED.orgA}`).update({ featureOverrides: { public_leaderboards: false } });
+    const fresh = await testApp();
+    const res = await list(await studentOf(auth), fresh.app);
+    expect(closed(res)).toEqual([403, 'FEATURE_DISABLED']);
+  });
+});

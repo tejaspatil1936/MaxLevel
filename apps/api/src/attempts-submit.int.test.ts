@@ -186,6 +186,9 @@ describe('submitting an attempt', () => {
     const board = await ctx.app.inject({ method: 'GET', url: `/v1/leaderboards/test_${t.testId}`, headers: s1 });
     expect(board.statusCode, board.body).toBe(200);
     bodies.push(board.body);
+    const boards = await ctx.app.inject({ method: 'GET', url: '/v1/student/leaderboards', headers: s1 });
+    expect(boards.json().boards).toHaveLength(1);
+    bodies.push(boards.body);
     for (const raw of bodies) expect(leaks(raw)).toEqual([]);
   });
 });

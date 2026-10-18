@@ -4,14 +4,17 @@ import {
   dayLabels,
   isEligible,
   parseBoardId,
+  studentLeaderboardsSchema,
   resultsPublic,
   testBoardTitle,
   type BoardKind,
   type BoardResponse,
+  type StudentLeaderboards,
 } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { SeriesRecord } from '../data/series';
+import type { StudentRecord } from '../data/students';
 import type { TestRecord } from '../data/tests';
 import { AppError, notFound } from '../errors';
 import { asEligibility } from '../services/eligibility';
@@ -34,6 +37,12 @@ export interface BoardSubject {
   test?: TestRecord;
   /** The series' tests (the open check of a series board reads their release state). */
   tests: TestRecord[];
+}
+
+interface Viewer {
+  record: StudentRecord | null;
+  attemptedTests: ReadonlySet<string>;
+  attemptedSeries: ReadonlySet<string>;
 }
 
 /**
@@ -79,25 +88,28 @@ export function leaderboardAccess(ctx: Pick<ApiContext, 'data' | 'clock'>) {
       return subjects(series, tests).find((s) => s.boardId === boardId) ?? null;
     },
 
-    /** LB-04: whether the student may open the board. `attempted` holds the tests of their finished attempts. */
-    async openTo(
-      orgId: string,
-      s: BoardSubject,
-      student: { id: string; attempted: ReadonlySet<string> },
-    ): Promise<boolean> {
+    /** What the open check knows about a student: their record and the tests and series of their finished attempts. */
+    async viewer(orgId: string, studentId: string): Promise<Viewer> {
+      const [record, attempts] = await Promise.all([
+        data.students.getStudent(orgId, studentId),
+        data.attempts.listFinishedAttempts(orgId, studentId),
+      ]);
+      return {
+        record,
+        attemptedTests: new Set(attempts.map((a) => a.testId)),
+        attemptedSeries: new Set(attempts.map((a) => a.seriesId)),
+      };
+    },
+
+    /** LB-04: whether the student may open the board. */
+    openTo(s: BoardSubject, viewer: Viewer): boolean {
       const now = clock.now();
       if (s.test) {
         if (!s.test.resolved?.testLeaderboard || !isPublic(s.test, now)) return false;
       } else if (!s.series.defaults.seriesLeaderboard || !s.tests.some((t) => isPublic(t, now))) return false;
       const own = s.test ? [s.test] : s.tests;
-      if (own.some((t) => student.attempted.has(t.id))) return true;
-      const record = await data.students.getStudent(orgId, student.id);
-      return !!record && isEligible(asEligibility(record), s.series.eligibility, s.test?.eligibility);
-    },
-
-    /** The tests of the student's finished attempts. */
-    async attempted(orgId: string, studentId: string): Promise<Set<string>> {
-      return new Set((await data.attempts.listFinishedAttempts(orgId, studentId)).map((a) => a.testId));
+      if (own.some((t) => viewer.attemptedTests.has(t.id))) return true;
+      return !!viewer.record && isEligible(asEligibility(viewer.record), s.series.eligibility, s.test?.eligibility);
     },
   };
 }
@@ -109,7 +121,7 @@ export function leaderboardAccess(ctx: Pick<ApiContext, 'data' | 'clock'>) {
  * everyone gets 403 FEATURE_DISABLED (FF-02).
  */
 export function leaderboardRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
-  const { data } = ctx;
+  const { data, eligibility } = ctx;
   const access = leaderboardAccess(ctx);
 
   return async (app) => {
@@ -124,10 +136,7 @@ export function leaderboardRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const studentId = req.user?.role === 'student' ? studentOf(req).studentId : null;
         const subject = await access.subject(orgId, req.params.boardId);
         if (!subject) throw studentId ? notAvailable() : notFound('Leaderboard');
-        if (studentId) {
-          const attempted = await access.attempted(orgId, studentId);
-          if (!(await access.openTo(orgId, subject, { id: studentId, attempted }))) throw notAvailable();
-        }
+        if (studentId && !access.openTo(subject, await access.viewer(orgId, studentId))) throw notAvailable();
         const [board, departments] = await Promise.all([
           data.leaderboards.getLeaderboard(orgId, subject.boardId),
           data.departments.departmentNames(orgId),
@@ -142,6 +151,41 @@ export function leaderboardRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           departments,
           studentId,
         });
+      },
+    );
+
+    /**
+     * GET /v1/student/leaderboards (US-ST-09, LB-04): the boards open to the caller, from the series they see and the
+     * series of their finished attempts, newest series first, each series board before its tests' boards in day order.
+     */
+    app.get(
+      '/v1/student/leaderboards',
+      {
+        config: { access: 'student' as const, feature: 'public_leaderboards' as const },
+        schema: { response: { 200: studentLeaderboardsSchema } },
+      },
+      async (req): Promise<StudentLeaderboards> => {
+        const orgId = req.orgId!;
+        const studentId = studentOf(req).studentId;
+        const [viewer, visible] = await Promise.all([
+          access.viewer(orgId, studentId),
+          eligibility.visibleSeries(orgId, studentId),
+        ]);
+        const seen = new Set(visible.map((s) => s.id));
+        const others = await Promise.all(
+          [...viewer.attemptedSeries].filter((id) => !seen.has(id)).map((id) => data.series.getSeries(orgId, id)),
+        );
+        const series = [...visible, ...others.filter((s): s is SeriesRecord => s !== null)].sort(
+          (a, b) => b.startDate.localeCompare(a.startDate) || a.title.localeCompare(b.title),
+        );
+        const lists = await Promise.all(series.map((s) => data.tests.listTests(orgId, s.id)));
+        const boards = series.flatMap((s, i) =>
+          access
+            .subjects(s, lists[i] ?? [])
+            .filter((b) => access.openTo(b, viewer))
+            .map(({ boardId, kind, title }) => ({ boardId, kind, title })),
+        );
+        return { boards };
       },
     );
   };
