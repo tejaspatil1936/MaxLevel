@@ -34,3 +34,5 @@ F-0.09 done — Firestore and Storage deny-all rules tests (from setup); infrast
 F-0.07 done — FF-01 resolution, FEATURE_DISABLED gate (also for super admins), 60 s clock cache, atomic monthly usage counters in the org timezone
 F-0.10 done — Google popup and emulator sign-in, bootstrap and token refresh, role homes, client guards, AUTH-03 alert; CSP allows the Firebase auth helper script
 F-0.02 done — Radix-based core components, Storybook catalogue in light, dark and high contrast, reduced motion instant
+QA and spec review: 4 blocking findings fixed with regression tests (verified-Google-only bootstrap, Table component, same-account sign-in retry, page titles); minor findings fixed or in docs/BACKLOG.md
+PHASE 0 DONE 10/10 features
