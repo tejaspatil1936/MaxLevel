@@ -24,6 +24,7 @@ import type { ApiContext } from './routes/context';
 import { departmentRoutes } from './routes/departments';
 import { meRoutes } from './routes/me';
 import { orgRoutes } from './routes/org';
+import { pairingRoutes } from './routes/pairing';
 import { platformRoutes } from './routes/platform';
 import { seriesRoutes } from './routes/series';
 import { studentRoutes } from './routes/students';
@@ -120,6 +121,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     examPreviewRoutes,
     studentTestRoutes,
     attemptRoutes,
+    pairingRoutes,
     auditRoutes,
     meRoutes,
   ])
