@@ -12,6 +12,7 @@ export default meta;
 export const Overlays: StoryObj = {
   render: function Render() {
     const [dialog, setDialog] = useState(false);
+    const [wide, setWide] = useState(false);
     const [confirm, setConfirm] = useState(false);
     const [drawer, setDrawer] = useState(false);
     const [tab, setTab] = useState('questions');
@@ -20,6 +21,9 @@ export const Overlays: StoryObj = {
         <div className="flex flex-wrap gap-3">
           <Button variant="secondary" onClick={() => setDialog(true)}>
             Open dialog
+          </Button>
+          <Button variant="secondary" onClick={() => setWide(true)}>
+            Open wide dialog
           </Button>
           <Button variant="danger" onClick={() => setConfirm(true)}>
             Delete student
@@ -56,6 +60,12 @@ export const Overlays: StoryObj = {
           footer={<Button onClick={() => setDialog(false)}>Save</Button>}
         >
           <p>Dialog body</p>
+        </Dialog>
+        <Dialog open={wide} onOpenChange={setWide} title="Add question" size="wide">
+          <div className="grid gap-6 md:grid-cols-2">
+            <p>Editor fields</p>
+            <p>Student view</p>
+          </div>
         </Dialog>
         <ConfirmDialog
           open={confirm}

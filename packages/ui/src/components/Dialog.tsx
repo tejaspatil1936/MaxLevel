@@ -43,8 +43,11 @@ function useReturnFocus() {
   };
 }
 // Never taller than the screen: long content scrolls inside the dialog (A11Y-15, WCAG 1.4.10).
-const panel =
-  'fixed left-1/2 top-1/2 max-h-[calc(100dvh-32px)] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-panel border border-rule bg-surface p-6 shadow-overlay';
+const panelBase =
+  'fixed left-1/2 top-1/2 max-h-[calc(100dvh-32px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-panel border border-rule bg-surface p-6 shadow-overlay';
+const panel = cx(panelBase, 'w-[min(560px,calc(100vw-32px))]');
+/** Wide dialogs hold an editor beside its preview; still never wider than the screen. */
+const widePanel = cx(panelBase, 'w-[min(1120px,calc(100vw-32px))]');
 
 export interface DialogProps {
   open: boolean;
@@ -53,16 +56,22 @@ export interface DialogProps {
   description?: ReactNode;
   children?: ReactNode;
   footer?: ReactNode;
+  /** `wide` for an editor with a side-by-side preview. */
+  size?: 'default' | 'wide';
 }
 
 /** Modal dialog: traps focus while open and returns it to the opener (A11Y-05). */
-export function Dialog({ open, onOpenChange, title, description, children, footer }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, size }: DialogProps) {
   const focus = useReturnFocus();
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
       <RDialog.Portal>
         <RDialog.Overlay className={overlay} />
-        <RDialog.Content className={panel} {...focus} {...(description ? {} : { 'aria-describedby': undefined })}>
+        <RDialog.Content
+          className={size === 'wide' ? widePanel : panel}
+          {...focus}
+          {...(description ? {} : { 'aria-describedby': undefined })}
+        >
           <RDialog.Title className="text-heading-2 font-bold">{title}</RDialog.Title>
           {description ? <RDialog.Description className="mt-2 text-graphite">{description}</RDialog.Description> : null}
           <div className="mt-4">{children}</div>
