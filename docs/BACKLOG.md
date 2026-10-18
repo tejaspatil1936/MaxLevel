@@ -37,3 +37,12 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - After sign-out the sign-in page keeps the previous user's theme and text size.
 - axe reports aria-hidden-focus while the org switcher menu is open (the skip link is under the aria-hidden area).
 - The emulator Google popup often fails to hand back its result here because the auth iframe loads gapi from apis.google.com (AUTH-01 popup tests).
+
+## Phase 2 (mid-phase review)
+
+- Question import (up to 1,000) and delete or reorder write every question in one batch; Firestore accepts it (no 500-write cap since 2023) but it is close to the 10 MiB request limit with long prompts. Split into chunks.
+- The question editor keeps only `{ id, text }` for options, so a future option image would be dropped on save.
+- Eligibility department, include and exclude IDs are stored without checking they belong to the org (matching only lists this org's students).
+- The JSON import summary is not in a status region; the Needs attention box re-reads on each keystroke (announce only the count).
+- Question Markdown keeps http(s) links; decide for the phase 3 exam screen whether links render as plain text.
+- Changing series dates can leave tests outside the new range; uploaded images of unsaved questions stay in Storage.
