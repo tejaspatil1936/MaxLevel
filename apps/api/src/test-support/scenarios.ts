@@ -9,9 +9,9 @@ import {
   type Section,
   type TaskQueue,
 } from '@mitaoe/shared';
-import type { Firestore } from 'firebase-admin/firestore';
+import { FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { AppError } from '../errors';
-import { emailKey } from './seed';
+import { emailKey, SEED_ORGS, writeSeedStudent } from './seed';
 
 // Scenario data on top of the base seed for acceptance tests (POST /__test/seed/:scenario, docs/testids).
 
@@ -445,6 +445,27 @@ const gradedAttempts: Scenario = async (db, _now, body) => {
   return { attemptIds };
 };
 
+/**
+ * Phase 4: registered students 21 to 20 + `count` of a seed org (docs/testids/phase-4.md, `more-students`), made
+ * exactly like the base seed's 20, named `Student NN`. At most 79, so NN stays two digits.
+ */
+const moreStudents: Scenario = async (db, now, body) => {
+  const org = SEED_ORGS.find((o) => o.id === body.orgId);
+  if (!org || !(await db.doc(`organizations/${org.id}`).get()).exists)
+    throw new AppError(404, 'NOT_FOUND', 'No such organization for the scenario.');
+  const count = Math.min(Math.max(Math.floor(num(body.count, 0)), 0), 79);
+  const batch = db.batch();
+  const studentIds = Array.from({ length: count }, (_, k) => {
+    const n = 21 + k;
+    const nn = String(n).padStart(2, '0');
+    const email = writeSeedStudent(batch, db, org, n, `Student ${nn}`, now);
+    batch.set(db.doc(`emailIndex/${emailKey(email)}`), { orgIds: FieldValue.arrayUnion(org.id) }, { merge: true });
+    return `stu-${org.id}-${nn}`;
+  });
+  await batch.commit();
+  return { studentIds };
+};
+
 export const SCENARIOS: Record<string, Scenario> = {
   'empty-org': emptyOrg,
   'student-attempts': studentAttempts,
@@ -452,4 +473,5 @@ export const SCENARIOS: Record<string, Scenario> = {
   'authoring-test': authoringTest,
   'exam-test': examTest,
   'graded-attempts': gradedAttempts,
+  'more-students': moreStudents,
 };

@@ -216,3 +216,36 @@ describe('graded-attempts scenario', () => {
     expect((await org.collection('tests').doc(t.testId).get()).get('attemptsStarted')).toBe(true);
   });
 });
+
+describe('more-students scenario', () => {
+  it('LB-05 adds registered students from 21 made like the base seed, departments cycling', async () => {
+    const { app } = await testApp();
+    const post = (orgId: string, count: number) =>
+      app.inject({
+        method: 'POST',
+        url: '/__test/seed/more-students',
+        headers: { 'x-test-secret': TEST_SECRET },
+        payload: { orgId, count },
+      });
+    const res = await post(SEED.orgA, 3);
+    expect(res.json()).toEqual({ studentIds: ['stu-org-a-21', 'stu-org-a-22', 'stu-org-a-23'] });
+    const s21 = (await org.collection('students').doc('stu-org-a-21').get()).data();
+    expect(s21).toMatchObject({
+      email: 'student21@a.test',
+      name: 'Student 21',
+      prn: '22010121',
+      departmentId: 'dept-org-a-computer', // departments[(21 - 1) mod 4]
+      graduationYear: 2026,
+      status: 'registered',
+    });
+    expect((await org.collection('students').doc('stu-org-a-22').get()).get('departmentId')).toBe('dept-org-a-it');
+    expect((await org.collection('students').doc('stu-org-a-22').get()).get('graduationYear')).toBe(2027);
+    const entries = await org.collection('whitelist').where('studentId', '==', 'stu-org-a-23').get();
+    expect(entries.docs.map((d) => d.get('status'))).toEqual(['registered']);
+    const b = await post(SEED.orgB, 1);
+    expect(b.json()).toEqual({ studentIds: ['stu-org-b-21'] });
+    const b21 = (await db.doc(`organizations/${SEED.orgB}/students/stu-org-b-21`).get()).data();
+    expect(b21).toMatchObject({ email: 'student21@b.test', prn: 'B22010121', departmentId: 'dept-org-b-computer' });
+    expect((await post('org-zzz', 1)).statusCode).toBe(404);
+  });
+});
