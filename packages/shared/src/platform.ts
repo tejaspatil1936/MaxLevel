@@ -11,6 +11,16 @@ export const slugSchema = z
   .toLowerCase()
   .regex(/^[a-z0-9][a-z0-9-]{1,40}[a-z0-9]$/, 'Use 3 to 42 lowercase letters, digits or hyphens.');
 
+/** Any IANA zone the runtime knows, including canonical names it lists under an alias (Asia/Kolkata). */
+export function isTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const orgStatusSchema = z.enum(['active', 'suspended', 'archived']);
 
 /** A logo sent with the create or edit form, base64-encoded; checked by file signature on the server (SEC-06). */
@@ -23,13 +33,7 @@ export type LogoUpload = z.infer<typeof logoUploadSchema>;
 export const orgCreateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   slug: slugSchema,
-  timezone: z
-    .string()
-    .default('Asia/Kolkata')
-    .refine(
-      (tz) => Intl.supportedValuesOf('timeZone').includes(tz) || tz === 'UTC',
-      'Choose a timezone from the list.',
-    ),
+  timezone: z.string().default('Asia/Kolkata').refine(isTimeZone, 'Choose a timezone from the list.'),
   departments: z.array(z.string().trim().min(1).max(80)).max(50).default([]),
   logo: logoUploadSchema.optional(),
 });
@@ -37,7 +41,7 @@ export const orgCreateSchema = z.object({
 export const orgPatchSchema = z
   .object({
     name: z.string().trim().min(2).max(120),
-    timezone: z.string(),
+    timezone: z.string().refine(isTimeZone, 'Choose a timezone from the list.'),
     status: orgStatusSchema,
     logo: logoUploadSchema,
   })
