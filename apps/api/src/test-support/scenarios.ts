@@ -1,3 +1,4 @@
+import { NO_RESTRICTION, SYSTEM_DEFAULTS } from '@mitaoe/shared';
 import type { Firestore } from 'firebase-admin/firestore';
 import { AppError } from '../errors';
 import { emailKey } from './seed';
@@ -85,4 +86,33 @@ const studentAttempts: Scenario = async (db, now, body) => {
   return { seriesId: series.id, testId: test.id, attemptId: attempt.id };
 };
 
-export const SCENARIOS: Record<string, Scenario> = { 'empty-org': emptyOrg, 'student-attempts': studentAttempts };
+/** The settings of the spec 5.4 table, at their system defaults, as a seeded series holds them. */
+const { marking: _m, floorAtZero: _f, questionTimeMode: _q, ...TABLE_DEFAULTS } = SYSTEM_DEFAULTS;
+
+/** Phase 2: a series (docs/testids/phase-2.md, `authoring-series`). Seeds write directly, with no audit entry. */
+const authoringSeries: Scenario = async (db, now, body) => {
+  const orgId = String(body.orgId ?? '');
+  if (!(await db.doc(`organizations/${orgId}`).get()).exists)
+    throw new AppError(404, 'NOT_FOUND', 'No such organization for the scenario.');
+  const ref = db.collection(`organizations/${orgId}/series`).doc();
+  await ref.set({
+    orgId,
+    title: typeof body.title === 'string' ? body.title : 'Placement 2026',
+    description: 'Daily tests for the 2026 placement season.',
+    status: typeof body.status === 'string' ? body.status : 'draft',
+    startDate: '2026-11-01',
+    endDate: '2026-11-30',
+    dailyWindow: { startMinutes: 600, endMinutes: 660 },
+    defaults: { ...TABLE_DEFAULTS, ...(body.defaults as object | undefined) },
+    eligibility: { ...NO_RESTRICTION, ...(body.eligibility as object | undefined) },
+    createdAt: now,
+    updatedAt: now,
+  });
+  return { seriesId: ref.id };
+};
+
+export const SCENARIOS: Record<string, Scenario> = {
+  'empty-org': emptyOrg,
+  'student-attempts': studentAttempts,
+  'authoring-series': authoringSeries,
+};
