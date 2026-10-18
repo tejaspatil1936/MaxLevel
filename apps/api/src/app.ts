@@ -8,7 +8,9 @@ import type { Logger } from 'pino';
 import type { Config } from './config';
 import type { Deps } from './deps';
 import { createLogger } from './logging';
+import type { IdempotencyData } from './data/idempotency';
 import { registerErrorHandling } from './plugins/errors';
+import { registerIdempotency } from './plugins/idempotency';
 import { registerRequestLog } from './plugins/request-log';
 import { registerRouteTable } from './plugins/route-table';
 import { registerServerTime } from './plugins/server-time';
@@ -39,7 +41,12 @@ import { questionImageStore } from './services/question-images';
 import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
 
 /** A Fastify instance with the API's conventions: Zod schemas, error shape, server time, CORS, logging. */
-export async function createServer(config: Config, clock: Clock, logger?: Logger): Promise<FastifyInstance> {
+export async function createServer(
+  config: Config,
+  clock: Clock,
+  logger?: Logger,
+  opts: { idempotency?: IdempotencyData } = {},
+): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: (logger ?? createLogger(config.logLevel)) as FastifyBaseLogger,
     disableRequestLogging: true,
@@ -55,6 +62,8 @@ export async function createServer(config: Config, clock: Clock, logger?: Logger
   registerErrorHandling(app);
   registerServerTime(app, clock);
   registerRequestLog(app);
+  // Before compression: the stored replay is the JSON body itself (API-02).
+  if (opts.idempotency) registerIdempotency(app, { store: opts.idempotency, clock });
   // CORS only for the app's own origins (SEC-05). X-Server-Time must be readable by the browser (API-03).
   await app.register(cors, {
     origin: config.appOrigins,
@@ -73,8 +82,8 @@ export async function createServer(config: Config, clock: Clock, logger?: Logger
 }
 
 export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInstance> {
-  const app = await createServer(deps.config, deps.clock, logger);
   const data = createData(deps.firebase.db);
+  const app = await createServer(deps.config, deps.clock, logger, { idempotency: data.idempotency });
   const entitlements = entitlementsService(data, deps.clock);
   const status = accountStatusService(data, deps.clock);
   registerAuth(app, { auth: deps.firebase.auth, data, entitlements, status });

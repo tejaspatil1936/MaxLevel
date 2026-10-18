@@ -4,6 +4,7 @@ import { attemptsData } from './attempts';
 import { auditData } from './audit';
 import { departmentsData } from './departments';
 import { entitlementsData } from './entitlements';
+import { idempotencyData } from './idempotency';
 import { identityData } from './identity';
 import { orgsData } from './orgs';
 import { platformData } from './platform';
@@ -19,6 +20,7 @@ import { whitelistData } from './whitelist';
 export function createData(db: Firestore) {
   return {
     identity: identityData(db),
+    idempotency: idempotencyData(db),
     orgs: orgsData(db),
     admins: adminsData(db),
     attempts: attemptsData(db),
