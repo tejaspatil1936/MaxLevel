@@ -117,7 +117,14 @@ describe('attempt data access', () => {
     expect(await data.attempts.getAttempt('org-b', attempt.id)).toBeNull();
   });
 
+  /** An in-progress attempt `att1` to save answers to. */
+  const putAtt1 = () => {
+    const { id: _id, ...fields } = record('att1');
+    return db.doc('organizations/org-a/attempts/att1').set(fields);
+  };
+
   it('EX-11 EX-14 DATA-03 keeps each answer in its own record and writes only a higher seq', async () => {
+    await putAtt1();
     const answer = (questionId: string, seq: number, optionId: string | null) => ({
       questionId,
       optionId,
@@ -141,6 +148,7 @@ describe('attempt data access', () => {
   });
 
   it('EX-13 a late answer is saved with lateSync and logs a late_sync event; a rejected one writes nothing', async () => {
+    await putAtt1();
     const base = { optionId: 'a', clientTs: 50 };
     expect(
       await data.attempts.saveAnswer('org-a', 'att1', { ...base, questionId: 'q1', seq: 1 }, 70, () => 'late_sync'),

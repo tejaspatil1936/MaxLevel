@@ -37,6 +37,9 @@ const timeLimitOf = (settings: Settings, q: { timeLimitSec?: number }) =>
       ? q.timeLimitSec
       : undefined;
 
+const finishedError = () =>
+  new AppError(409, 'ATTEMPT_FINISHED', 'This attempt is finished and takes no more answers.');
+
 export interface AttemptDeps {
   data: Data;
   clock: Clock;
@@ -228,8 +231,7 @@ export function attemptService(deps: AttemptDeps) {
       batch: AnswerBatch,
     ): Promise<AnswerBatchResult> {
       const attempt = await ownAttempt(orgId, studentId, attemptId);
-      if (isFinishedAttempt(attempt.status))
-        throw new AppError(409, 'ATTEMPT_FINISHED', 'This attempt is finished and takes no more answers.');
+      if (attempt.status !== 'in_progress') throw finishedError();
       const test = await data.tests.getTest(orgId, attempt.testId);
       if (!test?.resolved) throw notFound('Attempt');
       const settings = test.resolved;
@@ -246,20 +248,21 @@ export function attemptService(deps: AttemptDeps) {
       const verdicts = await Promise.all(
         batch.answers.map(async (a) => {
           const timeLimitSec = timeLimitOf(settings, set.byId.get(a.questionId) ?? {});
-          const verdict = await data.attempts.saveAnswer(orgId, attempt.id, a, now, (storedSeq) =>
+          const verdict = await data.attempts.saveAnswer(orgId, attempt.id, a, now, (storedSeq, stored) =>
             answerVerdict({
               seq: a.seq,
               storedSeq,
               clientTs: a.clientTs,
               serverNow: now,
-              deadlineAt: attempt.deadlineAt,
-              servedAt: attempt.questionServedAt[a.questionId],
+              deadlineAt: stored.deadlineAt,
+              servedAt: stored.questionServedAt[a.questionId],
               ...(timeLimitSec !== undefined ? { timeLimitSec } : {}),
             }),
           );
           return { questionId: a.questionId, verdict };
         }),
       );
+      if (verdicts.some((v) => v.verdict === 'ATTEMPT_FINISHED')) throw finishedError();
       const sync = { backlog: batch.backlog, clockOffsetMs: batch.clockOffsetMs, at: now };
       await Promise.all([
         data.attempts.recordSync(orgId, attempt.id, sync),
@@ -269,7 +272,7 @@ export function attemptService(deps: AttemptDeps) {
       for (const { questionId, verdict } of verdicts) {
         if (verdict === 'saved' || verdict === 'late_sync') result.saved.push(questionId);
         else if (verdict === 'stale') result.stale.push(questionId);
-        else result.rejected.push({ questionId, code: verdict });
+        else if (verdict !== 'ATTEMPT_FINISHED') result.rejected.push({ questionId, code: verdict });
       }
       return result;
     },

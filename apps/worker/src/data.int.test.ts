@@ -49,7 +49,7 @@ describe('worker data access', () => {
 
   it('EX-16 REL-04 finishes an attempt in progress once, and leaves it when finish declines', async () => {
     const ref = db.doc('organizations/org-a/attempts/att-1');
-    await ref.set({ orgId: 'org-a', testId: 't1', status: 'in_progress' });
+    await ref.set({ orgId: 'org-a', testId: 't1', status: 'in_progress', draw: { questionIds: ['q1'] } });
     await ref.collection('answers').doc('q1').set({ optionId: 'b', seq: 1, clientTs: 1, serverTs: 1 });
     const result = { score: 0, max: 1, pct: 0, correct: 0, incorrect: 1, unanswered: 0, sections: {}, durationSec: 1 };
 

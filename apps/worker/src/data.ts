@@ -86,8 +86,13 @@ export function workerData(db: Firestore) {
         if (!snap.exists) return null;
         const attempt = toAttempt(snap);
         if (attempt.status !== 'in_progress') return { attempt, finalized: false };
-        const answers = await tx.get(ref.collection('answers'));
-        const fields = finish(attempt, Object.fromEntries(answers.docs.map((d) => [d.id, d.data() as AnswerRecord])));
+        // Each drawn question's answer by reference, so an answer save racing this transaction conflicts with it.
+        const ids = attempt.draw.questionIds;
+        const answers = ids.length ? await tx.getAll(...ids.map((id) => ref.collection('answers').doc(id))) : [];
+        const fields = finish(
+          attempt,
+          Object.fromEntries(answers.flatMap((d) => (d.exists ? [[d.id, d.data() as AnswerRecord]] : []))),
+        );
         if (!fields) return { attempt, finalized: false };
         tx.update(ref, fields);
         return { attempt: { ...attempt, ...fields }, finalized: true };

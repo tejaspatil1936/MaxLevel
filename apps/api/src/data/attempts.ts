@@ -1,5 +1,11 @@
 import type { AnswerRecord, AnswerVerdict, AttemptRecord, AttemptStatus } from '@mitaoe/shared';
-import { FieldValue, type DocumentSnapshot, type Firestore } from 'firebase-admin/firestore';
+import {
+  FieldValue,
+  type DocumentReference,
+  type DocumentSnapshot,
+  type Firestore,
+  type Transaction,
+} from 'firebase-admin/firestore';
 
 export interface AttemptSummary {
   id: string;
@@ -26,6 +32,9 @@ export interface StudentAttemptRef {
 export type FinishedFields = Required<Pick<AttemptRecord, 'status' | 'submittedAt' | 'result'>> &
   Pick<AttemptRecord, 'terminationReason'>;
 
+/** What saving one answer did: the shared verdict, or `ATTEMPT_FINISHED` when the attempt is no longer in progress. */
+export type SaveVerdict = AnswerVerdict | 'ATTEMPT_FINISHED';
+
 /** The new attempt for an ID, built inside the start transaction; it may throw to refuse the start. */
 export type AttemptBuilder = (attemptId: string) => AttemptRecord;
 
@@ -40,6 +49,18 @@ const toAttempt = (d: DocumentSnapshot): AttemptRecord => {
     extraTimeSec: rest.extraTimeSec ?? 0,
   };
 };
+
+/** An attempt's answers keyed by question ID, read in `tx` by the drawn questions' record references. */
+async function answersOf(
+  tx: Transaction,
+  ref: DocumentReference,
+  attempt: AttemptRecord,
+): Promise<Record<string, AnswerRecord>> {
+  const ids = attempt.draw.questionIds;
+  if (ids.length === 0) return {};
+  const snaps = await tx.getAll(...ids.map((id) => ref.collection('answers').doc(id)));
+  return Object.fromEntries(snaps.flatMap((d) => (d.exists ? [[d.id, d.data() as AnswerRecord]] : [])));
+}
 
 export function attemptsData(db: Firestore) {
   const attempts = (orgId: string) => db.collection(`organizations/${orgId}/attempts`);
@@ -100,21 +121,24 @@ export function attemptsData(db: Firestore) {
 
     /**
      * EX-11, EX-13, EX-14: one answer in its own record and its own transaction, so saves of different questions never
-     * contend (DATA-03). `decide` sees the stored `seq` and says what to do; only `saved` and `late_sync` write, and a
-     * late one also logs a `late_sync` event in the same transaction.
+     * contend (DATA-03). The transaction reads the attempt too: once it is finished (or gone) nothing is written and
+     * the verdict is `ATTEMPT_FINISHED`, so an answer racing a submit is either graded or refused (EX-17). Otherwise
+     * `decide` sees the stored `seq` and the attempt as stored (its serve times, Q-12) and says what to do; only
+     * `saved` and `late_sync` write, and a late one also logs a `late_sync` event in the same transaction.
      */
     async saveAnswer(
       orgId: string,
       attemptId: string,
       answer: { questionId: string; optionId: string | null; seq: number; clientTs: number; markedForReview?: boolean },
       serverTs: number,
-      decide: (storedSeq: number | undefined) => AnswerVerdict,
-    ): Promise<AnswerVerdict> {
+      decide: (storedSeq: number | undefined, attempt: AttemptRecord) => AnswerVerdict,
+    ): Promise<SaveVerdict> {
       const attemptRef = attempts(orgId).doc(attemptId);
       const ref = attemptRef.collection('answers').doc(answer.questionId);
       return db.runTransaction(async (tx) => {
-        const stored = await tx.get(ref);
-        const verdict = decide(stored.exists ? (stored.get('seq') as number) : undefined);
+        const [snap, stored] = await tx.getAll(attemptRef, ref);
+        if (!snap!.exists || snap!.get('status') !== 'in_progress') return 'ATTEMPT_FINISHED';
+        const verdict = decide(stored!.exists ? (stored!.get('seq') as number) : undefined, toAttempt(snap!));
         if (verdict !== 'saved' && verdict !== 'late_sync') return verdict;
         const late = verdict === 'late_sync';
         const record: AnswerRecord = {
@@ -138,7 +162,8 @@ export function attemptsData(db: Firestore) {
     },
 
     /**
-     * EX-15 to EX-17, REL-04: finishes an attempt exactly once. In one transaction the attempt and its answers are read;
+     * EX-15 to EX-17, REL-04: finishes an attempt exactly once. In one transaction the attempt and its answers are read
+     * (each drawn question's record by reference, so a concurrent answer save conflicts with it and is retried);
      * an attempt still in progress gets the fields `finish` builds from them (status, submittedAt, graded result),
      * while a finished one is returned as stored, so repeats and retries change nothing. Null when there is no attempt.
      */
@@ -153,8 +178,7 @@ export function attemptsData(db: Firestore) {
         if (!snap.exists) return null;
         const attempt = toAttempt(snap);
         if (attempt.status !== 'in_progress') return { attempt, finalized: false };
-        const answers = await tx.get(ref.collection('answers'));
-        const fields = finish(attempt, Object.fromEntries(answers.docs.map((d) => [d.id, d.data() as AnswerRecord])));
+        const fields = finish(attempt, await answersOf(tx, ref, attempt));
         tx.update(ref, fields);
         return { attempt: { ...attempt, ...fields }, finalized: true };
       });
