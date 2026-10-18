@@ -30,6 +30,8 @@ export const exam = {
   'preview.showAnswers': 'Show answers',
   'preview.exit': 'Exit preview',
   'preview.open': 'Open preview',
+  'preview.intro':
+    'See the test exactly as a student will: a fresh draw each time, with the same sections, shuffles and options. No attempt is saved.',
   'preview.empty': 'This test has no approved questions yet. Add questions to preview it.',
   'preview.goToQuestions': 'Go to questions',
   'preview.notFound': "This test can't be found. It may have been deleted, or it belongs to another organization.",

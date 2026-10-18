@@ -16,6 +16,7 @@ import { MarkingTab } from '../marking/MarkingTab';
 import { QuestionsTab } from '../questions/QuestionsTab';
 import { SectionsTab } from '../sections/SectionsTab';
 import { SeriesNotFound } from '../series/SeriesNotFound';
+import { PreviewTab } from './PreviewTab';
 import { TestDetailsDialog } from './TestDetailsDialog';
 import { TestEligibility } from './TestEligibility';
 import { TestSettings } from './TestSettings';
@@ -86,6 +87,7 @@ function EditorPage({ test }: { test: TestDetail }) {
       return series.data ? <TestSettings key={stamp} test={test} series={series.data} /> : loading;
     if (value === 'eligibility')
       return series.data ? <TestEligibility key={stamp} test={test} series={series.data} /> : loading;
+    if (value === 'preview') return <PreviewTab test={test} onGoToQuestions={() => setTab('questions')} />;
     return null;
   };
 
