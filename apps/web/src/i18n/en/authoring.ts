@@ -35,4 +35,18 @@ export const authoring = {
   'setting.minutesError': 'Enter a whole number of minutes, 1 or more.',
   'setting.fullReviewBlocked':
     "In a flexible window, a full review released on submit would show the answers to students who haven't started yet. Release results after the window closes, or choose a lower detail level.",
+  'eligibility.title.series': 'Students who can take this series',
+  'eligibility.title.test': 'Students who can take this test',
+  'eligibility.departments': 'Departments',
+  'eligibility.years': 'Graduation years',
+  'eligibility.include': 'Also include',
+  'eligibility.exclude': 'Exclude',
+  'eligibility.entriesHint': 'Emails or PRNs, one per line.',
+  'eligibility.count.series': '{n} students can take this series',
+  'eligibility.countOne.series': '{n} student can take this series',
+  'eligibility.count.test': '{n} students can take this test',
+  'eligibility.countOne.test': '{n} student can take this test',
+  'eligibility.showMatching': 'Show matching students',
+  'eligibility.matching': 'Matching students',
+  'eligibility.unknown': 'No student matches {entry}. Check the email or PRN.',
 } as const;
