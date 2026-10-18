@@ -5,7 +5,10 @@ import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fas
 import type { WorkerConfig } from './config';
 import type { WorkerData } from './data';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
+import type { ExportData } from './export-data';
+import type { FileStore } from './firebase';
 import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit';
+import { exportHandler, exportPayloadSchema } from './tasks/export';
 import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
 import { releaseResultsHandler, releaseResultsPayloadSchema } from './tasks/release-results';
 
@@ -16,6 +19,8 @@ export interface WorkerDeps {
   data: WorkerData;
   /** Follow-up work (rescheduling, leaderboards) goes through this queue only. */
   queue: TaskQueue;
+  /** Results exports (EXP-03): their records and the Storage bucket the files go to. */
+  exports?: { data: ExportData; files: FileStore };
 }
 
 export const TASK_NAMES = [
@@ -98,7 +103,18 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           req.log.info({ task: 'leaderboard', testId: req.body.testId, outcome }, 'task done');
           return { ok: true, outcome };
         });
-      const handled: ReadonlyArray<string> = ['auto-submit', 'release-results', 'leaderboard'];
+      const handled: string[] = ['auto-submit', 'release-results', 'leaderboard'];
+      if (deps.exports) {
+        const run = exportHandler({ exports: deps.exports.data, files: deps.exports.files, clock });
+        handled.push('export');
+        tasks
+          .withTypeProvider<ZodTypeProvider>()
+          .post('/export', { schema: { body: exportPayloadSchema } }, async (req) => {
+            const outcome = await run(req.body);
+            req.log.info({ task: 'export', exportId: req.body.exportId, outcome }, 'task done');
+            return { ok: true, outcome };
+          });
+      }
       for (const name of TASK_NAMES.filter((n) => !handled.includes(n))) {
         // Handlers are added by the features that own them; until then a task is acknowledged and logged.
         tasks.post(`/${name}`, async (req) => {

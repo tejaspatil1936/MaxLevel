@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@mitaoe/shared": "workspace:*",
+    "exceljs": "4.4.0",
     "fastify": "5.12.7",
     "fastify-type-provider-zod": "7.0.0",
     "firebase-admin": "14.5.0",

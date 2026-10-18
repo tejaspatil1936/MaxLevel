@@ -369,6 +369,9 @@ importers:
       '@mitaoe/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      exceljs:
+        specifier: 4.4.0
+        version: 4.4.0
       fastify:
         specifier: 5.12.7
         version: 5.12.7
