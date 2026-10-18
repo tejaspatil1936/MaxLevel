@@ -97,4 +97,38 @@ describe('tests data access', () => {
     expect(await data.attempts.hasAttempts('org-b', 't1')).toBe(true);
     expect(await data.attempts.hasAttempts('org-b', 't2')).toBe(false);
   });
+
+  it('RES-01 RES-05 US-AD-10 published tests list newest first per org, and release fields read back as stored', async () => {
+    const older = await create('org-a', { scheduledDate: '2026-11-02' }, 1000);
+    const newer = await create('org-a', { scheduledDate: '2026-11-04', seriesId: 's2' }, 2000);
+    await create('org-a', {}, 3000);
+    const other = await create('org-b', {}, 1000);
+    for (const [org, id] of [
+      ['org-a', older],
+      ['org-a', newer],
+      ['org-b', other],
+    ] as const)
+      await db.doc(`organizations/${org}/tests/${id}`).update({ status: 'scheduled' });
+    expect((await data.tests.listPublishedTests('org-a')).map((t) => t.id)).toEqual([newer, older]);
+    expect(await data.tests.getTest('org-a', older)).toMatchObject({
+      resultsReleasedAt: null,
+      resultsWithdrawn: false,
+    });
+
+    const release = db.batch();
+    data.tests.setRelease('org-a', release, older, { resultsReleasedAt: 5000, resultsWithdrawn: false });
+    await release.commit();
+    expect(await data.tests.getTest('org-a', older)).toMatchObject({
+      resultsReleasedAt: 5000,
+      resultsWithdrawn: false,
+    });
+    const withdraw = db.batch();
+    data.tests.setRelease('org-a', withdraw, older, { resultsWithdrawn: true });
+    await withdraw.commit();
+    expect((await db.doc(`organizations/org-a/tests/${older}`).get()).data()).toMatchObject({
+      resultsReleasedAt: 5000,
+      resultsWithdrawn: true,
+      updatedAt: 1000,
+    });
+  });
 });

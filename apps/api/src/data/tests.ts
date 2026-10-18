@@ -21,9 +21,16 @@ export interface TestRecord {
   questionSetVersion: number;
   totalMarks: number;
   attemptsStarted: boolean;
+  /** RES-01: when the results were released (Release results, or the release task for `after_close`). */
+  resultsReleasedAt?: number | null;
+  /** RES-05: results withdrawn by an admin; absent means false. */
+  resultsWithdrawn?: boolean;
   createdAt: number;
   updatedAt: number;
 }
+
+/** What Release results and Withdraw results store (RES-01, RES-05). */
+export type ReleaseFields = { resultsReleasedAt: number; resultsWithdrawn: false } | { resultsWithdrawn: true };
 
 export interface TestInput {
   seriesId: string;
@@ -73,6 +80,8 @@ export function testsData(db: Firestore) {
       questionSetVersion: d.get('questionSetVersion') ?? 1,
       totalMarks: d.get('totalMarks') ?? 0,
       attemptsStarted: d.get('attemptsStarted') === true,
+      resultsReleasedAt: typeof d.get('resultsReleasedAt') === 'number' ? (d.get('resultsReleasedAt') as number) : null,
+      resultsWithdrawn: d.get('resultsWithdrawn') === true,
       createdAt: d.get('createdAt') ?? 0,
       updatedAt: d.get('updatedAt') ?? 0,
     };
@@ -87,6 +96,17 @@ export function testsData(db: Firestore) {
         .sort(
           (a, b) =>
             a.scheduledDate.localeCompare(b.scheduledDate) || a.createdAt - b.createdAt || a.id.localeCompare(b.id),
+        );
+    },
+
+    /** Published tests (stored status `scheduled`) of every series, newest scheduled date first (US-AD-10). */
+    async listPublishedTests(orgId: string): Promise<TestRecord[]> {
+      const snap = await col(orgId).where('status', '==', 'scheduled').get();
+      return snap.docs
+        .map(toTest)
+        .sort(
+          (a, b) =>
+            b.scheduledDate.localeCompare(a.scheduledDate) || a.createdAt - b.createdAt || a.id.localeCompare(b.id),
         );
     },
 
@@ -136,6 +156,11 @@ export function testsData(db: Firestore) {
         ...(status ? { status } : {}),
         ...(status === 'in_review' ? { approval: FieldValue.delete(), resolved: FieldValue.delete() } : {}),
       });
+    },
+
+    /** RES-01, RES-05: stores a release or a withdrawal; nothing else of the test changes. */
+    setRelease(orgId: string, tx: Tx, testId: string, fields: ReleaseFields): void {
+      writer(tx).update(col(orgId).doc(testId), fields);
     },
 
     updateTest(orgId: string, tx: Tx, testId: string, patch: TestUpdate): void {
