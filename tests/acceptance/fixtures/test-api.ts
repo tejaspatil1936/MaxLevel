@@ -74,6 +74,31 @@ export class TestApi {
   async seedExamTest(options: ExamTestSeed): Promise<ExamTestIds> {
     return this.seedScenario<ExamTestIds>('exam-test', { ...options });
   }
+
+  /** Phase 4 scenario: registered students 21 to 20 + count, made like the base seed (docs/testids/phase-4.md). */
+  async seedMoreStudents(orgId: string, count: number): Promise<{ studentIds: string[] }> {
+    return this.seedScenario<{ studentIds: string[] }>('more-students', { orgId, count });
+  }
+
+  /** Phase 4 scenario: finished, graded attempts of a test written directly (no task queued, no board computed). */
+  async seedGradedAttempts(orgId: string, testId: string, attempts: GradedAttemptSeed[]): Promise<string[]> {
+    return (await this.seedScenario<{ attemptIds: string[] }>('graded-attempts', { orgId, testId, attempts }))
+      .attemptIds;
+  }
+}
+
+export interface GradedAttemptSeed {
+  studentId: string;
+  score: number;
+  timeSec: number;
+  status?: 'submitted' | 'auto_submitted' | 'terminated';
+  /** Default: the test's window start + timeSec × 1000. */
+  submittedAt?: number;
+  strikesCount?: number;
+  terminationReason?: string;
+  correct?: number;
+  incorrect?: number;
+  unanswered?: number;
 }
 
 export interface ExamTestSeed {
