@@ -1,4 +1,4 @@
-import { pairingReservationSchema } from '@mitaoe/shared';
+import { pairingRedeemResultSchema, pairingReservationSchema, pairingTokenSchema } from '@mitaoe/shared';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { initFirebase } from './firebase';
 import { testApp } from './test-support/app';
@@ -32,6 +32,11 @@ const post = async (url: string, headers: Record<string, string> = {}, payload: 
   return { status: res.statusCode, body: res.json(), raw: res.body };
 };
 const reserve = (testId: string, headers: Record<string, string>) => post(`/v1/tests/${testId}/pairing-token`, headers);
+const redeem = (token: string) => post('/v1/pairing/redeem', {}, { token });
+/** The claims of a custom token minted by the Auth emulator (an unsigned JWT). */
+const claimsOf = (customToken: string) =>
+  (JSON.parse(Buffer.from(customToken.split('.')[1]!, 'base64url').toString('utf8')) as { claims: object }).claims;
+
 describe('pairing before Start', () => {
   it('PR-13 ORG-05 SER-08 a code before Start is refused like a start, and a refusal stores nothing', async () => {
     const live = await api.examTest();
@@ -100,5 +105,63 @@ describe('pairing before Start', () => {
     expect(started.body.attempt).toMatchObject({ id: attemptId, startedAt: NOW + MIN });
     expect((await reserve(t.testId, s1)).body.attemptId, 'pairing keeps the started attempt').toBe(attemptId);
     expect((await patch(t.testId)).statusCode, 'the lock starts with Start').toBe(409);
+  });
+});
+
+describe('pairing links', () => {
+  it('PR-13 PR-14 a link redeems once for a device custom token and expires after 5 minutes on the Clock', async () => {
+    const t = await api.examTest();
+    const s1 = await studentOf(auth, 1);
+    const { body: started } = await api.start(t.testId, s1);
+    const attemptId = started.attempt.id;
+    const issue = () => post(`/v1/attempts/${attemptId}/pairing-token`, s1);
+
+    const once = await issue();
+    expect(once.status, once.raw).toBe(200);
+    expect(pairingTokenSchema.parse(once.body)).toEqual(once.body);
+    expect(once.body).toMatchObject({ url: expect.stringMatching(LINK), expiresAt: NOW + 5 * MIN });
+    const redeemed = await redeem(once.body.token);
+    expect(redeemed.status, redeemed.raw).toBe(200);
+    expect(pairingRedeemResultSchema.parse(redeemed.body)).toEqual({
+      customToken: expect.any(String),
+      orgId: SEED.orgA,
+      testId: t.testId,
+      attemptId,
+    });
+    expect(claimsOf(redeemed.body.customToken)).toEqual({ role: 'device', orgId: SEED.orgA, attemptId });
+    const used = await redeem(once.body.token);
+    expect([used.status, code(used)]).toEqual([409, 'PAIRING_TOKEN_USED']);
+
+    const stale = await issue();
+    ctx.clock.advance(5 * MIN - 1);
+    const fresh = await issue();
+    ctx.clock.advance(1);
+    const expired = await redeem(stale.body.token);
+    expect([expired.status, code(expired)]).toEqual([410, 'PAIRING_TOKEN_EXPIRED']);
+    expect((await redeem(fresh.body.token)).status, 'a later code is still valid').toBe(200);
+
+    for (const bogus of ['not-a-real-token', `org-a.${'x'.repeat(43)}`, `org-b.${stale.body.token.split('.')[1]}`]) {
+      const r = await redeem(bogus);
+      expect([r.status, code(r)], bogus).toEqual([404, 'PAIRING_TOKEN_INVALID']);
+    }
+  });
+
+  it('PR-13 ORG-05 only the attempt own student gets a link, and not once the attempt is finished', async () => {
+    const t = await api.examTest();
+    const s1 = await studentOf(auth, 1);
+    const { body: started } = await api.start(t.testId, s1);
+    const url = `/v1/attempts/${started.attempt.id}/pairing-token`;
+    const admin = await asClaims(auth, 'admin1@a.test', { role: 'admin', orgId: SEED.orgA });
+    const b1 = await studentOf(auth, 1, SEED.orgB);
+
+    expect((await post(url, await studentOf(auth, 2))).status, 'another student').toBe(404);
+    expect((await post(url, b1)).status, 'another organization').toBe(404);
+    expect((await post(url, admin)).status).toBe(403);
+    expect((await post(url)).status, 'not signed in').toBe(401);
+    await db.doc(`${org}/attempts/${started.attempt.id}`).update({ status: 'submitted' });
+    const done = await post(url, s1);
+    expect([done.status, code(done)]).toEqual([409, 'ATTEMPT_FINISHED']);
+    const finished = await reserve(t.testId, s1);
+    expect([finished.status, code(finished)]).toEqual([409, 'ATTEMPT_FINISHED']);
   });
 });
