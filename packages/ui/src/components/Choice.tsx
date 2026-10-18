@@ -15,17 +15,20 @@ export interface CheckboxProps {
 export function Checkbox({ label, checked, onCheckedChange, disabled, className }: CheckboxProps) {
   const id = useId();
   return (
-    <div className={cx('flex min-h-11 items-center gap-3', className)}>
+    <div className={cx('flex min-h-11 items-center gap-1', className)}>
       <RCheckbox.Root
         id={id}
         checked={checked}
         disabled={disabled}
         onCheckedChange={(v) => onCheckedChange(v === true)}
-        className="flex size-6 items-center justify-center rounded-control border-2 border-ink bg-surface data-[state=checked]:border-ballpoint data-[state=checked]:bg-ballpoint"
+        className="group -mx-2.5 flex size-11 shrink-0 items-center justify-center rounded-control disabled:cursor-not-allowed"
       >
-        <RCheckbox.Indicator>
-          <Check aria-hidden size={16} className="text-on-ballpoint" />
-        </RCheckbox.Indicator>
+        {/* The visible box; the button around it is the 44 px target (UX-04). */}
+        <span className="flex size-6 items-center justify-center rounded-control border-2 border-ink bg-surface group-data-[state=checked]:border-ballpoint group-data-[state=checked]:bg-ballpoint">
+          <RCheckbox.Indicator>
+            <Check aria-hidden size={16} className="text-on-ballpoint" />
+          </RCheckbox.Indicator>
+        </span>
       </RCheckbox.Root>
       <label htmlFor={id} className="cursor-pointer">
         {label}
@@ -52,9 +55,12 @@ export function Switch({ label, checked, onCheckedChange, disabled, stateText }:
         checked={checked}
         disabled={disabled}
         onCheckedChange={onCheckedChange}
-        className="relative h-7 w-12 rounded-full border-2 border-ink bg-surface-sunken transition-colors duration-(--duration-small) data-[state=checked]:border-ballpoint data-[state=checked]:bg-ballpoint"
+        className="group flex h-11 w-14 shrink-0 items-center justify-center rounded-control disabled:cursor-not-allowed"
       >
-        <RSwitch.Thumb className="block size-5 translate-x-0.5 rounded-full bg-ink transition-transform duration-(--duration-small) data-[state=checked]:translate-x-5 data-[state=checked]:bg-on-ballpoint" />
+        {/* The visible track; the button around it is the 44 px target (UX-04). */}
+        <span className="relative flex h-7 w-12 items-center rounded-full border-2 border-ink bg-surface-sunken transition-colors duration-(--duration-small) group-data-[state=checked]:border-ballpoint group-data-[state=checked]:bg-ballpoint">
+          <RSwitch.Thumb className="block size-5 translate-x-0.5 rounded-full bg-ink transition-transform duration-(--duration-small) data-[state=checked]:translate-x-5 data-[state=checked]:bg-on-ballpoint" />
+        </span>
       </RSwitch.Root>
       <label htmlFor={id} className="cursor-pointer">
         {label}

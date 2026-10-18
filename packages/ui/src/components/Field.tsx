@@ -1,4 +1,11 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type Ref, type SelectHTMLAttributes } from 'react';
+import {
+  useId,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type Ref,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 import { cx } from '../cx';
 
 interface FieldFrameProps {
@@ -106,6 +113,61 @@ export function SelectField({
             </option>
           ))}
         </select>
+      )}
+    </FieldFrame>
+  );
+}
+
+export interface TextAreaFieldProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'children'> {
+  label: ReactNode;
+  hint?: ReactNode;
+  error?: ReactNode;
+  requiredText?: string;
+}
+
+export function TextAreaField({ label, hint, error, requiredText, className, ...rest }: TextAreaFieldProps) {
+  return (
+    <FieldFrame label={label} hint={hint} error={error} requiredText={requiredText}>
+      {({ id, describedBy, invalid }) => (
+        <textarea
+          id={id}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+          required={!!requiredText}
+          rows={5}
+          className={cx(control, 'py-2', className)}
+          {...rest}
+        />
+      )}
+    </FieldFrame>
+  );
+}
+
+export interface FileFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'children' | 'type'> {
+  label: ReactNode;
+  hint?: ReactNode;
+  error?: ReactNode;
+  requiredText?: string;
+  ref?: Ref<HTMLInputElement>;
+}
+
+/** A native file input with a visible label; the browser's own button stays keyboard and screen-reader friendly. */
+export function FileField({ label, hint, error, requiredText, className, ref, ...rest }: FileFieldProps) {
+  return (
+    <FieldFrame label={label} hint={hint} error={error} requiredText={requiredText}>
+      {({ id, describedBy, invalid }) => (
+        <input
+          ref={ref}
+          id={id}
+          type="file"
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+          className={cx(
+            'min-h-11 w-full text-ink file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-control file:border file:border-graphite file:bg-surface file:px-4 file:font-bold',
+            className,
+          )}
+          {...rest}
+        />
       )}
     </FieldFrame>
   );

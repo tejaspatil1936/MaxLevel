@@ -38,14 +38,17 @@ export function RadioGroup<V extends string>({
           <label
             key={o.value}
             htmlFor={`${id}-${o.value}`}
-            className="flex min-h-11 min-w-11 cursor-pointer items-center gap-2 rounded-control border border-rule bg-surface px-3 has-[[data-state=checked]]:border-ballpoint has-[[data-state=checked]]:bg-ballpoint-wash"
+            className="flex min-h-11 min-w-11 cursor-pointer items-center gap-1 rounded-control border border-rule bg-surface pr-3 has-[[data-state=checked]]:border-ballpoint has-[[data-state=checked]]:bg-ballpoint-wash"
           >
             <RRadio.Item
               id={`${id}-${o.value}`}
               value={o.value}
-              className="flex size-5 items-center justify-center rounded-full border-2 border-ink bg-surface data-[state=checked]:border-ballpoint"
+              className="group flex size-11 shrink-0 items-center justify-center rounded-control"
             >
-              <RRadio.Indicator className="block size-2.5 rounded-full bg-ballpoint" />
+              {/* The visible circle; the radio around it is the 44 px target (UX-04). */}
+              <span className="flex size-5 items-center justify-center rounded-full border-2 border-ink bg-surface group-data-[state=checked]:border-ballpoint">
+                <RRadio.Indicator className="block size-2.5 rounded-full bg-ballpoint" />
+              </span>
             </RRadio.Item>
             <span>{o.label}</span>
           </label>

@@ -55,7 +55,10 @@ export function InlineMessage({
 /** One plain sentence and one action, no illustrations (UX-08). */
 export function EmptyState({ message, action }: { message: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-panel border border-rule bg-surface p-6">
+    <div
+      data-testid="empty-state"
+      className="flex flex-col items-start gap-4 rounded-panel border border-rule bg-surface p-6"
+    >
       <p className="max-w-measure">{message}</p>
       {action}
     </div>

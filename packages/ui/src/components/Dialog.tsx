@@ -1,5 +1,5 @@
 import { AlertDialog as RAlert, Dialog as RDialog } from 'radix-ui';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { cx } from '../cx';
 import { Button } from './Button';
 
@@ -86,17 +86,28 @@ export interface DrawerProps extends DialogProps {
   className?: string;
 }
 
-/** Detail drawer on the right, 560 px wide, so the list stays in view (UX-05). */
+/**
+ * Detail drawer on the right, 560 px wide, so the list stays in view and usable (UX-05): it is non-modal, so nothing
+ * behind it is inert, and closing it returns focus to the control that opened it (A11Y-05).
+ */
 export function Drawer({ open, onOpenChange, title, description, children, footer, className }: DrawerProps) {
+  const opener = useRef<HTMLElement | null>(null);
   return (
-    <RDialog.Root open={open} onOpenChange={onOpenChange}>
+    <RDialog.Root open={open} onOpenChange={onOpenChange} modal={false}>
       <RDialog.Portal>
-        <RDialog.Overlay className="fixed inset-0 bg-ink/20" />
         <RDialog.Content
+          onOpenAutoFocus={() => {
+            opener.current = document.activeElement as HTMLElement | null;
+          }}
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            if (opener.current?.isConnected) opener.current.focus();
+          }}
           className={cx(
-            'fixed inset-y-0 right-0 flex w-[min(560px,100vw)] flex-col border-l border-rule bg-surface shadow-overlay',
+            'fixed inset-y-0 right-0 z-40 flex w-[min(560px,100vw)] flex-col border-l border-rule bg-surface shadow-overlay',
             className,
           )}
+          {...(description ? {} : { 'aria-describedby': undefined })}
         >
           <div className="border-b border-rule p-6">
             <RDialog.Title className="text-heading-2 font-bold">{title}</RDialog.Title>

@@ -25,9 +25,15 @@ export interface TableProps<Row> {
   /** Whole-row click opens the detail drawer (UX-05); the first cell stays a real button for keyboards. */
   onRowClick?: (row: Row) => void;
   rowLabel?: (row: Row) => string;
+  /** The column whose cell holds the row's open button; the first column by default. */
+  nameColumn?: string;
   selectedKey?: string | null;
   density?: 'comfortable' | 'compact';
   empty?: ReactNode;
+  /** While the first page loads: aria-busy and skeleton rows (UX-07). */
+  busy?: boolean;
+  /** Extra classes for the scroll region. */
+  className?: string;
 }
 
 /**
@@ -42,10 +48,11 @@ export function Table<Row>(p: TableProps<Row>) {
     <div
       role="region"
       aria-label={p.caption}
+      aria-busy={p.busy || undefined}
       tabIndex={0}
-      className="overflow-x-auto rounded-panel border border-rule bg-surface"
+      className={cx('overflow-x-auto rounded-panel border border-rule bg-surface', p.className)}
     >
-      <table className="w-full border-collapse text-body-small">
+      <table aria-busy={p.busy || undefined} className="w-full border-collapse text-body-small">
         <caption className="sr-only">{p.caption}</caption>
         <thead className="bg-surface-sunken">
           <tr>
@@ -84,7 +91,18 @@ export function Table<Row>(p: TableProps<Row>) {
           </tr>
         </thead>
         <tbody>
-          {p.rows.length === 0 && p.empty ? (
+          {p.busy && p.rows.length === 0
+            ? [0, 1, 2, 3, 4].map((i) => (
+                <tr key={`skeleton-${i}`} aria-hidden data-testid="skeleton" className="border-b border-rule">
+                  {p.columns.map((c) => (
+                    <td key={c.key} className={pad}>
+                      <span className="block h-4 rounded-control bg-surface-sunken" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            : null}
+          {!p.busy && p.rows.length === 0 && p.empty ? (
             <tr>
               <td colSpan={p.columns.length} className={pad}>
                 {p.empty}
@@ -106,7 +124,7 @@ export function Table<Row>(p: TableProps<Row>) {
               >
                 {p.columns.map((c, i) => (
                   <td key={c.key} className={cx(pad, c.align === 'end' && 'text-right tabular')}>
-                    {i === 0 && p.onRowClick ? (
+                    {(p.nameColumn ? c.key === p.nameColumn : i === 0) && p.onRowClick ? (
                       <button
                         type="button"
                         onClick={(e) => {
