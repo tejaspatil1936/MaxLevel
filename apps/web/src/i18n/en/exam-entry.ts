@@ -29,4 +29,22 @@ export const examEntry = {
   'preflight.fix.clock':
     "Your computer's clock is off by more than 5 minutes. Set it to update automatically, then press Check again.",
   'preflight.fix.browser': 'Use current Chrome, Edge or Firefox, or Safari 17 or later.',
+  'rules.title': 'Exam rules',
+  'rules.list': 'Rules for this test',
+  'rules.deadlineFixed': 'Deadline: {time}',
+  'rules.deadlineFlexible': 'Deadline: {n} minutes after you start',
+  'rules.deadlineHardClose': 'Deadline: {n} minutes after you start, and no later than {time}',
+  'rules.privacy':
+    'Camera video never leaves your device. Only proctoring events, such as leaving fullscreen, are sent to the server.',
+  'rules.agreement': 'I have read the rules and agree to follow them',
+  'rules.start': 'Start test',
+  'rules.blocked.checks': 'Complete the device checks first.',
+  'rules.blocked.agreement': 'Tick the agreement to start.',
+  'rules.blocked.phone': 'Connect your phone first.',
+  'rules.startFailed': "Couldn't start the test. {reason}",
+  'rules.error.WINDOW_NOT_OPEN': 'This test has not opened yet.',
+  'rules.error.WINDOW_CLOSED': 'The last start time for this test has passed.',
+  'rules.error.ATTEMPT_FINISHED': 'You have finished this test.',
+  'rules.error.NOT_ELIGIBLE': "This test isn't open to you.",
+  'rules.error.other': 'Check your connection, then try again.',
 } as const;
