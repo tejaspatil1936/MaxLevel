@@ -42,8 +42,9 @@ function useReturnFocus() {
     },
   };
 }
+// Never taller than the screen: long content scrolls inside the dialog (A11Y-15, WCAG 1.4.10).
 const panel =
-  'fixed left-1/2 top-1/2 w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-panel border border-rule bg-surface p-6 shadow-overlay';
+  'fixed left-1/2 top-1/2 max-h-[calc(100dvh-32px)] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-panel border border-rule bg-surface p-6 shadow-overlay';
 
 export interface DialogProps {
   open: boolean;

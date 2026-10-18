@@ -16,7 +16,8 @@ export interface MenuItem {
 }
 
 const itemClass =
-  'flex min-h-11 cursor-pointer flex-col justify-center rounded-control px-3 py-1 outline-none data-[highlighted]:bg-ballpoint-wash data-[disabled]:cursor-not-allowed';
+  // The highlighted item gets the shared focus ring (base.css :focus-visible) as well as a tint (A11Y-04).
+  'flex min-h-11 cursor-pointer flex-col justify-center rounded-control px-3 py-1 data-[highlighted]:bg-ballpoint-wash data-[disabled]:cursor-not-allowed';
 
 function Item({ item }: { item: MenuItem }) {
   const id = useId();
@@ -88,7 +89,7 @@ export function Menu({
         <DropdownMenu.Content
           align={align}
           sideOffset={4}
-          className="z-50 min-w-48 max-w-80 rounded-panel border border-rule bg-surface p-1 shadow-overlay"
+          className="z-50 min-w-48 max-w-80 rounded-panel border border-rule bg-surface p-1.5 shadow-overlay"
         >
           {items.map((item, i) => (
             <Item key={i} item={item} />
