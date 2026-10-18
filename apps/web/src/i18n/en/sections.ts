@@ -57,4 +57,9 @@ export const sections = {
   'sections.wholeTestLead': 'How many of the approved questions each student gets.',
   'sections.saveDraw': 'Save draw',
   'sections.drawSaved': 'Draw saved',
+  'marking.marksInvalid': 'Enter a number greater than 0.',
+  'marking.negativeInvalid': 'Enter 0 or a positive number.',
+  'marking.marksTooLarge': 'Enter 1000 or less.',
+  'marking.secondsInvalid': 'Enter a whole number of seconds, 1 or more.',
+  'marking.secondsTooLarge': 'Enter 3600 seconds or fewer.',
 } as const;
