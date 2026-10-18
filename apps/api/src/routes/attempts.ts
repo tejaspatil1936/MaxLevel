@@ -76,18 +76,14 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       },
     );
 
-    // EX-15: submitting and grading come with F-3.08; the Idempotency-Key requirement (API-02) holds already.
+    // EX-15 to EX-17: submit after the answers are synced; the attempt is graded on the server (API-02 key required).
     app.post(
       '/v1/attempts/:id/submit',
       {
         config: { ...student, idempotent: true },
         schema: { params: idParams, body: attemptSubmitSchema, response: { 200: attemptSubmitResultSchema } },
       },
-      async (req) => {
-        const attempt = await ctx.data.attempts.getAttempt(req.orgId!, req.params.id);
-        if (!attempt || attempt.studentId !== studentOf(req).studentId) throw notFound('Attempt');
-        throw new AppError(501, 'NOT_IMPLEMENTED', "Submitting isn't available yet.");
-      },
+      async (req) => attempts.submit(req.orgId!, studentOf(req).studentId, req.params.id, req.body.reason),
     );
   };
 }

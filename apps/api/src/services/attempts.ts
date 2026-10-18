@@ -21,6 +21,7 @@ import type { Data } from '../data';
 import type { TestRecord } from '../data/tests';
 import { AppError, notFound } from '../errors';
 import { asEligibility } from './eligibility';
+import { attemptGrader } from './grading';
 import type { PublishedQuestions, PublishedTestCache } from './published-tests';
 
 const REFUSALS = {
@@ -50,6 +51,7 @@ export interface AttemptDeps {
  */
 export function attemptService(deps: AttemptDeps) {
   const { data, clock, queue, rtdb, published } = deps;
+  const grader = attemptGrader(deps);
 
   /** Everything the exam screen needs in one response (PERF-03); the response schema strips any answer key. */
   function payload(
@@ -270,6 +272,25 @@ export function attemptService(deps: AttemptDeps) {
         else result.rejected.push({ questionId, code: verdict });
       }
       return result;
+    },
+
+    /**
+     * POST /v1/attempts/{id}/submit (EX-15, EX-16, EX-17): the client sends it after its answers are synced. An
+     * attempt in progress is graded and finished as `submitted`, or `auto_submitted` when time ran out (`time_up`);
+     * a finished one is returned as it is, so a repeat gives the same `submittedAt`.
+     */
+    async submit(
+      orgId: string,
+      studentId: string,
+      attemptId: string,
+      reason?: 'time_up',
+    ): Promise<{ status: AttemptRecord['status']; submittedAt: number }> {
+      const attempt = await ownAttempt(orgId, studentId, attemptId);
+      if (attempt.status === 'reset') throw new AppError(409, 'ATTEMPT_FINISHED', 'This attempt was reset.');
+      const done = isFinishedAttempt(attempt.status)
+        ? attempt
+        : await grader.finish(orgId, attempt, reason === 'time_up' ? 'auto_submitted' : 'submitted');
+      return { status: done.status, submittedAt: done.submittedAt ?? done.startedAt };
     },
   };
 }
