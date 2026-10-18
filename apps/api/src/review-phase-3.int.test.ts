@@ -89,7 +89,12 @@ describe('a Realtime Database outage never holds up an attempt', () => {
     expect(strike.json()).toMatchObject({ strikesCount: 1, counted: true, status: 'terminated' });
 
     const done = await replies(
-      down.app.inject({ method: 'POST', url: `/v1/attempts/${id}/submit`, headers: s1, payload: {} }),
+      down.app.inject({
+        method: 'POST',
+        url: `/v1/attempts/${id}/submit`,
+        headers: { ...s1, 'idempotency-key': crypto.randomUUID() },
+        payload: {},
+      }),
     );
     expect(done.statusCode, done.body).toBe(200);
     expect(done.json()).toMatchObject({ status: 'terminated' });
