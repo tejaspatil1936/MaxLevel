@@ -1,9 +1,9 @@
 import {
-  drawSize,
   NO_RESTRICTION,
-  resolveMarks,
   resolveSettings,
   SYSTEM_DEFAULTS,
+  testDrawPools,
+  totalMarks as totalMarksOf,
   type Difficulty,
   type Section,
 } from '@mitaoe/shared';
@@ -260,17 +260,8 @@ const authoringTest: Scenario = async (db, now, body) => {
       test: { overrides, scheduledDate },
       timezone: org.get('timezone') ?? 'Asia/Kolkata',
     });
-    const approved = stored.filter((q) => q.status === 'approved');
-    const pools = [
-      { section: undefined, drawCount: test.drawCount as number | undefined, difficultyMix: undefined },
-      ...sections.map((s) => ({ section: s, drawCount: s.drawCount, difficultyMix: s.difficultyMix })),
-    ];
-    const totalMarks = pools.reduce((sum, p) => {
-      const qs = approved.filter((q) => q.sectionId === p.section?.id);
-      if (!qs.length) return sum;
-      const size = drawSize({ sectionId: p.section?.id ?? null, questions: qs, ...p });
-      return sum + size * resolveMarks({}, p.section, resolved.marking).marks;
-    }, 0);
+    const pools = testDrawPools({ sections, drawCount: test.drawCount as number | undefined }, stored);
+    const { total: totalMarks } = totalMarksOf(pools, stored, sections, resolved.marking);
     Object.assign(test, {
       status: 'scheduled',
       approval: { status: 'approved', approvedBy: 'seed', approvedAt: now },
