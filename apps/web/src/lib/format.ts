@@ -96,6 +96,14 @@ export function formatCountdown(remainingMs: number): string {
   return days === 1 ? t('time.countdownOneDay', { time }) : t('time.countdownDays', { n: formatCount(days), time });
 }
 
+/** The exam timer (EX-06): `MM:SS` below one hour (`41:58`), `H:MM:SS` from one hour (`1:00:00`). */
+export function formatExamTimer(remainingMs: number): string {
+  const s = Math.max(0, Math.floor(remainingMs / 1000));
+  const h = Math.floor(s / 3600);
+  const mmss = `${two(Math.floor((s % 3600) / 60))}:${two(s % 60)}`;
+  return h === 0 ? mmss : `${h}:${mmss}`;
+}
+
 /** `+1 for a correct answer, −0.25 for a wrong answer, 0 for no answer` (U+2212 minus, en-IN numbers). */
 export function formatMarking(m: { marks: number; negativeMarks: number }): string {
   return t('marking.summary', {

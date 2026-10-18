@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatCountdown,
+  formatExamTimer,
   formatDay,
   formatMarking,
   formatMinutes,
@@ -40,6 +41,13 @@ describe('student formats', () => {
     expect(formatCountdown(86_399_999)).toBe('23:59:59');
     expect(formatCountdown(86_400_000 + 61_000)).toBe('1 day 00:01:01');
     expect(formatCountdown((2 * 1440 + 210) * 60_000)).toBe('2 days 03:30:00');
+  });
+
+  it('EX-06 the exam timer reads MM:SS below one hour and H:MM:SS from one hour', () => {
+    expect(formatExamTimer(41 * 60_000 + 58_999)).toBe('41:58');
+    expect(formatExamTimer(9 * 60_000 + 59_000)).toBe('09:59');
+    expect(formatExamTimer(3_600_000)).toBe('1:00:00');
+    expect(formatExamTimer(-5)).toBe('00:00');
   });
 
   it('UX-11 TST-07 times a student acts on read HH:mm in the org zone with the zone named', () => {
