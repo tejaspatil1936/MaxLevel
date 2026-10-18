@@ -6,17 +6,22 @@ import {
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
   resolveSettings,
   settingsProblems,
+  drawProblems,
   testCreateSchema,
   testDetailSchema,
   testListQuerySchema,
   testListSchema,
   testPatchSchema,
+  testDrawPools,
   testStatusAt,
+  type DrawProblem,
+  type Section,
   type Test,
   type TestDetail,
 } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import type { QuestionRecord } from '../data/questions';
 import type { SeriesRecord } from '../data/series';
 import type { TestRecord, TestUpdate } from '../data/tests';
 import { AppError, notFound } from '../errors';
@@ -39,6 +44,64 @@ function refuseDateOutside(series: SeriesRecord, date: string): void {
       `Choose a date from ${day(series.startDate)} to ${day(series.endDate)}, the series dates.`,
       { field: 'scheduledDate' },
     );
+}
+
+const questionsText = (n: number, what = 'approved') => `${n} ${what} ${n === 1 ? 'question' : 'questions'}`;
+
+/** US-AD-07, Q-05: a draw its pool cannot satisfy, as the error the editor shows on the named field. */
+function drawRefusal(p: DrawProblem): AppError {
+  const holder = p.sectionId === null ? 'This test' : 'This section';
+  const where = { sectionId: p.sectionId, problem: p.code };
+  if (p.code === 'DRAW_TOO_LARGE')
+    return new AppError(
+      400,
+      'DRAW_TOO_LARGE',
+      `${holder} has ${questionsText(p.available)}, so it can't draw ${p.drawCount}.`,
+      { ...where, field: 'drawCount', drawCount: p.drawCount, available: p.available },
+    );
+  if (p.code === 'MIX_UNSATISFIABLE')
+    return new AppError(
+      400,
+      'MIX_UNSATISFIABLE',
+      `${holder} has ${questionsText(p.available, p.difficulty)}, so the mix can't take ${p.wanted}.`,
+      { ...where, field: `difficultyMix.${p.difficulty}`, wanted: p.wanted, available: p.available },
+    );
+  return new AppError(
+    400,
+    'MIX_UNSATISFIABLE',
+    `The mix adds up to ${p.mixTotal} questions. Set Questions to draw to ${p.mixTotal} or leave it empty.`,
+    { ...where, field: 'drawCount', mixTotal: p.mixTotal, drawCount: p.drawCount },
+  );
+}
+
+const sameDraw = (a: Section | undefined, b: Section) =>
+  !!a &&
+  a.drawCount === b.drawCount &&
+  (['easy', 'medium', 'hard'] as const).every((d) => a.difficultyMix?.[d] === b.difficultyMix?.[d]);
+
+/**
+ * Q-03, Q-05, US-AD-07: refuses a draw or difficulty mix this change sets that its pool of approved questions cannot
+ * satisfy. Pools the change leaves as they were are not judged again. Questions of a section that is no longer listed
+ * count as questions in no section.
+ */
+function refuseUnsatisfiableDraw(
+  before: { sections: Section[] },
+  next: { sections: Section[]; drawCount?: number },
+  setsDrawCount: boolean,
+  questions: QuestionRecord[],
+): void {
+  const previous = new Map(before.sections.map((s) => [s.id, s]));
+  const listed = new Set(next.sections.map((s) => s.id));
+  const pools = testDrawPools(
+    next,
+    questions.map((q) => (q.sectionId && !listed.has(q.sectionId) ? { ...q, sectionId: null } : q)),
+  );
+  for (const pool of pools) {
+    const section = next.sections.find((s) => s.id === pool.sectionId);
+    const judged = section ? !sameDraw(previous.get(section.id), section) : next.sections.length === 0 && setsDrawCount;
+    const [problem] = judged ? drawProblems(pool) : [];
+    if (problem) throw drawRefusal(problem);
+  }
 }
 
 /** Tests of a series with their day labels and status (TST-01, TST-02, TST-04, TST-07, SER-03). */
@@ -126,20 +189,38 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
               field: 'resultRelease',
             });
         }
+        const nextSections = sections?.map((x, i) => ({
+          ...x,
+          id: x.id ?? data.tests.newSectionId(orgId),
+          order: i + 1,
+        }));
+        // Draw checks (US-AD-07); a deleted section's questions move to no section (DECISIONS).
+        let orphaned: string[] = [];
+        if (nextSections || details.drawCount != null) {
+          const questions = await data.questions.listQuestions(orgId, before.id);
+          const next = {
+            sections: nextSections ?? before.sections,
+            drawCount: 'drawCount' in details ? (details.drawCount ?? undefined) : before.drawCount,
+          };
+          refuseUnsatisfiableDraw(before, next, details.drawCount != null, questions);
+          const listed = new Set(next.sections.map((x) => x.id));
+          orphaned = questions.filter((q) => q.sectionId && !listed.has(q.sectionId)).map((q) => q.id);
+        }
+        const now = clock.now();
         const changes: TestUpdate = {
           ...details,
           ...('company' in details ? { company: details.company || null } : {}),
           ...('dayNumber' in details ? { dayNumber: details.dayNumber || null } : {}),
           ...(overrides ? { overrides } : {}),
-          ...(sections
-            ? {
-                sections: sections.map((x, i) => ({ ...x, id: x.id ?? data.tests.newSectionId(orgId), order: i + 1 })),
-              }
-            : {}),
-          updatedAt: clock.now(),
+          ...(nextSections ? { sections: nextSections } : {}),
+          updatedAt: now,
         };
         const batch = db.batch();
         data.tests.updateTest(orgId, batch, before.id, changes);
+        if (orphaned.length) {
+          data.questions.clearSection(orgId, batch, before.id, orphaned, now);
+          data.tests.questionsChanged(orgId, batch, before.id, now);
+        }
         const target = { type: 'test', id: before.id };
         if (overrides)
           audit(req, batch, { action: 'test.settings.update', target, before: before.overrides, after: overrides });
