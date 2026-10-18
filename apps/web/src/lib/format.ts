@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+
 // Numbers and times shown to people (UI-06): en-IN grouping, times in the organization's timezone.
 const numbers = new Intl.NumberFormat('en-IN');
 export const formatCount = (n: number) => numbers.format(n);
@@ -48,4 +50,31 @@ export function parseMinutes(time: string): number | null {
 export function zoneName(timeZone: string, at: number): string {
   const parts = new Intl.DateTimeFormat('en-IN', { timeZone, timeZoneName: 'short' }).formatToParts(at);
   return parts.find((p) => p.type === 'timeZoneName')?.value ?? timeZone;
+}
+
+/** The calendar day (yyyy-mm-dd) and 24-hour time (`HH:mm`) of an instant in a timezone (TST-07). */
+export function zonedParts(ms: number, timeZone: string): { day: string; time: string } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(ms);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return { day: `${get('year')}-${get('month')}-${get('day')}`, time: `${get('hour')}:${get('minute')}` };
+}
+
+/** A window as `2 Nov 2026, 10:00 to 11:00 IST`, in the organization's timezone with the zone named (UX-11). */
+export function formatWindow(window: { start: number; end: number }, timeZone: string): string {
+  const start = zonedParts(window.start, timeZone);
+  const end = zonedParts(window.end, timeZone);
+  return t('time.window', {
+    date: formatDay(start.day),
+    start: start.time,
+    end: end.day === start.day ? end.time : t('time.dayTime', { date: formatDay(end.day), time: end.time }),
+    zone: zoneName(timeZone, window.start),
+  });
 }
