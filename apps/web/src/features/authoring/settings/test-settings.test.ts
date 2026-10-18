@@ -62,6 +62,14 @@ describe('test settings tab', () => {
     expect(testSettingErrors(state, TZ)).toEqual({ windowEnd: 'setting.windowError' });
   });
 
+  it('TST-03 TST-06 a window override saved untouched keeps its stored instants, seconds included', () => {
+    const window = { start: ist(9, 28) + 17_000, end: ist(10, 28) + 17_000 };
+    const state = initialTestSettings(base, { window, showPastScores: true }, TZ);
+    expect(overridesFromState(state, { window }, base, TZ)).toEqual({ window, showPastScores: true });
+    const edited = { ...state, window: { ...state.window, end: '2026-11-02T11:00' } };
+    expect(overridesFromState(edited, { window }, base, TZ).window).toEqual({ start: ist(9, 28), end: ist(11) });
+  });
+
   it('TST-03 SER-09 only overridden values are checked, and the leaky release combination always is', () => {
     let state = setOverridden(initialTestSettings(base, {}, TZ), 'maxStrikes', true, base, TZ);
     state = { ...state, draft: { ...state.draft, maxStrikes: '11' } };

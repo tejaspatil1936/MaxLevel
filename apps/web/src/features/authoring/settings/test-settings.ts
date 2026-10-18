@@ -129,7 +129,15 @@ export function overridesFromState(
   base: Settings,
   timeZone: string,
 ): SettingsOverrides {
-  const window = draftWindow(state, base, timeZone);
+  // A window override left as loaded keeps its stored instants: the inputs show whole minutes, and a stored window
+  // with seconds must not read as an edit, which TST-06 refuses once attempts have started.
+  const own = stored.window;
+  const untouched =
+    !!own &&
+    state.overridden.includes('window') &&
+    windowDraft(own, timeZone).start === state.window.start &&
+    windowDraft(own, timeZone).end === state.window.end;
+  const window = untouched ? own : draftWindow(state, base, timeZone);
   const slot = window ? Math.round((window.end - window.start) / 60_000) : null;
   const values: Partial<Settings> = settingsFromDraft(state.draft, slot);
   const out: Record<string, unknown> = Object.fromEntries(
