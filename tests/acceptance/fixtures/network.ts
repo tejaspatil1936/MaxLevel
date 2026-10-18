@@ -42,6 +42,16 @@ export function apiRequest(method: string, path: string | RegExp) {
   };
 }
 
+/** Records every API request the page sends, as `METHOD /path`, from now on (requests are not changed). */
+export function recordApiCalls(page: Page): () => string[] {
+  const calls: string[] = [];
+  page.on('request', (req) => {
+    if (!req.url().startsWith(API_URL) || req.method() === 'OPTIONS') return;
+    calls.push(`${req.method()} ${new URL(req.url()).pathname}`);
+  });
+  return () => [...calls];
+}
+
 /** Matches any API request that changes something (POST, PUT, PATCH, DELETE). */
 export const anyMutation = (req: Request) => ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method());
 

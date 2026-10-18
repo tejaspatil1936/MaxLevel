@@ -59,4 +59,43 @@ export class TestApi {
   ): Promise<{ seriesId: string; testId: string; attemptId: string }> {
     return this.seedScenario('student-attempts', { orgId, studentId });
   }
+
+  /** Phase 2 scenario: the `Placement 2026` series (docs/testids/phase-2.md, "Test-only scenarios"). */
+  async seedSeries(options: SeriesSeed): Promise<{ seriesId: string }> {
+    return this.seedScenario<{ seriesId: string }>('authoring-series', { ...options });
+  }
+
+  /** Phase 2 scenario: a test (by default with the `basic` questions), in a new default series unless one is given. */
+  async seedAuthoringTest(options: AuthoringTestSeed): Promise<AuthoringTestIds> {
+    return this.seedScenario<AuthoringTestIds>('authoring-test', { ...options });
+  }
+}
+
+export interface SeriesSeed {
+  orgId: string;
+  title?: string;
+  status?: 'draft' | 'active' | 'archived';
+  defaults?: Record<string, unknown>;
+  eligibility?: Partial<{ departmentIds: string[]; graduationYears: number[]; include: string[]; exclude: string[] }>;
+}
+
+export interface AuthoringTestSeed {
+  orgId: string;
+  seriesId?: string;
+  title?: string;
+  company?: string;
+  scheduledDate?: string;
+  questions?: 'none' | 'basic' | 'sectioned';
+  invalidQuestion?: boolean;
+  overrides?: Record<string, unknown>;
+  sectionDraws?: Record<string, number>;
+  testDraw?: number;
+  publish?: boolean;
+}
+
+export interface AuthoringTestIds {
+  seriesId: string;
+  testId: string;
+  questionIds: string[];
+  sectionIds: Record<string, string>;
 }
