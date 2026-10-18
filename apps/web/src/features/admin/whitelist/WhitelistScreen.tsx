@@ -61,7 +61,7 @@ export function WhitelistScreen() {
     setCursors([]);
     setSelected(new Set());
   };
-  const refresh = () => qc.invalidateQueries({ queryKey: [orgId] });
+  const refresh = () => qc.invalidateQueries({ queryKey: qk.orgAll(orgId) });
 
   const bulk = useMutation({
     mutationFn: (action: 'disable' | 'enable' | 'remove') =>

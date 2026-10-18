@@ -96,7 +96,7 @@ export function StudentsScreen() {
         body: { action, emails: items.filter((s) => selected.has(s.id)).map((s) => s.email) },
       }),
     onSuccess: () => setSelected(new Set()),
-    onSettled: () => qc.invalidateQueries({ queryKey: [orgId] }),
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.orgAll(orgId) }),
   });
 
   const items = list.data?.items ?? [];

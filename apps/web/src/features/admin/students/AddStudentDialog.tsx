@@ -39,7 +39,7 @@ export function AddStudentDialog({ departments, onClose }: { departments: Depart
         },
       }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [orgId] });
+      void qc.invalidateQueries({ queryKey: qk.orgAll(orgId) });
       onClose();
     },
     onError: (e) => {

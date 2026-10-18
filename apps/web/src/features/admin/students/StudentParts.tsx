@@ -7,6 +7,7 @@ import { useState, type FormEvent } from 'react';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
+import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
 import { useDepartments } from './AddStudentDialog';
 import { graduationYears } from './years';
@@ -72,7 +73,7 @@ export function EditForm({ detail, onDone }: { detail: StudentDetail; onDone: ()
         : Promise.resolve(null);
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: [orgId] });
+      await qc.invalidateQueries({ queryKey: qk.orgAll(orgId) });
       onDone();
     },
     onError: (e) =>

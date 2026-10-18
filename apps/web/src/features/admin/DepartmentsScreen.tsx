@@ -35,7 +35,7 @@ export function DepartmentsScreen() {
   const [modal, setModal] = useState<Modal>(null);
   const openAdd = useCallback(() => setModal({ kind: 'add' }), []);
   useOpenParam('add', openAdd);
-  const refresh = () => qc.invalidateQueries({ queryKey: [orgId] });
+  const refresh = () => qc.invalidateQueries({ queryKey: qk.orgAll(orgId) });
   const setStatus = useMutation({
     mutationFn: (p: { dept: Department; status: Department['status'] }) =>
       api(`/v1/departments/${encodeURIComponent(p.dept.id)}`, { method: 'PATCH', body: { status: p.status } }),

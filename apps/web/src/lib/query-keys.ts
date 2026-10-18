@@ -3,6 +3,8 @@
 // "platform".
 export const qk = {
   me: (uid: string) => ['user', uid, 'me'] as const,
+  /** Everything cached for one organization, for invalidating after a change. */
+  orgAll: (orgId: string) => [orgId] as const,
   org: (orgId: string) => [orgId, 'org'] as const,
   orgList: (orgId: string, list: string, params: object = {}) => [orgId, list, params] as const,
   platformOrgs: () => ['platform', 'orgs'] as const,

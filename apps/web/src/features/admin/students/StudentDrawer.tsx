@@ -52,7 +52,7 @@ function DrawerBody({ detail, onDeleted }: { detail: StudentDetail; onDeleted: (
   const [editing, setEditing] = useState(false);
   const [confirm, setConfirm] = useState<'disable' | 'delete' | null>(null);
   const [typed, setTyped] = useState('');
-  const refresh = () => qc.invalidateQueries({ queryKey: [orgId] });
+  const refresh = () => qc.invalidateQueries({ queryKey: qk.orgAll(orgId) });
   const patch = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
       api(`/v1/students/${encodeURIComponent(s.id)}`, { method: 'PATCH', body }),
