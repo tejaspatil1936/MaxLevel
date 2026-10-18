@@ -40,3 +40,18 @@ PHASE 0 DONE 10/10 features
 ## Phase 1
 
 PHASE 1 START eefa9ba9a2b10e15c781dcc6cfb2c07986cebf01
+Tests: 118 phase 1 acceptance tests by test-author, reviewed twice by spec-reviewer (first FAIL with 3 blocking items, fixed; second PASS), locked at 08e2687.
+Note: verify.sh runs with PLAYWRIGHT_HTML_OPEN=never; otherwise a failing run waits on Playwright's HTML report server.
+F-1.01 done — organizations list, new organization form with logo and departments, detail with status changes (restore from archived)
+F-1.02 done — admins table, add by email, remove with confirmation and token revocation
+F-1.03 done — feature switches and limits, usage against limits, FF-03 locked sidebar entry
+F-1.04 done — super-admin switcher above Main, Working in banner, archived read-only workspace, choice kept per tab
+F-1.05 done — sidebar with icons below 1,200 px, skip link, focus ring, 44 px targets, Ctrl K palette, ? shortcuts
+F-1.06 done — departments CRUD, merge, archive/restore, delete only when unused
+F-1.07 done — upload wizard: CSV/XLSX parsed in the browser, column mapping, validation report, limit check
+F-1.08 done — whitelist list, search, status filter, bulk disable/enable/export/remove, single add
+F-1.09 done — org chooser group, suspended/archived refusals, account menu with org switch, DPDP consent
+F-1.10 done — profile completion with PRN from the list, profile lock with optimistic switch and rollback
+F-1.11 done — student directory with filters, sorting, columns, density; non-modal drawer with attempts and history
+F-1.12 done — org and platform audit logs with filters in the org timezone and CSV export
+F-1.13 done — accessibility panel saved to the account and applied before first paint, reading ruler
