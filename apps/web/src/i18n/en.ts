@@ -7,6 +7,7 @@ import { people } from './en/people';
 import { phone } from './en/phone';
 import { platform } from './en/platform';
 import { questions } from './en/questions';
+import { results } from './en/results';
 import { sections } from './en/sections';
 import { student } from './en/student';
 
@@ -126,6 +127,7 @@ export const en = {
   ...exam,
   ...examEntry,
   ...phone,
+  ...results,
 } as const;
 
 export type MessageKey = keyof typeof en;
