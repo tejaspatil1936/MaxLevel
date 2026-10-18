@@ -34,6 +34,10 @@ export interface ApiOptions {
   headers?: Record<string, string>;
 }
 
+/** Bodies up to this many characters (24 KiB at most as UTF-8) are sent with `keepalive`, inside the browser's 64 KiB
+ * budget for such requests. */
+const KEEPALIVE_MAX_CHARS = 8 * 1024;
+
 export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
   const user = firebaseAuth().currentUser;
   const headers: Record<string, string> = { ...opts.headers };
@@ -43,10 +47,15 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
   // Device time is what the offset corrects, so this is the one place the client reads it directly.
   // eslint-disable-next-line no-restricted-properties
   const sentAt = Date.now();
+  const method = opts.method ?? 'GET';
+  const body = opts.body === undefined ? undefined : JSON.stringify(opts.body);
   const res = await fetch(`${config.apiUrl}${path}`, {
-    method: opts.method ?? 'GET',
+    method,
     headers,
-    body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+    body,
+    // A small change outlives the page (UX-07): an optimistic toggle followed by a reload or a link still saves.
+    // Larger bodies would count against the browser's 64 KiB keepalive budget, so they end with the page.
+    keepalive: method !== 'GET' && (body?.length ?? 0) <= KEEPALIVE_MAX_CHARS,
   });
   const serverTime = Number(res.headers.get('x-server-time'));
   if (serverTime) {
