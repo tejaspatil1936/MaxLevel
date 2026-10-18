@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  // Unset means production: only an explicit test or development run skips the task OIDC check (oidc.ts).
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('production'),
   PORT: z.coerce.number().int().default(4001),
   HOST: z.string().default('0.0.0.0'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
