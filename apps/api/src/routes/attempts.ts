@@ -11,6 +11,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../errors';
+import { ANSWER_RATE_LIMIT } from '../plugins/rate-limit';
 import { attemptService } from '../services/attempts';
 import type { ApiContext } from './context';
 
@@ -49,11 +50,11 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       async (req) => attempts.resume(req.orgId!, studentOf(req).studentId, req.params.id),
     );
 
-    // EX-10, EX-11: the exam screen's answer batches; rate limits per user (API-06) come with offline sync (F-3.07).
+    // EX-10, EX-11: the exam screen's answer batches, limited per user (API-06).
     app.put(
       '/v1/attempts/:id/answers',
       {
-        config: student,
+        config: { ...student, rateLimit: ANSWER_RATE_LIMIT },
         schema: { params: idParams, body: answerBatchSchema, response: { 200: answerBatchResultSchema } },
       },
       async (req) => attempts.saveAnswers(req.orgId!, studentOf(req).studentId, req.params.id, req.body),

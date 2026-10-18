@@ -11,6 +11,7 @@ import { createLogger } from './logging';
 import type { IdempotencyData } from './data/idempotency';
 import { registerErrorHandling } from './plugins/errors';
 import { registerIdempotency } from './plugins/idempotency';
+import { registerRateLimit } from './plugins/rate-limit';
 import { registerRequestLog } from './plugins/request-log';
 import { registerRouteTable } from './plugins/route-table';
 import { registerServerTime } from './plugins/server-time';
@@ -78,6 +79,8 @@ export async function createServer(
   });
   await app.register(helmet, { contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'same-site' } });
   await app.register(compress, { threshold: 1024 });
+  // Per-user limits on routes that opt in with config.rateLimit (API-06); registered before any route.
+  await registerRateLimit(app);
   app.addHook('onSend', async (req, reply) => {
     reply.header('X-Request-Id', req.id);
   });
