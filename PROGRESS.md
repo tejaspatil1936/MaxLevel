@@ -89,3 +89,4 @@ Checkpoint after 5 features: spec review runs on the phase 3 diff in parallel wi
 F-3.06 done — timer in server time with red pen under 10 minutes, polite Time announcements at 10, 5 and 1 minutes, T reads the time left
 F-3.07 done — IndexedDB-first answers and offline exam payload, batched sync with seq and backoff, refused answers shown, per-user rate limits on answers and events
 F-3.08 done — submit with flush and offline retry, submitted screen, auto-submit task in the worker with reschedule, local task dispatcher, grading from the stored draw, leaderboard task queued
+F-3.09 done — navigate route storing first serve times, timed questions lock and advance, forward-only navigation, server refusals after limit plus 2 s; answers refused inside the transaction once an attempt is finished (review fix)
