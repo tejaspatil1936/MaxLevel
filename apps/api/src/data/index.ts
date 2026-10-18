@@ -8,6 +8,7 @@ import { identityData } from './identity';
 import { orgsData } from './orgs';
 import { platformData } from './platform';
 import { preferencesData } from './preferences';
+import { seriesData } from './series';
 import { studentsData } from './students';
 import { usageData } from './usage';
 import { whitelistData } from './whitelist';
@@ -26,6 +27,7 @@ export function createData(db: Firestore) {
     whitelist: whitelistData(db),
     platform: platformData(db),
     preferences: preferencesData(db),
+    series: seriesData(db),
     usage: usageData(db),
   };
 }
