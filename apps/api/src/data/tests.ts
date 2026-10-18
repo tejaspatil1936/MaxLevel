@@ -39,6 +39,13 @@ export type TestUpdate = Partial<{
   [K in keyof Omit<TestRecord, 'id' | 'seriesId' | 'createdAt'>]: TestRecord[K] | null;
 }> & { updatedAt: number };
 
+/** Q-15, DECISIONS Q16: the fields an edit of an approved or scheduled test writes to send it back to review. */
+export const BACK_TO_REVIEW = {
+  status: 'in_review',
+  approval: null,
+  resolved: null,
+} as const satisfies Partial<TestUpdate>;
+
 const NO_RULES: EligibilityRules = { departmentIds: [], graduationYears: [], include: [], exclude: [] };
 /** Fields whose `null` means "remove"; dayNumber keeps an explicit null (no custom label). */
 const REMOVABLE = new Set(['company', 'drawCount', 'approval', 'resolved']);
@@ -119,13 +126,15 @@ export function testsData(db: Firestore) {
 
     /**
      * Records a change to the test's question set: a new questionSetVersion (PERF-01), and `in_review` when the
-     * change gives a draft test its first question (TST-04).
+     * change gives a draft test its first question (TST-04) or edits an approved test before attempts (Q-15), which
+     * also removes its approval and settings snapshot.
      */
     questionsChanged(orgId: string, tx: Tx, testId: string, now: number, status?: TestStatus): void {
       writer(tx).update(col(orgId).doc(testId), {
         questionSetVersion: FieldValue.increment(1),
         updatedAt: now,
         ...(status ? { status } : {}),
+        ...(status === 'in_review' ? { approval: FieldValue.delete(), resolved: FieldValue.delete() } : {}),
       });
     },
 

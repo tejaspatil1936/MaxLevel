@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { initFirebase } from '../firebase';
 import { clearEmulators } from '../test-support/emulators';
 import { createData } from '.';
+import { BACK_TO_REVIEW } from './tests';
 
 const { db } = initFirebase();
 const data = createData(db);
@@ -61,5 +62,39 @@ describe('tests data access', () => {
     data.tests.updateTest('org-a', clear, id, { dayNumber: null, updatedAt: 3000 });
     await clear.commit();
     expect(await data.tests.getTest('org-a', id)).toMatchObject({ dayNumber: null, dayHidden: true });
+  });
+
+  it('Q-15 TST-04 a return to review removes the approval and the snapshot; BACK_TO_REVIEW does the same', async () => {
+    const id = await create('org-a', {}, 1000);
+    const approval = { status: 'approved', approvedBy: 'u1', approvedAt: 1500 };
+    await db
+      .doc(`organizations/org-a/tests/${id}`)
+      .update({ status: 'scheduled', approval, resolved: { maxStrikes: 3 } });
+    const batch = db.batch();
+    data.tests.questionsChanged('org-a', batch, id, 2000, 'in_review');
+    await batch.commit();
+    const stored = (await db.doc(`organizations/org-a/tests/${id}`).get()).data();
+    expect(stored).toMatchObject({ status: 'in_review', questionSetVersion: 2, updatedAt: 2000 });
+    expect(stored).not.toHaveProperty('approval');
+    expect(stored).not.toHaveProperty('resolved');
+
+    await db.doc(`organizations/org-a/tests/${id}`).update({ status: 'approved', approval });
+    const patch = db.batch();
+    data.tests.updateTest('org-a', patch, id, { ...BACK_TO_REVIEW, updatedAt: 3000 });
+    await patch.commit();
+    const after = await data.tests.getTest('org-a', id);
+    expect(after).toMatchObject({ status: 'in_review' });
+    expect(after).not.toHaveProperty('approval');
+  });
+
+  it('TST-06 Q-15 hasAttempts sees an attempt or an attempt index entry of the test, in its org only', async () => {
+    expect(await data.attempts.hasAttempts('org-a', 't1')).toBe(false);
+    await db.doc('organizations/org-a/attemptIndex/t10_s1').set({ attemptCount: 1 });
+    await db.doc('organizations/org-b/attempts/a1').set({ testId: 't1' });
+    expect(await data.attempts.hasAttempts('org-a', 't1')).toBe(false);
+    await db.doc('organizations/org-a/attemptIndex/t1_s1').set({ activeAttemptId: 'a2', attemptCount: 1 });
+    expect(await data.attempts.hasAttempts('org-a', 't1')).toBe(true);
+    expect(await data.attempts.hasAttempts('org-b', 't1')).toBe(true);
+    expect(await data.attempts.hasAttempts('org-b', 't2')).toBe(false);
   });
 });
