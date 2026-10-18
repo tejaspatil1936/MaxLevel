@@ -4,6 +4,7 @@ import { authoring } from './en/authoring';
 import { people } from './en/people';
 import { platform } from './en/platform';
 import { questions } from './en/questions';
+import { sections } from './en/sections';
 import { student } from './en/student';
 
 const core = {
@@ -111,6 +112,15 @@ const core = {
   'filter.all': 'All',
 } as const;
 
-export const en = { ...core, ...platform, ...people, ...student, ...audit, ...authoring, ...questions } as const;
+export const en = {
+  ...core,
+  ...platform,
+  ...people,
+  ...student,
+  ...audit,
+  ...authoring,
+  ...questions,
+  ...sections,
+} as const;
 
 export type MessageKey = keyof typeof en;
