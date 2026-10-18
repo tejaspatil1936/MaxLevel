@@ -83,3 +83,4 @@ Tests: 59 phase 3 acceptance tests by test-author (36 e2e REQs; integration and 
 F-3.01 done — timing (canStart, lastStartAt, attemptDeadline, sectionDeadline), scoring with negatives, passing marks and floor, strike dedupe, sync retry and answer verdicts, attempt schemas (shared, unit-tested)
 F-3.02 done — student dashboard (live, upcoming, completed) with server-clock countdowns and timezone, test page, exam-test seed scenario
 F-3.03 done — POST /v1/attempts with eligibility and window checks, seeded draw, deadline, auto-submit task, Idempotency-Key replay, resume payload without answer keys, TST-06 lock, published-test cache
+F-3.04 built — preflight checks with fix lines, self-hosted MediaPipe face detector, rules screen with Start (2 tests wait on F-3.05 and F-3.10-3.12)
