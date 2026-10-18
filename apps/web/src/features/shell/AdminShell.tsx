@@ -37,7 +37,7 @@ function SideLink({ link, locked }: { link: NavLink; locked: boolean }) {
         {locked ? <Lock aria-hidden size={16} className="ml-auto text-graphite max-[1199px]:hidden" /> : null}
       </Link>
       {locked ? (
-        <span id={hintId} hidden>
+        <span id={hintId} className="sr-only">
           {t('plan.notIncluded')}
         </span>
       ) : null}

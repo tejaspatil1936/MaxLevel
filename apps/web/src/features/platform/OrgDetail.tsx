@@ -91,21 +91,17 @@ function OrgDetailView({ org }: { org: PlatformOrgDetail }) {
 
   return (
     <>
+      {org.logoUrl ? (
+        // A data URL from the API, shown as a labelled image (the static export has no image optimizer).
+        <span
+          role="img"
+          aria-label={t('org.logoAlt', { name: org.name })}
+          className="mb-4 block h-12 w-24 bg-contain bg-left bg-no-repeat"
+          style={{ backgroundImage: `url(${JSON.stringify(org.logoUrl)})` }}
+        />
+      ) : null}
       <PageHeader
-        title={
-          <span className="flex flex-wrap items-center gap-4">
-            {org.logoUrl ? (
-              // A data URL from the API, shown as a labelled image (the static export has no image optimizer).
-              <span
-                role="img"
-                aria-label={t('org.logoAlt', { name: org.name })}
-                className="block h-12 w-24 bg-contain bg-left bg-no-repeat"
-                style={{ backgroundImage: `url(${JSON.stringify(org.logoUrl)})` }}
-              />
-            ) : null}
-            <span>{org.name}</span>
-          </span>
-        }
+        title={org.name}
         subtitle={
           <span className="flex items-center gap-3">
             <span data-testid="org-status">

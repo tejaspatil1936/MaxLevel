@@ -2,7 +2,7 @@
 
 import type { MeResponse } from '@mitaoe/shared';
 import { Button, Menu } from '@mitaoe/ui';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, CircleUser } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -28,13 +28,14 @@ export function StudentShell({ me, children }: { me: MeResponse; children: React
             </Link>
           </nav>
           <div className="flex items-center gap-2">
+            <span className="text-body-small text-graphite max-[700px]:hidden">{me.email}</span>
             <AccessibilityButton />
             <Menu
               label={t('account.menu')}
               trigger={
-                <Button variant="secondary" className="gap-2">
-                  <span>{me.email}</span>
-                  <ChevronDown aria-hidden size={18} />
+                <Button variant="secondary" className="min-w-11 gap-1 px-2">
+                  <CircleUser aria-hidden size={20} />
+                  <ChevronDown aria-hidden size={16} />
                 </Button>
               }
               items={[

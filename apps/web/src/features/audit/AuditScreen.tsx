@@ -105,9 +105,9 @@ export function AuditScreen({
     }
   };
 
+  const items = list.data?.items ?? [];
   const set = (k: keyof Filters) => (e: { target: { value: string } }) =>
     setDraft((d) => ({ ...d, [k]: e.target.value }));
-  const items = list.data?.items ?? [];
   return (
     <>
       <PageHeader
@@ -138,52 +138,55 @@ export function AuditScreen({
         <TextField label={t('audit.to')} type="date" value={draft.to} onChange={set('to')} />
         <div className="flex items-end gap-3">
           <Button type="submit">{t('audit.apply')}</Button>
-          <Button variant="secondary" onClick={clear}>
-            {t('audit.clear')}
-          </Button>
-        </div>
-      </form>
-      {list.isError ? <InlineMessage>{t('common.loadFailed')}</InlineMessage> : null}
-      {list.isSuccess && items.length === 0 ? (
-        <EmptyState
-          message={t('audit.empty')}
-          action={
+          {/* With no matches the empty state offers the one Clear filters action (UX-08). */}
+          {list.isSuccess && items.length === 0 ? null : (
             <Button variant="secondary" onClick={clear}>
               {t('audit.clear')}
             </Button>
+          )}
+        </div>
+      </form>
+      {list.isError ? <InlineMessage>{t('common.loadFailed')}</InlineMessage> : null}
+      {/* The table stays in place; with no matches it holds the empty state (UX-08). */}
+      <>
+        <Table
+          caption={t('nav.audit')}
+          busy={list.isPending}
+          rows={items}
+          rowKey={(e) => e.id}
+          empty={
+            <EmptyState
+              message={t('audit.empty')}
+              action={
+                <Button variant="secondary" onClick={clear}>
+                  {t('audit.clear')}
+                </Button>
+              }
+            />
           }
+          columns={[
+            { key: 'time', header: t('audit.time'), cell: (e) => formatDateTime(e.createdAt, timeZone) },
+            ...(platform
+              ? [{ key: 'org', header: t('audit.organization'), cell: (e: AuditEntry) => orgName(e.orgId) }]
+              : []),
+            { key: 'actor', header: t('audit.actor'), cell: (e) => e.actor.email },
+            { key: 'action', header: t('audit.action'), cell: (e) => e.action },
+            { key: 'target', header: t('audit.target'), cell: (e) => e.target.id },
+            {
+              key: 'change',
+              header: t('audit.change'),
+              cell: (e) => (
+                <span className="block max-w-96 break-words font-code text-body-small">
+                  {e.before !== undefined ? show(e.before) : ''}
+                  {e.before !== undefined && e.after !== undefined ? ' → ' : ''}
+                  {e.after !== undefined ? show(e.after) : ''}
+                </span>
+              ),
+            },
+          ]}
         />
-      ) : (
-        <>
-          <Table
-            caption={t('nav.audit')}
-            busy={list.isPending}
-            rows={items}
-            rowKey={(e) => e.id}
-            columns={[
-              { key: 'time', header: t('audit.time'), cell: (e) => formatDateTime(e.createdAt, timeZone) },
-              ...(platform
-                ? [{ key: 'org', header: t('audit.organization'), cell: (e: AuditEntry) => orgName(e.orgId) }]
-                : []),
-              { key: 'actor', header: t('audit.actor'), cell: (e) => e.actor.email },
-              { key: 'action', header: t('audit.action'), cell: (e) => e.action },
-              { key: 'target', header: t('audit.target'), cell: (e) => e.target.id },
-              {
-                key: 'change',
-                header: t('audit.change'),
-                cell: (e) => (
-                  <span className="block max-w-96 break-words font-code text-body-small">
-                    {e.before !== undefined ? show(e.before) : ''}
-                    {e.before !== undefined && e.after !== undefined ? ' → ' : ''}
-                    {e.after !== undefined ? show(e.after) : ''}
-                  </span>
-                ),
-              },
-            ]}
-          />
-          <Pager cursors={cursors} nextCursor={list.data?.nextCursor} onChange={setCursors} />
-        </>
-      )}
+        <Pager cursors={cursors} nextCursor={list.data?.nextCursor} onChange={setCursors} />
+      </>
     </>
   );
 }
