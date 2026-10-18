@@ -65,6 +65,17 @@ export function attemptClient(app: FastifyInstance) {
       return { status: res.statusCode, body: res.json() as AnswerBatchResult, raw: res.body };
     },
 
+    /** POST /v1/attempts/{id}/navigate for one question. */
+    async navigate(id: string, headers: Record<string, string>, questionId: string) {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/v1/attempts/${id}/navigate`,
+        headers,
+        payload: { questionId },
+      });
+      return { status: res.statusCode, body: res.json() as { servedAt: number; serverTime: number }, raw: res.body };
+    },
+
     async resume(id: string, headers: Record<string, string>) {
       const res = await app.inject({ method: 'GET', url: `/v1/attempts/${id}`, headers });
       return { status: res.statusCode, body: res.json() as AttemptPayload, raw: res.body };

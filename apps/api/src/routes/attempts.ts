@@ -7,6 +7,8 @@ import {
   attemptStartSchema,
   attemptSubmitResultSchema,
   attemptSubmitSchema,
+  navigateResultSchema,
+  navigateSchema,
   type AttemptPayload,
 } from '@mitaoe/shared';
 import type { FastifyRequest } from 'fastify';
@@ -60,6 +62,16 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         schema: { params: idParams, body: answerBatchSchema, response: { 200: answerBatchResultSchema } },
       },
       async (req) => attempts.saveAnswers(req.orgId!, studentOf(req).studentId, req.params.id, req.body),
+    );
+
+    // Q-11, Q-12: the exam screen shows a question; a timed one's first serve time is kept.
+    app.post(
+      '/v1/attempts/:id/navigate',
+      {
+        config: { ...student, rateLimit: ANSWER_RATE_LIMIT },
+        schema: { params: idParams, body: navigateSchema, response: { 200: navigateResultSchema } },
+      },
+      async (req) => attempts.navigate(req.orgId!, studentOf(req).studentId, req.params.id, req.body.questionId),
     );
 
     // PR-08: the client's proctoring reports, limited per user (API-06). Logging and counting come with F-3.10.

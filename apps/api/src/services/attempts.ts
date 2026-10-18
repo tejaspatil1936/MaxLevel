@@ -271,6 +271,33 @@ export function attemptService(deps: AttemptDeps) {
     },
 
     /**
+     * POST /v1/attempts/{id}/navigate (Q-11, Q-12): the exam screen shows a question. A timed question's first serve
+     * time is stored once and returned on every later call; an untimed question stores nothing. A question outside the
+     * attempt's draw is refused.
+     */
+    async navigate(
+      orgId: string,
+      studentId: string,
+      attemptId: string,
+      questionId: string,
+    ): Promise<{ servedAt: number; serverTime: number }> {
+      const attempt = await ownAttempt(orgId, studentId, attemptId);
+      if (attempt.status !== 'in_progress') throw finishedError();
+      if (!attempt.draw.questionIds.includes(questionId))
+        throw new AppError(400, 'VALIDATION', 'This question is not part of this attempt.', { questionId });
+      const test = await data.tests.getTest(orgId, attempt.testId);
+      if (!test?.resolved) throw notFound('Attempt');
+      const set = await published.questions(orgId, test);
+      const now = clock.now();
+      if (questionTimeLimit(test.resolved, set.byId.get(questionId) ?? {}) === undefined)
+        return { servedAt: now, serverTime: now };
+      const served = await data.attempts.serveQuestion(orgId, attempt.id, questionId, now);
+      if (!served) throw notFound('Attempt');
+      if (served === 'ATTEMPT_FINISHED') throw finishedError();
+      return { servedAt: served.servedAt, serverTime: now };
+    },
+
+    /**
      * POST /v1/attempts/{id}/submit (EX-15, EX-16, EX-17): the client sends it after its answers are synced. An
      * attempt in progress is graded and finished as `submitted`, or `auto_submitted` when time ran out (`time_up`);
      * a finished one is returned as it is, so a repeat gives the same `submittedAt`.
