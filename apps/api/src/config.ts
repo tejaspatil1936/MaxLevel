@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
 const envSchema = z.object({
@@ -10,6 +11,9 @@ const envSchema = z.object({
   WORKER_URL: z.string().default('http://127.0.0.1:4001'),
   // The cloud-tasks driver arrives with the deployment phase; until then every run uses the local queue.
   TASK_QUEUE: z.enum(['local']).default('local'),
+  // Signs export download links (EXP-03). Every API instance needs the same value (Secret Manager in production); a
+  // run without it signs with a random key of its own, so links work only on that process.
+  EXPORT_LINK_SECRET: z.string().min(32).optional(),
 });
 
 export type Config = {
@@ -21,6 +25,7 @@ export type Config = {
   testApiSecret?: string;
   workerUrl: string;
   taskQueue: 'local';
+  exportLinkSecret: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -32,6 +37,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     logLevel: e.LOG_LEVEL,
     workerUrl: e.WORKER_URL,
     taskQueue: e.TASK_QUEUE,
+    exportLinkSecret: e.EXPORT_LINK_SECRET ?? randomBytes(32).toString('hex'),
     appOrigins: e.APP_ORIGINS.split(',')
       .map((s) => s.trim())
       .filter(Boolean),
