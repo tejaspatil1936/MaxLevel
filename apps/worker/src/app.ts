@@ -6,6 +6,7 @@ import type { WorkerConfig } from './config';
 import type { WorkerData } from './data';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit';
+import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
 import { releaseResultsHandler, releaseResultsPayloadSchema } from './tasks/release-results';
 
 export interface WorkerDeps {
@@ -89,7 +90,15 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           req.log.info({ task: 'release-results', testId: req.body.testId, outcome }, 'task done');
           return { ok: true, outcome };
         });
-      const handled: ReadonlyArray<string> = ['auto-submit', 'release-results'];
+      const leaderboard = leaderboardHandler(deps);
+      tasks
+        .withTypeProvider<ZodTypeProvider>()
+        .post('/leaderboard', { schema: { body: leaderboardPayloadSchema } }, async (req) => {
+          const outcome = await leaderboard(req.body);
+          req.log.info({ task: 'leaderboard', testId: req.body.testId, outcome }, 'task done');
+          return { ok: true, outcome };
+        });
+      const handled: ReadonlyArray<string> = ['auto-submit', 'release-results', 'leaderboard'];
       for (const name of TASK_NAMES.filter((n) => !handled.includes(n))) {
         // Handlers are added by the features that own them; until then a task is acknowledged and logged.
         tasks.post(`/${name}`, async (req) => {
