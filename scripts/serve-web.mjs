@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Serves the static export (apps/web/out) on PORT (default 3000) with the same headers as vercel.json, plus the
-// local API and emulator origins in the CSP connect-src, so tests exercise the real security headers.
+// local API and emulator origins in the CSP connect-src and the Realtime Database emulator in script-src (its
+// long-polling transport loads scripts), so tests exercise the real security headers.
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
@@ -9,6 +10,7 @@ const root = new URL('../apps/web/out/', import.meta.url).pathname;
 const vercel = JSON.parse(readFileSync(new URL('../apps/web/vercel.json', import.meta.url), 'utf8'));
 const port = Number(process.env.PORT ?? 3000);
 const LOCAL = 'http://localhost:4000 http://127.0.0.1:9099 http://127.0.0.1:9000 ws://127.0.0.1:9000';
+const RTDB_LONG_POLL = 'http://127.0.0.1:9000';
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
@@ -34,6 +36,7 @@ function headersFor(path) {
   if (out['Content-Security-Policy']) {
     out['Content-Security-Policy'] = out['Content-Security-Policy']
       .replace('connect-src ', `connect-src ${LOCAL} `)
+      .replace('script-src ', `script-src ${RTDB_LONG_POLL} `)
       .replace('frame-src ', 'frame-src http://127.0.0.1:9099 ');
   }
   delete out['Strict-Transport-Security']; // plain HTTP locally

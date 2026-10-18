@@ -71,6 +71,19 @@ describe('security headers', () => {
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("frame-ancestors 'none'");
   });
+
+  it('PR-15 REL-05 the CSP lets Realtime Database connect over WebSocket and its long-polling fallback', () => {
+    const directive = (name: string) =>
+      all['Content-Security-Policy']!.split(';')
+        .map((d) => d.trim().split(/\s+/))
+        .find(([n]) => n === name)!
+        .slice(1);
+    for (const host of ['https://*.firebaseio.com', 'https://*.firebasedatabase.app']) {
+      expect(directive('script-src'), 'long-polling loads scripts').toContain(host);
+      expect(directive('connect-src')).toContain(host);
+      expect(directive('connect-src')).toContain(host.replace('https:', 'wss:'));
+    }
+  });
 });
 
 describe('data fetching', () => {
