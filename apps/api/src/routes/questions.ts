@@ -1,6 +1,11 @@
 import {
   questionCreateSchema,
+  questionImageSavedSchema,
+  questionImageUploadSchema,
+  questionImportedSchema,
+  questionImportSchema,
   questionListSchema,
+  questionOrderSchema,
   questionPatchSchema,
   questionProblems,
   questionSavedSchema,
@@ -36,7 +41,7 @@ function withoutEmptyOptions<T extends Partial<Pick<QuestionCreate, 'options' | 
   };
 }
 
-/** Questions of a test: list, write, edit and delete (Q-01, DECISIONS Q17, TST-04). */
+/** Questions of a test: list, write, edit, delete, reorder, JSON import and images (Q-01, DECISIONS Q17, TST-04). */
 export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   const { data, audit, clock, questionImages } = ctx;
   const db = ctx.firebase.db;
@@ -192,6 +197,82 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         audit(req, batch, { action: 'question.delete', target: { type: 'question', id: q.id }, before: q });
         await batch.commit();
         return { deleted: true as const };
+      },
+    );
+
+    // Q-01: the new order is saved at once; the list must name every question of the test exactly once.
+    app.put(
+      '/v1/tests/:id/questions/order',
+      {
+        config: admin,
+        schema: {
+          params: idParams,
+          body: questionOrderSchema,
+          response: { 200: z.object({ ids: z.array(z.string()) }) },
+        },
+      },
+      async (req) => {
+        const orgId = req.orgId!;
+        const test = await testOf(orgId, req.params.id);
+        const current = new Set((await data.questions.listQuestions(orgId, test.id)).map((q) => q.id));
+        const ids = req.body.ids;
+        if (ids.length !== current.size || new Set(ids).size !== ids.length || ids.some((id) => !current.has(id)))
+          throw new AppError(400, 'VALIDATION', 'List every question of this test once.', { field: 'ids' });
+        const batch = db.batch();
+        data.questions.setOrder(orgId, batch, test.id, ids, clock.now());
+        changed(orgId, batch, test, false);
+        audit(req, batch, { action: 'question.reorder', target: { type: 'test', id: test.id }, after: { ids } });
+        await batch.commit();
+        return { ids };
+      },
+    );
+
+    // Q-01: questions parsed from a JSON file in the browser, appended in file order and checked like written ones.
+    app.post(
+      '/v1/tests/:id/questions/import',
+      {
+        config: admin,
+        bodyLimit: 8 * 1024 * 1024,
+        schema: { params: idParams, body: questionImportSchema, response: { 201: questionImportedSchema } },
+      },
+      async (req, reply) => {
+        const orgId = req.orgId!;
+        const test = await testOf(orgId, req.params.id);
+        const inputs = req.body.questions.map(withoutEmptyOptions);
+        for (const q of inputs) refuseForeignRefs(orgId, test, q);
+        const list = await data.questions.listQuestions(orgId, test.id);
+        const seen: Array<{ prompt: string }> = [...list];
+        const last = list.at(-1)?.order ?? 0;
+        const now = clock.now();
+        const batch = db.batch();
+        const ids = inputs.map((q, i) => {
+          const status = statusOf(questionProblems(q, seen));
+          seen.push(q);
+          const input = { ...q, order: last + i + 1, source: { kind: 'json' as const }, status };
+          return data.questions.createQuestion(orgId, batch, test.id, input, now);
+        });
+        changed(orgId, batch, test, true);
+        audit(req, batch, {
+          action: 'question.import',
+          target: { type: 'test', id: test.id },
+          after: { count: ids.length, ids },
+        });
+        await batch.commit();
+        return reply.status(201).send({ count: ids.length, ids });
+      },
+    );
+
+    // A11Y-10: an image for a question of this test, stored before the question is saved and named by its path.
+    app.post(
+      '/v1/tests/:id/question-images',
+      {
+        config: admin,
+        schema: { params: idParams, body: questionImageUploadSchema, response: { 201: questionImageSavedSchema } },
+      },
+      async (req, reply) => {
+        const orgId = req.orgId!;
+        const test = await testOf(orgId, req.params.id);
+        return reply.status(201).send(await questionImages.save(orgId, test.id, req.body));
       },
     );
   };

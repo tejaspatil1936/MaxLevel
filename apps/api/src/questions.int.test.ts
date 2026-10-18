@@ -156,3 +156,65 @@ describe('question routes', () => {
     expect((await db.collection(`${testPath}/questions`).get()).size).toBe(1);
   });
 });
+
+describe('question order, import and images', () => {
+  it('Q-01 the order is saved as given, and a list that is not exactly the test questions is refused', async () => {
+    const { app } = await testApp();
+    const ids = [await add(app, body('One')), await add(app, body('Two')), await add(app, body('Three'))].map(
+      (q) => q.id,
+    );
+    const reversed = [...ids].reverse();
+    const res = await call(app, 'PUT', '/v1/tests/t1/questions/order', { ids: reversed });
+    expect(res.statusCode).toBe(200);
+    expect((await list(app)).map((q) => q.id)).toEqual(reversed);
+    const [entry] = await audit('question.reorder');
+    expect(entry).toMatchObject({ target: { type: 'test', id: 't1' }, after: { ids: reversed } });
+    for (const bad of [ids.slice(1), [...ids, 'other'], [ids[0], ids[0], ids[1]]]) {
+      const refused = await call(app, 'PUT', '/v1/tests/t1/questions/order', { ids: bad });
+      expect(refused.statusCode).toBe(400);
+    }
+    expect((await list(app)).map((q) => q.id)).toEqual(reversed);
+  });
+
+  it('Q-01 TST-04 imported questions are appended in order as json, each checked, with one audit entry', async () => {
+    const { app } = await testApp();
+    await add(app, body('Existing question'));
+    const res = await call(app, 'POST', '/v1/tests/t1/questions/import', {
+      questions: [body('Imported one'), body('Imported two', []), body('existing question')],
+    });
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ count: 3 });
+    const items = await list(app);
+    expect(items.map((q) => [q.status, q.problems])).toEqual([
+      ['approved', []],
+      ['approved', []],
+      ['draft', [{ code: 'NO_CORRECT_ANSWER' }]],
+      ['draft', [{ code: 'DUPLICATE', of: 1 }]],
+    ]);
+    const docs = (await db.collection(`${testPath}/questions`).get()).docs.map((d) => d.data());
+    expect(docs.filter((d) => d.source.kind === 'json')).toHaveLength(3);
+    expect(Math.max(...docs.map((d) => d.order))).toBe(4);
+    const [entry] = await audit('question.import');
+    expect(entry).toMatchObject({ target: { type: 'test', id: 't1' }, after: { count: 3 } });
+  });
+
+  it('A11Y-10 SEC-06 an uploaded image is stored for this test, listed as a data URL, and a fake one is refused', async () => {
+    const { app } = await testApp();
+    const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const up = await call(app, 'POST', '/v1/tests/t1/question-images', { contentType: 'image/png', data: png });
+    expect(up.statusCode).toBe(201);
+    const { path, url } = up.json() as { path: string; url: string };
+    expect(path.startsWith(`${testPath}/images/`)).toBe(true);
+    await add(app, { ...body('Which shape?'), images: [{ path, alt: 'A red square' }] });
+    const listed = (await call(app, 'GET', '/v1/tests/t1/questions')).json() as { imageUrls: Record<string, string> };
+    expect(listed.imageUrls).toEqual({ [path]: url });
+    const fake = await call(app, 'POST', '/v1/tests/t1/question-images', {
+      contentType: 'image/png',
+      data: Buffer.from('<html></html>').toString('base64'),
+    });
+    expect(fake.statusCode).toBe(400);
+    expect(
+      (await call(app, 'POST', '/v1/tests/none/question-images', { contentType: 'image/png', data: png })).statusCode,
+    ).toBe(404);
+  });
+});

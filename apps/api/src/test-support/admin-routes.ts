@@ -227,6 +227,28 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     foreignParams: foreignQuestion,
     fresh: async (db, n) => withQuestion(db, n + 1),
   },
+  'PUT /v1/tests/:id/questions/order': {
+    foreignParams: { id: 'test-org-b' },
+    fresh: async (db) => {
+      const { params } = await withQuestion(db);
+      const ids = (await db.collection(`organizations/org-a/tests/${params.id}/questions`).get()).docs.map((d) => d.id);
+      return { params, body: { ids } };
+    },
+  },
+  'POST /v1/tests/:id/questions/import': {
+    foreignParams: { id: 'test-org-b' },
+    fresh: async (db) => ({ ...(await withTest(db)), body: { questions: [questionBody] } }),
+  },
+  'POST /v1/tests/:id/question-images': {
+    foreignParams: { id: 'test-org-b' },
+    fresh: async (db) => ({
+      ...(await withTest(db)),
+      body: {
+        contentType: 'image/png',
+        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      },
+    }),
+  },
 
   'GET /v1/audit': {},
 };
