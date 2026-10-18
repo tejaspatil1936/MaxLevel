@@ -1,6 +1,7 @@
 'use client';
 
 import { cx } from '@mitaoe/ui';
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { hasCodeBlock, renderQuestionMarkdown, type CodeHighlighter } from './markdown';
 
@@ -70,8 +71,16 @@ export function QuestionView({
       <QuestionText text={prompt} className="max-w-question text-question" />
       {images.map((img, i) =>
         img.src ? (
-          // Data URLs from the API: next/image cannot optimise them in a static export.
-          <img key={i} src={img.src} alt={img.alt} className="max-h-80 max-w-full self-start border border-rule" />
+          // Data or signed URLs, shown at their own size (the static export does not optimise images).
+          <Image
+            key={i}
+            src={img.src}
+            alt={img.alt}
+            width={0}
+            height={0}
+            unoptimized
+            className="h-auto max-h-80 w-auto max-w-full self-start border border-rule"
+          />
         ) : null,
       )}
       <ol className="flex flex-col gap-2">

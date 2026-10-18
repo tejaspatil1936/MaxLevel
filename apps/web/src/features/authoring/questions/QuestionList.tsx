@@ -17,7 +17,7 @@ interface ItemProps {
   lifted: boolean;
   helpId: string;
   disabled: boolean;
-  handleRef: (el: HTMLButtonElement | null) => void;
+  registerHandle: (el: HTMLButtonElement | null) => void;
   onHandleKey: (e: KeyboardEvent<HTMLButtonElement>) => void;
   onHandleBlur: () => void;
   onEdit?: () => void;
@@ -27,24 +27,28 @@ interface ItemProps {
 /** One question: its number, prompt as students see it, section, status and, for a draft, its reasons (Q17). */
 function QuestionItem(p: ItemProps) {
   const { question: q, n } = p;
-  const sortable = useSortable({ id: q.id, disabled: p.disabled, transition: null });
+  const { setNodeRef, setActivatorNodeRef, listeners, transform, isDragging } = useSortable({
+    id: q.id,
+    disabled: p.disabled,
+    transition: null,
+  });
   const forN = t('questions.forQuestion', { n });
   return (
     <li
-      ref={sortable.setNodeRef}
-      style={{ transform: CSS.Translate.toString(sortable.transform) }}
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform) }}
       className={cx(
         'flex gap-2 border-b border-rule bg-surface py-3 pr-3 last:border-b-0',
-        (sortable.isDragging || p.lifted) && 'relative z-10 bg-ballpoint-wash shadow-overlay',
+        (isDragging || p.lifted) && 'relative z-10 bg-ballpoint-wash shadow-overlay',
       )}
     >
       <button
         type="button"
         ref={(el) => {
-          sortable.setActivatorNodeRef(el);
-          p.handleRef(el);
+          setActivatorNodeRef(el);
+          p.registerHandle(el);
         }}
-        {...sortable.listeners}
+        {...listeners}
         aria-label={t('questions.reorderName', { n })}
         aria-describedby={p.helpId}
         aria-pressed={p.lifted}
@@ -193,7 +197,7 @@ export function QuestionList({
                 lifted={lifted?.id === q.id}
                 helpId={helpId}
                 disabled={readOnly}
-                handleRef={(el) => {
+                registerHandle={(el) => {
                   if (el) handles.current.set(q.id, el);
                   else handles.current.delete(q.id);
                 }}
