@@ -22,3 +22,5 @@ export * from './question-checks';
 export * from './questions-json';
 export * from './timing';
 export * from './scoring';
+export * from './strikes';
+export * from './sync';
