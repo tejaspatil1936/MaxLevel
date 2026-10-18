@@ -1,6 +1,7 @@
 // English messages (A11Y-23). Every interface string lives here and is read through t().
 import { audit } from './en/audit';
 import { exam } from './en/exam';
+import { history } from './en/history';
 import { examEntry } from './en/exam-entry';
 import { authoring } from './en/authoring';
 import { people } from './en/people';
@@ -130,6 +131,7 @@ export const en = {
   ...phone,
   ...results,
   ...result,
+  ...history,
 } as const;
 
 export type MessageKey = keyof typeof en;

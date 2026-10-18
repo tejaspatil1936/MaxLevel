@@ -1,24 +1,18 @@
 'use client';
 
-import type { CompletedTest, StudentDashboard as Dashboard, StudentTestSummary } from '@mitaoe/shared';
+import type { StudentDashboard as Dashboard, StudentTestSummary } from '@mitaoe/shared';
 import { EmptyState, InlineMessage, PageHeader, Skeleton, StatusPill } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useCallback, useId, type ReactNode } from 'react';
 import { resultUrl } from '@/features/results/StudentResultScreen';
-import { t, type MessageKey } from '@/i18n';
+import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { formatCount, formatWindow } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
 import { Countdown } from './Countdown';
-import { studentTestUrl, testHeading } from './test-heading';
-
-const STATUS: Record<CompletedTest['status'], MessageKey> = {
-  submitted: 'studentTests.submitted',
-  auto_submitted: 'studentTests.autoSubmitted',
-  terminated: 'studentTests.terminated',
-};
+import { FINISHED_STATUS, studentTestUrl, testHeading } from './test-heading';
 
 /** The countdown of a live test (to its last start) or an upcoming one (to its window start). */
 const countdownOf = (test: StudentTestSummary, live: boolean) =>
@@ -87,7 +81,7 @@ export function StudentDashboard() {
                   {testHeading(test)}
                 </Link>
                 <StatusPill tone={test.status === 'terminated' ? 'danger' : 'success'}>
-                  {t(STATUS[test.status])}
+                  {t(FINISHED_STATUS[test.status])}
                 </StatusPill>
               </div>
             )}
