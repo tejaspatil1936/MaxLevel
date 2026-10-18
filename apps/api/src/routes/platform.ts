@@ -25,7 +25,7 @@ const sa = { access: 'superAdmin' as const };
 
 /** Super-admin console: organizations, their admins, entitlements, usage and the cross-org audit log (spec 2). */
 export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
-  const { data, audit, clock, entitlements, status } = ctx;
+  const { data, audit, clock, entitlements, status, logos } = ctx;
   const db = ctx.firebase.db;
   const usageOf = async (org: OrgRecord): Promise<OrgUsage> => {
     const month = monthKey(clock.now(), org.timezone);
@@ -51,6 +51,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
     timezone: org.timezone,
     status: org.status,
     logoPath: org.logoPath,
+    logoUrl: await logos.dataUrl(org.logoPath),
     createdAt: org.createdAt,
     usage: await usageOf(org),
     entitlements: (await entitlements.get(org.id))!,
@@ -92,16 +93,17 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           throw new AppError(
             409,
             'SLUG_TAKEN',
-            'Another organization already uses this slug. Choose a different one.',
+            'This slug is already used by another organization. Choose a different one.',
             { field: 'slug' },
           );
         }
+        const logoPath = body.logo ? await logos.save(orgId, body.logo) : null;
         const batch = db.batch();
         data.orgs.createOrg(orgId, batch, {
           name: body.name,
           slug: body.slug,
           timezone: body.timezone,
-          logoPath: body.logoPath ?? null,
+          logoPath,
           createdAt: clock.now(),
         });
         const unique = [...new Map(body.departments.map((d) => [d.toLowerCase(), d])).values()];
@@ -112,7 +114,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           {
             action: 'org.create',
             target: { type: 'organization', id: orgId },
-            after: { ...body, departments: unique },
+            after: { name: body.name, slug: body.slug, timezone: body.timezone, logoPath, departments: unique },
           },
           orgId,
         );
@@ -121,7 +123,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
             throw new AppError(
               409,
               'SLUG_TAKEN',
-              'Another organization already uses this slug. Choose a different one.',
+              'This slug is already used by another organization. Choose a different one.',
               { field: 'slug' },
             );
           throw e;
@@ -144,24 +146,35 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const { orgId } = req.params;
         const before = await data.orgs.getOrgRecord(orgId);
         if (!before) throw notFound('Organization');
-        if (before.status === 'archived' && (req.body.name || req.body.timezone) && req.body.status !== 'active') {
+        if (
+          before.status === 'archived' &&
+          (req.body.name || req.body.timezone || req.body.logo) &&
+          req.body.status !== 'active'
+        ) {
           throw new AppError(
             409,
             'ORG_ARCHIVED',
             'This organization is archived and read-only. Restore it to make changes.',
           );
         }
+        const { logo, ...fields } = req.body;
+        const logoPath = logo ? await logos.save(orgId, logo) : undefined;
         const batch = db.batch();
-        data.orgs.updateOrg(orgId, batch, req.body);
-        const changed = Object.fromEntries(Object.keys(req.body).map((k) => [k, before[k as keyof typeof before]]));
+        data.orgs.updateOrg(orgId, batch, { ...fields, ...(logoPath ? { logoPath } : {}) });
+        const changed = Object.fromEntries(Object.keys(fields).map((k) => [k, before[k as keyof typeof before]]));
         const action =
           req.body.status && req.body.status !== before.status
-            ? `org.status.${req.body.status === 'active' ? 'restore' : req.body.status}`
+            ? `org.${req.body.status === 'active' ? 'restore' : req.body.status === 'suspended' ? 'suspend' : 'archive'}`
             : 'org.update';
         audit(
           req,
           batch,
-          { action, target: { type: 'organization', id: orgId }, before: changed, after: req.body },
+          {
+            action,
+            target: { type: 'organization', id: orgId },
+            before: changed,
+            after: { ...fields, ...(logoPath ? { logoPath } : {}) },
+          },
           orgId,
         );
         await batch.commit();
@@ -185,7 +198,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
             'This organization is archived and read-only. Restore it to make changes.',
           );
         if (await data.admins.findActiveAdminByEmail(orgId, req.body.email)) {
-          throw new AppError(409, 'ADMIN_EXISTS', 'This email is already an admin of the organization.', {
+          throw new AppError(409, 'ADMIN_EXISTS', 'This email is already an admin of this organization.', {
             field: 'email',
           });
         }
@@ -203,7 +216,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           addedBy: req.user!.uid,
           addedAt: clock.now(),
         });
-        audit(req, batch, { action: 'admin.add', target: { type: 'admin', id: adminId }, after: req.body }, orgId);
+        audit(req, batch, { action: 'org.admin.add', target: { type: 'admin', id: adminId }, after: req.body }, orgId);
         await batch.commit();
         const { uid: _uid, ...admin } = (await data.admins.getAdmin(orgId, adminId))!;
         return reply.status(201).send(admin);
@@ -230,7 +243,7 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           req,
           batch,
           {
-            action: 'admin.remove',
+            action: 'org.admin.remove',
             target: { type: 'admin', id: adminId },
             before: { email: admin.email, status: 'active' },
             after: { status: 'removed' },

@@ -3,6 +3,7 @@ import type { Deps } from '../deps';
 import type { AccountStatusService } from '../services/account-status';
 import type { AuditWriter } from '../services/audit';
 import type { EntitlementsService } from '../services/entitlements';
+import type { LogoStore } from '../services/logos';
 
 /** What every route module receives from buildApp. */
 export interface ApiContext extends Deps {
@@ -10,4 +11,5 @@ export interface ApiContext extends Deps {
   audit: AuditWriter;
   entitlements: EntitlementsService;
   status: AccountStatusService;
+  logos: LogoStore;
 }

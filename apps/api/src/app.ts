@@ -27,6 +27,7 @@ import { sessionRoutes } from './routes/session';
 import { auditWriter } from './services/audit';
 import { accountStatusService } from './services/account-status';
 import { entitlementsService } from './services/entitlements';
+import { logoStore } from './services/logos';
 import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
 
 /** A Fastify instance with the API's conventions: Zod schemas, error shape, server time, CORS, logging. */
@@ -71,7 +72,14 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
   registerAuth(app, { auth: deps.firebase.auth, data, entitlements, status });
   await app.register(healthRoutes);
   await app.register(sessionRoutes({ ...deps, data, entitlements }));
-  const ctx: ApiContext = { ...deps, data, audit: auditWriter(data, deps.clock), entitlements, status };
+  const ctx: ApiContext = {
+    ...deps,
+    data,
+    audit: auditWriter(data, deps.clock),
+    entitlements,
+    status,
+    logos: logoStore(deps.firebase),
+  };
   await app.register(orgRoutes(ctx));
   for (const routes of [platformRoutes, departmentRoutes, whitelistRoutes, studentRoutes, auditRoutes, meRoutes])
     await app.register(routes(ctx));
