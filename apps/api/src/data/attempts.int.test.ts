@@ -38,6 +38,32 @@ describe('attempt data access', () => {
     expect(await data.attempts.listStudentAttempts('org-c', 'stu-1')).toEqual([]);
   });
 
+  it('US-ST-08 ORG-03 lists one student’s finished attempts in one org with their scores only', async () => {
+    const put = (orgId: string, id: string, fields: object) =>
+      db.doc(`organizations/${orgId}/attempts/${id}`).set({ orgId, testId: 't1', seriesId: 's1', ...fields });
+    const result = { score: 3, max: 4, pct: 75, correct: 3 };
+    await Promise.all([
+      put('org-a', 'a1', {
+        studentId: 'stu-1',
+        status: 'submitted',
+        submittedAt: 900,
+        result,
+        draw: { questionIds: ['q1'] },
+      }),
+      put('org-a', 'a2', { studentId: 'stu-1', status: 'terminated', testId: 't2', submittedAt: 950 }),
+      put('org-a', 'a3', { studentId: 'stu-1', status: 'in_progress', testId: 't3' }),
+      put('org-a', 'a4', { studentId: 'stu-1', status: 'reset', testId: 't4', result }),
+      put('org-a', 'a5', { studentId: 'stu-2', status: 'submitted', result }),
+      put('org-b', 'b1', { studentId: 'stu-1', status: 'submitted', result }),
+    ]);
+    const rows = await data.attempts.listFinishedAttempts('org-a', 'stu-1');
+    expect(rows.sort((a, b) => a.id.localeCompare(b.id))).toEqual([
+      { id: 'a1', testId: 't1', seriesId: 's1', status: 'submitted', submittedAt: 900, score: 3, max: 4 },
+      { id: 'a2', testId: 't2', seriesId: 's1', status: 'terminated', submittedAt: 950, score: null, max: null },
+    ]);
+    expect(await data.attempts.listFinishedAttempts('org-c', 'stu-1')).toEqual([]);
+  });
+
   const record = (id: string, over: Partial<AttemptRecord> = {}): AttemptRecord => ({
     id,
     orgId: 'org-a',

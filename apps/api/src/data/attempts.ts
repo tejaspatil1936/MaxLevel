@@ -1,4 +1,10 @@
-import type { AnswerRecord, AnswerVerdict, AttemptRecord, AttemptStatus } from '@mitaoe/shared';
+import {
+  isFinishedAttempt,
+  type AnswerRecord,
+  type AnswerVerdict,
+  type AttemptRecord,
+  type AttemptStatus,
+} from '@mitaoe/shared';
 import {
   FieldPath,
   FieldValue,
@@ -27,6 +33,17 @@ export interface StudentAttemptRef {
   status: AttemptStatus;
   startedAt: number;
   submittedAt: number | null;
+}
+
+/** What the student history needs of a finished attempt (US-ST-08, RES-04): its score, never its draw or answers. */
+export interface FinishedAttemptRef {
+  id: string;
+  testId: string;
+  seriesId: string;
+  status: AttemptStatus;
+  submittedAt: number | null;
+  score: number | null;
+  max: number | null;
 }
 
 /** What finishing an attempt stores (EX-17, PR-10). */
@@ -280,6 +297,28 @@ export function attemptsData(db: Firestore) {
           submittedAt: (d.get('submittedAt') as number | undefined) ?? null,
         }))
         .sort((a, b) => b.startedAt - a.startedAt);
+    },
+
+    /**
+     * US-ST-08: a student's finished attempts (`submitted`, `auto_submitted`, `terminated`) in their organization,
+     * read with only their test, series, status, submission time and score.
+     */
+    async listFinishedAttempts(orgId: string, studentId: string): Promise<FinishedAttemptRef[]> {
+      const snap = await attempts(orgId)
+        .where('studentId', '==', studentId)
+        .select('testId', 'seriesId', 'status', 'submittedAt', 'result.score', 'result.max')
+        .get();
+      return snap.docs
+        .filter((d) => isFinishedAttempt(d.get('status') as AttemptStatus))
+        .map((d) => ({
+          id: d.id,
+          testId: d.get('testId') as string,
+          seriesId: d.get('seriesId') as string,
+          status: d.get('status') as AttemptStatus,
+          submittedAt: (d.get('submittedAt') as number | undefined) ?? null,
+          score: (d.get('result.score') as number | undefined) ?? null,
+          max: (d.get('result.max') as number | undefined) ?? null,
+        }));
     },
 
     /** A student's attempts, newest first, with their test titles (STU-10). */
