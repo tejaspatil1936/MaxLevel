@@ -221,6 +221,17 @@ describe('/tasks/export', () => {
     expect(book[2]!.rows.slice(1).map((r) => r[9])).toEqual([1, 2]);
   });
 
+  it('EXP-02 a test title ending in an apostrophe still gives a series XLSX', async () => {
+    await org.collection('tests').doc('t2').update({ title: "Verbal 'B'" });
+    await requestExport('e7', 'series', 's1', 'xlsx');
+    expect(await task('export', { orgId: 'org-a', exportId: 'e7' })).toBe('stored');
+    expect((await sheets(await file('e7'))).map((s) => s.name)).toEqual([
+      'Series',
+      'Day 1 Quantitative aptitude',
+      "Day 2 Verbal 'B",
+    ]);
+  });
+
   it('EXP-03 ORG-03 a missing test or series marks the export failed and stores no file', async () => {
     await requestExport('e5', 'test', 'nope', 'csv');
     await requestExport('e6', 'series', 'nope', 'xlsx');

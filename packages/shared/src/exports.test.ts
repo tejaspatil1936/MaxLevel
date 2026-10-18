@@ -66,6 +66,17 @@ describe('results export columns', () => {
     expect(long.length).toBeLessThanOrEqual(31);
   });
 
+  it('EXP-02 sheet names never start or end with an apostrophe, which Excel refuses', () => {
+    expect(xlsxSheetName("Day 2: Aptitude 'B'")).toBe("Day 2 Aptitude 'B");
+    expect(xlsxSheetName("'Mock' test")).toBe("Mock' test");
+    expect(xlsxSheetName(`${'x'.repeat(30)}'tail`)).toBe('x'.repeat(30));
+    expect(xlsxSheetName("''' ")).toBe('');
+  });
+
+  it('EXP-02 History is reserved by Excel, in any case', () => {
+    expect(xlsxSheetNames(['History', 'history'])).toEqual(['History (2)', 'history (3)']);
+  });
+
   it('EXP-02 sheet names stay unique ignoring case and never take a reserved name', () => {
     expect(xlsxSheetNames(['Mock', 'mock', 'Series', ':'], ['Series'])).toEqual([
       'Mock',
