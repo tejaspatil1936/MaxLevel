@@ -13,3 +13,5 @@ export * from './draw';
 export * from './marks';
 export * from './day-labels';
 export * from './settings';
+export * from './series';
+export * from './test-record';

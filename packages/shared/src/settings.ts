@@ -59,6 +59,8 @@ export type SettingsOverrides = z.infer<typeof settingsOverridesSchema>;
 /** A series' defaults: every setting but the window, which a series sets as `dailyWindow`. */
 export const seriesDefaultsSchema = settingsOverridesSchema.omit({ window: true });
 export type SeriesDefaults = z.infer<typeof seriesDefaultsSchema>;
+/** Stored overrides or defaults in a response: unknown keys are stripped rather than refused. */
+export const storedSettingsSchema = z.object(settingsShape).partial();
 
 export const SYSTEM_DEFAULTS: Omit<Settings, 'window'> = {
   timingMode: 'fixed',
