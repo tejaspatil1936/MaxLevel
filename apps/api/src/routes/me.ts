@@ -9,7 +9,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { StudentRecord } from '../data/students';
-import { AppError } from '../errors';
+import { AppError, notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const hasProfile = (s: StudentRecord | null) => !!s && !!s.name && !!s.prn && !!s.departmentId && !!s.graduationYear;
@@ -138,7 +138,7 @@ export function meRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       '/v1/me/preferences',
       { config: { access: 'signedIn' }, schema: { body: preferencesSchema, response: { 200: preferencesSchema } } },
       async (req) => {
-        await data.preferences.setPreferences(req.user!, req.body);
+        if (!(await data.preferences.setPreferences(req.user!, req.body))) throw notFound('Student');
         return req.body;
       },
     );

@@ -23,8 +23,19 @@ export function preferencesData(db: Firestore) {
         .catch(DEFAULT_PREFERENCES)
         .parse({ ...DEFAULT_PREFERENCES, ...(s.get('preferences') ?? {}) });
     },
-    async setPreferences(owner: PreferencesOwner, prefs: Preferences): Promise<void> {
+    /** False when the student record no longer exists: preferences never recreate a deleted record. */
+    async setPreferences(owner: PreferencesOwner, prefs: Preferences): Promise<boolean> {
+      if (owner.orgId && owner.studentId) {
+        return ref(owner)
+          .update({ preferences: prefs })
+          .then(() => true)
+          .catch((e: { code?: number }) => {
+            if (e.code === 5) return false; // NOT_FOUND
+            throw e;
+          });
+      }
       await ref(owner).set({ preferences: prefs }, { merge: true });
+      return true;
     },
   };
 }
