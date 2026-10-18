@@ -2,6 +2,7 @@ import { expectNoSeriousA11yViolations } from '../fixtures/axe';
 import {
   countdownText,
   DASHBOARD_EMPTY,
+  leaksAnswerKey,
   markingText,
   postStart,
   remainingPattern,
@@ -29,7 +30,7 @@ test.beforeEach(async ({ testApi }) => {
 });
 
 test.describe('F-3.02 student dashboard and test page', () => {
-  test('US-ST-03 UX-11 the dashboard lists live, upcoming and completed tests with window, duration and countdown in the org timezone', async ({
+  test('US-ST-03 UX-11 DATA-05 the dashboard lists live, upcoming and completed tests with window, duration and countdown in the org timezone', async ({
     page,
     signInAs,
     testApi,
@@ -110,6 +111,7 @@ test.describe('F-3.02 student dashboard and test page', () => {
     expect(JSON.stringify(res.body.live)).toContain(verbal.testId);
     expect(JSON.stringify(res.body.upcoming)).toContain(logic.testId);
     expect(JSON.stringify(res.body.completed)).toContain(done.testId);
+    expect(leaksAnswerKey(res.body), 'answer keys in the dashboard').toEqual([]);
   });
 
   test('US-ST-03 tests the student is not eligible for, draft series, unpublished, missed and other-org tests are not shown', async ({
