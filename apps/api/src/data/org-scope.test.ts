@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createData } from '.';
 
 // ORG-03: every data-access function takes orgId as its first parameter. Only bootstrap lookups by email
-// (identity) and super-admin cross-org views (platform) are exempt.
-const EXEMPT = new Set(['identity', 'platform']);
+// (identity), per-account preferences and super-admin cross-org views (platform) are exempt.
+const EXEMPT = new Set(['identity', 'platform', 'preferences']);
 
 describe('data-access layer', () => {
   it('ORG-03 every org-scoped data function takes orgId first', () => {

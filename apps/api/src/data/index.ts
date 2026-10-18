@@ -6,6 +6,7 @@ import { entitlementsData } from './entitlements';
 import { identityData } from './identity';
 import { orgsData } from './orgs';
 import { platformData } from './platform';
+import { preferencesData } from './preferences';
 import { studentsData } from './students';
 import { usageData } from './usage';
 import { whitelistData } from './whitelist';
@@ -22,6 +23,7 @@ export function createData(db: Firestore) {
     departments: departmentsData(db),
     whitelist: whitelistData(db),
     platform: platformData(db),
+    preferences: preferencesData(db),
     usage: usageData(db),
   };
 }

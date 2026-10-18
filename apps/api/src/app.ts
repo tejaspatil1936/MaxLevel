@@ -15,7 +15,14 @@ import { registerServerTime } from './plugins/server-time';
 import { createData } from './data';
 import { registerAuth } from './plugins/auth';
 import { healthRoutes } from './routes/health';
+import { auditRoutes } from './routes/audit';
+import type { ApiContext } from './routes/context';
+import { departmentRoutes } from './routes/departments';
+import { meRoutes } from './routes/me';
 import { orgRoutes } from './routes/org';
+import { platformRoutes } from './routes/platform';
+import { studentRoutes } from './routes/students';
+import { whitelistRoutes } from './routes/whitelist';
 import { sessionRoutes } from './routes/session';
 import { auditWriter } from './services/audit';
 import { accountStatusService } from './services/account-status';
@@ -64,7 +71,10 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
   registerAuth(app, { auth: deps.firebase.auth, data, entitlements, status });
   await app.register(healthRoutes);
   await app.register(sessionRoutes({ ...deps, data, entitlements }));
-  await app.register(orgRoutes({ ...deps, data, audit: auditWriter(data, deps.clock) }));
+  const ctx: ApiContext = { ...deps, data, audit: auditWriter(data, deps.clock), entitlements, status };
+  await app.register(orgRoutes(ctx));
+  for (const routes of [platformRoutes, departmentRoutes, whitelistRoutes, studentRoutes, auditRoutes, meRoutes])
+    await app.register(routes(ctx));
   // Test-only API: never registered outside NODE_ENV=test with a TEST_API_SECRET.
   if (testApiEnabled(deps)) await app.register(testOnlyRoutes(deps));
   return app;

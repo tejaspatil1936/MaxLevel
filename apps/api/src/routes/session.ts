@@ -11,6 +11,10 @@ export function sessionRoutes(deps: Deps & { data: Data; entitlements: Entitleme
     const e = await deps.entitlements.get(orgId);
     return e ? { features: e.features, limits: e.limits } : null;
   };
+  const studentComplete = async (orgId: string | null, studentId: string | null) => {
+    if (!orgId || !studentId) return false;
+    return !!(await deps.data.students.getStudent(orgId, studentId))?.consentAt;
+  };
   return async (app) => {
     app.post(
       '/v1/session/bootstrap',
@@ -35,6 +39,8 @@ export function sessionRoutes(deps: Deps & { data: Data; entitlements: Entitleme
           studentId: u.studentId,
           org: u.orgId ? await deps.data.orgs.getOrg(u.orgId) : null,
           entitlements: u.orgId ? await effective(u.orgId) : null,
+          preferences: await deps.data.preferences.getPreferences(u.uid),
+          profileComplete: u.role !== 'student' ? true : await studentComplete(u.orgId, u.studentId),
         };
       },
     );
