@@ -91,3 +91,46 @@ describe('a published snapshot never takes the leaky combination', () => {
     expect(stored).toMatchObject({ resultDetail: 'sections', resultRelease: 'after_close' });
   });
 });
+
+describe('publishing re-checks the settings', () => {
+  it('Q-14 US-AD-09 TST-05 a series change after approval that breaks the settings blocks publishing', async () => {
+    const { app } = await testApp();
+    const headers = await admin();
+    const created = await app.inject({
+      method: 'POST',
+      url: '/v1/tests',
+      headers,
+      payload: { seriesId: 's1', title: 'Aptitude', scheduledDate: '2026-11-02' },
+    });
+    const testId = (created.json() as { id: string }).id;
+    const question = await app.inject({
+      method: 'POST',
+      url: `/v1/tests/${testId}/questions`,
+      headers,
+      payload: {
+        prompt: 'What is 2 + 2?',
+        options: [
+          { id: 'a', text: '4' },
+          { id: 'b', text: '5' },
+        ],
+        correctOptionIds: ['a'],
+      },
+    });
+    expect(question.statusCode).toBe(201);
+    const approve = await app.inject({ method: 'POST', url: `/v1/tests/${testId}/approve`, headers, payload: {} });
+    expect(approve.statusCode).toBe(200);
+    // A 120-minute flexible test in a 60-minute daily window can never be started.
+    const series = await app.inject({
+      method: 'PATCH',
+      url: '/v1/series/s1',
+      headers,
+      payload: {
+        defaults: { timingMode: 'flexible', durationMin: 120, resultDetail: 'sections', resultRelease: 'after_close' },
+      },
+    });
+    expect(series.statusCode).toBe(200);
+    const publish = await app.inject({ method: 'POST', url: `/v1/tests/${testId}/publish`, headers, payload: {} });
+    expect([publish.statusCode, publish.json().error?.code]).toEqual([409, 'CHECKLIST_FAILED']);
+    expect((await db.doc(`organizations/${orgA}/tests/${testId}`).get()).get('status')).toBe('approved');
+  });
+});
