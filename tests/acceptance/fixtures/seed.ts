@@ -89,3 +89,42 @@ export const studentOfB = (n: number): SeedAccount => ({
   role: 'student',
   orgId: ORG_B.id,
 });
+
+/** Org created by the `empty-org` test scenario (docs/testids/phase-1.md, "Test-only scenarios"). */
+export const ORG_C: SeedOrg = {
+  id: 'org-c',
+  slug: 'empty',
+  name: 'Empty College of Engineering',
+  departments: [],
+};
+
+/** The admin of org C, created by the `empty-org` scenario. */
+export const adminC: SeedAccount = { email: 'admin1@c.test', name: 'Admin 1', role: 'admin', orgId: ORG_C.id };
+
+/** Whitelisted, never-signed-in org A student n (1 to 5); invited01 has PRN A-PRN-901 on its entry. */
+export const invitedOfA = (n: number): SeedAccount => ({
+  email: `invited${two(n)}@a.test`,
+  name: `Invited A${two(n)}`,
+  role: 'student',
+  orgId: ORG_A.id,
+});
+
+/** PRN on invited01@a.test's whitelist entry (STU-02). */
+export const INVITED01_PRN = 'A-PRN-901';
+
+/** Seeded record facts for registered student n (1 to 20) of an org (docs/TEST_ENV.md). */
+export function seededStudent(org: SeedOrg, n: number) {
+  const department = org.departments[(n - 1) % org.departments.length]!;
+  return {
+    id: `stu-${org.id}-${two(n)}`,
+    email: `student${two(n)}@${org.id === ORG_A.id ? 'a' : 'b'}.test`,
+    name: studentName(n),
+    prn: `${org.id === ORG_A.id ? '' : 'B'}220101${two(n)}`,
+    department,
+    departmentId: departmentId(org, department),
+    graduationYear: n % 2 === 1 ? 2026 : 2027,
+  };
+}
+
+/** Seeded department ID, `dept-<orgId>-<lowercase name>`. */
+export const departmentId = (org: SeedOrg, name: string) => `dept-${org.id}-${name.toLowerCase()}`;

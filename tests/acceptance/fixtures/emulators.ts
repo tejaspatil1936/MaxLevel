@@ -13,6 +13,10 @@ export interface AuthAccount {
   localId: string;
   email: string;
   customClaims: Record<string, unknown>;
+  /** Seconds since the epoch before which issued tokens count as revoked (set by revokeRefreshTokens). */
+  validSince?: number;
+  /** The Google provider's subject for this account, when it has one. */
+  googleSub?: string;
 }
 
 export interface StoredDoc {
@@ -41,6 +45,12 @@ function decodeFields(fields: Record<string, FsValue> | undefined): Record<strin
   return Object.fromEntries(Object.entries(fields ?? {}).map(([k, v]) => [k, decode(v)]));
 }
 
+function encode(v: string | number | boolean): FsValue {
+  if (typeof v === 'string') return { stringValue: v };
+  if (typeof v === 'boolean') return { booleanValue: v };
+  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+}
+
 function toDoc(d: { name: string; fields?: Record<string, FsValue> }): StoredDoc {
   const path = d.name.split('/documents/')[1]!;
   return { path, id: path.split('/').pop()!, data: decodeFields(d.fields) };
@@ -59,12 +69,25 @@ export class Emulators {
       },
     );
     expect(res.status(), await res.text()).toBe(200);
-    const body = (await res.json()) as { users?: Array<{ localId: string; email: string; customAttributes?: string }> };
-    return (body.users ?? []).map((u) => ({
-      localId: u.localId,
-      email: u.email,
-      customClaims: u.customAttributes ? (JSON.parse(u.customAttributes) as Record<string, unknown>) : {},
-    }));
+    const body = (await res.json()) as {
+      users?: Array<{
+        localId: string;
+        email: string;
+        customAttributes?: string;
+        validSince?: string;
+        providerUserInfo?: Array<{ providerId: string; rawId: string }>;
+      }>;
+    };
+    return (body.users ?? []).map((u) => {
+      const google = (u.providerUserInfo ?? []).find((p) => p.providerId === 'google.com');
+      return {
+        localId: u.localId,
+        email: u.email,
+        customClaims: u.customAttributes ? (JSON.parse(u.customAttributes) as Record<string, unknown>) : {},
+        ...(u.validSince ? { validSince: Number(u.validSince) } : {}),
+        ...(google ? { googleSub: google.rawId } : {}),
+      };
+    });
   }
 
   /** The one Auth emulator account with this email; fails if there is none or more than one. */
@@ -82,20 +105,80 @@ export class Emulators {
     return toDoc((await res.json()) as { name: string; fields?: Record<string, FsValue> });
   }
 
-  /** Records of the collection `parent/collectionId` (parent '' for a root collection) whose `field` equals `value`. */
-  async where(parent: string, collectionId: string, field: string, value: string): Promise<StoredDoc[]> {
+  /**
+   * Records of the collection `parent/collectionId` (parent '' for a root collection) whose `field` equals `value`.
+   * `field` may be a dotted path into a map, for example `target.id`.
+   */
+  async where(
+    parent: string,
+    collectionId: string,
+    field: string,
+    value: string | number | boolean,
+  ): Promise<StoredDoc[]> {
     const url = parent ? `${DOCS}/${parent}:runQuery` : `${DOCS}:runQuery`;
     const res = await this.request.post(url, {
       headers: OWNER,
       data: {
         structuredQuery: {
           from: [{ collectionId }],
-          where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: { stringValue: value } } },
+          where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: encode(value) } },
         },
       },
     });
     expect(res.status(), await res.text()).toBe(200);
     const rows = (await res.json()) as Array<{ document?: { name: string; fields?: Record<string, FsValue> } }>;
     return rows.flatMap((r) => (r.document ? [toDoc(r.document)] : []));
+  }
+
+  /** Every record of the collection `parent/collectionId` (parent '' for a root collection), following page tokens. */
+  async list(parent: string, collectionId: string): Promise<StoredDoc[]> {
+    const out: StoredDoc[] = [];
+    let pageToken = '';
+    for (;;) {
+      const base = parent ? `${DOCS}/${parent}/${collectionId}` : `${DOCS}/${collectionId}`;
+      const url = `${base}?pageSize=500${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+      const res = await this.request.get(url, { headers: OWNER });
+      expect(res.status(), await res.text()).toBe(200);
+      const body = (await res.json()) as {
+        documents?: Array<{ name: string; fields?: Record<string, FsValue> }>;
+        nextPageToken?: string;
+      };
+      out.push(...(body.documents ?? []).map(toDoc));
+      if (!body.nextPageToken) return out;
+      pageToken = body.nextPageToken;
+    }
+  }
+
+  /** Number of records in the collection `parent/collectionId`. */
+  async count(parent: string, collectionId: string): Promise<number> {
+    return (await this.list(parent, collectionId)).length;
+  }
+
+  /** The organization's audit entries (organizations/{orgId}/auditLogs), optionally only those with this action. */
+  async audit(orgId: string, action?: string): Promise<StoredDoc[]> {
+    return action
+      ? this.where(`organizations/${orgId}`, 'auditLogs', 'action', action)
+      : this.list(`organizations/${orgId}`, 'auditLogs');
+  }
+
+  /** The organization record with this slug, or null. */
+  async orgBySlug(slug: string): Promise<StoredDoc | null> {
+    const found = await this.where('', 'organizations', 'slug', slug);
+    expect(found.length, `organizations with slug ${slug}`).toBeLessThanOrEqual(1);
+    return found[0] ?? null;
+  }
+
+  /** The whitelist entry of this org with this email, or null (emails are stored lowercase, WL-01). */
+  async whitelistEntry(orgId: string, email: string): Promise<StoredDoc | null> {
+    const found = await this.where(`organizations/${orgId}`, 'whitelist', 'email', email);
+    expect(found.length, `whitelist entries for ${email} in ${orgId}`).toBeLessThanOrEqual(1);
+    return found[0] ?? null;
+  }
+
+  /** The student record of this org with this email, or null. */
+  async studentByEmail(orgId: string, email: string): Promise<StoredDoc | null> {
+    const found = await this.where(`organizations/${orgId}`, 'students', 'email', email);
+    expect(found.length, `student records for ${email} in ${orgId}`).toBeLessThanOrEqual(1);
+    return found[0] ?? null;
   }
 }

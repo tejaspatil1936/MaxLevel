@@ -46,4 +46,17 @@ export class TestApi {
       (await this.call<{ tasks: PendingTask[] }>('GET', '/__test/tasks')).tasks,
     runDue: async (): Promise<string[]> => (await this.call<{ ran: string[] }>('POST', '/__test/tasks/run-due')).ran,
   };
+
+  /** Phase 1 scenario: org C with one admin and nothing else (docs/testids/phase-1.md, "Test-only scenarios"). */
+  async seedEmptyOrg(): Promise<{ orgId: string }> {
+    return this.seedScenario<{ orgId: string }>('empty-org');
+  }
+
+  /** Phase 1 scenario: one graded, submitted attempt (42 of 50, 1 strike) by this student. */
+  async seedStudentAttempts(
+    orgId: string,
+    studentId: string,
+  ): Promise<{ seriesId: string; testId: string; attemptId: string }> {
+    return this.seedScenario('student-attempts', { orgId, studentId });
+  }
 }
