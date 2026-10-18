@@ -39,7 +39,8 @@ export type SaveVerdict = AnswerVerdict | 'ATTEMPT_FINISHED';
 /** The new attempt for an ID, built inside the start transaction; it may throw to refuse the start. */
 export type AttemptBuilder = (attemptId: string) => AttemptRecord;
 
-const toAttempt = (d: DocumentSnapshot): AttemptRecord => {
+/** An attempt record as stored, with the defaults of fields older records may lack. */
+export const toAttempt = (d: DocumentSnapshot): AttemptRecord => {
   const { orgId, ...rest } = d.data() ?? {};
   return {
     ...(rest as Omit<AttemptRecord, 'id' | 'orgId'>),
@@ -153,6 +154,7 @@ export function attemptsData(db: Firestore) {
         tx.set(ref, record);
         if (late)
           tx.create(attemptRef.collection('events').doc(), {
+            orgId,
             type: 'late_sync',
             details: { questionId: answer.questionId, seq: answer.seq },
             clientTs: answer.clientTs,

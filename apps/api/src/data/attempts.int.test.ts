@@ -167,7 +167,7 @@ describe('attempt data access', () => {
     expect(answers.q1).toMatchObject({ lateSync: true, seq: 1 });
     const events = await db.collection('organizations/org-a/attempts/att1/events').get();
     expect(events.docs.map((d) => d.data())).toEqual([
-      { type: 'late_sync', details: { questionId: 'q1', seq: 1 }, clientTs: 50, serverTs: 70 },
+      { orgId: 'org-a', type: 'late_sync', details: { questionId: 'q1', seq: 1 }, clientTs: 50, serverTs: 70 },
     ]);
   });
   it('EX-17 REL-04 finishes an attempt once from its stored answers; repeats, other orgs and missing ones change nothing', async () => {

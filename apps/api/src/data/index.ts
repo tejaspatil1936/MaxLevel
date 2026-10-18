@@ -4,6 +4,7 @@ import { attemptsData } from './attempts';
 import { auditData } from './audit';
 import { departmentsData } from './departments';
 import { entitlementsData } from './entitlements';
+import { eventsData } from './events';
 import { idempotencyData } from './idempotency';
 import { identityData } from './identity';
 import { orgsData } from './orgs';
@@ -25,6 +26,7 @@ export function createData(db: Firestore) {
     admins: adminsData(db),
     attempts: attemptsData(db),
     audit: auditData(db),
+    events: eventsData(db),
     students: studentsData(db),
     entitlements: entitlementsData(db),
     departments: departmentsData(db),
