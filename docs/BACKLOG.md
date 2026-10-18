@@ -50,3 +50,12 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - (QA) Focus goes to the page after Use series value, deleting a question, saving the first question from the empty state and removing an option; move it to a nearby control.
 - (QA) Unsaved Settings and Eligibility tab edits are dropped on tab change or reload without a warning.
 - (QA) A failed offline reorder keeps the new order on screen and shows the raw browser error.
+
+## Phase 2 (release-gate review)
+
+- Publish re-runs only settingsProblems, not checklist item 4 (settingsGaps); a series default edited between approve and publish can snapshot unchecked settings.
+- Approve reads the test and its questions outside a transaction.
+- sectionInputSchema accepts client-chosen IDs and does not reject duplicates in one PATCH.
+- A published test's totalMarks and snapshot are not re-evaluated after a series default changes; the UI shows no staleness hint.
+- PATCH writes the test document twice in one batch when sections are deleted.
+- hasAttempts relies on the `${testId}_` attemptIndex key format; phase 3 must add a test for it.
