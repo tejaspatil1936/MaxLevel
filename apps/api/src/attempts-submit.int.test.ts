@@ -84,6 +84,28 @@ describe('submitting an attempt', () => {
     expect(task.get('payload')).toEqual({ orgId: SEED.orgA, testId: t.testId, seriesId: t.seriesId });
   });
 
+  it('LB-03 finishes within one 30-second slot share one recompute, run at the slot end; the next slot gets its own', async () => {
+    const t = await api.examTest();
+    const slotStart = (Math.floor(NOW / 30_000) + 1) * 30_000;
+    const finish = async (n: number, at: number) => {
+      const headers = await student(n);
+      const { body } = await api.start(t.testId, headers);
+      ctx.clock.set(at);
+      expect((await submit(body.attempt.id, headers, {}, fresh())).status).toBe(200);
+    };
+    const boardTasks = async () =>
+      (await ctx.queue.pending()).filter((k) => k.name.startsWith(`leaderboard-${SEED.orgA}-${t.testId}-`));
+    await finish(1, slotStart + 1_000);
+    await finish(2, slotStart + 29_999);
+    expect(await boardTasks(), 'one task for both').toEqual([
+      expect.objectContaining({ path: '/tasks/leaderboard', scheduleTime: slotStart + 30_000 }),
+    ]);
+    await finish(3, slotStart + 30_000);
+    const next = await boardTasks();
+    expect(next.map((k) => k.scheduleTime)).toEqual([slotStart + 30_000, slotStart + 60_000]);
+    expect(new Set(next.map((k) => k.name)).size).toBe(2);
+  });
+
   it('EX-17 Q-06 grades the draw stored on the attempt with the answer key, whatever the questions now say', async () => {
     const t = await api.examTest();
     const s1 = await student(1);
