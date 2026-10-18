@@ -63,9 +63,9 @@ export async function holdAppScripts(page: Page): Promise<{ count(): number; rel
     count: () => held,
     release: async () => {
       released = true;
+      // The route stays: once released it passes every request straight on. Removing it while held requests are
+      // still continuing would handle them twice.
       for (const resume of waiting.splice(0)) resume();
-      // Let the held requests continue before the route is removed (removing it first handles them twice).
-      await page.unroute(pattern, { behavior: 'wait' });
     },
   };
 }
