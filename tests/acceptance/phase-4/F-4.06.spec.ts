@@ -64,6 +64,7 @@ test.describe('F-4.06 results exports', () => {
     await testApi.clock.set(pc.attempt.deadlineAt + 121_000);
     await testApi.tasks.runDue();
     await expectAttemptSoon(emulators, ORG_A.id, pc.attempt.id, (x) => x.status === 'auto_submitted', 'auto-submitted');
+    await runLeaderboardTask(request, { orgId: ORG_A.id, testId: t.testId, seriesId: t.seriesId });
 
     const results = new AdminTestResults(page);
     await results.goto(t.testId, HEADING);
@@ -137,6 +138,7 @@ test.describe('F-4.06 results exports', () => {
     const t = await testApi.seedExamTest({ orgId: ORG_A.id });
     const a = await sitAndSubmit(await apiAs(accounts.studentA), testApi, t.testId, { 0: '20 m/s', 1: '30' }, 5);
     const b = await sitAndSubmit(await apiAs(studentOfA(2)), testApi, t.testId, { 0: '20 m/s', 1: '30', 2: '4' });
+    await runLeaderboardTask(request, { orgId: ORG_A.id, testId: t.testId, seriesId: t.seriesId });
     const admin = await apiAs(accounts.adminA);
 
     const first = await postExport(admin, { scope: 'test', refId: t.testId, format: 'xlsx' }, 'xlsx-once');

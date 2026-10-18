@@ -175,15 +175,21 @@ test.describe('F-4.05 leaderboards', () => {
     ]);
     const stored = await storedBoard(emulators, ORG_A.id, testBoard(t.testId));
     expect(stored!.computedAt).toBeGreaterThanOrEqual(first.scheduleTime);
-    const series = await storedBoard(emulators, ORG_A.id, seriesBoard(t.seriesId));
-    expect(series, 'the series board is stored too').not.toBeNull();
-    expect(series!.rows.map((r) => [r.studentId, r.rank, r.score])).toEqual([
+    const series = await boardSoon(
+      emulators,
+      testApi,
+      ORG_A.id,
+      seriesBoard(t.seriesId),
+      (r) => r.length === 2,
+      'the series board is stored too',
+    );
+    expect(series.map((r) => [r.studentId, r.rank, r.score])).toEqual([
       [id(2), 1, 3],
       [id(1), 2, 2],
     ]);
 
     await sitAndSubmit(await apiAs(studentOfA(3)), testApi, t.testId, { 0: '20 m/s' });
-    const next = (await testApi.tasks.pending()).filter(isBoardTask);
+    const next = (await testApi.tasks.pending()).filter((k) => isBoardTask(k) && k.name !== first.name);
     expect(next, 'a finish in the next slot queues its own recompute').toHaveLength(1);
     expect(next[0]!.name).not.toBe(first.name);
     await testApi.clock.set(next[0]!.scheduleTime + 1_000);
