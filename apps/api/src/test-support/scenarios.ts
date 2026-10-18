@@ -13,7 +13,7 @@ import { emailKey } from './seed';
 
 // Scenario data on top of the base seed for acceptance tests (POST /__test/seed/:scenario, docs/testids).
 
-export type ScenarioResult = Record<string, string | string[] | Record<string, string>>;
+export type ScenarioResult = Record<string, string | string[] | Record<string, string> | Record<string, number>>;
 type Scenario = (db: Firestore, now: number, body: Record<string, unknown>) => Promise<ScenarioResult>;
 
 const emptyOrg: Scenario = async (db, now) => {
@@ -274,9 +274,82 @@ const authoringTest: Scenario = async (db, now, body) => {
   return { seriesId, testId: ref.id, questionIds: stored.map((q) => q.id), sectionIds };
 };
 
+const MIN = 60_000;
+const DAY = 86_400_000;
+const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
+
+/** The calendar day (yyyy-mm-dd) of an instant in a timezone. */
+const zonedDay = (ms: number, timeZone: string) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(ms);
+
+/**
+ * Phase 3: a published test ready to sit (docs/testids/phase-3.md, `exam-test`), its window `opensInMin` minutes
+ * from the clock's current time, in a new active `Placement 2026` series unless `seriesId` is given. Proctoring that
+ * needs hardware and shuffling are off unless `overrides` switch them on.
+ */
+const examTest: Scenario = async (db, now, body) => {
+  const orgId = String(body.orgId ?? '');
+  const org = await db.doc(`organizations/${orgId}`).get();
+  if (!org.exists) throw new AppError(404, 'NOT_FOUND', 'No such organization for the scenario.');
+  const timezone = (org.get('timezone') as string | undefined) ?? 'Asia/Kolkata';
+  const start = now + num(body.opensInMin, -2) * MIN;
+  const window = { start, end: start + num(body.windowMin, 60) * MIN };
+  const timingMode = body.timingMode === 'flexible' ? 'flexible' : 'fixed';
+  const overrides = {
+    window,
+    timingMode,
+    ...(timingMode === 'flexible' ? { durationMin: num(body.durationMin, 60) } : {}),
+    fullscreenRequired: false,
+    cameraRequired: false,
+    secondCamera: false,
+    shuffleQuestions: false,
+    shuffleOptions: false,
+    ...(body.overrides as object | undefined),
+  };
+  const scheduledDate = zonedDay(window.start, timezone);
+  let seriesId = typeof body.seriesId === 'string' ? body.seriesId : null;
+  if (!seriesId) {
+    const ref = db.collection(`organizations/${orgId}/series`).doc();
+    const day = Date.parse(`${scheduledDate}T00:00:00Z`);
+    await ref.set({
+      orgId,
+      title: 'Placement 2026',
+      description: 'Daily tests for the 2026 placement season.',
+      status: typeof body.seriesStatus === 'string' ? body.seriesStatus : 'active',
+      startDate: isoDay(day - 30 * DAY),
+      endDate: isoDay(day + 60 * DAY),
+      dailyWindow: { startMinutes: 600, endMinutes: 660 },
+      defaults: { ...TABLE_DEFAULTS },
+      eligibility: { ...NO_RESTRICTION, ...(body.seriesEligibility as object | undefined) },
+      createdAt: now,
+      updatedAt: now,
+    });
+    seriesId = ref.id;
+  }
+  const ids = await authoringTest(db, now, {
+    orgId,
+    seriesId,
+    ...(typeof body.title === 'string' ? { title: body.title } : {}),
+    ...(typeof body.company === 'string' ? { company: body.company } : {}),
+    ...(body.questions !== undefined ? { questions: body.questions } : {}),
+    ...(body.sectionDraws !== undefined ? { sectionDraws: body.sectionDraws } : {}),
+    ...(body.testDraw !== undefined ? { testDraw: body.testDraw } : {}),
+    overrides,
+    scheduledDate,
+    publish: body.publish !== false,
+  });
+  if (body.eligibility)
+    await db
+      .doc(`organizations/${orgId}/tests/${String(ids.testId)}`)
+      .update({ eligibility: { ...NO_RESTRICTION, ...(body.eligibility as object) } });
+  return { ...ids, window };
+};
+
 export const SCENARIOS: Record<string, Scenario> = {
   'empty-org': emptyOrg,
   'student-attempts': studentAttempts,
   'authoring-series': authoringSeries,
   'authoring-test': authoringTest,
+  'exam-test': examTest,
 };

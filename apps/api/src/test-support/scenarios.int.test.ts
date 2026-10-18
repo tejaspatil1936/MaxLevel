@@ -83,3 +83,84 @@ describe('authoring-test scenario', () => {
     ]);
   });
 });
+
+describe('exam-test scenario', () => {
+  const NOW = Date.UTC(2026, 10, 2, 4, 0); // 2 Nov 2026, 09:30 IST
+  const MIN = 60_000;
+  async function seedExam(body: object) {
+    const { app, clock } = await testApp();
+    clock.set(NOW);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/__test/seed/exam-test',
+      headers: { 'x-test-secret': TEST_SECRET },
+      payload: { orgId: SEED.orgA, ...body },
+    });
+    expect(res.statusCode).toBe(200);
+    return res.json() as { seriesId: string; testId: string; window: { start: number; end: number } };
+  }
+
+  it('US-ST-03 TST-05 seeds a published live test in a new active series, with hardware proctoring and shuffling off', async () => {
+    const ids = await seedExam({});
+    expect(ids.window).toEqual({ start: NOW - 2 * MIN, end: NOW + 58 * MIN });
+    const series = (await org.collection('series').doc(ids.seriesId).get()).data()!;
+    expect(series).toMatchObject({
+      title: 'Placement 2026',
+      status: 'active',
+      dailyWindow: { startMinutes: 600, endMinutes: 660 },
+      eligibility: { departmentIds: [], graduationYears: [], include: [], exclude: [] },
+    });
+    expect(series.startDate <= '2026-11-02' && series.endDate >= '2026-11-02').toBe(true);
+    const test = (await org.collection('tests').doc(ids.testId).get()).data()!;
+    expect(test).toMatchObject({
+      title: 'Quantitative aptitude',
+      company: 'TCS',
+      scheduledDate: '2026-11-02',
+      status: 'scheduled',
+      totalMarks: 4,
+      resolved: {
+        timingMode: 'fixed',
+        window: ids.window,
+        durationMin: 60,
+        lateEntryCutoffMin: 15,
+        fullscreenRequired: false,
+        cameraRequired: false,
+        secondCamera: false,
+        shuffleQuestions: false,
+        shuffleOptions: false,
+        marking: { marks: 1, negativeMarks: 0 },
+      },
+    });
+  });
+
+  it('US-ST-03 SER-06 applies timing, overrides, both rule sets, the series status and publish: false', async () => {
+    const ids = await seedExam({
+      title: 'Verbal ability',
+      timingMode: 'flexible',
+      opensInMin: -30,
+      windowMin: 180,
+      durationMin: 45,
+      overrides: { maxStrikes: 5 },
+      eligibility: { departmentIds: ['dept-org-a-mechanical'] },
+      seriesEligibility: { exclude: ['stu-org-a-01'] },
+      seriesStatus: 'draft',
+    });
+    const test = (await org.collection('tests').doc(ids.testId).get()).data()!;
+    expect(test.resolved).toMatchObject({ timingMode: 'flexible', durationMin: 45, maxStrikes: 5 });
+    expect(test.resolved.window).toEqual({ start: NOW - 30 * MIN, end: NOW + 150 * MIN });
+    expect(test.eligibility).toEqual({
+      departmentIds: ['dept-org-a-mechanical'],
+      graduationYears: [],
+      include: [],
+      exclude: [],
+    });
+    const series = (await org.collection('series').doc(ids.seriesId).get()).data()!;
+    expect(series).toMatchObject({ status: 'draft', eligibility: { exclude: ['stu-org-a-01'] } });
+
+    const draft = await seedExam({ seriesId: ids.seriesId, publish: false, opensInMin: 2 * 1440 });
+    expect(draft.seriesId).toBe(ids.seriesId);
+    const stored = (await org.collection('tests').doc(draft.testId).get()).data()!;
+    expect(stored).toMatchObject({ status: 'in_review', scheduledDate: '2026-11-04' });
+    expect(stored).not.toHaveProperty('resolved');
+  });
+});
