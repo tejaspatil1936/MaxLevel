@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AttemptStatus } from './attempt';
 import {
   LEADERBOARD_PAGE_ROWS,
+  boardResponse,
   boardResponseSchema,
   leaderboardPages,
   leaderboardRecordSchema,
@@ -11,6 +12,7 @@ import {
   seriesBoardId,
   studentBoardView,
   testBoardId,
+  testBoardTitle,
   type RankableAttempt,
 } from './leaderboard';
 
@@ -204,5 +206,52 @@ describe('board ids and response', () => {
       me: row,
     });
     expect(JSON.stringify(body)).not.toMatch(/studentId|correctOptionIds/);
+  });
+});
+
+describe('served board', () => {
+  const stored = Array.from({ length: 55 }, (_, i) => ({
+    studentId: `s${i + 1}`,
+    name: `Student ${i + 1}`,
+    departmentId: i % 2 ? 'd2' : 'd1',
+    score: 55 - i,
+    rank: i + 1,
+    timeSec: 60 + i,
+  }));
+  const departments = new Map([
+    ['d1', 'Computer'],
+    ['d2', 'IT'],
+  ]);
+  const base = { boardId: 'test_t1', kind: 'test' as const, title: 'Day 1: Aptitude', max: 60, departments };
+
+  it('LB-05 US-ST-09 a student gets the first 50 rows and their own row wherever it is, with department names', () => {
+    const body = boardResponse({ ...base, board: { computedAt: 9, total: 55, rows: stored }, studentId: 's53' });
+    expect(body.rows).toHaveLength(50);
+    expect(body.rows[0]).toEqual({ rank: 1, name: 'Student 1', department: 'Computer', score: 55, timeSec: 60 });
+    expect(body.me).toEqual({ rank: 53, name: 'Student 53', department: 'Computer', score: 3, timeSec: 112 });
+    expect(body).toMatchObject({ computedAt: 9, total: 55, max: 60 });
+    expect(boardResponse({ ...base, board: { computedAt: 9, total: 55, rows: stored }, studentId: 'x' }).me).toBeNull();
+    expect(JSON.stringify(body)).not.toMatch(/studentId|departmentId/);
+  });
+
+  it('LB-05 an admin gets every row and no own row; a board not computed yet has no rows', () => {
+    const body = boardResponse({ ...base, board: { computedAt: 9, total: 55, rows: stored }, studentId: null });
+    expect(body.rows).toHaveLength(55);
+    expect(body.me).toBeNull();
+    const none = boardResponse({ ...base, kind: 'series', max: undefined, board: null, studentId: null });
+    expect(none).toEqual({
+      boardId: 'test_t1',
+      kind: 'series',
+      title: 'Day 1: Aptitude',
+      computedAt: null,
+      total: 0,
+      rows: [],
+      me: null,
+    });
+  });
+
+  it('LB-05 a test board is titled by the test heading', () => {
+    expect(testBoardTitle('Quantitative aptitude', 'Day 1')).toBe('Day 1: Quantitative aptitude');
+    expect(testBoardTitle('Quantitative aptitude', null)).toBe('Quantitative aptitude');
   });
 });

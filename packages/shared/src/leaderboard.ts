@@ -62,6 +62,55 @@ export const boardResponseSchema = z.object({
 });
 export type BoardResponse = z.infer<typeof boardResponseSchema>;
 
+/** A board open to the student, as listed on `/student/leaderboards/` (US-ST-09, LB-04). */
+export const openBoardSchema = z.object({ boardId: z.string(), kind: boardKindSchema, title: z.string() });
+export type OpenBoard = z.infer<typeof openBoardSchema>;
+/** `GET /v1/student/leaderboards`: the boards open to the caller, series boards before their tests' boards. */
+export const studentLeaderboardsSchema = z.object({ boards: z.array(openBoardSchema) });
+export type StudentLeaderboards = z.infer<typeof studentLeaderboardsSchema>;
+
+/** A test board's title is the test heading: `Day 1: Quantitative aptitude`, or the title when the day is hidden. */
+export const testBoardTitle = (title: string, dayLabel: string | null) => (dayLabel ? `${dayLabel}: ${title}` : title);
+
+export interface BoardResponseInput {
+  boardId: string;
+  kind: BoardKind;
+  title: string;
+  max?: number;
+  /** The stored board, or null while it has not been computed. */
+  board: { computedAt: number; total: number; rows: ReadonlyArray<LeaderboardRow> } | null;
+  /** Department names by ID (DECISIONS Q28); an unknown ID shows as empty. */
+  departments: ReadonlyMap<string, string>;
+  /** The student asking, or null for an admin. */
+  studentId: string | null;
+}
+
+/**
+ * LB-05, US-ST-09: the served board. A student gets the first 50 rows and their own row as `me`; an admin every row
+ * and `me: null`. Rows carry the department's name and no student ID.
+ */
+export function boardResponse(input: BoardResponseInput): BoardResponse {
+  const stored = input.board?.rows ?? [];
+  const view = input.studentId === null ? { rows: [...stored], me: null } : studentBoardView(stored, input.studentId);
+  const served = (r: LeaderboardRow): BoardRow => ({
+    rank: r.rank,
+    name: r.name,
+    department: input.departments.get(r.departmentId) ?? '',
+    score: r.score,
+    timeSec: r.timeSec,
+  });
+  return {
+    boardId: input.boardId,
+    kind: input.kind,
+    title: input.title,
+    computedAt: input.board?.computedAt ?? null,
+    total: input.board?.total ?? 0,
+    ...(input.max !== undefined ? { max: input.max } : {}),
+    rows: view.rows.map(served),
+    me: view.me ? served(view.me) : null,
+  };
+}
+
 export interface RankableAttempt {
   studentId: string;
   name: string;
