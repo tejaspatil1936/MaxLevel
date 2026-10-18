@@ -26,3 +26,15 @@ Locked acceptance tests the build believes are wrong. The owner decides; the bui
   (or `toHaveCount(2)`).
 - Effect until then: `scripts/verify.sh feature F-4.03` fails on this one assertion; no application change can pass it
   without rendering the prompt wrongly.
+
+## 2026-10-18 — scripts/verify.sh `prod_api` (full mode) starts the production API without `EXPORT_LINK_SECRET`
+
+- What happens: since the review fix for F-4.06, `apps/api` refuses to start when `NODE_ENV=production` and
+  `EXPORT_LINK_SECRET` is missing or under 32 bytes (a per-process random key breaks signed export links across API
+  instances). `prod_api` starts `node apps/api/dist/server.js` with `NODE_ENV=production` and no secret, so `/health`
+  never answers, `GET /__test/clock` gives `000` instead of `404`, and the `prod-api` step of `verify.sh full` fails.
+  Feature and fast runs do not run this step.
+- Proposed change: add `EXPORT_LINK_SECRET=$(openssl rand -hex 32)` (or any fixed 32+ character value) to the
+  environment of the `node apps/api/dist/server.js` line in `prod_api`.
+- Effect until then: `scripts/verify.sh full` fails at `prod-api`; no application change can pass it without
+  keeping the per-process fallback in production.

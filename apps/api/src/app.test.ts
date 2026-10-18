@@ -40,7 +40,10 @@ describe('api skeleton', () => {
 describe('test-only API', () => {
   it('is not registered outside test mode', async () => {
     const clock = new TestClock();
-    const config = { ...loadConfig({ NODE_ENV: 'production', TEST_API_SECRET: 's' }), logLevel: 'silent' as const };
+    const config = {
+      ...loadConfig({ NODE_ENV: 'production', TEST_API_SECRET: 's', EXPORT_LINK_SECRET: 'x'.repeat(32) }),
+      logLevel: 'silent' as const,
+    };
     const a = await buildApp({ clock, config, ...deps(clock) });
     expect(
       (await a.inject({ method: 'GET', url: '/__test/clock', headers: { 'x-test-secret': 's' } })).statusCode,

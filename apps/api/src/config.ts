@@ -11,9 +11,13 @@ const envSchema = z.object({
   WORKER_URL: z.string().default('http://127.0.0.1:4001'),
   // The cloud-tasks driver arrives with the deployment phase; until then every run uses the local queue.
   TASK_QUEUE: z.enum(['local']).default('local'),
-  // Signs export download links (EXP-03). Every API instance needs the same value (Secret Manager in production); a
-  // run without it signs with a random key of its own, so links work only on that process.
-  EXPORT_LINK_SECRET: z.string().min(32).optional(),
+  // Signs export download links (EXP-03). Every API instance needs the same value, so production refuses to start
+  // without one (Secret Manager); a development or test run without it signs with a random key of its own, so links
+  // work only on that process.
+  EXPORT_LINK_SECRET: z
+    .string()
+    .refine((s) => Buffer.byteLength(s, 'utf8') >= 32, 'EXPORT_LINK_SECRET must be at least 32 bytes')
+    .optional(),
 });
 
 export type Config = {
@@ -30,6 +34,8 @@ export type Config = {
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const e = envSchema.parse(env);
+  if (e.NODE_ENV === 'production' && !e.EXPORT_LINK_SECRET)
+    throw new Error('EXPORT_LINK_SECRET (at least 32 bytes) is required when NODE_ENV is production');
   return {
     env: e.NODE_ENV,
     port: e.PORT,

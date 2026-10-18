@@ -38,11 +38,13 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 - Unblocks: SEC-01, SEC-03, PR-14, DATA-09, EXP-03.
 
 ### 0.4 Secret Manager
-- What: create secrets `llm-api-key` (phase 6), `sentry-dsn-api`, `sentry-dsn-worker`. Mount them in Cloud Run as
-  environment variables at deploy time.
+- What: create secrets `llm-api-key` (phase 6), `sentry-dsn-api`, `sentry-dsn-worker`, and `export-link-secret`
+  (at least 32 random bytes, e.g. `openssl rand -hex 32`). Mount them in Cloud Run as environment variables at deploy
+  time; `export-link-secret` becomes `EXPORT_LINK_SECRET` on the `api` service, one value shared by every instance
+  (it signs export download links, EXP-03). The API refuses to start in production without it.
 - Where: Security → Secret Manager.
 - Confirm: `gcloud secrets list` shows them; the services start with the secret values present.
-- Unblocks: SEC-02, OBS-02, IMP-07.
+- Unblocks: SEC-02, OBS-02, IMP-07, EXP-03.
 
 ### 0.5 Artifact Registry
 - What: a Docker repository `mitaoe` in `asia-south1` in staging and prod.
