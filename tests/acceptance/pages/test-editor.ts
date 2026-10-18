@@ -424,13 +424,19 @@ export class SectionsTab {
     return cellIn(this.list, this.row(name), column);
   }
 
-  /** Section names in table order. */
+  /** Section names in table order (a snapshot; use expectNames to wait for an order). */
   async names(): Promise<string[]> {
     const out: string[] = [];
     const n = await this.rows.count();
     for (let i = 0; i < n; i++)
       out.push((await (await cellIn(this.list, this.rows.nth(i), 'Name')).innerText()).trim());
     return out;
+  }
+
+  /** Waits until the table lists exactly these sections, in this order. */
+  async expectNames(names: readonly string[]): Promise<void> {
+    await expect(this.rows).toHaveCount(names.length);
+    await expect.poll(() => this.names(), { message: 'section order' }).toEqual([...names]);
   }
 
   async choose(name: string, item: 'Edit' | 'Move up' | 'Move down' | 'Delete'): Promise<void> {

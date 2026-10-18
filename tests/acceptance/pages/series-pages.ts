@@ -235,12 +235,9 @@ export class SeriesPage {
     return this.timeline.getByRole('link', { name: testTitle, exact: true });
   }
 
-  /** Test titles in timeline order. */
-  async timelineTitles(): Promise<string[]> {
-    return this.timeline
-      .getByRole('link')
-      .allInnerTexts()
-      .then((t) => t.map((s) => s.trim()));
+  /** Waits until the timeline lists exactly these test titles, in this order. */
+  async expectTimeline(titles: readonly string[]): Promise<void> {
+    await expect(this.timeline.getByRole('link')).toHaveText(titles.map((t) => exactly(t)));
   }
 
   addTestDialog(): Locator {

@@ -195,3 +195,21 @@ export async function writeQuestionsJson(path: string, questions: JsonQuestion[]
   await writeFile(path, JSON.stringify({ format: 'mitaoe-questions/1', questions }, null, 2), 'utf8');
   return path;
 }
+
+/** A question in the legacy JSON format (spec 15.1; legacy/data/infosys/infosys-set-2.json). */
+export interface LegacyJsonQuestion {
+  id: string;
+  text: string;
+  options: string[];
+  /** 0-based index of the correct option. */
+  correctIndex?: number;
+  explanation?: string;
+  topic?: string;
+  source?: string;
+}
+
+/** Writes a question file in the legacy format (no `format` key) and returns its path. */
+export async function writeLegacyQuestionsJson(path: string, questions: LegacyJsonQuestion[]): Promise<string> {
+  await writeFile(path, JSON.stringify({ questions }, null, 2), 'utf8');
+  return path;
+}
