@@ -71,22 +71,28 @@ export function whitelistRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         }
         const now = clock.now();
         const single = req.body.source === 'single' && accepted.length === 1;
-        // Each entry is two writes (entry and email index); batches stay under Firestore's 500-write limit. The audit
-        // entry rides in the last batch, so the log never claims an import that did not finish.
-        for (let i = 0; i === 0 || i < accepted.length; i += 200) {
+        // WL-05: an email listed again gets its kept student record back (and with it the attempts), never a second one.
+        const kept = new Map((await data.students.listStudents(orgId)).map((s) => [s.email, s]));
+        // Each entry is up to three writes (entry, email index, kept record); batches stay under Firestore's 500-write
+        // limit. The audit entry rides in the last batch, so the log never claims an import that did not finish.
+        for (let i = 0; i === 0 || i < accepted.length; i += 150) {
           const batch = db.batch();
-          for (const r of accepted.slice(i, i + 200)) {
+          for (const r of accepted.slice(i, i + 150)) {
+            const record = kept.get(r.email);
+            const restored = record?.consentAt && record.name ? 'registered' : 'invited';
             data.whitelist.putWhitelistEntry(orgId, batch, {
               email: r.email,
-              prn: r.prn ?? null,
+              prn: r.prn ?? record?.prn ?? null,
               note: r.note ?? null,
-              status: 'invited',
+              status: record ? restored : 'invited',
+              studentId: record?.id ?? null,
               source: req.body.source,
               addedBy: req.user!.uid,
               addedAt: now,
             });
+            if (record) data.students.updateStudent(orgId, batch, record.id, { status: restored, updatedAt: now });
           }
-          if (i + 200 >= accepted.length) {
+          if (i + 150 >= accepted.length) {
             audit(req, batch, {
               action: single ? 'whitelist.add' : 'whitelist.import',
               target: { type: 'whitelist', id: single ? accepted[0]!.email : 'bulk' },

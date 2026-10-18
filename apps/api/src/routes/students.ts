@@ -62,7 +62,7 @@ export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
               ...(graduationYear ? { graduationYear } : {}),
               ...(st ? { status: st } : {}),
             })
-            .then((all) => all.filter((x) => x.name !== null)),
+            .then((all) => all.filter((x) => !!x.name && !!x.email && !!x.status)),
         );
         if (q) {
           const n = q.toLowerCase();
@@ -160,9 +160,18 @@ export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const patch = req.body;
         if (patch.prn) await prnFree(orgId, patch.prn, before.id);
         if (patch.departmentId) await departmentExists(orgId, patch.departmentId);
+        // WL-05: a student whose whitelist entry was removed stays disabled until the email is listed again.
+        const entry = await data.whitelist.getWhitelistEntry(orgId, before.email);
+        if (!entry && patch.status && patch.status !== 'disabled') {
+          throw new AppError(
+            409,
+            'NOT_LISTED',
+            'This email is no longer on the whitelist. Add it to the whitelist again to enable the student.',
+          );
+        }
         const batch = db.batch();
         data.students.updateStudent(orgId, batch, before.id, { ...patch, updatedAt: clock.now() });
-        if (patch.status || patch.prn) {
+        if (entry && (patch.status || patch.prn)) {
           data.whitelist.updateWhitelistEntry(orgId, batch, before.email, {
             ...(patch.status ? { status: patch.status } : {}),
             ...(patch.prn ? { prn: patch.prn } : {}),
