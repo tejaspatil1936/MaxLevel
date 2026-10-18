@@ -2,11 +2,10 @@ import {
   bulkResultSchema,
   buildImportReport,
   importReportSchema,
-  pageOf,
   whitelistBulkSchema,
-  whitelistEntrySchema,
   whitelistImportSchema,
   whitelistListQuerySchema,
+  whitelistPageSchema,
 } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { normalizeEmail } from '../data/keys';
@@ -26,19 +25,20 @@ export function whitelistRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       '/v1/whitelist',
       {
         config: admin,
-        schema: { querystring: whitelistListQuerySchema, response: { 200: pageOf(whitelistEntrySchema) } },
+        schema: { querystring: whitelistListQuerySchema, response: { 200: whitelistPageSchema } },
       },
       async (req) => {
         const { cursor, limit, status: st, q } = req.query;
         const needle = q?.toLowerCase();
-        const all = (await data.whitelist.listWhitelist(req.orgId!))
+        const entries = await data.whitelist.listWhitelist(req.orgId!);
+        const all = entries
           .filter(
             (e) =>
               (!st || e.status === st) &&
               (!needle || e.email.includes(needle) || (e.prn ?? '').toLowerCase().includes(needle)),
           )
           .sort((a, b) => a.email.localeCompare(b.email));
-        return pageItems(all, cursor, limit);
+        return { ...pageItems(all, cursor, limit), total: entries.length };
       },
     );
 

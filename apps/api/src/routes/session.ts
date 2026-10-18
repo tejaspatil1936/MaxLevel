@@ -47,6 +47,7 @@ export function sessionRoutes(deps: Deps & { data: Data; entitlements: Entitleme
           entitlements: u.orgId ? await effective(u.orgId) : null,
           preferences: await deps.data.preferences.getPreferences(u.uid),
           profileComplete: u.role !== 'student' ? true : await studentComplete(u.orgId, u.studentId),
+          canSwitchOrg: u.role === 'student' && (await deps.data.identity.orgIdsForEmail(u.email)).length > 1,
         };
       },
     );

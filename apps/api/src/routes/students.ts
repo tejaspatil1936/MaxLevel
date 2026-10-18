@@ -4,7 +4,7 @@ import {
   studentListQuerySchema,
   studentPatchSchema,
   studentSchema,
-  auditEntrySchema,
+  studentDetailSchema,
   type Student,
 } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
@@ -16,21 +16,6 @@ import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
 const idParams = z.object({ id: z.string().min(1).max(128) });
-
-const attemptSummarySchema = z.object({
-  id: z.string(),
-  testTitle: z.string(),
-  status: z.string(),
-  score: z.number().nullable(),
-  max: z.number().nullable(),
-  strikes: z.number().int(),
-  startedAt: z.number(),
-});
-const studentDetailSchema = z.object({
-  student: studentSchema,
-  attempts: z.array(attemptSummarySchema),
-  history: z.array(auditEntrySchema),
-});
 
 /** Student directory, detail, edits and manual adds (STU-08 to STU-11, US-AD-02). */
 export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
