@@ -2,6 +2,7 @@ import type { FeatureFlag } from '@mitaoe/shared';
 import {
   BarChart3,
   Building2,
+  CalendarRange,
   LayoutDashboard,
   ListChecks,
   Network,
@@ -25,6 +26,7 @@ export const ADMIN_NAV: NavLink[] = [
   { label: 'nav.whitelist', href: '/admin/whitelist/', icon: ListChecks },
   { label: 'nav.students', href: '/admin/students/', icon: Users },
   { label: 'nav.departments', href: '/admin/departments/', icon: Network },
+  { label: 'nav.series', href: '/admin/series/', icon: CalendarRange },
   { label: 'nav.reports', href: '/admin/reports/', icon: BarChart3, feature: 'analytics_reports' },
   { label: 'nav.audit', href: '/admin/audit/', icon: ScrollText },
   { label: 'nav.settings', href: '/admin/settings/', icon: Settings },

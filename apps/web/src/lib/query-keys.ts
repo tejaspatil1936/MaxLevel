@@ -7,6 +7,8 @@ export const qk = {
   orgAll: (orgId: string) => [orgId] as const,
   org: (orgId: string) => [orgId, 'org'] as const,
   orgList: (orgId: string, list: string, params: object = {}) => [orgId, list, params] as const,
+  /** One record of an org-scoped kind, for example a series. */
+  orgItem: (orgId: string, kind: string, id: string) => [orgId, kind, 'item', id] as const,
   platformOrgs: () => ['platform', 'orgs'] as const,
   platformOrg: (orgId: string) => ['platform', 'orgs', orgId] as const,
   platformAudit: (params: object) => ['platform', 'audit', params] as const,
