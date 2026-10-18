@@ -58,3 +58,7 @@ F-1.13 done — accessibility panel saved to the account and applied before firs
 Release gate: spec review found 3 blocking items (archived-org platform writes, removed-entry student re-enable, preferences recreating a deleted record); QA found 6 more (duplicate PRN from the whitelist, accessibility panel taller than the screen, menu focus ring, sticky bar covering a field, unnamed loading states) plus CSV formula cells (owner instruction). Each fixed after a regression test; minor findings in docs/BACKLOG.md.
 VERIFY full PASS 7c851a27fd45df6d0590fc38440c80eb9db16b48 (docs/verification/phase-1.md)
 PHASE 1 DONE 13/13 features
+
+## Phase 2
+
+PHASE 2 START c5c79f0b796d1131f2ea80243bd1ead0b7da03e5
