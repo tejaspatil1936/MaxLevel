@@ -148,6 +148,52 @@ export function ConfirmDialog(p: ConfirmDialogProps) {
   );
 }
 
+export interface AcknowledgeDialogProps {
+  open: boolean;
+  title: ReactNode;
+  /** The notice itself; it is the dialog's description. */
+  children: ReactNode;
+  actionLabel: string;
+  onAction: () => void;
+}
+
+/**
+ * A notice that must be acknowledged before going on (the exam's strike warning, PR-09): an alert dialog with one
+ * button, which has focus. Escape and clicks outside do not close it; only the button does, through `onAction`.
+ */
+export function AcknowledgeDialog(p: AcknowledgeDialogProps) {
+  const { onCloseAutoFocus, onOpenAutoFocus } = useReturnFocus();
+  return (
+    <RAlert.Root open={p.open}>
+      <RAlert.Portal>
+        <RAlert.Overlay className={overlay} />
+        <RAlert.Content
+          className={panel}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onCloseAutoFocus={onCloseAutoFocus}
+          onOpenAutoFocus={(e) => {
+            onOpenAutoFocus();
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[data-action]')?.focus();
+          }}
+        >
+          <RAlert.Title className="text-heading-2 font-bold">{p.title}</RAlert.Title>
+          <RAlert.Description asChild>
+            <div className="mt-2 grid gap-2">{p.children}</div>
+          </RAlert.Description>
+          <div className="mt-6 flex justify-end">
+            <RAlert.Action asChild>
+              <Button data-action onClick={p.onAction}>
+                {p.actionLabel}
+              </Button>
+            </RAlert.Action>
+          </div>
+        </RAlert.Content>
+      </RAlert.Portal>
+    </RAlert.Root>
+  );
+}
+
 export interface DrawerProps extends DialogProps {
   className?: string;
 }
