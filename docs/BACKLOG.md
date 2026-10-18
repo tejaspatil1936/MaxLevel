@@ -74,3 +74,12 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - F-3.13 checks the absence of phone_disconnected with a single read; check after a later event round trip.
 - colourBlindShots leaves background-image (hatching) in colour, which is lenient for A11Y-14.
 - The browser DATA-05 dashboard check looks for field names only (the integration row checks explanation text).
+
+## Phase 3 (mid-phase review)
+
+- Idempotency keys are not bound to the request body; the same user reusing a key for another test gets the first payload replayed.
+- TST-06: PATCH /v1/tests reads attemptsStarted outside the start transaction, so an edit racing the first start can change settings an attempt already used.
+- The exam's single-key shortcuts cannot be turned off or remapped (WCAG 2.1.4); EX-09 requires them; add an off switch in the accessibility panel.
+- Preflight check results change without a live region (WCAG 4.1.3).
+- `_localTasks` is a top-level collection (dev/test driver only).
+- Two tabs on one attempt can collide on per-question seq counters; the newer change may come back stale.
