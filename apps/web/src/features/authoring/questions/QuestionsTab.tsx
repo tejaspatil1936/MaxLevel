@@ -7,11 +7,12 @@ import { useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { useWorkspace } from '@/lib/workspace';
+import { JsonImportDialog } from './JsonImportDialog';
 import { QuestionEditor } from './QuestionEditor';
 import { QuestionList } from './QuestionList';
 import { questionsPath, useQuestions, useQuestionsChanged } from './useQuestions';
 
-/** Q-01: the test's questions: add and edit with a live student view, reorder and delete. */
+/** Q-01: the test's questions: add and edit with a live student view, import JSON, reorder and delete. */
 export function QuestionsTab({ test }: { test: TestDetail }) {
   const { readOnly } = useWorkspace();
   const qc = useQueryClient();
@@ -20,6 +21,7 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
   const [deleting, setDeleting] = useState<{ question: Question; n: number } | null>(null);
   // `null`: closed; `{}`: adding; `{ question, n }`: editing question n.
   const [editing, setEditing] = useState<{ question?: Question; n?: number } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   // The new order shows at once and is saved straight away (Q-01).
   const reorder = useMutation({
@@ -57,7 +59,12 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
   );
   return (
     <div className="flex flex-col gap-4">
-      {items.length ? <div className="flex flex-wrap justify-end gap-3">{add}</div> : null}
+      <div className="flex flex-wrap justify-end gap-3">
+        <Button variant="secondary" disabled={readOnly} onClick={() => setImporting(true)}>
+          {t('questions.importJson')}
+        </Button>
+        {items.length ? add : null}
+      </div>
       {reorder.isError ? (
         <InlineMessage>{t('questions.reorderFailed', { reason: reorder.error.message })}</InlineMessage>
       ) : null}
@@ -80,6 +87,14 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
           editing={editing.question && editing.n ? { question: editing.question, n: editing.n } : undefined}
           onSaved={() => changed.refresh()}
           onClose={() => setEditing(null)}
+        />
+      ) : null}
+      {importing ? (
+        <JsonImportDialog
+          testId={test.id}
+          list={questions.data}
+          onImported={() => changed.refresh()}
+          onClose={() => setImporting(false)}
         />
       ) : null}
       {deleting ? (

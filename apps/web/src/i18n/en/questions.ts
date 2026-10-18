@@ -61,4 +61,17 @@ export const questions = {
   'questions.draftNote': 'Until these are fixed the question is saved as a draft.',
   'questions.save': 'Save question',
   'questions.saved': 'Question saved',
+  'questions.importTitle': 'Import questions from JSON',
+  'questions.importFile': 'JSON file',
+  'questions.importHint':
+    'The legacy question file, or the mitaoe-questions/1 format. Questions are added after the ones already here.',
+  'questions.importInvalid': "This file isn't valid question JSON. Check it against the import format.",
+  'questions.importSummary': 'Import summary',
+  'questions.importFound': 'Questions found: {n}',
+  'questions.importReady': 'Ready to use: {n}',
+  'questions.importAttention': 'Need attention: {n}',
+  'questions.importAttentionNote': 'Questions that need attention are added as drafts with their reasons shown.',
+  'questions.importSubmit': 'Import questions',
+  'questions.imported.one': 'Imported 1 question',
+  'questions.imported.other': 'Imported {n} questions',
 } as const;
