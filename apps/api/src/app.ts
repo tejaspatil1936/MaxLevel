@@ -25,6 +25,7 @@ import { seriesRoutes } from './routes/series';
 import { studentRoutes } from './routes/students';
 import { questionRoutes } from './routes/questions';
 import { testsRoutes } from './routes/tests';
+import { examPreviewRoutes } from './routes/exam-preview';
 import { whitelistRoutes } from './routes/whitelist';
 import { sessionRoutes } from './routes/session';
 import { auditWriter } from './services/audit';
@@ -96,6 +97,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     seriesRoutes,
     testsRoutes,
     questionRoutes,
+    examPreviewRoutes,
     auditRoutes,
     meRoutes,
   ])
