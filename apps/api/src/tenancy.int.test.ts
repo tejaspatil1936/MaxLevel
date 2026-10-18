@@ -93,6 +93,11 @@ describe('admin route table', () => {
     }
     const org = await app.inject({ method: 'GET', url: '/v1/org', headers: { ...t.adminA, 'x-org-id': SEED.orgB } });
     expect(org.json()).toMatchObject({ id: SEED.orgA, name: 'MIT Academy of Engineering' });
+    const sa = { ...t.superAdmin };
+    for (const bad of ['org-a/departments/dept-org-a-computer', '..', 'ORG-A', '']) {
+      const res = await app.inject({ method: 'GET', url: '/v1/org', headers: { ...sa, 'x-org-id': bad } });
+      expect([res.statusCode, bad]).toEqual([bad ? 404 : 400, bad]);
+    }
     const write = await app.inject({
       method: 'PATCH',
       url: '/v1/org/settings',

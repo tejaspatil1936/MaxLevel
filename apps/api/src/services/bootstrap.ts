@@ -63,8 +63,14 @@ export async function bootstrapSession(
     };
   };
 
+  // Until the user picks, no org is active: old claims must not keep them in the previously chosen org.
+  const choose = async (res: BootstrapResponse) => {
+    await deps.auth.setCustomUserClaims(user.uid, null);
+    return res;
+  };
+
   const adminPick = pick(await data.identity.findAdmins(user.email, orgIds));
-  if (adminPick && 'choose' in adminPick) return adminPick.choose;
+  if (adminPick && 'choose' in adminPick) return choose(adminPick.choose);
   if (adminPick) {
     const admin = adminPick.match;
     if (admin.uid !== user.uid) await data.admins.linkAdminUid(admin.orgId, admin.adminId, user.uid);
@@ -73,7 +79,7 @@ export async function bootstrapSession(
 
   const entries = (await data.identity.findWhitelistEntries(user.email, orgIds)).filter((e) => e.status !== 'disabled');
   const entryPick = pick(entries);
-  if (entryPick && 'choose' in entryPick) return entryPick.choose;
+  if (entryPick && 'choose' in entryPick) return choose(entryPick.choose);
   if (entryPick) {
     const entry = entryPick.match;
     if (entry.studentId) await data.students.linkStudentUid(entry.orgId, entry.studentId, user.uid);

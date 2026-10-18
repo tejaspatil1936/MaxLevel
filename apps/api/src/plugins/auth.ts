@@ -33,6 +33,9 @@ declare module 'fastify' {
   }
 }
 
+/** Organization IDs are lowercase slugs (the seed and org creation use the same form). */
+export const ORG_ID = /^[a-z0-9][a-z0-9-]{1,62}$/;
+
 const unauthenticated = () => new AppError(401, 'UNAUTHENTICATED', 'Your sign-in has expired. Sign in again.');
 const forbidden = () => new AppError(403, 'FORBIDDEN', 'Your account cannot use this.');
 
@@ -105,7 +108,10 @@ export function registerAuth(
           if (typeof orgId !== 'string' || !orgId) {
             throw new AppError(400, 'ORG_REQUIRED', 'Choose an organization to work in.', { header: 'X-Org-Id' });
           }
-          if (!(await deps.data.orgs.getOrg(orgId))) throw new AppError(404, 'NOT_FOUND', 'Organization not found.');
+          // Only a plain org ID may reach a document path; anything else names no organization.
+          if (!ORG_ID.test(orgId) || !(await deps.data.orgs.getOrg(orgId))) {
+            throw new AppError(404, 'NOT_FOUND', 'Organization not found.');
+          }
           req.orgId = orgId;
           return;
         }

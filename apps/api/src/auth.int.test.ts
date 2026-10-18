@@ -151,6 +151,19 @@ describe('session bootstrap', () => {
     });
     expect(chosen.json()).toMatchObject({ status: 'ok', role: 'student', orgId: SEED.orgB });
   });
+
+  it('AUTH-02 asking again to choose clears the previous choice, so a reload cannot slip into the old org', async () => {
+    const first = await bootstrap(SEED.multiOrg, { orgId: SEED.orgA });
+    expect((await auth.getUser(first.user.uid)).customClaims).toMatchObject({ orgId: SEED.orgA });
+    const again = await first.app.inject({
+      method: 'POST',
+      url: '/v1/session/bootstrap',
+      headers: bearer(await first.user.token()),
+      payload: {},
+    });
+    expect(again.json().status).toBe('choose_org');
+    expect((await auth.getUser(first.user.uid)).customClaims ?? {}).toEqual({});
+  });
 });
 
 describe('claims drive the request context', () => {
