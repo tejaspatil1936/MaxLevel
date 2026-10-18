@@ -73,7 +73,10 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
         schema: {
           params: z.object({ scenario: z.string() }),
           body: z.record(z.string(), z.unknown()).default({}),
-          response: { 200: z.record(z.string(), z.string()) },
+          // Scenario IDs: a string, a list in order (questionIds) or a map by name (sectionIds).
+          response: {
+            200: z.record(z.string(), z.union([z.string(), z.array(z.string()), z.record(z.string(), z.string())])),
+          },
         },
       },
       async (req) => {
