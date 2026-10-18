@@ -137,9 +137,9 @@ export class UploadWizard {
     return this.report.getByRole('listitem').filter({ hasText: new RegExp(`^\\s*${label}: ${count(n)}\\s*$`) });
   }
 
-  /** A row of the Preview table that contains this text. */
+  /** The row of the Preview table with a cell that is exactly this text (case matters: emails are shown as written). */
   previewRow(text: string): Locator {
-    return rowWith(this.preview, text);
+    return this.preview.getByRole('row').filter({ has: this.page.getByRole('cell', { name: text, exact: true }) });
   }
 
   /** A row of the Problems table with this email (as written in the file) and problem. */
