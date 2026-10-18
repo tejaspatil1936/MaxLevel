@@ -72,3 +72,6 @@ F-2.06 done — sections table and dialog with draw and difficulty-mix validatio
 F-2.07 done — reusable exam screen (options, palette, navigation) in preview mode at /exam/?preview=, fresh seeded draw from GET /v1/tests/{id}/preview, Show answers, no attempt or proctoring
 F-2.08 done — approval checklist (shared), approve and publish endpoints with settings snapshot and SER-09 refusal, return to in_review on edits before attempts, checklist in the Preview tab
 F-2.09 done — super-admin authoring in an org workspace works through the shared admin routes with the super admin as actor (verified, no extra code)
+Checkpoints: mid-phase review and QA found 1 blocking issue (series edit could make a test leak answers, SER-09); release-gate review and QA found 2 more (in-place snapshot update skipping the SER-09 check; publish not re-checking settings). Each fixed after a regression test; minor findings in docs/BACKLOG.md.
+VERIFY full PASS 7530c6dc3c60c6a1d22c454716806da44249097c (docs/verification/phase-2.md)
+PHASE 2 DONE 9/9 features
