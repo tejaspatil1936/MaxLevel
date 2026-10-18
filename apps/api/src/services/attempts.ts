@@ -8,9 +8,13 @@ import {
   isEligible,
   isFinishedAttempt,
   questionTimeLimit,
+  strikeVerdict,
   type AnswerBatch,
   type AnswerBatchResult,
   type AnswerRecord,
+  type AttemptEventList,
+  type AttemptEventReport,
+  type AttemptEventResult,
   type AttemptPayload,
   type AttemptRecord,
   type Clock,
@@ -295,6 +299,53 @@ export function attemptService(deps: AttemptDeps) {
       if (!served) throw notFound('Attempt');
       if (served === 'ATTEMPT_FINISHED') throw finishedError();
       return { servedAt: served.servedAt, serverTime: now };
+    },
+
+    /**
+     * POST /v1/attempts/{id}/events (PR-07, PR-08, PR-10, PR-11, spec 11.2): every report is logged; shared
+     * `strikeVerdict` decides in the transaction, from the stored count and the server clock, whether it is a new
+     * strike. A counted strike is mirrored to `live/…`; the strike that reaches the maximum ends the attempt as
+     * `terminated` (`max_strikes`) and grades it once. The response carries the server's count.
+     */
+    async reportEvent(
+      orgId: string,
+      studentId: string,
+      attemptId: string,
+      report: AttemptEventReport,
+    ): Promise<AttemptEventResult> {
+      const attempt = await ownAttempt(orgId, studentId, attemptId);
+      if (attempt.status !== 'in_progress') throw finishedError();
+      const test = await data.tests.getTest(orgId, attempt.testId);
+      if (!test?.resolved) throw notFound('Attempt');
+      const { devtoolsPolicy, maxStrikes } = test.resolved;
+      const now = clock.now();
+      const done = await data.events.recordEvent(orgId, attempt.id, report, now, (stored) =>
+        strikeVerdict({
+          type: report.type,
+          devtoolsPolicy,
+          maxStrikes,
+          strikesCount: stored.strikesCount,
+          lastStrikeAt: stored.lastStrikeAt,
+          now,
+        }),
+      );
+      if (!done) throw notFound('Attempt');
+      if (done === 'ATTEMPT_FINISHED') throw finishedError();
+      const { verdict } = done;
+      if (verdict.counted)
+        await rtdb
+          .ref(`live/${orgId}/${attempt.testId}/${attempt.id}`)
+          .update({ strikes: done.attempt.strikesCount, updatedAt: now });
+      const status = verdict.terminates
+        ? (await grader.finish(orgId, done.attempt, 'terminated', { terminationReason: 'max_strikes' })).status
+        : done.attempt.status;
+      return { strikesCount: done.attempt.strikesCount, counted: verdict.counted, status };
+    },
+
+    /** GET /v1/attempts/{id}/events (PR-11): an attempt's event timeline for admins; another org's attempt is 404. */
+    async listEvents(orgId: string, attemptId: string): Promise<AttemptEventList> {
+      if (!(await data.attempts.getAttempt(orgId, attemptId))) throw notFound('Attempt');
+      return { items: await data.events.listEvents(orgId, attemptId) };
     },
 
     /**

@@ -105,6 +105,20 @@ const questionBody = {
   correctOptionIds: ['b'],
 };
 const foreignQuestion = { id: 'test-org-b', questionId: 'q-org-b' };
+/** An attempt with a fixed ID in each org, with one logged event. */
+const attemptIn = async (db: Firestore, orgId: string, id: string) => {
+  const ref = db.doc(`organizations/${orgId}/attempts/${id}`);
+  await ref.set({ orgId, testId: `test-${orgId}`, studentId: `stu-${orgId}-01`, status: 'in_progress', startedAt: 0 });
+  await ref
+    .collection('events')
+    .doc('evt-1')
+    .set({ orgId, type: 'window_blur', details: {}, clientTs: 0, serverTs: 0 });
+  return id;
+};
+const withAttempt = async (db: Firestore) => {
+  await attemptIn(db, 'org-b', 'att-org-b');
+  return { params: { id: await attemptIn(db, 'org-a', 'att-org-a') } };
+};
 
 export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'GET /v1/org': {},
@@ -258,6 +272,8 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
       },
     }),
   },
+
+  'GET /v1/attempts/:id/events': { foreignParams: { id: 'att-org-b' }, fresh: withAttempt },
 
   'GET /v1/audit': {},
 };
