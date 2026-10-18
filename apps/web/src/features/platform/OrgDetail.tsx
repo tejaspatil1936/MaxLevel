@@ -41,7 +41,7 @@ export function OrgDetail() {
   if (org.isError) return <InlineMessage>{t('org.notFound')}</InlineMessage>;
   if (!org.data)
     return (
-      <div aria-busy="true" aria-label={t('app.loading')}>
+      <div role="status" aria-busy="true" aria-label={t('app.loading')}>
         <Skeleton className="h-12 w-80" />
         <Skeleton className="mt-6 h-64 w-full" />
       </div>

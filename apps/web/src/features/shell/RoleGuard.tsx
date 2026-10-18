@@ -33,7 +33,7 @@ export function RoleGuard({ roles, children }: { roles: Role[]; children: (me: M
   }
   if (!allowed) {
     return (
-      <div aria-busy="true" aria-label={t('app.loading')} className="mx-auto max-w-admin p-6">
+      <div role="status" aria-busy="true" aria-label={t('app.loading')} className="mx-auto max-w-admin p-6">
         <Skeleton className="h-12 w-64" />
         <Skeleton className="mt-6 h-40 w-full" />
       </div>

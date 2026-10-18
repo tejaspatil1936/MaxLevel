@@ -4,7 +4,7 @@ import type { PlatformOrgDetail } from '@mitaoe/shared';
 import { Button, FileField, PageHeader, SelectField, TextAreaField, TextField } from '@mitaoe/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type FocusEvent, type FormEvent } from 'react';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { readLogo } from '@/lib/files';
@@ -21,6 +21,15 @@ export function OrgForm() {
   const [logo, setLogo] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const logoInput = useRef<HTMLInputElement>(null);
+  const bar = useRef<HTMLElement>(null);
+  // A11Y-04: the fixed action bar never covers the focused field; scroll it above the bar when it would.
+  const keepAboveBar = (e: FocusEvent<HTMLFormElement>) => {
+    const el = e.target as HTMLElement;
+    if (bar.current?.contains(el)) return;
+    const barTop = bar.current?.getBoundingClientRect().top ?? innerHeight;
+    const r = el.getBoundingClientRect();
+    if (r.bottom > barTop - 8) window.scrollBy({ top: r.bottom - barTop + 16 });
+  };
   const dirty =
     logo !== null || (Object.keys(INITIAL) as Array<keyof typeof INITIAL>).some((k) => values[k] !== INITIAL[k]);
   const set = (k: keyof typeof INITIAL) => (e: { target: { value: string } }) =>
@@ -75,7 +84,7 @@ export function OrgForm() {
 
   const required = t('common.requiredMark');
   return (
-    <form noValidate onSubmit={submit} className="pb-28">
+    <form noValidate onSubmit={submit} onFocus={keepAboveBar} className="pb-40">
       <PageHeader title={t('org.new')} />
       <div className="flex max-w-measure flex-col gap-5">
         <TextField
@@ -117,6 +126,7 @@ export function OrgForm() {
         {errors.form ? <p className="font-bold text-redpen">{errors.form}</p> : null}
       </div>
       <section
+        ref={bar}
         aria-label={t('common.formActions')}
         className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-surface px-6 py-3 shadow-overlay"
       >

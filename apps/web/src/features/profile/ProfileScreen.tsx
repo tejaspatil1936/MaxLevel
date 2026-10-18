@@ -22,7 +22,7 @@ export function ProfileScreen() {
   });
   if (!me || !profile.data) {
     return (
-      <div aria-busy="true" aria-label={t('app.loading')}>
+      <div role="status" aria-busy="true" aria-label={t('app.loading')}>
         <Skeleton className="h-12 w-72" />
         <Skeleton className="mt-6 h-64 w-full" />
       </div>
