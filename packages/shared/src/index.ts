@@ -11,3 +11,4 @@ export * from './platform';
 export * from './eligibility';
 export * from './draw';
 export * from './marks';
+export * from './day-labels';
