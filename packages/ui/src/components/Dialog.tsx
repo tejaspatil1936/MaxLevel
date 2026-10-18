@@ -4,6 +4,44 @@ import { cx } from '../cx';
 import { Button } from './Button';
 
 const overlay = 'fixed inset-0 bg-ink/40';
+
+// A11Y-05: dialogs here are opened from state, not a Radix trigger, so they remember the control that opened them.
+// Focus inside a menu does not count: a dialog opened from a menu item returns to the menu's trigger button.
+let lastFocused: HTMLElement | null = null;
+let tracking = false;
+function trackFocus() {
+  if (tracking || typeof document === 'undefined') return;
+  tracking = true;
+  document.addEventListener(
+    'focusin',
+    (e) => {
+      const el = e.target as HTMLElement;
+      if (!el.closest?.('[role=menu]')) lastFocused = el;
+    },
+    true,
+  );
+}
+trackFocus();
+
+/** Marks the control that is opening a dialog, for openers that do not take focus themselves (menu triggers). */
+export function rememberOpener(el: HTMLElement): void {
+  lastFocused = el;
+}
+
+/** Handlers that send focus back to the opener when the dialog closes. */
+function useReturnFocus() {
+  const opener = useRef<HTMLElement | null>(null);
+  return {
+    onOpenAutoFocus: () => {
+      opener.current = lastFocused;
+    },
+    onCloseAutoFocus: (e: Event) => {
+      e.preventDefault();
+      const el = opener.current;
+      if (el?.isConnected) el.focus();
+    },
+  };
+}
 const panel =
   'fixed left-1/2 top-1/2 w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-panel border border-rule bg-surface p-6 shadow-overlay';
 
@@ -18,11 +56,12 @@ export interface DialogProps {
 
 /** Modal dialog: traps focus while open and returns it to the opener (A11Y-05). */
 export function Dialog({ open, onOpenChange, title, description, children, footer }: DialogProps) {
+  const focus = useReturnFocus();
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
       <RDialog.Portal>
         <RDialog.Overlay className={overlay} />
-        <RDialog.Content className={panel} {...(description ? {} : { 'aria-describedby': undefined })}>
+        <RDialog.Content className={panel} {...focus} {...(description ? {} : { 'aria-describedby': undefined })}>
           <RDialog.Title className="text-heading-2 font-bold">{title}</RDialog.Title>
           {description ? <RDialog.Description className="mt-2 text-graphite">{description}</RDialog.Description> : null}
           <div className="mt-4">{children}</div>
@@ -51,17 +90,29 @@ export interface ConfirmDialogProps {
  * red pen when destructive.
  */
 export function ConfirmDialog(p: ConfirmDialogProps) {
+  const { onCloseAutoFocus, onOpenAutoFocus } = useReturnFocus();
   return (
     <RAlert.Root open={p.open} onOpenChange={p.onOpenChange}>
       <RAlert.Portal>
         <RAlert.Overlay className={overlay} />
-        <RAlert.Content className={panel}>
+        <RAlert.Content
+          className={panel}
+          onCloseAutoFocus={onCloseAutoFocus}
+          onOpenAutoFocus={(e) => {
+            onOpenAutoFocus();
+            // UX-02: focus starts on Cancel, never on the destructive action.
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[data-cancel]')?.focus();
+          }}
+        >
           <RAlert.Title className="text-heading-2 font-bold">{p.title}</RAlert.Title>
           <RAlert.Description className="mt-2 text-graphite">{p.description}</RAlert.Description>
           {p.children ? <div className="mt-4">{p.children}</div> : null}
           <div className="mt-6 flex justify-end gap-3">
             <RAlert.Cancel asChild>
-              <Button variant="secondary">{p.cancelLabel}</Button>
+              <Button variant="secondary" data-cancel>
+                {p.cancelLabel}
+              </Button>
             </RAlert.Cancel>
             <RAlert.Action asChild>
               <Button
@@ -91,18 +142,12 @@ export interface DrawerProps extends DialogProps {
  * behind it is inert, and closing it returns focus to the control that opened it (A11Y-05).
  */
 export function Drawer({ open, onOpenChange, title, description, children, footer, className }: DrawerProps) {
-  const opener = useRef<HTMLElement | null>(null);
+  const focus = useReturnFocus();
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange} modal={false}>
       <RDialog.Portal>
         <RDialog.Content
-          onOpenAutoFocus={() => {
-            opener.current = document.activeElement as HTMLElement | null;
-          }}
-          onCloseAutoFocus={(e) => {
-            e.preventDefault();
-            if (opener.current?.isConnected) opener.current.focus();
-          }}
+          {...focus}
           className={cx(
             'fixed inset-y-0 right-0 z-40 flex w-[min(560px,100vw)] flex-col border-l border-rule bg-surface shadow-overlay',
             className,

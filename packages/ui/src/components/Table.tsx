@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cx } from '../cx';
 
 export interface Column<Row> {
@@ -41,15 +41,28 @@ export interface TableProps<Row> {
  * region so wide tables never scroll the page (DECISIONS Q10).
  */
 export function Table<Row>(p: TableProps<Row>) {
+  // The scroll region takes keyboard focus only when it actually scrolls sideways (WCAG 2.1.1).
+  const region = useRef<HTMLDivElement>(null);
+  const [scrolls, setScrolls] = useState(false);
+  useEffect(() => {
+    const el = region.current;
+    if (!el) return;
+    const check = () => setScrolls(el.scrollWidth > el.clientWidth + 1);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  }, []);
   const pad = p.density === 'compact' ? 'px-3 py-1.5' : 'px-3 py-3';
   const nextSort = (key: string): SortState =>
     p.sort?.key !== key ? { key, dir: 'asc' } : p.sort.dir === 'asc' ? { key, dir: 'desc' } : null;
   return (
     <div
+      ref={region}
       role="region"
       aria-label={p.caption}
       aria-busy={p.busy || undefined}
-      tabIndex={0}
+      tabIndex={scrolls ? 0 : undefined}
       className={cx('overflow-x-auto rounded-panel border border-rule bg-surface', p.className)}
     >
       <table aria-busy={p.busy || undefined} className="w-full border-collapse text-body-small">

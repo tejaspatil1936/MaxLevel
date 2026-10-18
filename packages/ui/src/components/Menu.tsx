@@ -2,6 +2,7 @@ import { DropdownMenu } from 'radix-ui';
 import { Check } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 import { cx } from '../cx';
+import { rememberOpener } from './Dialog';
 
 export interface MenuItem {
   label: ReactNode;
@@ -73,8 +74,14 @@ export function Menu({
   align?: 'start' | 'end';
 }) {
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild aria-label={label}>
+    // A menu of checkboxes stays non-modal, so the table it changes stays visible to assistive technology.
+    <DropdownMenu.Root modal={!items.some((i) => i.checked !== undefined)}>
+      <DropdownMenu.Trigger
+        asChild
+        aria-label={label}
+        onPointerDown={(e) => rememberOpener(e.currentTarget)}
+        onKeyDown={(e) => rememberOpener(e.currentTarget)}
+      >
         {trigger}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>

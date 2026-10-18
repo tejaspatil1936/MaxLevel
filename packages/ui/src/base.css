@@ -12,7 +12,11 @@
     line-height: 1.6;
     background: var(--sheet);
   }
-  /* A11Y-04: a 2 px ballpoint ring with a 2 px offset on every focused control. */
+  /* A11Y-04: a 2 px ballpoint ring with a 2 px offset on every focused control. The colour is set on every element,
+     so a colour transition never shows the ring in another colour while it appears. */
+  * {
+    outline-color: var(--ballpoint);
+  }
   :focus-visible {
     outline: 2px solid var(--ballpoint);
     outline-offset: 2px;
