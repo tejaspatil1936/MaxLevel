@@ -117,6 +117,18 @@ export function testsData(db: Firestore) {
       return col(orgId).doc().id;
     },
 
+    /**
+     * Records a change to the test's question set: a new questionSetVersion (PERF-01), and `in_review` when the
+     * change gives a draft test its first question (TST-04).
+     */
+    questionsChanged(orgId: string, tx: Tx, testId: string, now: number, status?: TestStatus): void {
+      writer(tx).update(col(orgId).doc(testId), {
+        questionSetVersion: FieldValue.increment(1),
+        updatedAt: now,
+        ...(status ? { status } : {}),
+      });
+    },
+
     updateTest(orgId: string, tx: Tx, testId: string, patch: TestUpdate): void {
       const fields = Object.fromEntries(
         Object.entries(patch)

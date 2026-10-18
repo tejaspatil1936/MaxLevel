@@ -8,6 +8,7 @@ import { identityData } from './identity';
 import { orgsData } from './orgs';
 import { platformData } from './platform';
 import { preferencesData } from './preferences';
+import { questionsData } from './questions';
 import { seriesData } from './series';
 import { studentsData } from './students';
 import { testsData } from './tests';
@@ -30,6 +31,7 @@ export function createData(db: Firestore) {
     preferences: preferencesData(db),
     series: seriesData(db),
     tests: testsData(db),
+    questions: questionsData(db),
     usage: usageData(db),
   };
 }
