@@ -1,0 +1,64 @@
+import type { Page } from '@playwright/test';
+import { apiRequest, holdApiRequests } from '../acceptance/fixtures/network';
+import { runLeaderboardTask, studentFacts } from '../acceptance/fixtures/results';
+import { accounts, ORG_A } from '../acceptance/fixtures/seed';
+import { expect, test } from '../acceptance/fixtures/test';
+import { AdminSeriesResults, AdminTestResults, headerTexts } from '../acceptance/pages/results-pages';
+import { table } from '../acceptance/pages/ui';
+
+// Bugs found while verifying phase 4. Each test failed before its fix.
+
+const id = (n: number) => studentFacts(ORG_A, n).id;
+
+/**
+ * Opens `url` with the leaderboard request held, checks the page heading stays hidden while the page's own record has
+ * loaded, then releases the board and checks its header row is there the moment the heading shows.
+ */
+async function headingWaitsForBoard(page: Page, url: string, own: RegExp, columns: string[]) {
+  const held = await holdApiRequests(page, apiRequest('GET', /^\/v1\/leaderboards\//));
+  const loaded = page.waitForResponse((r) => r.request().method() === 'GET' && own.test(new URL(r.url()).pathname));
+  await page.goto(url);
+  await held.waitUntilHeld();
+  expect((await loaded).ok(), 'the page record loaded').toBe(true);
+  const heading = page.getByRole('heading', { level: 1, name: /^Results for / });
+  await expect(heading, 'no heading while the board is still loading').toBeHidden();
+  held.release();
+  await expect(heading).toBeVisible();
+  expect(await headerTexts(table(page.getByRole('main'), 'Leaderboard')), 'board shown with the heading').toEqual(
+    columns,
+  );
+}
+
+test.describe('phase 4 review', () => {
+  test('LB-05 the admin results pages show their heading and the Leaderboard table together', async ({
+    page,
+    signInAs,
+    request,
+    testApi,
+  }) => {
+    const t = await testApi.seedExamTest({
+      orgId: ORG_A.id,
+      overrides: { resultRelease: 'immediate', testLeaderboard: true },
+    });
+    await testApi.seedGradedAttempts(ORG_A.id, t.testId, [
+      { studentId: id(1), score: 3, timeSec: 600 },
+      { studentId: id(2), score: 2, timeSec: 600 },
+    ]);
+    await runLeaderboardTask(request, { orgId: ORG_A.id, testId: t.testId, seriesId: t.seriesId });
+    await signInAs(accounts.adminA);
+
+    await headingWaitsForBoard(page, AdminTestResults.url(t.testId), new RegExp(`^/v1/tests/${t.testId}/release$`), [
+      'Rank',
+      'Name',
+      'Department',
+      'Score',
+      'Time taken',
+    ]);
+    await headingWaitsForBoard(page, AdminSeriesResults.url(t.seriesId), new RegExp(`^/v1/series/${t.seriesId}$`), [
+      'Rank',
+      'Name',
+      'Department',
+      'Total',
+    ]);
+  });
+});
