@@ -6,9 +6,9 @@ import { RoleGuard } from '@/features/shell/RoleGuard';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <RoleGuard roles={['admin']}>
+    <RoleGuard roles={['admin', 'superAdmin']}>
       {(me) => (
-        <AdminShell me={me} orgName={me.org?.name ?? null}>
+        <AdminShell me={me} area="admin">
           {children}
         </AdminShell>
       )}
