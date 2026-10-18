@@ -46,3 +46,7 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - The JSON import summary is not in a status region; the Needs attention box re-reads on each keystroke (announce only the count).
 - Question Markdown keeps http(s) links; decide for the phase 3 exam screen whether links render as plain text.
 - Changing series dates can leave tests outside the new range; uploaded images of unsaved questions stay in Storage.
+- (QA) Simultaneous question writes or a zero-gap double click can store duplicate order numbers or duplicate series and imports; use a transaction for the order counter and an idempotency key on create.
+- (QA) Focus goes to the page after Use series value, deleting a question, saving the first question from the empty state and removing an option; move it to a nearby control.
+- (QA) Unsaved Settings and Eligibility tab edits are dropped on tab change or reload without a warning.
+- (QA) A failed offline reorder keeps the new order on screen and shows the raw browser error.
