@@ -180,6 +180,12 @@ describe('submitting an attempt', () => {
     const history = await ctx.app.inject({ method: 'GET', url: '/v1/student/history', headers: s1 });
     expect(history.json().series).toHaveLength(1);
     bodies.push(history.body);
+    await db
+      .doc(`${org}/tests/${t.testId}`)
+      .update({ 'resolved.testLeaderboard': true, 'resolved.resultRelease': 'immediate' });
+    const board = await ctx.app.inject({ method: 'GET', url: `/v1/leaderboards/test_${t.testId}`, headers: s1 });
+    expect(board.statusCode, board.body).toBe(200);
+    bodies.push(board.body);
     for (const raw of bodies) expect(leaks(raw)).toEqual([]);
   });
 });

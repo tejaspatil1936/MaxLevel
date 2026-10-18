@@ -262,6 +262,13 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     foreignParams: { id: 'test-org-b' },
     fresh: (db) => withPublishedTest(db, true),
   },
+  'GET /v1/leaderboards/:boardId': {
+    foreignParams: { boardId: 'test_test-org-b' },
+    fresh: async (db) => {
+      await withPublishedTest(db, true);
+      return { params: { boardId: 'test_test-org-a' } };
+    },
+  },
   'GET /v1/tests/:id/questions': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'GET /v1/tests/:id/preview': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'POST /v1/tests/:id/questions': {
