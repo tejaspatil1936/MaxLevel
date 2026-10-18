@@ -35,6 +35,7 @@ import { questionRoutes } from './routes/questions';
 import { testsRoutes } from './routes/tests';
 import { releaseRoutes } from './routes/release';
 import { resultsRoutes } from './routes/results';
+import { exportRoutes } from './routes/exports';
 import { testApprovalRoutes } from './routes/test-approval';
 import { examPreviewRoutes } from './routes/exam-preview';
 import { whitelistRoutes } from './routes/whitelist';
@@ -123,6 +124,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     testApprovalRoutes,
     releaseRoutes,
     resultsRoutes,
+    exportRoutes,
     questionRoutes,
     examPreviewRoutes,
     studentTestRoutes,

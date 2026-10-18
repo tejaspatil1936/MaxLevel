@@ -269,6 +269,31 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
       return { params: { boardId: 'test_test-org-a' } };
     },
   },
+  'POST /v1/exports': {
+    fresh: async (db) => {
+      const { params } = await withPublishedTest(db);
+      return { body: { scope: 'test', refId: params.id, format: 'csv' } };
+    },
+  },
+  'GET /v1/exports/:id': {
+    params: { id: 'export-org-a' },
+    foreignParams: { id: 'export-org-b' },
+    fresh: async (db) => {
+      for (const orgId of ['org-a', 'org-b'])
+        await db.doc(`organizations/${orgId}/exports/export-${orgId}`).set({
+          orgId,
+          scope: 'test',
+          refId: `test-${orgId}`,
+          format: 'csv',
+          status: 'queued',
+          filePath: `organizations/${orgId}/exports/export-${orgId}/results-test-${orgId}.csv`,
+          filename: `results-test-${orgId}.csv`,
+          createdBy: 'seed',
+          createdAt: 0,
+        });
+      return { params: { id: 'export-org-a' } };
+    },
+  },
   'GET /v1/tests/:id/questions': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'GET /v1/tests/:id/preview': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'POST /v1/tests/:id/questions': {
