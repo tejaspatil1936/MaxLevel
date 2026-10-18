@@ -23,6 +23,7 @@ export * from './questions-json';
 export * from './timing';
 export * from './scoring';
 export * from './strikes';
+export * from './face-watch';
 export * from './sync';
 export * from './attempt';
 export * from './student-tests';
