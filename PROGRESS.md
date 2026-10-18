@@ -81,3 +81,5 @@ PHASE 2 DONE 9/9 features
 PHASE 3 START ebe9d7d435dfbabbb82bf751cee5577df8467d7a
 Tests: 59 phase 3 acceptance tests by test-author (36 e2e REQs; integration and unit REQs specified in the contract), reviewed twice (6 blocking, then 1 settled by a DECISIONS line), locked.
 F-3.01 done — timing (canStart, lastStartAt, attemptDeadline, sectionDeadline), scoring with negatives, passing marks and floor, strike dedupe, sync retry and answer verdicts, attempt schemas (shared, unit-tested)
+F-3.02 done — student dashboard (live, upcoming, completed) with server-clock countdowns and timezone, test page, exam-test seed scenario
+F-3.03 done — POST /v1/attempts with eligibility and window checks, seeded draw, deadline, auto-submit task, Idempotency-Key replay, resume payload without answer keys, TST-06 lock, published-test cache
