@@ -76,6 +76,22 @@ describe('saving answers', () => {
     });
   });
 
+  it('EX-11 DATA-03 concurrent, reordered batches keep the highest seq of each question in its own record', async () => {
+    const { s1, id, q } = await started();
+    const options = ['a', 'b', 'c', 'd'];
+    const sends = [5, 2, 8, 1, 7, 3, 6, 4].map((seq) =>
+      api.answers(id, s1, batch([answer(q[0]!, seq, options[seq % 4]!), answer(q[1]!, 9 - seq, options[seq % 4]!)])),
+    );
+    const results = await Promise.all(sends);
+    expect(results.map((r) => r.status)).toEqual(results.map(() => 200));
+
+    const answers = await db.collection(`${org}/attempts/${id}/answers`).get();
+    expect(Object.fromEntries(answers.docs.map((d) => [d.id, [d.get('seq'), d.get('optionId')]]))).toEqual({
+      [q[0]!]: [8, 'a'],
+      [q[1]!]: [8, 'b'],
+    });
+  });
+
   it('EX-13 accepts an answer made before the deadline for 2 minutes after it, as a late sync, and rejects later ones', async () => {
     const { s1, id, q, deadlineAt } = await started();
     ctx.clock.set(deadlineAt + MIN);
