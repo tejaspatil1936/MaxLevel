@@ -10,6 +10,7 @@ import {
   REASONS,
   SEEDED_TEST,
   storedPrompts,
+  writeLegacyQuestionsJson,
   writeQuestionsJson,
 } from '../fixtures/authoring';
 import { expectNoSeriousA11yViolations } from '../fixtures/axe';
@@ -277,6 +278,84 @@ test.describe('F-2.05 question editor and JSON import', () => {
     expect(entry?.data.after).toMatchObject({ count: 3 });
   });
 
+  test('Q-01 an admin imports the legacy JSON question format, mapped to the new question fields', async ({
+    page,
+    signInAs,
+    testApi,
+    emulators,
+  }) => {
+    const { testId } = await testApi.seedAuthoringTest({ orgId: ORG_A.id, questions: 'none' });
+    const file = await writeLegacyQuestionsJson(tmp('infosys-set.json'), [
+      {
+        id: 'inf-1',
+        text: 'A sum doubles in 5 years at simple interest. What is the rate?',
+        options: ['10%', '15%', '20%', '25%'],
+        correctIndex: 2,
+        explanation: 'Interest equals the principal in 5 years: 100 / 5 = 20%.',
+        topic: 'Simple interest',
+        source: 'Infosys set 2',
+      },
+      {
+        id: 'inf-2',
+        text: 'Choose the word closest in meaning to candid.',
+        options: ['Frank', 'Secretive', 'Careful', 'Polite'],
+        correctIndex: 0,
+        topic: 'Vocabulary',
+      },
+      {
+        id: 'inf-3',
+        text: 'Which of these numbers is divisible by 9?',
+        options: ['123', '234', '345', '456'],
+        correctIndex: 7,
+      },
+      { id: 'inf-4', text: 'Pick the next letter: A, C, E, G, ?', options: ['H', 'I', 'J', 'K'] },
+    ]);
+    await signInAs(accounts.adminA);
+    const editor = new TestEditorPage(page);
+    await editor.goto(testId, SEEDED_TEST.heading);
+    const questions = await editor.questions();
+    const dlg = await questions.openImport();
+
+    await dlg.file.setInputFiles(file);
+
+    for (const text of ['Questions found: 4', 'Ready to use: 2', 'Need attention: 2'])
+      await expect(dlg.summaryItem(text)).toBeVisible();
+    await dlg.submit.click();
+    await expect(dlg.dialog).toBeHidden();
+    await expect(editor.notice('Imported 4 questions')).toBeVisible();
+    await questions.expectOrder(['What is the rate?', 'closest in meaning', 'divisible by 9', 'Pick the next letter']);
+    await expect(questions.item(3)).toContainText(REASONS.noCorrect);
+    await expect(questions.item(4)).toContainText(REASONS.noCorrect);
+
+    const stored = await questionsOf(emulators, ORG_A.id, testId);
+    expect(stored.map((d) => d.data.prompt)).toEqual([
+      'A sum doubles in 5 years at simple interest. What is the rate?',
+      'Choose the word closest in meaning to candid.',
+      'Which of these numbers is divisible by 9?',
+      'Pick the next letter: A, C, E, G, ?',
+    ]);
+    const optionTexts = (d: (typeof stored)[number]) => (d.data.options as Array<{ text: string }>).map((o) => o.text);
+    expect(optionTexts(stored[0]!)).toEqual(['10%', '15%', '20%', '25%']);
+    expect(optionTexts(stored[3]!)).toEqual(['H', 'I', 'J', 'K']);
+    expect(correctOptionText(stored[0]!)).toBe('20%');
+    expect(correctOptionText(stored[1]!)).toBe('Frank');
+    expect(stored[0]?.data).toMatchObject({
+      status: 'approved',
+      explanation: 'Interest equals the principal in 5 years: 100 / 5 = 20%.',
+      tags: ['Simple interest'],
+      source: { kind: 'json' },
+    });
+    expect(stored[1]?.data).toMatchObject({ status: 'approved', tags: ['Vocabulary'], source: { kind: 'json' } });
+    for (const draft of [stored[2]!, stored[3]!])
+      expect(draft.data, 'no correct answer, or one out of range').toMatchObject({
+        status: 'draft',
+        correctOptionIds: [],
+        source: { kind: 'json' },
+      });
+    const [entry] = await auditFor(emulators, ORG_A.id, 'question.import', testId);
+    expect(entry?.data.after).toMatchObject({ count: 4 });
+  });
+
   test('Q-01 a file that is not question JSON is refused next to the file field and adds nothing', async ({
     page,
     signInAs,
@@ -317,7 +396,7 @@ test.describe('F-2.05 question editor and JSON import', () => {
     await expect(questions.importJson).toBeVisible();
   });
 
-  test('ORG-05 ORG-14 Q-01 org B questions are 404 for an org A admin, students are refused, a super admin adds questions', async ({
+  test('ORG-05 ORG-14 Q-01 org B questions are 404 for an org A admin, students are refused, a super admin adds, edits and reorders them', async ({
     testApi,
     apiAs,
     emulators,
@@ -335,11 +414,19 @@ test.describe('F-2.05 question editor and JSON import', () => {
     const adminA = await apiAs(accounts.adminA);
     expect((await adminA.get(`/v1/tests/${b.testId}/questions`)).status).toBe(404);
     expect((await adminA.post(`/v1/tests/${b.testId}/questions`, body)).status).toBe(404);
-    expect(await questionsOf(emulators, ORG_B.id, b.testId)).toHaveLength(4);
+    expect(
+      (await adminA.patch(`/v1/tests/${b.testId}/questions/${b.questionIds[0]}`, { prompt: 'Changed' })).status,
+    ).toBe(404);
+    expect((await adminA.delete(`/v1/tests/${b.testId}/questions/${b.questionIds[0]}`)).status).toBe(404);
+    expect(
+      (await adminA.put(`/v1/tests/${b.testId}/questions/order`, { ids: [...b.questionIds].reverse() })).status,
+    ).toBe(404);
+    expect(await storedPrompts(emulators, ORG_B.id, b.testId)).toEqual(BASIC_QUESTIONS.map((q) => q.prompt));
 
     const student = await apiAs(accounts.studentA);
     expect((await student.get(`/v1/tests/${a.testId}/questions`)).status).toBe(403);
     expect((await student.post(`/v1/tests/${a.testId}/questions`, body)).status).toBe(403);
+    expect((await student.put(`/v1/tests/${a.testId}/questions/order`, { ids: [] })).status).toBe(403);
 
     const superA = await apiAs(accounts.superAdmin, { orgId: ORG_A.id });
     const created = await superA.post<{ id: string; status: string }>(`/v1/tests/${a.testId}/questions`, body);
@@ -349,8 +436,20 @@ test.describe('F-2.05 question editor and JSON import', () => {
     expect(stored?.data).toMatchObject({ prompt: 'What is 2 + 2?', status: 'approved' });
     const [entry] = await auditFor(emulators, ORG_A.id, 'question.create', created.body.id);
     expect(entry?.data.actor).toMatchObject({ email: accounts.superAdmin.email, role: 'superAdmin' });
-    const listB = await superA.inOrg(ORG_B.id).get<{ items: unknown[] }>(`/v1/tests/${b.testId}/questions`);
+    const superB = superA.inOrg(ORG_B.id);
+    const listB = await superB.get<{ items: unknown[] }>(`/v1/tests/${b.testId}/questions`);
     expect(listB.status).toBe(200);
     expect(listB.body.items).toHaveLength(4);
+    expect(
+      (await superB.put(`/v1/tests/${b.testId}/questions/order`, { ids: [...b.questionIds].reverse() })).status,
+    ).toBe(200);
+    expect(await storedPrompts(emulators, ORG_B.id, b.testId)).toEqual(BASIC_QUESTIONS.map((q) => q.prompt).reverse());
+    expect(
+      (await superB.patch(`/v1/tests/${b.testId}/questions/${b.questionIds[0]}`, { prompt: 'Edited by the platform' }))
+        .status,
+    ).toBe(200);
+    expect((await questionsOf(emulators, ORG_B.id, b.testId)).find((d) => d.id === b.questionIds[0])?.data.prompt).toBe(
+      'Edited by the platform',
+    );
   });
 });
