@@ -1,34 +1,55 @@
 import type { AnswerBatch, AnswerBatchResult } from '@mitaoe/shared';
 import { describe, expect, it } from 'vitest';
-import { createAnswerSync, type SyncStatus } from './answer-sync';
+import {
+  createAnswerSync,
+  type LocalAnswerState,
+  type PendingAnswer,
+  type Rejection,
+  type SyncStatus,
+} from './answer-sync';
 
 /** A controllable transport and timer: each send waits until the test resolves or rejects it. */
-function harness(storedSeq: Record<string, number> = {}) {
+function harness(storedSeq: Record<string, number> = {}, waiting: PendingAnswer[] = [], online = true) {
   const sent: AnswerBatch[] = [];
-  const replies: Array<{ ok: () => void; fail: (e?: unknown) => void }> = [];
+  const replies: Array<{ ok: (rejected?: AnswerBatchResult['rejected']) => void; fail: (e?: unknown) => void }> = [];
+  const stored: Array<[string, number, LocalAnswerState]> = [];
+  const rejections: Rejection[][] = [];
   const timers: Array<{ ms: number; fn: () => void }> = [];
   const statuses: SyncStatus[] = [];
-  const sync = createAnswerSync(storedSeq, {
-    send: (batch) =>
-      new Promise<AnswerBatchResult>((resolve, reject) => {
-        sent.push(batch);
-        replies.push({
-          ok: () => resolve({ saved: batch.answers.map((a) => a.questionId), stale: [], rejected: [], serverTime: 0 }),
-          fail: (e = new TypeError('Failed to fetch')) => reject(e),
-        });
-      }),
-    now: () => 1000.4,
-    clockOffsetMs: () => -12.6,
-    schedule: (fn, ms) => {
-      const timer = { ms, fn };
-      timers.push(timer);
-      return () => timers.splice(timers.indexOf(timer), 1);
+  const sync = createAnswerSync(
+    storedSeq,
+    {
+      send: (batch) =>
+        new Promise<AnswerBatchResult>((resolve, reject) => {
+          sent.push(batch);
+          replies.push({
+            ok: (rejected = []) =>
+              resolve({
+                saved: batch.answers.map((a) => a.questionId).filter((q) => !rejected.some((r) => r.questionId === q)),
+                stale: [],
+                rejected,
+                serverTime: 0,
+              }),
+            fail: (e = new TypeError('Failed to fetch')) => reject(e),
+          });
+        }),
+      now: () => 1000.4,
+      clockOffsetMs: () => -12.6,
+      schedule: (fn, ms) => {
+        const timer = { ms, fn };
+        timers.push(timer);
+        return () => timers.splice(timers.indexOf(timer), 1);
+      },
+      onStatus: (s) => statuses.push(s),
+      refusal: (e) => (e === 'refused' ? 'ATTEMPT_FINISHED' : null),
+      store: (a, state) => stored.push([a.questionId, a.seq, state]),
+      onRejected: (r) => rejections.push(r),
+      online,
     },
-    onStatus: (s) => statuses.push(s),
-    isPermanent: (e) => e === 'refused',
-  });
+    waiting,
+  );
   const settle = () => new Promise((r) => setTimeout(r, 0));
-  return { sync, sent, replies, timers, statuses, settle, last: () => statuses.at(-1) };
+  return { sync, sent, replies, timers, statuses, stored, rejections, settle, last: () => statuses.at(-1) };
 }
 
 describe('answer sync', () => {
@@ -88,16 +109,82 @@ describe('answer sync', () => {
     expect(h.last()).toEqual({ kind: 'saved' });
   });
 
-  it('EX-11 a refused batch is dropped instead of retried, and dispose cancels a waiting retry', async () => {
+  it('EX-10 every change goes to the device store at once as waiting, then as saved once the server has it', async () => {
     const h = harness();
     h.sync.record('q1', 'a', false);
-    h.replies[0]!.fail('refused');
+    expect(h.stored).toEqual([['q1', 1, 'waiting']]);
+    h.sync.record('q1', 'b', false);
+    h.replies[0]!.ok();
     await h.settle();
-    expect(h.timers).toHaveLength(0);
+    // The first send is settled, but a newer change of q1 waits, so only that one is stored, then saved.
+    expect(h.stored).toEqual([
+      ['q1', 1, 'waiting'],
+      ['q1', 2, 'waiting'],
+    ]);
+    h.replies[1]!.ok();
+    await h.settle();
+    expect(h.stored.at(-1)).toEqual(['q1', 2, 'saved']);
+  });
+
+  it('US-ST-05 EX-11 answers kept on the device are sent first after a reload, and new changes continue their seq', async () => {
+    const kept = { questionId: 'q1', optionId: 'a', seq: 3, clientTs: 900, markedForReview: false };
+    const h = harness({ q1: 1 }, [kept]);
+    expect(h.sent[0]!.answers).toEqual([kept]);
+    expect(h.sync.waiting()).toBe(1);
+    h.replies[0]!.fail();
+    await h.settle();
+    expect(h.last()).toEqual({ kind: 'offline', waiting: 1 });
+    h.sync.record('q1', 'b', false);
+    h.timers.shift()!.fn();
+    expect(h.sent[1]!.answers).toEqual([{ ...kept, optionId: 'b', seq: 4, clientTs: 1000 }]);
+  });
+
+  it('EX-13 refused answers are reported, never dropped silently, until a later change of the question is saved', async () => {
+    const h = harness();
+    h.sync.record('q1', 'a', false);
+    h.replies[0]!.ok([{ questionId: 'q1', code: 'AFTER_DEADLINE' }]);
+    await h.settle();
+    expect(h.rejections.at(-1)).toEqual([{ questionId: 'q1', code: 'AFTER_DEADLINE' }]);
+    expect(h.stored.at(-1)).toEqual(['q1', 1, 'rejected']);
     expect(h.last()).toEqual({ kind: 'saved' });
 
+    // A refused batch (a 4xx that a retry can't fix) is not retried; every answer in it is reported.
     h.sync.record('q2', 'a', false);
-    h.replies[1]!.fail();
+    h.replies[1]!.fail('refused');
+    await h.settle();
+    expect(h.timers).toHaveLength(0);
+    expect(h.rejections.at(-1)).toEqual([
+      { questionId: 'q1', code: 'AFTER_DEADLINE' },
+      { questionId: 'q2', code: 'ATTEMPT_FINISHED' },
+    ]);
+
+    h.sync.record('q1', 'b', false);
+    h.replies[2]!.ok();
+    await h.settle();
+    expect(h.rejections.at(-1)).toEqual([{ questionId: 'q2', code: 'ATTEMPT_FINISHED' }]);
+  });
+
+  it('EX-12 offline with nothing waiting says so, and coming back online sends at once instead of waiting', async () => {
+    const h = harness({}, [], false);
+    h.sync.setOnline(false);
+    expect(h.last()).toEqual({ kind: 'offline', waiting: 0 });
+    h.sync.record('q1', 'a', false);
+    h.replies[0]!.fail();
+    await h.settle();
+    expect(h.last()).toEqual({ kind: 'offline', waiting: 1 });
+    expect(h.timers).toHaveLength(1);
+    h.sync.setOnline(true);
+    expect(h.timers, 'the waiting retry is cancelled').toHaveLength(0);
+    expect(h.sent).toHaveLength(2);
+    h.replies[1]!.ok();
+    await h.settle();
+    expect(h.last()).toEqual({ kind: 'saved' });
+  });
+
+  it('EX-12 dispose cancels a waiting retry', async () => {
+    const h = harness();
+    h.sync.record('q2', 'a', false);
+    h.replies[0]!.fail();
     await h.settle();
     expect(h.timers).toHaveLength(1);
     h.sync.dispose();

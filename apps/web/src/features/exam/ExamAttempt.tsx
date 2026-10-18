@@ -92,8 +92,9 @@ function AttemptLoader({ orgId, attemptId }: { orgId: string; attemptId: string 
 const savedSeqs = (answers: AttemptPayload['answers']) =>
   Object.fromEntries(Object.entries(answers).map(([id, a]) => [id, a.seq]));
 
-/** A batch the API refused (other than throttling or a timeout) is not retried. */
-const isPermanent = (e: unknown) => e instanceof ApiError && e.status < 500 && e.status !== 408 && e.status !== 429;
+/** A batch the API refused (other than throttling, a timeout or an expired sign-in) is not retried. */
+const refusal = (e: unknown) =>
+  e instanceof ApiError && e.status < 500 && ![401, 408, 429].includes(e.status) ? e.code : null;
 
 function summaryRows(payload: AttemptPayload, state: ExamState): SummaryRow[] {
   const row = (name: string, ids: string[]): SummaryRow => {
@@ -138,7 +139,7 @@ function AttemptExam({ payload }: { payload: AttemptPayload }) {
         return () => clearTimeout(timer);
       },
       onStatus: setStatus,
-      isPermanent,
+      refusal,
     });
     sync.current = queue;
     return () => queue.dispose();
