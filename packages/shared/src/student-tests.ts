@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { FINISHED_ATTEMPT_STATUSES, isFinishedAttempt, type AttemptStatus } from './attempt';
-import { markingSchema, type Settings } from './settings';
+import { markingSchema, settingsSchema, type Settings } from './settings';
 import { canStart } from './timing';
 
 // The student dashboard and test page (US-ST-03, UX-11, spec 7.1). Times are epoch ms (UTC); the client shows them in
@@ -63,6 +63,16 @@ export const studentDashboardSchema = z.object({
 });
 export type StudentDashboard = z.infer<typeof studentDashboardSchema>;
 
+/** What the preflight and rules screens need beyond the test page (EX-01, EX-02): the timing mode and the proctoring switches. */
+export const examEntrySchema = settingsSchema.pick({
+  timingMode: true,
+  windowEndPolicy: true,
+  fullscreenRequired: true,
+  cameraRequired: true,
+  secondCamera: true,
+});
+export type ExamEntry = z.infer<typeof examEntrySchema>;
+
 /** GET /v1/student/tests/{id}: the test page (spec 7.1 step 1), for a test the dashboard would list. */
 export const studentTestPageSchema = studentTestSummarySchema.extend({
   timezone: z.string(),
@@ -72,5 +82,6 @@ export const studentTestPageSchema = studentTestSummarySchema.extend({
   sections: z.array(z.object({ name: z.string(), questionCount: z.number().int() })),
   marking: markingSchema,
   maxStrikes: z.number().int(),
+  exam: examEntrySchema,
 });
 export type StudentTestPage = z.infer<typeof studentTestPageSchema>;

@@ -171,6 +171,13 @@ describe('student test page', () => {
       sections: [],
       marking: { marks: 4, negativeMarks: 1, preset: 'p4_m1' },
       maxStrikes: 5,
+      exam: {
+        timingMode: 'fixed',
+        windowEndPolicy: 'full_duration',
+        fullscreenRequired: false,
+        cameraRequired: false,
+        secondCamera: false,
+      },
     });
     expect(res.raw).not.toContain('correctOptionIds');
     expect(res.raw).not.toContain('explanation');
@@ -183,6 +190,22 @@ describe('student test page', () => {
         { name: 'Quant', questionCount: 3 },
         { name: 'Verbal', questionCount: 2 },
       ],
+    });
+  });
+
+  it('EX-01 EX-02 carries the timing mode and proctoring switches the preflight and rules screens need', async () => {
+    const flexible = await examTest({
+      timingMode: 'flexible',
+      overrides: { windowEndPolicy: 'hard_close', fullscreenRequired: true, cameraRequired: true },
+    });
+    const res = await page(flexible.testId);
+    expect(res.status, res.raw).toBe(200);
+    expect(res.body.exam).toEqual({
+      timingMode: 'flexible',
+      windowEndPolicy: 'hard_close',
+      fullscreenRequired: true,
+      cameraRequired: true,
+      secondCamera: false,
     });
   });
 

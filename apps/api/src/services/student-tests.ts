@@ -1,6 +1,7 @@
 import {
   dayLabels,
   drawSize,
+  examEntrySchema,
   isEligible,
   isFinishedAttempt,
   lastStartAt,
@@ -138,6 +139,7 @@ export function studentTestsService(data: Data) {
         }),
         marking: page.settings.marking,
         maxStrikes: page.settings.maxStrikes,
+        exam: examEntrySchema.parse(page.settings),
       };
     },
   };

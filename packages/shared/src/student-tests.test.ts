@@ -59,7 +59,16 @@ describe('student dashboard schemas', () => {
       sections: [],
       marking: { marks: 1, negativeMarks: 0, preset: 'p1_0' },
       maxStrikes: 3,
+      exam: {
+        timingMode: 'fixed',
+        windowEndPolicy: 'full_duration',
+        fullscreenRequired: true,
+        cameraRequired: true,
+        secondCamera: false,
+        devtoolsPolicy: 'block',
+      },
     });
+    expect(page.exam).not.toHaveProperty('devtoolsPolicy');
     for (const body of [dash, page]) {
       expect(JSON.stringify(body)).not.toContain('correctOptionIds');
       expect(JSON.stringify(body)).not.toContain('explanation');
