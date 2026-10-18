@@ -78,3 +78,28 @@ export function formatWindow(window: { start: number; end: number }, timeZone: s
     zone: zoneName(timeZone, window.start),
   });
 }
+
+/** An instant as `HH:mm IST`: 24-hour time in the organization's timezone with the zone named (TST-07, UX-11). */
+export function formatZonedTime(ms: number, timeZone: string): string {
+  return t('time.zoned', { time: zonedParts(ms, timeZone).time, zone: zoneName(timeZone, ms) });
+}
+
+/** The calendar day of an instant in the organization's timezone, as `d MMM yyyy`. */
+export const formatZonedDay = (ms: number, timeZone: string) => formatDay(zonedParts(ms, timeZone).day);
+
+/** A countdown on student pages: `HH:MM:SS` below one day, `1 day HH:MM:SS`, then `<n> days HH:MM:SS`. */
+export function formatCountdown(remainingMs: number): string {
+  const s = Math.max(0, Math.floor(remainingMs / 1000));
+  const days = Math.floor(s / 86_400);
+  const time = `${two(Math.floor((s % 86_400) / 3600))}:${two(Math.floor((s % 3600) / 60))}:${two(s % 60)}`;
+  if (days === 0) return time;
+  return days === 1 ? t('time.countdownOneDay', { time }) : t('time.countdownDays', { n: formatCount(days), time });
+}
+
+/** `+1 for a correct answer, −0.25 for a wrong answer, 0 for no answer` (U+2212 minus, en-IN numbers). */
+export function formatMarking(m: { marks: number; negativeMarks: number }): string {
+  return t('marking.summary', {
+    marks: formatCount(m.marks),
+    wrong: m.negativeMarks === 0 ? '0' : t('marking.deduction', { n: formatCount(m.negativeMarks) }),
+  });
+}

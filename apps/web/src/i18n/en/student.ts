@@ -24,4 +24,9 @@ export const student = {
   'profile.departmentMissing': 'Choose your department.',
   'profile.yearMissing': 'Choose your graduation year.',
   'profile.prnTaken': 'This PRN is already registered. Check it, or ask your placement cell for help.',
+  'time.zoned': '{time} {zone}',
+  'time.countdownOneDay': '1 day {time}',
+  'time.countdownDays': '{n} days {time}',
+  'marking.summary': '+{marks} for a correct answer, {wrong} for a wrong answer, 0 for no answer',
+  'marking.deduction': '−{n}',
 } as const;
