@@ -169,7 +169,6 @@ export const profileSchema = z.object({
   prn: prnSchema,
   departmentId: z.string().min(1),
   graduationYear: graduationYearSchema,
-  consent: z.literal(true).optional(),
 });
 
 export const studentProfileSchema = z.object({

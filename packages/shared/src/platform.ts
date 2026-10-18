@@ -13,6 +13,13 @@ export const slugSchema = z
 
 export const orgStatusSchema = z.enum(['active', 'suspended', 'archived']);
 
+/** A logo sent with the create or edit form, base64-encoded; checked by file signature on the server (SEC-06). */
+export const logoUploadSchema = z.object({
+  contentType: z.enum(['image/png', 'image/jpeg', 'image/svg+xml']),
+  data: z.string().max(700_000), // about 512 KB of image
+});
+export type LogoUpload = z.infer<typeof logoUploadSchema>;
+
 export const orgCreateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   slug: slugSchema,
@@ -24,12 +31,16 @@ export const orgCreateSchema = z.object({
       'Choose a timezone from the list.',
     ),
   departments: z.array(z.string().trim().min(1).max(80)).max(50).default([]),
-  /** Storage path returned by the logo upload step, if a logo was uploaded. */
-  logoPath: z.string().max(300).optional(),
+  logo: logoUploadSchema.optional(),
 });
 
 export const orgPatchSchema = z
-  .object({ name: z.string().trim().min(2).max(120), timezone: z.string(), status: orgStatusSchema })
+  .object({
+    name: z.string().trim().min(2).max(120),
+    timezone: z.string(),
+    status: orgStatusSchema,
+    logo: logoUploadSchema,
+  })
   .partial()
   .refine((p) => Object.keys(p).length > 0, { message: 'Change at least one field.' });
 
@@ -51,6 +62,8 @@ export const platformOrgSchema = z.object({
   timezone: z.string(),
   status: orgStatusSchema,
   logoPath: z.string().nullable(),
+  /** The logo as a data URL, so an <img> can show it without a signed link. */
+  logoUrl: z.string().nullable(),
   createdAt: z.number(),
   usage: usageSchema,
   entitlements: entitlementsSchema,
