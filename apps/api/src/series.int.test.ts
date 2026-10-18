@@ -95,10 +95,15 @@ describe('series routes', () => {
     expect((await setStatus('draft')).json()).toMatchObject({ status: 'draft' });
     expect((await setStatus('paused')).statusCode).toBe(400);
 
-    expect((await audit('series.activate')).map((e) => [e.before, e.after])).toEqual([
-      [{ status: 'draft' }, { status: 'active' }],
-      [{ status: 'archived' }, { status: 'active' }],
-    ]);
+    // Entries are compared as a set: the query has no order.
+    const activations = (await audit('series.activate')).map((e) => [e.before, e.after]);
+    expect(activations).toHaveLength(2);
+    expect(activations).toEqual(
+      expect.arrayContaining([
+        [{ status: 'draft' }, { status: 'active' }],
+        [{ status: 'archived' }, { status: 'active' }],
+      ]),
+    );
     expect(await audit('series.archive')).toEqual([
       expect.objectContaining({ before: { status: 'active' }, after: { status: 'archived' } }),
     ]);
