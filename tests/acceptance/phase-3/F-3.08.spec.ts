@@ -1,5 +1,6 @@
 import { stackEnv } from '../../env';
-import { BASIC_QUESTIONS, optionName } from '../fixtures/authoring';
+import { expectNoSeriousA11yViolations } from '../fixtures/axe';
+import { BASIC_QUESTIONS, optionName, SECTIONED_PROMPTS } from '../fixtures/authoring';
 import {
   advanceExamTime,
   expectApiError,
@@ -12,6 +13,7 @@ import {
   storedAnswers,
   storedAttempt,
   SUBMITTED,
+  type ExamPayload,
 } from '../fixtures/exam';
 import { openExam } from '../fixtures/exam-session';
 import { apiRequest, holdApiRequests, recordApiCalls } from '../fixtures/network';
@@ -25,10 +27,14 @@ import { cellIn, expectConfirmLayout, rowWith } from '../pages/ui';
 
 const WORKER_URL = stackEnv.WORKER_URL ?? 'http://127.0.0.1:4001';
 const sectioned = (i: number) => `${String.fromCharCode(65 + i)}. ${SECTIONED_OPTIONS[i]}`;
+const BASIC_EXPLANATIONS = BASIC_QUESTIONS.flatMap((q) => (q.explanation ? [q.explanation] : []));
+const SECTIONED_EXPLANATIONS = [...SECTIONED_PROMPTS.Quant, ...SECTIONED_PROMPTS.Verbal].map(
+  (p) => `Explanation for ${p}.`,
+);
 const p1m025 = { marking: { marks: 1, negativeMarks: 0.25, preset: 'p1_m025' } };
 
 test.describe('F-3.08 submit @exam', () => {
-  test('EX-15 EX-17 Submit test shows answered, unanswered and marked per section, syncs every answer, then submits and grades', async ({
+  test('EX-15 EX-17 DATA-05 Submit test shows answered, unanswered and marked per section, syncs every answer, then submits and grades', async ({
     page,
     signInAs,
     apiAs,
@@ -36,7 +42,7 @@ test.describe('F-3.08 submit @exam', () => {
     emulators,
   }) => {
     test.setTimeout(90_000);
-    const { exam, attemptId, t, payload } = await openExam(
+    const { exam, attemptId, t, payload, api } = await openExam(
       { page, signInAs, apiAs, testApi },
       { questions: 'sectioned', overrides: p1m025 },
     );
@@ -95,6 +101,11 @@ test.describe('F-3.08 submit @exam', () => {
       [t.sectionIds.Quant!]: { score: 0.75, max: 6, correct: 1, incorrect: 1, unanswered: 4 },
       [t.sectionIds.Verbal!]: { score: 2, max: 4, correct: 2, incorrect: 0, unanswered: 2 },
     });
+    await expectNoSeriousA11yViolations(page);
+    const graded = await api.get<ExamPayload>(`/v1/attempts/${attemptId}`);
+    expect(graded.status).toBe(200);
+    expect(graded.body.attempt.status).toBe('submitted');
+    expect(leaksAnswerKey(graded.body, SECTIONED_EXPLANATIONS), 'answer keys after grading').toEqual([]);
   });
 
   test('EX-15 an offline submit says so, keeps retrying and goes through when the connection returns', async ({
@@ -154,7 +165,7 @@ test.describe('F-3.08 submit @exam', () => {
 });
 
 test.describe('F-3.08 submit and auto-submit API', () => {
-  test('EX-16 EX-17 REL-04 with the browser closed the auto-submit task finalizes the attempt, and running it again changes nothing', async ({
+  test('EX-16 EX-17 REL-04 DATA-05 with the browser closed the auto-submit task finalizes the attempt, and running it again changes nothing', async ({
     request,
     testApi,
     apiAs,
@@ -193,6 +204,10 @@ test.describe('F-3.08 submit and auto-submit API', () => {
     expect(after.status).toBe('auto_submitted');
     expect(after.submittedAt, 'submittedAt unchanged').toBe(done.submittedAt);
     expect(after.result, 'result unchanged').toEqual(done.result);
+    const graded = await student.get<ExamPayload>(`/v1/attempts/${attempt.id}`);
+    expect(graded.status).toBe(200);
+    expect(graded.body.attempt.status).toBe('auto_submitted');
+    expect(leaksAnswerKey(graded.body, BASIC_EXPLANATIONS), 'answer keys after auto-submit').toEqual([]);
   });
 
   test('EX-15 DATA-05 only the attempt own student can submit it, a repeat returns the same submission, and nothing is accepted after', async ({
