@@ -59,3 +59,11 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - A published test's totalMarks and snapshot are not re-evaluated after a series default changes; the UI shows no staleness hint.
 - PATCH writes the test document twice in one batch when sections are deleted.
 - hasAttempts relies on the `${testId}_` attemptIndex key format; phase 3 must add a test for it.
+- (QA) Approve and publish are not idempotent under simultaneous requests (three 200s and three audit entries); run them in a transaction.
+- (QA) Focus goes to the page after Approve test, Save marking and timers and Go to questions.
+- (QA) The marking-scheme radio group moves only with Left and Right; the time-limit group moves focus without selecting.
+- (QA) Unsaved Marking and timers edits are dropped when switching tabs; a failed publish shows the raw browser error.
+- (QA) The disabled Publish test still says "Approve the test before publishing it." once the test is scheduled or live.
+- (QA) Editing a live test with no attempts returns it to In review without a confirmation.
+- (QA) A section with no questions passes the draw check; a whole-test drawCount sent while the test has sections is accepted and ignored; unknown section IDs are accepted.
+- (QA) The super admin's first GET /v1/org on /platform/ can return 400 ORG_REQUIRED; the editor tab is not kept in the URL.
