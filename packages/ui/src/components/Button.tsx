@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, Ref } from 'react';
 import { cx } from '../cx';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive';
 export type ButtonSize = 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,6 +15,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   secondary: 'bg-surface text-ink border-rule hover:bg-ballpoint-wash',
   ghost: 'bg-transparent text-ballpoint border-transparent hover:bg-ballpoint-wash',
   danger: 'bg-surface text-redpen border-redpen hover:bg-redpen-wash',
+  /** The confirming button of a destructive dialog (UX-02): solid red pen. */
+  destructive: 'bg-redpen text-on-redpen border-redpen hover:bg-ink hover:border-ink',
 };
 
 /** Buttons keep the 120 ms small-feedback colour transition (UI-10); reduced motion makes it instant (UI-12). */

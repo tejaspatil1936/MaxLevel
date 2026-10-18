@@ -165,3 +165,12 @@ describe('no decorative effects', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe('destructive buttons', () => {
+  it('A11Y-13 text on the red pen fill reaches 4.5:1 in every theme', () => {
+    for (const [name, t] of Object.entries(themes)) {
+      const on = t['on-redpen'] ?? root['on-redpen'];
+      expect(contrast(on!, t.redpen!), name).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});

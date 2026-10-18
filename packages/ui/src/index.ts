@@ -9,3 +9,4 @@ export * from './components/Status';
 export * from './components/Tabs';
 export * from './components/Toast';
 export * from './components/Table';
+export * from './components/RadioGroup';

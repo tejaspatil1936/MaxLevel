@@ -23,6 +23,7 @@
   --tick: #17734a;
   --tick-wash: #ddf0e6;
   --on-ballpoint: #ffffff;
+  --on-redpen: #ffffff;
   --border-width: 1px;
 }
 
@@ -45,6 +46,7 @@
   --tick: #4fc48a;
   --tick-wash: #12301f;
   --on-ballpoint: #0f1326;
+  --on-redpen: #0f1326;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -67,6 +69,7 @@
     --tick: #4fc48a;
     --tick-wash: #12301f;
     --on-ballpoint: #0f1326;
+    --on-redpen: #0f1326;
   }
 }
 
@@ -90,6 +93,7 @@
   --tick: #0b5534;
   --tick-wash: #ffffff;
   --on-ballpoint: #ffffff;
+  --on-redpen: #ffffff;
   --border-width: 2px;
 }
 

@@ -65,7 +65,7 @@ export function ConfirmDialog(p: ConfirmDialogProps) {
             </RAlert.Cancel>
             <RAlert.Action asChild>
               <Button
-                variant={p.destructive ? 'danger' : 'primary'}
+                variant={p.destructive ? 'destructive' : 'primary'}
                 disabled={p.confirmDisabled}
                 onClick={(e) => {
                   e.preventDefault();
