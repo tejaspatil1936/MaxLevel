@@ -2,7 +2,7 @@ import { TestClock } from '@mitaoe/shared';
 import { Writable } from 'node:stream';
 import { buildApp } from '../app';
 import { loadConfig, type Config } from '../config';
-import { initFirebase } from '../firebase';
+import { initFirebase, type FirebaseHandles } from '../firebase';
 import { createLogger } from '../logging';
 import { localTaskQueue } from '../tasks/local-queue';
 
@@ -21,7 +21,9 @@ export function logSink() {
 }
 
 /** The real API on the emulators with a settable clock, for integration tests. */
-export async function testApp(opts: { config?: Partial<Config>; withLogs?: boolean } = {}) {
+export async function testApp(
+  opts: { config?: Partial<Config>; withLogs?: boolean; rtdb?: FirebaseHandles['rtdb'] } = {},
+) {
   const clock = new TestClock();
   const config = {
     ...loadConfig({ NODE_ENV: 'test', TEST_API_SECRET: TEST_SECRET }),
@@ -29,7 +31,7 @@ export async function testApp(opts: { config?: Partial<Config>; withLogs?: boole
     ...opts.config,
   };
   const sink = opts.withLogs ? logSink() : null;
-  const firebase = initFirebase();
+  const firebase = { ...initFirebase(), ...(opts.rtdb ? { rtdb: opts.rtdb } : {}) };
   const queue = localTaskQueue(firebase.db, clock);
   const app = await buildApp({ clock, config, firebase, queue }, sink?.logger);
   await app.ready();
