@@ -1,14 +1,19 @@
-import { TestClock, type Clock } from '@mitaoe/shared';
+import { TestClock, type Clock, type TaskQueue } from '@mitaoe/shared';
 import { z } from 'zod';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { WorkerConfig } from './config';
+import type { WorkerData } from './data';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
+import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit';
 
 export interface WorkerDeps {
   clock: Clock;
   config: WorkerConfig;
   checkTaskAuth?: TaskAuthCheck;
+  data: WorkerData;
+  /** Follow-up work (rescheduling, leaderboards) goes through this queue only. */
+  queue: TaskQueue;
 }
 
 export const TASK_NAMES = [
@@ -62,7 +67,20 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           });
         }
       });
-      for (const name of TASK_NAMES) {
+      const autoSubmit = autoSubmitHandler(deps);
+      tasks
+        .withTypeProvider<ZodTypeProvider>()
+        .post('/auto-submit', { schema: { body: autoSubmitPayloadSchema } }, async (req, reply) => {
+          const outcome = await autoSubmit(req.body);
+          req.log.info({ task: 'auto-submit', attemptId: req.body.attemptId, outcome }, 'task done');
+          // A run before its deadline is answered 503 so the queue tries again later (Cloud Tasks retries non-2xx).
+          if (outcome === 'retry')
+            return reply.status(503).send({
+              error: { code: 'TOO_EARLY', message: 'The attempt is not due yet; retry later.', details: {} },
+            });
+          return { ok: true, outcome };
+        });
+      for (const name of TASK_NAMES.filter((n) => n !== 'auto-submit')) {
         // Handlers are added by the features that own them; until then a task is acknowledged and logged.
         tasks.post(`/${name}`, async (req) => {
           req.log.info({ task: name }, 'task received');
