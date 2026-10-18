@@ -7,6 +7,23 @@ import type { DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 /** What finishing an attempt stores (EX-17). */
 export type FinishedFields = Required<Pick<AttemptRecord, 'status' | 'submittedAt' | 'result'>>;
 
+/** What the release task reads of a test: its settings snapshot and release state (RES-01). */
+export interface ReleaseTest {
+  id: string;
+  seriesId: string;
+  resolved: Settings;
+  resultsReleasedAt: number | null;
+  resultsWithdrawn: boolean;
+}
+
+const toReleaseTest = (d: DocumentSnapshot): ReleaseTest => ({
+  id: d.id,
+  seriesId: d.get('seriesId') as string,
+  resolved: d.get('resolved') as Settings,
+  resultsReleasedAt: typeof d.get('resultsReleasedAt') === 'number' ? (d.get('resultsReleasedAt') as number) : null,
+  resultsWithdrawn: d.get('resultsWithdrawn') === true,
+});
+
 /** What grading needs of a test: its sections (section marks) and its published settings snapshot. */
 export interface GradedTest {
   id: string;
@@ -46,6 +63,31 @@ export function workerData(db: Firestore) {
         sections: (d.get('sections') as Section[] | undefined) ?? [],
         resolved: d.get('resolved') as Settings,
       };
+    },
+
+    /** A published test's release state, or null for a missing or unpublished test. */
+    async getReleaseTest(orgId: string, testId: string): Promise<ReleaseTest | null> {
+      const d = await org(orgId).collection('tests').doc(testId).get();
+      return d.exists && d.get('resolved') ? toReleaseTest(d) : null;
+    },
+
+    /**
+     * RES-01, REL-04: stores `resultsReleasedAt` in a transaction when `decide` still says so on the stored test, so a
+     * Release or Withdraw results racing the task is never overwritten. True when it stored.
+     */
+    async releaseByTask(
+      orgId: string,
+      testId: string,
+      decide: (test: ReleaseTest) => boolean,
+      now: number,
+    ): Promise<boolean> {
+      const ref = org(orgId).collection('tests').doc(testId);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists || !snap.get('resolved') || !decide(toReleaseTest(snap))) return false;
+        tx.update(ref, { resultsReleasedAt: now });
+        return true;
+      });
     },
 
     /** The answer key and own marks of the named questions of a test (EX-17); missing questions are left out. */
