@@ -62,8 +62,8 @@ chosen (before any save), and the form does not save while it is shown:
 `In a flexible window, a full review released on submit would show the answers to students who haven't started yet. Release results after the window closes, or choose a lower detail level.`
 
 The API refuses the same combination with `400` and error code `FULL_REVIEW_BEFORE_CLOSE`, on series defaults and on
-the resolved settings of a test. (`Manually` is allowed here; phase 4's release action refuses a manual full-review
-release before a flexible window closes.)
+the resolved settings of a test. (`Manually` is allowed here. Phase 4's **Release results** action must refuse a
+full-review release before a flexible window closes, so a manual release can never leak answers either.)
 
 ## Eligibility editor (series form and test `Eligibility` tab)
 
@@ -105,6 +105,9 @@ validation). Error bodies follow API-01.
 | `PATCH /v1/tests/{id}` | any of `{ title, company, dayNumber, dayHidden, scheduledDate, overrides, eligibility, sections, drawCount }`; `overrides` replaces the whole override map; `sections` replaces the section list (entries without `id` are new) | `200`; `400 MIX_UNSATISFIABLE`, `400 DRAW_TOO_LARGE`, `400 FULL_REVIEW_BEFORE_CLOSE` as described below |
 | `GET /v1/tests/{id}/questions` | | `200` `{ items: Question[] }` in `order` |
 | `POST /v1/tests/{id}/questions` | `{ prompt, options: [{ id, text }], correctOptionIds, explanation?, difficulty?, sectionId?, marks?, negativeMarks?, tags?, timeLimitSec?, images? }` | `200` or `201` with `{ id, status }`; status `approved` when the question passes the checks, else `draft` (DECISIONS Q17) |
+| `PATCH /v1/tests/{id}/questions/{questionId}` | any of the `POST` fields | `200` with `{ id, status }`, checked again |
+| `DELETE /v1/tests/{id}/questions/{questionId}` | | `200` or `204`; the remaining questions keep their relative order |
+| `PUT /v1/tests/{id}/questions/order` | `{ ids: string[] }` (every question ID of the test, in the new order) | `200`; `400` when the list is not exactly the test's question IDs |
 | `GET /v1/tests/{id}/preview` | | `200` the exam payload for preview, including each question's `correctOptionIds` and `explanation` (admins only) |
 | `POST /v1/tests/{id}/approve` | `{}` | `200` `{ status: "approved", totalMarks }`; `409 CHECKLIST_FAILED` with `details.failed` (the failed checklist texts) when any check fails, and nothing changes |
 | `POST /v1/tests/{id}/publish` | `{}` | `200` `{ status: "scheduled" }`; `409 TEST_NOT_APPROVED` for a test that is not approved, and nothing changes |
@@ -229,7 +232,8 @@ test is stored with `status: "scheduled"` and `resolved` holding the full resolv
 `Result detail`, `Show past scores to students`, `Test leaderboard` and `Series leaderboard` on an `Approved` or
 `Scheduled` test with no attempts returns it to `In review`: stored `status: "in_review"`, `approval` and `resolved`
 removed (Q-15, DECISIONS Q16). Changing one of those five release and visibility settings keeps the status and updates
-`resolved` in place.
+`resolved` in place. Editing the test's eligibility keeps the status too (eligibility is checked again when an attempt
+starts, SER-08).
 
 ### Questions tab
 
@@ -289,8 +293,32 @@ with `source.kind: "json"`, checked as above, and one `question.import` entry is
 question JSON shows the field error `This file isn't valid question JSON. Check it against the import format.` and
 adds nothing.
 
-Accepted JSON: the legacy question format (legacy/, mapped to the new schema; the builder covers it with a unit test
-on a legacy sample) and this format, which the acceptance tests use:
+Accepted JSON, two formats, both tested end to end.
+
+**Legacy format** (spec 15.1; as in legacy/data/infosys/infosys-set-2.json), recognised by having no `format` key:
+
+```json
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Markdown text",
+      "options": ["first option", "second option", "third option", "fourth option"],
+      "correctIndex": 1,
+      "explanation": "optional",
+      "topic": "optional",
+      "source": "optional"
+    }
+  ]
+}
+```
+
+Mapping: `text` becomes `prompt`; `options` become the options in order; `correctIndex` (0-based) makes the option at
+that index the only entry of `correctOptionIds`; `explanation` is kept; `topic` becomes the only tag; the legacy `id`
+and `source` strings are not shown (the question gets a new ID and `source.kind: "json"`). A missing or out-of-range
+`correctIndex` leaves `correctOptionIds` empty, so the question is stored `draft` with `No correct answer is set.`
+
+**`mitaoe-questions/1` format** (this project's own; the builder logs it in docs/DECISIONS.md):
 
 ```json
 {
@@ -340,8 +368,9 @@ Validation (US-AD-07, Q-05), each blocking the save, shown on the named field:
 | mix total differs from a set draw | `Questions to draw` | `The mix adds up to <t> questions. Set Questions to draw to <t> or leave it empty.` |
 | whole-test draw larger than the test's approved questions | `Questions to draw` (whole-test) | `This test has <m> approved questions, so it can't draw <n>.` |
 
-A mix with no draw count draws the mix total. The API refuses the same with `400 DRAW_TOO_LARGE` or
-`400 MIX_UNSATISFIABLE`.
+A mix with no draw count draws the mix total. The API refuses the same with `400 DRAW_TOO_LARGE` (a draw above the
+pool) or `400 MIX_UNSATISFIABLE` (a mix count above a difficulty's questions, and also a mix total that differs from a
+set draw, `MIX_DRAW_MISMATCH` in shared).
 
 ### Marking and timers tab
 
@@ -356,8 +385,10 @@ A mix with no draw count draws the mix total. The API refuses the same with `400
 A new test shows `+1 and 0` with 1 and 0, and `No time limit`. Choosing a preset fills both values, which stay
 editable; a value edited so that it no longer matches a preset selects `Custom` (Q-08). Stored in the test's
 `overrides.marking` as `{ marks, negativeMarks, preset }` with `preset` `p1_0`, `p1_m025`, `p4_m1` or `custom` and
-`negativeMarks` as the positive number taken off (1 for −1). `Same limit for every question` stores
-`overrides.questionTimeLimitSec`; `Set on each question` stores no test-level limit, keeps the choice, and shows
+`negativeMarks` as the positive number taken off (1 for −1). The time-limit choice is stored as
+`overrides.questionTimeMode`: `none` (also when absent), `same` or `each`. `Same limit for every question` stores
+`questionTimeMode: "same"` with `overrides.questionTimeLimitSec`; `Set on each question` stores
+`questionTimeMode: "each"` and no `questionTimeLimitSec`, so the choice survives a reload, and shows
 `Time limit (seconds)` in the question editor (stored as the question's `timeLimitSec`) (Q-10). Errors: marks not above
 0 `Enter a number greater than 0.`; negative value below 0 `Enter 0 or a positive number.`; seconds not a whole number
 of at least 1 `Enter a whole number of seconds, 1 or more.`
@@ -488,6 +519,14 @@ export function resolveSettings(input: { series: Pick<Series, 'defaults' | 'dail
   test: Pick<Test, 'overrides' | 'scheduledDate'>; timezone: string }): Settings;
 export function settingsProblems(settings: Partial<Settings>): Array<{ code: 'FULL_REVIEW_BEFORE_CLOSE'; field: 'resultRelease' }>;
 
+// questions-json.ts (both import formats of the Questions tab)
+export interface ImportedQuestion {
+  prompt: string; options: string[]; correct: number[];              // 0-based indexes; empty = none
+  explanation?: string; difficulty?: Difficulty; marks?: number; negativeMarks?: number; tags: string[];
+  timeLimitSec?: number;
+}
+export function parseQuestionJson(json: unknown): { questions: ImportedQuestion[] } | { error: 'INVALID' };
+
 // question-checks.ts
 export type QuestionProblem =
   | { code: 'NO_CORRECT_ANSWER' } | { code: 'TOO_FEW_OPTIONS' } | { code: 'EMPTY_PROMPT' }
@@ -499,6 +538,7 @@ export function problemText(p: QuestionProblem): string;             // the reas
 
 | REQ | Kind | Behaviours the tests must show |
 | --- | --- | --- |
+| Q-01 | unit | `parseQuestionJson` maps the legacy format (`text`, `options`, `correctIndex`, `explanation`, `topic` to `tags`; an out-of-range or missing `correctIndex` gives `correct: []`) and `mitaoe-questions/1` (`correct` letter or letters to indexes), on a sample from legacy/data/infosys/infosys-set-2.json and a hand-written file; it returns `{ error: 'INVALID' }` for anything else (no `questions` array, a question without text or options, an unknown `format`) |
 | SER-04 | unit | `isEligible` is false for `invited` and `disabled` students even with no rules and even when they are on the include list; true for a `registered` student with `NO_RESTRICTION` |
 | SER-05 | unit | `matchesRules`: departments match any selected; graduation years any selected; both filters set means both must match; an empty filter or list means no restriction; the include list admits a student who fails the filters; the exclude list removes a student who matches; exclude beats include |
 | SER-06 | unit | `isEligible(s, series, test)` is true only when both rule sets match; a test include of a student the series rejects stays false (never widens); a test exclude or narrower filter removes students the series admits |
@@ -508,7 +548,7 @@ export function problemText(p: QuestionProblem): string;             // the reas
 | SER-02 | integration | series status is `draft`, `active` or `archived` (PATCH moves between them, audit-logged); the student-visible series listing (the service behind `GET /v1/student/dashboard`, phase 3) returns only `active` series for which `isEligible` holds |
 | TST-04 | integration | the lifecycle `draft` → `in_review` (first question added) → `approved` (`POST /approve`) → `scheduled` (`POST /publish`), with `live` and `closed` derived from the resolved window and the Clock; `POST /publish` on a `draft` or `in_review` test is `409 TEST_NOT_APPROVED` and stores nothing; status cannot be set through PATCH |
 | TST-05 | integration | `POST /publish` stores `resolved` equal to `resolveSettings` of the series, the test and the org timezone at that moment, in the same batch as `status: "scheduled"` and the `test.publish` audit entry |
-| Q-15 | integration | on an `approved` or `scheduled` test with no attempt: adding, editing, deleting or reordering a question, changing sections, draw, marking, time limits or a locked setting sets `status: "in_review"` and removes `approval` and `resolved`; changing `resultRelease`, `resultDetail`, `showPastScores`, `testLeaderboard` or `seriesLeaderboard` does not, and updates `resolved` |
+| Q-15 | integration | on an `approved` or `scheduled` test with no attempt: adding, editing, deleting or reordering a question, changing sections, draw, marking, time limits or a locked setting sets `status: "in_review"` and removes `approval` and `resolved`; changing `resultRelease`, `resultDetail`, `showPastScores`, `testLeaderboard` or `seriesLeaderboard` does not, and updates `resolved`; an eligibility edit does not either (eligibility is checked when an attempt starts, SER-08) |
 
 Also, beside the routes: every new admin route is in the phase 0 route-table tests (ORG-05 404 for org B, ORG-14 with
 an admin token and with a super-admin token plus `X-Org-Id`), and the SER-09 and Q17 rules have unit tests on
