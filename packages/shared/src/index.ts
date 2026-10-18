@@ -20,3 +20,4 @@ export * from './test-record';
 export * from './question';
 export * from './question-checks';
 export * from './questions-json';
+export * from './timing';
