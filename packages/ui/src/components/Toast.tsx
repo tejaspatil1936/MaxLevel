@@ -20,8 +20,11 @@ export function Toaster() {
   );
 }
 
+/** Sonner's toasts carry no role, so a notice is a `status` whose whole text is the message (UX-10). */
+const notice = (message: string) => <span role="status">{message}</span>;
+
 export const notify = {
-  success: (message: string) => toast.success(message),
+  success: (message: string) => toast.success(notice(message)),
   error: (message: string) => toast.error(message),
-  info: (message: string) => toast(message),
+  info: (message: string) => toast(notice(message)),
 };
