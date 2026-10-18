@@ -1,5 +1,5 @@
-import type { AttemptStatus } from '@mitaoe/shared';
-import { FieldPath, type Firestore } from 'firebase-admin/firestore';
+import type { AnswerRecord, AttemptRecord, AttemptStatus } from '@mitaoe/shared';
+import { FieldPath, FieldValue, type DocumentSnapshot, type Firestore } from 'firebase-admin/firestore';
 
 export interface AttemptSummary {
   id: string;
@@ -22,8 +22,78 @@ export interface StudentAttemptRef {
   submittedAt: number | null;
 }
 
-export function attemptsData(db: Firestore) {
+/** The new attempt for an ID, built inside the start transaction; it may throw to refuse the start. */
+export type AttemptBuilder = (attemptId: string) => AttemptRecord;
+
+const toAttempt = (d: DocumentSnapshot): AttemptRecord => {
+  const { orgId, ...rest } = d.data() ?? {};
   return {
+    ...(rest as Omit<AttemptRecord, 'id' | 'orgId'>),
+    id: d.id,
+    orgId: orgId as string,
+    questionServedAt: rest.questionServedAt ?? {},
+    strikesCount: rest.strikesCount ?? 0,
+    extraTimeSec: rest.extraTimeSec ?? 0,
+  };
+};
+
+export function attemptsData(db: Firestore) {
+  const attempts = (orgId: string) => db.collection(`organizations/${orgId}/attempts`);
+  const indexRef = (orgId: string, testId: string, studentId: string) =>
+    db.doc(`organizations/${orgId}/attemptIndex/${testId}_${studentId}`);
+
+  return {
+    /**
+     * DATA-02, EX-04: one active attempt per student per test. In one transaction on the attempt index: an active
+     * attempt that was not reset is returned as it is; otherwise `build` makes the attempt (with a reserved attempt
+     * ID when phone pairing reserved one, PR-13), which is created with the index entry and, on the test's first
+     * start, the test's `attemptsStarted` flag (TST-06).
+     */
+    async startAttempt(
+      orgId: string,
+      input: { testId: string; studentId: string; firstStart: boolean },
+      build: AttemptBuilder,
+    ): Promise<{ attempt: AttemptRecord; created: boolean }> {
+      const ref = indexRef(orgId, input.testId, input.studentId);
+      return db.runTransaction(async (tx) => {
+        const index = await tx.get(ref);
+        const activeId = index.get('activeAttemptId') as string | null | undefined;
+        if (activeId) {
+          const active = await tx.get(attempts(orgId).doc(activeId));
+          if (active.exists && active.get('status') !== 'reset') return { attempt: toAttempt(active), created: false };
+        }
+        const reserved = index.get('reservedAttemptId') as string | undefined;
+        const attempt = build(reserved ?? attempts(orgId).doc().id);
+        const { id, ...fields } = attempt;
+        tx.create(attempts(orgId).doc(id), fields);
+        tx.set(
+          ref,
+          {
+            testId: input.testId,
+            studentId: input.studentId,
+            activeAttemptId: id,
+            attemptCount: ((index.get('attemptCount') as number | undefined) ?? 0) + 1,
+            reservedAttemptId: FieldValue.delete(),
+          },
+          { merge: true },
+        );
+        if (input.firstStart)
+          tx.update(db.doc(`organizations/${orgId}/tests/${input.testId}`), { attemptsStarted: true });
+        return { attempt, created: true };
+      });
+    },
+
+    async getAttempt(orgId: string, attemptId: string): Promise<AttemptRecord | null> {
+      const d = await attempts(orgId).doc(attemptId).get();
+      return d.exists ? toAttempt(d) : null;
+    },
+
+    /** The saved answers of an attempt, keyed by question ID (EX-05, EX-14). */
+    async getAnswers(orgId: string, attemptId: string): Promise<Record<string, AnswerRecord>> {
+      const snap = await attempts(orgId).doc(attemptId).collection('answers').get();
+      return Object.fromEntries(snap.docs.map((d) => [d.id, d.data() as AnswerRecord]));
+    },
+
     /**
      * TST-06, Q-15: whether any attempt of the test exists, read from the attempts and the attempt index (phase 3
      * writes both when an attempt starts; a test record's `attemptsStarted` flag is checked by the caller as well).
