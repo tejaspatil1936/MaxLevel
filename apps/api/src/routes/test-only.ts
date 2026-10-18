@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { Deps } from '../deps';
 import { AppError } from '../errors';
 import { clearEmulators } from '../test-support/emulators';
+import { SCENARIOS } from '../test-support/scenarios';
 import { seedBase } from '../test-support/seed';
 
 /** True only when NODE_ENV=test, TEST_API_SECRET is set and the clock is settable (PLAN section 6). */
@@ -57,6 +58,22 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock }): FastifyPlugin
         await clearEmulators();
         if (req.body.seed === 'base') await seedBase(deps.firebase.db, clock.now());
         return { ok: true as const };
+      },
+    );
+
+    app.post(
+      '/__test/seed/:scenario',
+      {
+        schema: {
+          params: z.object({ scenario: z.string() }),
+          body: z.record(z.string(), z.unknown()).default({}),
+          response: { 200: z.record(z.string(), z.string()) },
+        },
+      },
+      async (req) => {
+        const run = SCENARIOS[req.params.scenario];
+        if (!run) throw new AppError(404, 'NOT_FOUND', `No scenario named ${req.params.scenario}.`);
+        return run(deps.firebase.db, clock.now(), req.body);
       },
     );
   };

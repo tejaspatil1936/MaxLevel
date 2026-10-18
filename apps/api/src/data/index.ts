@@ -1,5 +1,6 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import { adminsData } from './admins';
+import { attemptsData } from './attempts';
 import { auditData } from './audit';
 import { departmentsData } from './departments';
 import { entitlementsData } from './entitlements';
@@ -17,6 +18,7 @@ export function createData(db: Firestore) {
     identity: identityData(db),
     orgs: orgsData(db),
     admins: adminsData(db),
+    attempts: attemptsData(db),
     audit: auditData(db),
     students: studentsData(db),
     entitlements: entitlementsData(db),
