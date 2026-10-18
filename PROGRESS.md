@@ -94,3 +94,4 @@ F-3.10 done — events logged and counted in one transaction with 3 s dedupe, te
 F-3.11 done — lockdown: fullscreen exit, tab hidden and window blur strikes, devtools policy keys, context menu, copy, paste, print and selection blocked (fixed fractional clientTs refusals from F-3.10)
 F-3.12 done — camera reopened on the exam, on-device face checks every 500 ms, no_face after 5 s and multiple_faces after 2 s as one incident, collapsible self-view keeps the camera on
 F-3.04 done — PERF-05 passes now that the no_face warning exists (no MediaPipe refetch after preflight)
+F-3.13 done — phone pairing on the rules screen (QR, 5-minute single-use token, device custom token), phone page with heartbeat and camera, Reconnect your phone after 15 s and strike after 60 s, REL-05 suspension, Realtime Database rules with tests
