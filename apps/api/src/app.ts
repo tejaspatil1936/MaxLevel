@@ -17,6 +17,7 @@ import { registerServerTime } from './plugins/server-time';
 import { createData } from './data';
 import { registerAuth } from './plugins/auth';
 import { healthRoutes } from './routes/health';
+import { attemptRoutes } from './routes/attempts';
 import { auditRoutes } from './routes/audit';
 import type { ApiContext } from './routes/context';
 import { departmentRoutes } from './routes/departments';
@@ -37,6 +38,7 @@ import { accountStatusService } from './services/account-status';
 import { eligibilityService } from './services/eligibility';
 import { entitlementsService } from './services/entitlements';
 import { logoStore } from './services/logos';
+import { publishedTestCache } from './services/published-tests';
 import { questionImageStore } from './services/question-images';
 import { testApiEnabled, testOnlyRoutes } from './routes/test-only';
 
@@ -89,6 +91,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
   registerAuth(app, { auth: deps.firebase.auth, data, entitlements, status });
   await app.register(healthRoutes);
   await app.register(sessionRoutes({ ...deps, data, entitlements }));
+  const questionImages = questionImageStore(deps.firebase);
   const ctx: ApiContext = {
     ...deps,
     data,
@@ -97,7 +100,8 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     entitlements,
     status,
     logos: logoStore(deps.firebase),
-    questionImages: questionImageStore(deps.firebase),
+    questionImages,
+    published: publishedTestCache(data, questionImages, deps.clock),
   };
   await app.register(orgRoutes(ctx));
   for (const routes of [
@@ -111,6 +115,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     questionRoutes,
     examPreviewRoutes,
     studentTestRoutes,
+    attemptRoutes,
     auditRoutes,
     meRoutes,
   ])
@@ -120,6 +125,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     const clearCaches = () => {
       entitlements.invalidateAll();
       status.invalidate();
+      ctx.published.clear();
     };
     await app.register(testOnlyRoutes({ ...deps, clearCaches }));
   }
