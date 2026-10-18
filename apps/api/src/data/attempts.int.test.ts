@@ -116,4 +116,50 @@ describe('attempt data access', () => {
     });
     expect(await data.attempts.getAttempt('org-b', attempt.id)).toBeNull();
   });
+
+  it('EX-11 EX-14 DATA-03 keeps each answer in its own record and writes only a higher seq', async () => {
+    const answer = (questionId: string, seq: number, optionId: string | null) => ({
+      questionId,
+      optionId,
+      seq,
+      clientTs: 100 + seq,
+    });
+    const byNumber = (stored: number | undefined, seq: number) =>
+      stored !== undefined && seq <= stored ? ('stale' as const) : ('saved' as const);
+    const save = (a: ReturnType<typeof answer>) =>
+      data.attempts.saveAnswer('org-a', 'att1', a, 999, (stored) => byNumber(stored, a.seq));
+
+    // Out of order and concurrent: seq 3 wins whatever arrives last; another question never contends.
+    const verdicts = await Promise.all([save(answer('q1', 3, 'c')), save(answer('q2', 1, 'a'))]);
+    expect(verdicts).toEqual(['saved', 'saved']);
+    expect(await save(answer('q1', 2, 'b'))).toBe('stale');
+    expect(await save(answer('q1', 3, 'd'))).toBe('stale');
+    expect(await data.attempts.getAnswers('org-a', 'att1')).toEqual({
+      q1: { optionId: 'c', seq: 3, clientTs: 103, serverTs: 999, markedForReview: false },
+      q2: { optionId: 'a', seq: 1, clientTs: 101, serverTs: 999, markedForReview: false },
+    });
+  });
+
+  it('EX-13 a late answer is saved with lateSync and logs a late_sync event; a rejected one writes nothing', async () => {
+    const base = { optionId: 'a', clientTs: 50 };
+    expect(
+      await data.attempts.saveAnswer('org-a', 'att1', { ...base, questionId: 'q1', seq: 1 }, 70, () => 'late_sync'),
+    ).toBe('late_sync');
+    expect(
+      await data.attempts.saveAnswer(
+        'org-a',
+        'att1',
+        { ...base, questionId: 'q2', seq: 1 },
+        70,
+        () => 'AFTER_DEADLINE',
+      ),
+    ).toBe('AFTER_DEADLINE');
+    const answers = await data.attempts.getAnswers('org-a', 'att1');
+    expect(Object.keys(answers)).toEqual(['q1']);
+    expect(answers.q1).toMatchObject({ lateSync: true, seq: 1 });
+    const events = await db.collection('organizations/org-a/attempts/att1/events').get();
+    expect(events.docs.map((d) => d.data())).toEqual([
+      { type: 'late_sync', details: { questionId: 'q1', seq: 1 }, clientTs: 50, serverTs: 70 },
+    ]);
+  });
 });

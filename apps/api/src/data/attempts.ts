@@ -1,4 +1,4 @@
-import type { AnswerRecord, AttemptRecord, AttemptStatus } from '@mitaoe/shared';
+import type { AnswerRecord, AnswerVerdict, AttemptRecord, AttemptStatus } from '@mitaoe/shared';
 import { FieldValue, type DocumentSnapshot, type Firestore } from 'firebase-admin/firestore';
 
 export interface AttemptSummary {
@@ -92,6 +92,50 @@ export function attemptsData(db: Firestore) {
     async getAnswers(orgId: string, attemptId: string): Promise<Record<string, AnswerRecord>> {
       const snap = await attempts(orgId).doc(attemptId).collection('answers').get();
       return Object.fromEntries(snap.docs.map((d) => [d.id, d.data() as AnswerRecord]));
+    },
+
+    /**
+     * EX-11, EX-13, EX-14: one answer in its own record and its own transaction, so saves of different questions never
+     * contend (DATA-03). `decide` sees the stored `seq` and says what to do; only `saved` and `late_sync` write, and a
+     * late one also logs a `late_sync` event in the same transaction.
+     */
+    async saveAnswer(
+      orgId: string,
+      attemptId: string,
+      answer: { questionId: string; optionId: string | null; seq: number; clientTs: number; markedForReview?: boolean },
+      serverTs: number,
+      decide: (storedSeq: number | undefined) => AnswerVerdict,
+    ): Promise<AnswerVerdict> {
+      const attemptRef = attempts(orgId).doc(attemptId);
+      const ref = attemptRef.collection('answers').doc(answer.questionId);
+      return db.runTransaction(async (tx) => {
+        const stored = await tx.get(ref);
+        const verdict = decide(stored.exists ? (stored.get('seq') as number) : undefined);
+        if (verdict !== 'saved' && verdict !== 'late_sync') return verdict;
+        const late = verdict === 'late_sync';
+        const record: AnswerRecord = {
+          optionId: answer.optionId,
+          seq: answer.seq,
+          clientTs: answer.clientTs,
+          serverTs,
+          markedForReview: answer.markedForReview ?? false,
+          ...(late ? { lateSync: true } : {}),
+        };
+        tx.set(ref, record);
+        if (late)
+          tx.create(attemptRef.collection('events').doc(), {
+            type: 'late_sync',
+            details: { questionId: answer.questionId, seq: answer.seq },
+            clientTs: answer.clientTs,
+            serverTs,
+          });
+        return verdict;
+      });
+    },
+
+    /** OBS-03: the latest batch's backlog and clock offset; the only attempt field an answer batch writes (EX-14). */
+    async recordSync(orgId: string, attemptId: string, sync: NonNullable<AttemptRecord['sync']>): Promise<void> {
+      await attempts(orgId).doc(attemptId).update({ sync });
     },
 
     /**
