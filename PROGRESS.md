@@ -65,3 +65,4 @@ PHASE 2 START c5c79f0b796d1131f2ea80243bd1ead0b7da03e5
 Tests: 55 phase 2 acceptance tests by test-author (23 e2e REQs; unit/integration REQs specified in the contract), reviewed twice (first FAIL: legacy JSON import; second PASS), locked.
 F-2.01 done — eligibility, seeded draw, marks and presets, day labels, settings resolution, question checks, JSON import parsing, authoring schemas (shared, unit-tested)
 F-2.02 done — series API with SER-09 refusal and eligibility preview, student series listing service, series list, new/edit forms with settings controls and live eligibility count, series page with activate/archive
+F-2.03 done — tests API with derived live/closed status, authoring-test scenario, series timeline with day labels in the org timezone, Add test dialog, test editor shell
