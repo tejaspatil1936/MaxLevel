@@ -1,11 +1,11 @@
 'use client';
 
 import type { ExamPayload, StudentQuestion } from '@mitaoe/shared';
-import { Button, cx } from '@mitaoe/ui';
+import { Button, cx, Dialog } from '@mitaoe/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode } from 'react';
 import { t } from '@/i18n';
 import { AnswerOptions } from './AnswerOptions';
-import { questionState, type ExamAction, type ExamState } from './exam-state';
+import { questionState, shortcutFor, type ExamAction, type ExamState } from './exam-state';
 import { QuestionPalette, TimingTrack, type PaletteGroup } from './QuestionPalette';
 import { QuestionPrompt, QuestionText } from './QuestionView';
 
@@ -25,7 +25,18 @@ export interface ExamScreenProps {
   dispatch: Dispatch<ExamAction>;
   /** Preview only: show the correct option and the explanation (Q-13). */
   showAnswers?: boolean;
+  /** The `T` key: say the time left (A11Y-06); attempts only. */
+  onTimeKey?: () => void;
 }
+
+const SHORTCUT_KEYS = [
+  'exam.shortcut.options',
+  'exam.shortcut.next',
+  'exam.shortcut.previous',
+  'exam.shortcut.mark',
+  'exam.shortcut.time',
+  'exam.shortcut.help',
+] as const;
 
 /** Palette groups: the test's sections in order, then questions in no section; one group for a test without them. */
 function paletteGroups(exam: ExamScreenProps['exam']): PaletteGroup[] {
@@ -38,15 +49,15 @@ function paletteGroups(exam: ExamScreenProps['exam']): PaletteGroup[] {
   return loose.length ? [...groups, { section: null, indexes: loose }] : groups;
 }
 
-/** Any open dialog takes the keys from the sheet behind it. */
+/** Any open dialog (shortcuts, the submit summary, a strike warning) takes the keys from the sheet behind it. */
 const dialogOpen = () => !!document.querySelector('[role="dialog"], [role="alertdialog"]');
 
 /**
  * The exam screen (13.7): the top bar, the answer sheet with its timing track, the palette on the right (a drawer
- * below 1,280 px, A11Y-15) and the navigation along the bottom. The same screen serves the admin
+ * below 1,280 px, A11Y-15) and the navigation along the bottom, with the EX-09 keys. The same screen serves the admin
  * preview and the student's attempt.
  */
-export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = false }: ExamScreenProps) {
+export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = false, onTimeKey }: ExamScreenProps) {
   const groups = useMemo(() => paletteGroups(exam), [exam]);
   const total = exam.questions.length;
   const question = exam.questions[state.index]!;
@@ -58,6 +69,7 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
   const last = state.index === total - 1;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const currentBubble = useRef<HTMLButtonElement>(null);
   const closeDrawer = useCallback(() => {
@@ -78,16 +90,34 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
     if (drawerOpen) currentBubble.current?.focus();
   }, [drawerOpen]);
 
+  const latest = useRef({ index: state.index, total, question, onTimeKey, drawerOpen });
+  latest.current = { index: state.index, total, question, onTimeKey, drawerOpen };
   useEffect(() => {
-    if (!drawerOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented || dialogOpen()) return;
+      if (e.defaultPrevented || dialogOpen()) return;
+      const now = latest.current;
+      if (e.key === 'Escape' && now.drawerOpen) {
+        e.preventDefault();
+        closeDrawer();
+        return;
+      }
+      const shortcut = shortcutFor(e);
+      if (!shortcut) return;
       e.preventDefault();
-      closeDrawer();
+      if (shortcut.type === 'option') {
+        const option = now.question.options[shortcut.index];
+        if (option) dispatch({ type: 'choose', optionId: option.id });
+      } else if (shortcut.type === 'next') {
+        if (now.index < now.total - 1) goTo(now.index + 1);
+      } else if (shortcut.type === 'previous') {
+        if (now.index > 0) goTo(now.index - 1);
+      } else if (shortcut.type === 'mark') dispatch({ type: 'toggleMark' });
+      else if (shortcut.type === 'time') now.onTimeKey?.();
+      else setShortcutsOpen(true);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [drawerOpen, closeDrawer]);
+  }, [dispatch, goTo, closeDrawer]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-sheet">
@@ -186,6 +216,13 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
           </div>
         </div>
       </main>
+      <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} title={t('exam.shortcuts')}>
+        <ul className="flex flex-col gap-2">
+          {SHORTCUT_KEYS.map((key) => (
+            <li key={key}>{t(key)}</li>
+          ))}
+        </ul>
+      </Dialog>
     </div>
   );
 }
