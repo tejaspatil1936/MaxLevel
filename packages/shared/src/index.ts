@@ -36,3 +36,4 @@ export * from './results';
 export * from './result-view';
 export * from './history';
 export * from './csv';
+export * from './exports';
