@@ -37,3 +37,4 @@ export * from './result-view';
 export * from './history';
 export * from './csv';
 export * from './exports';
+export * from './export-tables';
