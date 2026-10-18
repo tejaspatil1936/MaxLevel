@@ -31,4 +31,10 @@ describe('leaderboards data access', () => {
     });
     expect(await data.leaderboards.getLeaderboard('org-b', 'test_t1'), 'another org').toBeNull();
   });
+
+  it('LB-05 ORG-03 names the departments of the org that board rows refer to by ID', async () => {
+    await db.doc('organizations/org-a/departments/d1').set({ orgId: 'org-a', name: 'Computer', status: 'active' });
+    await db.doc('organizations/org-b/departments/d2').set({ orgId: 'org-b', name: 'Civil', status: 'active' });
+    expect([...(await data.departments.departmentNames('org-a'))]).toEqual([['d1', 'Computer']]);
+  });
 });

@@ -22,6 +22,12 @@ export function departmentsData(db: Firestore) {
         .sort((a, b) => a.name.localeCompare(b.name));
     },
 
+    /** Department names by ID, for records that keep only the ID (leaderboard rows, DECISIONS Q28). */
+    async departmentNames(orgId: string): Promise<Map<string, string>> {
+      const snap = await col(orgId).select('name').get();
+      return new Map(snap.docs.map((d) => [d.id, d.get('name') as string]));
+    },
+
     async getDepartment(orgId: string, deptId: string): Promise<Omit<Department, 'studentCount'> | null> {
       const d = await col(orgId).doc(deptId).get();
       return d.exists ? { id: d.id, name: d.get('name'), status: d.get('status') } : null;
