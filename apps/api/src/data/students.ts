@@ -67,7 +67,16 @@ export function studentsData(db: Firestore) {
     /** Generates the studentId here (DATA-01): a manually added student has no Firebase user yet. */
     createStudent(orgId: string, tx: Tx, input: Omit<StudentRecord, 'id'>): string {
       const ref = col(orgId).doc();
-      writer(tx).create(ref, { orgId, ...input, email: normalizeEmail(input.email), accommodations: {} });
+      // uid and consentAt stay absent until the student signs in and agrees (DATA-01, SEC-08).
+      const { uid, consentAt, ...rest } = input;
+      writer(tx).create(ref, {
+        orgId,
+        ...rest,
+        ...(uid ? { uid } : {}),
+        ...(consentAt ? { consentAt } : {}),
+        email: normalizeEmail(input.email),
+        accommodations: {},
+      });
       return ref.id;
     },
 

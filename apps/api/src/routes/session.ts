@@ -45,7 +45,7 @@ export function sessionRoutes(deps: Deps & { data: Data; entitlements: Entitleme
           studentId: u.studentId,
           org: u.orgId ? await deps.data.orgs.getOrg(u.orgId) : null,
           entitlements: u.orgId ? await effective(u.orgId) : null,
-          preferences: await deps.data.preferences.getPreferences(u.uid),
+          preferences: await deps.data.preferences.getPreferences(u),
           profileComplete: u.role !== 'student' ? true : await studentComplete(u.orgId, u.studentId),
           canSwitchOrg: u.role === 'student' && (await deps.data.identity.orgIdsForEmail(u.email)).length > 1,
         };

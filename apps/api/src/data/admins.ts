@@ -55,7 +55,6 @@ export function adminsData(db: Firestore) {
         orgId,
         email,
         name: input.name ?? null,
-        uid: null,
         status: 'active',
         addedBy: input.addedBy,
         addedAt: input.addedAt,

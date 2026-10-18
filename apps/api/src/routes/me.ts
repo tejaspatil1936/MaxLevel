@@ -138,7 +138,7 @@ export function meRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       '/v1/me/preferences',
       { config: { access: 'signedIn' }, schema: { body: preferencesSchema, response: { 200: preferencesSchema } } },
       async (req) => {
-        await data.preferences.setPreferences(req.user!.uid, req.body);
+        await data.preferences.setPreferences(req.user!, req.body);
         return req.body;
       },
     );
@@ -146,7 +146,7 @@ export function meRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
     app.get(
       '/v1/me/preferences',
       { config: { access: 'signedIn' }, schema: { response: { 200: preferencesSchema } } },
-      async (req) => (req.user ? data.preferences.getPreferences(req.user.uid) : DEFAULT_PREFERENCES),
+      async (req) => (req.user ? data.preferences.getPreferences(req.user) : DEFAULT_PREFERENCES),
     );
   };
 }
