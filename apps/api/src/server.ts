@@ -16,4 +16,5 @@ const app = await buildApp({ clock, config, firebase, queue: localTaskQueue(fire
 app.addHook('onClose', () => dispatcher.stop());
 installGracefulShutdown(app);
 await app.listen({ port: config.port, host: config.host });
-dispatcher.start(app.log);
+// Production hands tasks to Cloud Tasks (OWNER_SETUP); the in-process dispatcher is for local and test runs only.
+if (config.env !== 'production') dispatcher.start(app.log);
