@@ -95,7 +95,9 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
   }, [drawerOpen]);
 
   const latest = useRef({ index: state.index, total, question, onTimeKey, drawerOpen });
-  latest.current = { index: state.index, total, question, onTimeKey, drawerOpen };
+  useEffect(() => {
+    latest.current = { index: state.index, total, question, onTimeKey, drawerOpen };
+  });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || dialogOpen()) return;
