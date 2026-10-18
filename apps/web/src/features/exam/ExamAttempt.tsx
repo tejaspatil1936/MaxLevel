@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
+import { PhoneStatus, ReconnectPhone, usePhoneWatch } from '@/features/phone/PhoneWatch';
+import { useLaptopPresence } from '@/features/phone/presence';
 import { CameraPreview } from '@/features/proctoring/CameraPreview';
 import { useCameraWatch } from '@/features/proctoring/useCameraWatch';
 import { AccessibilityButton } from '@/features/shell/AccessibilityPanel';
@@ -279,6 +281,16 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   // The laptop camera (PR-01, PR-02): on for the whole exam, faces counted on the device, incidents reported as above.
   const { cameraRequired } = payload.settings;
   const cameraStream = useCameraWatch(cameraRequired, report);
+  // Presence in Realtime Database (DATA-06): this laptop's own record, and with a second camera the phone's, whose
+  // disconnection brings up the reconnect overlay and then a strike (PR-16) unless our database is down (REL-05).
+  const { session } = useSession();
+  const me = session.status === 'ready' ? session.me : null;
+  const orgId = me?.orgId ?? null;
+  const testId = payload.attempt.testId;
+  const presenceOf = useMemo(() => (orgId ? { orgId, testId, attemptId } : null), [orgId, testId, attemptId]);
+  useLaptopPresence(presenceOf);
+  const { secondCamera } = payload.settings;
+  const phone = usePhoneWatch(secondCamera ? presenceOf : null, report);
   // Each timed question is reported as served when it shows (Q-12); until the server answers, its countdown runs from
   // the time it showed here (QuestionTimer).
   const [served, setServed] = useState<Record<string, number>>(payload.questionServedAt);
@@ -443,6 +455,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
           <>
             <SyncStatusView status={status} />
             <div className="ml-auto flex flex-wrap items-center gap-x-6 gap-y-2">
+              {secondCamera ? <PhoneStatus link={phone.link} /> : null}
               <StrikeTally count={proctor.strikes} max={payload.attempt.maxStrikes} />
               <ExamTimer
                 deadlineAt={deadlineAt}
@@ -472,6 +485,9 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         offline={submitOffline}
         onConfirm={() => void submission.current?.submit()}
       />
+      {secondCamera && presenceOf ? (
+        <ReconnectPhone open={phone.reconnect} attempt={presenceOf} timezone={me?.org?.timezone ?? null} />
+      ) : null}
       <StrikeWarning
         warning={proctor.warning}
         max={payload.attempt.maxStrikes}
