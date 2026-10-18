@@ -84,6 +84,12 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
   for (const routes of [platformRoutes, departmentRoutes, whitelistRoutes, studentRoutes, auditRoutes, meRoutes])
     await app.register(routes(ctx));
   // Test-only API: never registered outside NODE_ENV=test with a TEST_API_SECRET.
-  if (testApiEnabled(deps)) await app.register(testOnlyRoutes(deps));
+  if (testApiEnabled(deps)) {
+    const clearCaches = () => {
+      entitlements.invalidateAll();
+      status.invalidate();
+    };
+    await app.register(testOnlyRoutes({ ...deps, clearCaches }));
+  }
   return app;
 }

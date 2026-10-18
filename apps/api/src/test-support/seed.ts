@@ -52,7 +52,7 @@ const ORGS: OrgSeed[] = [
     name: 'College of Engineering Pune',
     slug: 'coep',
     domain: 'b.test',
-    prnPrefix: 'B22',
+    prnPrefix: 'B2201',
     departments: ['Computer', 'Civil'],
   },
 ];

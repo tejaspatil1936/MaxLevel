@@ -11,7 +11,12 @@ import { seedBase } from '../test-support/seed';
 export const testApiEnabled = (deps: Deps): deps is Deps & { clock: TestClock } =>
   deps.config.env === 'test' && !!deps.config.testApiSecret && deps.clock instanceof TestClock;
 
-export function testOnlyRoutes(deps: Deps & { clock: TestClock }): FastifyPluginAsyncZod {
+/** In-memory caches the reset empties, so one test's entitlements or account status never leak into the next. */
+export interface ResettableCaches {
+  clearCaches: () => void;
+}
+
+export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCaches): FastifyPluginAsyncZod {
   const { clock, config } = deps;
   const clockBody = z.union([z.object({ nowMs: z.number().int() }), z.object({ advanceMs: z.number().int() })]);
   const clockReply = { 200: z.object({ nowMs: z.number() }) };
@@ -55,6 +60,7 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock }): FastifyPlugin
       },
       async (req) => {
         clock.reset();
+        deps.clearCaches();
         await clearEmulators();
         if (req.body.seed === 'base') await seedBase(deps.firebase.db, clock.now());
         return { ok: true as const };

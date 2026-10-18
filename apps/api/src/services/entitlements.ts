@@ -19,6 +19,7 @@ export function entitlementsService(data: Data, clock: Clock) {
   return {
     get,
     invalidate: (orgId: string) => cache.delete(orgId),
+    invalidateAll: () => cache.clear(),
 
     /** 403 FEATURE_DISABLED unless the feature is on for the organization (FF-02). */
     async requireFeature(orgId: string, feature: keyof Entitlements['features']): Promise<void> {
