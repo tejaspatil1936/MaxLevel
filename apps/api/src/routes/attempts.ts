@@ -1,4 +1,6 @@
 import {
+  answerBatchResultSchema,
+  answerBatchSchema,
   attemptPayloadSchema,
   attemptStartSchema,
   attemptSubmitResultSchema,
@@ -45,6 +47,16 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       '/v1/attempts/:id',
       { config: student, schema: { params: idParams, response: { 200: attemptPayloadSchema } } },
       async (req) => attempts.resume(req.orgId!, studentOf(req).studentId, req.params.id),
+    );
+
+    // EX-10, EX-11: the exam screen's answer batches; rate limits per user (API-06) come with offline sync (F-3.07).
+    app.put(
+      '/v1/attempts/:id/answers',
+      {
+        config: student,
+        schema: { params: idParams, body: answerBatchSchema, response: { 200: answerBatchResultSchema } },
+      },
+      async (req) => attempts.saveAnswers(req.orgId!, studentOf(req).studentId, req.params.id, req.body),
     );
 
     // EX-15: submitting and grading come with F-3.08; the Idempotency-Key requirement (API-02) holds already.

@@ -1,4 +1,4 @@
-import type { AttemptPayload } from '@mitaoe/shared';
+import type { AnswerBatchResult, AttemptPayload } from '@mitaoe/shared';
 import type { Auth } from 'firebase-admin/auth';
 import type { FastifyInstance } from 'fastify';
 import { expect } from 'vitest';
@@ -6,7 +6,7 @@ import { TEST_SECRET } from './app';
 import { SEED } from './seed';
 import { asClaims } from './tokens';
 
-// Helpers for the attempt integration tests (POST /v1/attempts, GET /v1/attempts/{id}).
+// Helpers for the attempt integration tests (POST /v1/attempts, GET /v1/attempts/{id}, PUT …/answers).
 
 export const NOW = Date.UTC(2026, 10, 2, 4, 0); // 2 Nov 2026, 09:30 IST
 export const MIN = 60_000;
@@ -57,6 +57,12 @@ export function attemptClient(app: FastifyInstance) {
         payload: { testId },
       });
       return { status: res.statusCode, body: res.json() as AttemptPayload, raw: res.body };
+    },
+
+    /** PUT /v1/attempts/{id}/answers with a batch body. */
+    async answers(id: string, headers: Record<string, string>, payload: object) {
+      const res = await app.inject({ method: 'PUT', url: `/v1/attempts/${id}/answers`, headers, payload });
+      return { status: res.statusCode, body: res.json() as AnswerBatchResult, raw: res.body };
     },
 
     async resume(id: string, headers: Record<string, string>) {

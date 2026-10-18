@@ -1,4 +1,5 @@
 import {
+  answerVerdict,
   attemptDeadline,
   autoSubmitTask,
   canStart,
@@ -6,6 +7,8 @@ import {
   drawAttempt,
   isEligible,
   isFinishedAttempt,
+  type AnswerBatch,
+  type AnswerBatchResult,
   type AnswerRecord,
   type AttemptPayload,
   type AttemptRecord,
@@ -24,6 +27,14 @@ const REFUSALS = {
   WINDOW_NOT_OPEN: "This test hasn't opened yet.",
   WINDOW_CLOSED: 'The last start time for this test has passed.',
 } as const;
+
+/** A question's own time limit under the test's question time mode (Q-11), or none. */
+const timeLimitOf = (settings: Settings, q: { timeLimitSec?: number }) =>
+  settings.questionTimeMode === 'same'
+    ? settings.questionTimeLimitSec
+    : settings.questionTimeMode === 'each'
+      ? q.timeLimitSec
+      : undefined;
 
 export interface AttemptDeps {
   data: Data;
@@ -54,12 +65,7 @@ export function attemptService(deps: AttemptDeps) {
       const q = set.byId.get(id);
       if (!q) return [];
       const options = new Map(q.options.map((o) => [o.id, o]));
-      const timeLimitSec =
-        settings.questionTimeMode === 'same'
-          ? settings.questionTimeLimitSec
-          : settings.questionTimeMode === 'each'
-            ? q.timeLimitSec
-            : undefined;
+      const timeLimitSec = timeLimitOf(settings, q);
       return [
         {
           id,
@@ -110,6 +116,13 @@ export function attemptService(deps: AttemptDeps) {
       questionServedAt: attempt.questionServedAt,
       serverTime: clock.now(),
     };
+  }
+
+  /** The caller's own attempt; another student's or another organization's is 404 (ORG-05). */
+  async function ownAttempt(orgId: string, studentId: string, attemptId: string): Promise<AttemptRecord> {
+    const attempt = await data.attempts.getAttempt(orgId, attemptId);
+    if (!attempt || attempt.studentId !== studentId) throw notFound('Attempt');
+    return attempt;
   }
 
   const dayLabelOf = async (orgId: string, test: TestRecord) =>
@@ -190,8 +203,7 @@ export function attemptService(deps: AttemptDeps) {
 
     /** GET /v1/attempts/{id} (EX-05): the caller's own attempt, in progress or finished, with its saved answers. */
     async resume(orgId: string, studentId: string, attemptId: string): Promise<AttemptPayload> {
-      const attempt = await data.attempts.getAttempt(orgId, attemptId);
-      if (!attempt || attempt.studentId !== studentId) throw notFound('Attempt');
+      const attempt = await ownAttempt(orgId, studentId, attemptId);
       const test = await data.tests.getTest(orgId, attempt.testId);
       if (!test?.resolved) throw notFound('Attempt');
       const [dayLabel, set, answers] = await Promise.all([
@@ -200,6 +212,64 @@ export function attemptService(deps: AttemptDeps) {
         data.attempts.getAnswers(orgId, attempt.id),
       ]);
       return payload(test, dayLabel, test.resolved, set, attempt, answers);
+    },
+
+    /**
+     * PUT /v1/attempts/{id}/answers (EX-11, EX-13, EX-14, Q-12, OBS-03): each answer is judged by shared
+     * `answerVerdict` against its stored seq, the deadline and its question timer on the server clock, and written in
+     * its own transaction. An answer for a question or option outside the attempt's draw refuses the whole batch.
+     */
+    async saveAnswers(
+      orgId: string,
+      studentId: string,
+      attemptId: string,
+      batch: AnswerBatch,
+    ): Promise<AnswerBatchResult> {
+      const attempt = await ownAttempt(orgId, studentId, attemptId);
+      if (isFinishedAttempt(attempt.status))
+        throw new AppError(409, 'ATTEMPT_FINISHED', 'This attempt is finished and takes no more answers.');
+      const test = await data.tests.getTest(orgId, attempt.testId);
+      if (!test?.resolved) throw notFound('Attempt');
+      const settings = test.resolved;
+      const set = await published.questions(orgId, test);
+      for (const a of batch.answers) {
+        const options = attempt.draw.optionOrder[a.questionId];
+        if (!options || (a.optionId !== null && !options.includes(a.optionId)))
+          throw new AppError(400, 'VALIDATION', 'An answer names a question or option outside this attempt.', {
+            questionId: a.questionId,
+          });
+      }
+
+      const now = clock.now();
+      const verdicts = await Promise.all(
+        batch.answers.map(async (a) => {
+          const timeLimitSec = timeLimitOf(settings, set.byId.get(a.questionId) ?? {});
+          const verdict = await data.attempts.saveAnswer(orgId, attempt.id, a, now, (storedSeq) =>
+            answerVerdict({
+              seq: a.seq,
+              storedSeq,
+              clientTs: a.clientTs,
+              serverNow: now,
+              deadlineAt: attempt.deadlineAt,
+              servedAt: attempt.questionServedAt[a.questionId],
+              ...(timeLimitSec !== undefined ? { timeLimitSec } : {}),
+            }),
+          );
+          return { questionId: a.questionId, verdict };
+        }),
+      );
+      const sync = { backlog: batch.backlog, clockOffsetMs: batch.clockOffsetMs, at: now };
+      await Promise.all([
+        data.attempts.recordSync(orgId, attempt.id, sync),
+        rtdb.ref(`live/${orgId}/${attempt.testId}/${attempt.id}`).update({ backlog: batch.backlog, updatedAt: now }),
+      ]);
+      const result: AnswerBatchResult = { saved: [], stale: [], rejected: [], serverTime: now };
+      for (const { questionId, verdict } of verdicts) {
+        if (verdict === 'saved' || verdict === 'late_sync') result.saved.push(questionId);
+        else if (verdict === 'stale') result.stale.push(questionId);
+        else result.rejected.push({ questionId, code: verdict });
+      }
+      return result;
     },
   };
 }
