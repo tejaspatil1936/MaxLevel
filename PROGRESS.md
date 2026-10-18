@@ -70,3 +70,5 @@ F-2.04 done — test Settings tab with Inherited/Overridden groups and reset, te
 F-2.05 done — question CRUD, reorder (drag and keyboard), image upload, JSON import (legacy and mitaoe-questions/1), editor with live Student view (markdown-it, KaTeX MathML, Shiki)
 F-2.06 done — sections table and dialog with draw and difficulty-mix validation (API 400s), whole-test draw, marking presets and per-question time limits
 F-2.07 done — reusable exam screen (options, palette, navigation) in preview mode at /exam/?preview=, fresh seeded draw from GET /v1/tests/{id}/preview, Show answers, no attempt or proctoring
+F-2.08 done — approval checklist (shared), approve and publish endpoints with settings snapshot and SER-09 refusal, return to in_review on edits before attempts, checklist in the Preview tab
+F-2.09 done — super-admin authoring in an org workspace works through the shared admin routes with the super admin as actor (verified, no extra code)
