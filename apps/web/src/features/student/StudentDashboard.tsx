@@ -5,6 +5,7 @@ import { EmptyState, InlineMessage, PageHeader, Skeleton, StatusPill } from '@mi
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useCallback, useId, type ReactNode } from 'react';
+import { resultUrl } from '@/features/results/StudentResultScreen';
 import { t, type MessageKey } from '@/i18n';
 import { api } from '@/lib/api';
 import { formatCount, formatWindow } from '@/lib/format';
@@ -79,7 +80,12 @@ export function StudentDashboard() {
           <Group title={t('studentTests.completed')} items={d.completed}>
             {(test) => (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="text-heading-2 font-bold">{testHeading(test)}</span>
+                <Link
+                  href={resultUrl(test.attemptId)}
+                  className="inline-flex min-h-11 items-center text-heading-2 font-bold text-ballpoint underline"
+                >
+                  {testHeading(test)}
+                </Link>
                 <StatusPill tone={test.status === 'terminated' ? 'danger' : 'success'}>
                   {t(STATUS[test.status])}
                 </StatusPill>
