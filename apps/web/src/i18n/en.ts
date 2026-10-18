@@ -82,6 +82,7 @@ const core = {
   'nav.overview': 'Overview',
   'nav.organizations': 'Organizations',
   'nav.tests': 'Tests',
+  'nav.history': 'History',
   'nav.whitelist': 'Whitelist',
   'nav.students': 'Students',
   'nav.departments': 'Departments',

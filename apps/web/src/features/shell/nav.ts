@@ -38,3 +38,13 @@ export const PLATFORM_NAV: NavLink[] = [
   { label: 'nav.organizations', href: '/platform/', icon: Building2 },
   { label: 'nav.audit', href: '/platform/audit/', icon: ScrollText },
 ];
+
+/** The student top bar's `Main` links (docs/testids/phase-4.md): the page shown, or its section, is current. */
+export const STUDENT_NAV: Array<{ label: MessageKey; href: string; current: (path: string) => boolean }> = [
+  {
+    label: 'nav.tests',
+    href: '/student/',
+    current: (path) => path === '/student/' || path.startsWith('/student/test/'),
+  },
+  { label: 'nav.history', href: '/student/history/', current: (path) => path.startsWith('/student/history/') },
+];
