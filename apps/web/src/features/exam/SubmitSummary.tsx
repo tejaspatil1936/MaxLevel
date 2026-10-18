@@ -3,6 +3,7 @@
 import { ConfirmDialog, InlineMessage, Table } from '@mitaoe/ui';
 import { t } from '@/i18n';
 import { formatCount } from '@/lib/format';
+import type { SubmitPhase } from './submission';
 
 export interface SummaryRow {
   name: string;
@@ -13,24 +14,29 @@ export interface SummaryRow {
 
 /**
  * Submit test? (EX-15, UX-03): answered, not answered and marked questions per section, focus on Cancel. Confirming
- * waits until every answer is saved; the submit itself and its offline retries are F-3.08's.
+ * syncs every waiting answer, then submits; while the submit can't reach the API the dialog says so and keeps trying.
  */
 export function SubmitSummary({
   open,
   onOpenChange,
   rows,
   saved,
-  error,
+  phase,
+  offline,
   onConfirm,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rows: SummaryRow[];
   saved: boolean;
-  error: boolean;
+  phase: SubmitPhase;
+  /** The submit (or the answer sync before it) can't reach the API. */
+  offline: boolean;
   onConfirm: () => void;
 }) {
   const count = (n: number) => formatCount(n);
+  const busy = phase === 'saving' || phase === 'sending' || phase === 'offline';
+  const progress = offline ? t('attempt.submitOffline') : busy ? t('attempt.submitting') : '';
   return (
     <ConfirmDialog
       open={open}
@@ -39,7 +45,7 @@ export function SubmitSummary({
       description={t('attempt.summaryBody')}
       cancelLabel={t('common.cancel')}
       confirmLabel={t('attempt.submit')}
-      confirmDisabled={!saved}
+      confirmDisabled={busy || phase === 'done'}
       onConfirm={onConfirm}
     >
       <Table
@@ -59,8 +65,11 @@ export function SubmitSummary({
           { key: 'marked', header: t('attempt.summaryMarked'), cell: (r) => count(r.marked), align: 'end' },
         ]}
       />
-      {!saved ? <p className="mt-3 text-graphite">{t('attempt.summaryWaiting')}</p> : null}
-      {error ? (
+      {!saved && !busy ? <p className="mt-3 text-graphite">{t('attempt.summaryWaiting')}</p> : null}
+      <p role="status" className={offline ? 'mt-3 font-bold text-redpen' : 'mt-3 text-graphite'}>
+        {progress}
+      </p>
+      {phase === 'failed' ? (
         <div className="mt-3">
           <InlineMessage>{t('attempt.submitFailed')}</InlineMessage>
         </div>

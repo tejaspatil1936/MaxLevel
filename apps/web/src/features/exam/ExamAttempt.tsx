@@ -3,7 +3,7 @@
 import type { AnswerBatchResult, AttemptPayload } from '@mitaoe/shared';
 import { isFinishedAttempt } from '@mitaoe/shared';
 import { Button, InlineMessage, Skeleton } from '@mitaoe/ui';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
@@ -27,6 +27,7 @@ import {
   putDeviceAnswer,
   putDeviceExam,
 } from './offline-store';
+import { createSubmission, type Submission, type SubmitPhase } from './submission';
 import { SubmitSummary, type SummaryRow } from './SubmitSummary';
 import { CLOCK_REFRESH_MS, timeLeftText, warningText } from './time-left';
 
@@ -191,6 +192,9 @@ function summaryRows(payload: AttemptPayload, state: ExamState): SummaryRow[] {
   return loose.length ? [...rows, row(t('exam.paletteOther'), loose)] : rows;
 }
 
+/** The API says the attempt is finished (submitted, auto-submitted or ended), so nothing more is sent. */
+const attemptFinished = (e: unknown) => e instanceof ApiError && e.code === 'ATTEMPT_FINISHED';
+
 const TIME_CODES = new Set(['AFTER_DEADLINE', 'QUESTION_TIME_UP', 'QUESTION_NOT_SERVED']);
 
 /** Answers the server refused, by question number: those whose time was up, then any other refusal. */
@@ -231,6 +235,14 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
     waiting.length ? { kind: 'offline', waiting: waiting.length } : { kind: 'saved' },
   );
   const [rejections, setRejections] = useState<Rejection[]>([]);
+  // A finished attempt (submitted here, by the auto-submit task, or ended) opens the submitted screen.
+  const finished = useRef(() => {});
+  useEffect(() => {
+    finished.current = () => {
+      void clearDeviceExam(attemptId);
+      router.replace(submittedUrl(attemptId));
+    };
+  }, [attemptId, router]);
   const sync = useRef<AnswerSync | null>(null);
   useEffect(() => {
     const queue = createAnswerSync(
@@ -240,6 +252,9 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
           api<AnswerBatchResult>(`/v1/attempts/${encodeURIComponent(attemptId)}/answers`, {
             method: 'PUT',
             body: batch,
+          }).catch((e: unknown) => {
+            if (attemptFinished(e)) finished.current();
+            throw e;
           }),
         now: serverNow,
         clockOffsetMs: serverClockOffset,
@@ -292,18 +307,36 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
 
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [submitKey] = useState(() => crypto.randomUUID());
-  const submit = useMutation({
-    mutationFn: () =>
-      api(`/v1/attempts/${encodeURIComponent(attemptId)}/submit`, {
-        method: 'POST',
-        body: {},
-        headers: { 'idempotency-key': submitKey },
-      }),
-    onSuccess: () => {
-      void clearDeviceExam(attemptId);
-      router.replace(submittedUrl(attemptId));
-    },
-  });
+  const [phase, setPhase] = useState<SubmitPhase>('idle');
+  const submission = useRef<Submission | null>(null);
+  useEffect(() => {
+    const s = createSubmission({
+      flush: () => sync.current?.flush() ?? Promise.resolve(),
+      send: (reason) =>
+        api(`/v1/attempts/${encodeURIComponent(attemptId)}/submit`, {
+          method: 'POST',
+          body: reason ? { reason } : {},
+          headers: { 'idempotency-key': submitKey },
+        }),
+      retryable: (e) => !(e instanceof ApiError) || e.status >= 500 || [408, 429].includes(e.status),
+      finished: attemptFinished,
+      schedule: (fn, ms) => {
+        const timer = setTimeout(fn, ms);
+        return () => clearTimeout(timer);
+      },
+      onPhase: setPhase,
+      onDone: () => finished.current(),
+    });
+    submission.current = s;
+    // Coming back online sends the waiting submit at once (EX-15).
+    const online = () => s.retryNow();
+    window.addEventListener('online', online);
+    return () => {
+      window.removeEventListener('online', online);
+      s.dispose();
+    };
+  }, [attemptId, submitKey]);
+  const submitOffline = phase === 'offline' || (phase === 'saving' && status.kind === 'offline');
 
   return (
     <>
@@ -312,14 +345,27 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         title={testHeading(payload.test)}
         state={state}
         dispatch={dispatch}
-        notice={<RefusedAnswers rejections={rejections} ids={ids} />}
+        notice={
+          <>
+            <RefusedAnswers rejections={rejections} ids={ids} />
+            {submitOffline && !summaryOpen ? (
+              <p role="status" className="font-bold text-redpen">
+                {t('attempt.submitOffline')}
+              </p>
+            ) : null}
+          </>
+        }
         onTimeKey={() => announce(timeLeftText(deadlineAt - serverNow()))}
         bar={
           <>
             <SyncStatusView status={status} />
             <div className="ml-auto flex flex-wrap items-center gap-x-6 gap-y-2">
               <StrikeTally count={payload.attempt.strikesCount} max={payload.attempt.maxStrikes} />
-              <ExamTimer deadlineAt={deadlineAt} onWarning={(m) => announce(warningText(m))} />
+              <ExamTimer
+                deadlineAt={deadlineAt}
+                onWarning={(m) => announce(warningText(m))}
+                onTimeUp={() => void submission.current?.submit('time_up')}
+              />
               <TimeAnnouncements text={announcement} />
               <AccessibilityButton />
               <Button variant="secondary" onClick={() => setSummaryOpen(true)}>
@@ -332,13 +378,16 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
       <SubmitSummary
         open={summaryOpen}
         onOpenChange={(open) => {
+          // A submit already sent can't be called back; anything waiting stops when the summary closes.
+          if (!open && (phase === 'sending' || phase === 'done')) return;
+          if (!open) submission.current?.cancel();
           setSummaryOpen(open);
-          if (!open) submit.reset();
         }}
         rows={summaryRows(payload, state)}
         saved={status.kind === 'saved'}
-        error={submit.isError}
-        onConfirm={() => (submit.isPending ? undefined : submit.mutate())}
+        phase={phase}
+        offline={submitOffline}
+        onConfirm={() => void submission.current?.submit()}
       />
     </>
   );

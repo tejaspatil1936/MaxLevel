@@ -61,21 +61,37 @@ export function StrikeTally({ count, max }: { count: number; max: number }) {
 
 /**
  * `deadline − server now` in noticeboard numerals (EX-06); a timer, never a live region. The numerals turn red pen
- * below 10 minutes, and `onWarning` runs once as the time left passes 10, 5 and 1 minutes (A11Y-09).
+ * below 10 minutes, `onWarning` runs once as the time left passes 10, 5 and 1 minutes (A11Y-09), and `onTimeUp` once
+ * when it reaches zero.
  */
-export function ExamTimer({ deadlineAt, onWarning }: { deadlineAt: number; onWarning?: (minutes: number) => void }) {
+export function ExamTimer({
+  deadlineAt,
+  onWarning,
+  onTimeUp,
+}: {
+  deadlineAt: number;
+  onWarning?: (minutes: number) => void;
+  /** Runs once when the deadline is reached on the server's time (EX-16). */
+  onTimeUp?: () => void;
+}) {
   const id = useId();
   const remaining = deadlineAt - useServerNow();
   const before = useRef(remaining);
   const warn = useRef(onWarning);
+  const up = useRef(onTimeUp);
+  const timeUp = remaining <= 0;
   useEffect(() => {
     warn.current = onWarning;
+    up.current = onTimeUp;
   });
   useEffect(() => {
     const minutes = passedWarning(before.current, remaining);
     before.current = remaining;
     if (minutes !== null) warn.current?.(minutes);
   }, [remaining]);
+  useEffect(() => {
+    if (timeUp) up.current?.();
+  }, [timeUp]);
   return (
     <p className="flex items-baseline gap-2">
       <span id={id} className="text-graphite">
