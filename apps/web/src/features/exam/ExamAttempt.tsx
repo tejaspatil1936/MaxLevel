@@ -14,10 +14,11 @@ import { t } from '@/i18n';
 import { api, ApiError, serverClockOffset, serverNow } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
 import { createAnswerSync, type AnswerSync, type SyncStatus } from './answer-sync';
-import { ExamTimer, StrikeTally, SyncStatusView } from './AttemptBar';
+import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
 import { examReducer, initialExamState, type ExamState } from './exam-state';
 import { ExamScreen } from './ExamScreen';
 import { SubmitSummary, type SummaryRow } from './SubmitSummary';
+import { CLOCK_REFRESH_MS, timeLeftText, warningText } from './time-left';
 
 const backLink = 'inline-flex min-h-11 items-center font-bold text-ballpoint underline';
 
@@ -158,6 +159,14 @@ function AttemptExam({ payload }: { payload: AttemptPayload }) {
         sync.current?.record(id, state.answers[id] ?? null, !!state.marked[id]);
   }, [state.answers, state.marked]);
 
+  // The clock offset is measured again every minute from X-Server-Time (EX-06); any API response updates it.
+  useEffect(() => {
+    const id = setInterval(() => void api('/health').catch(() => undefined), CLOCK_REFRESH_MS);
+    return () => clearInterval(id);
+  }, []);
+  const deadlineAt = payload.attempt.deadlineAt;
+  const [announcement, announce] = useTimeAnnouncer();
+
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [submitKey] = useState(() => crypto.randomUUID());
   const submit = useMutation({
@@ -177,12 +186,14 @@ function AttemptExam({ payload }: { payload: AttemptPayload }) {
         title={testHeading(payload.test)}
         state={state}
         dispatch={dispatch}
+        onTimeKey={() => announce(timeLeftText(deadlineAt - serverNow()))}
         bar={
           <>
             <SyncStatusView status={status} />
             <div className="ml-auto flex flex-wrap items-center gap-x-6 gap-y-2">
               <StrikeTally count={payload.attempt.strikesCount} max={payload.attempt.maxStrikes} />
-              <ExamTimer deadlineAt={payload.attempt.deadlineAt} />
+              <ExamTimer deadlineAt={deadlineAt} onWarning={(m) => announce(warningText(m))} />
+              <TimeAnnouncements text={announcement} />
               <AccessibilityButton />
               <Button variant="secondary" onClick={() => setSummaryOpen(true)}>
                 {t('attempt.submit')}

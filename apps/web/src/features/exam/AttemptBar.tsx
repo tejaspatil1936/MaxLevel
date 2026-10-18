@@ -2,11 +2,12 @@
 
 import { cx } from '@mitaoe/ui';
 import { Check, CloudOff, RefreshCw } from 'lucide-react';
-import { useId } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useServerNow } from '@/features/student/Countdown';
 import { t } from '@/i18n';
 import { formatExamTimer } from '@/lib/format';
 import type { SyncStatus } from './answer-sync';
+import { isFinalMinutes, passedWarning } from './time-left';
 
 // The attempt's top-bar pieces (13.6, 13.7): sync status, strike tally and the noticeboard timer.
 
@@ -58,18 +59,69 @@ export function StrikeTally({ count, max }: { count: number; max: number }) {
   );
 }
 
-/** `deadline − server now` in noticeboard numerals (EX-06); a timer, never a live region. */
-export function ExamTimer({ deadlineAt }: { deadlineAt: number }) {
+/**
+ * `deadline − server now` in noticeboard numerals (EX-06); a timer, never a live region. The numerals turn red pen
+ * below 10 minutes, and `onWarning` runs once as the time left passes 10, 5 and 1 minutes (A11Y-09).
+ */
+export function ExamTimer({ deadlineAt, onWarning }: { deadlineAt: number; onWarning?: (minutes: number) => void }) {
   const id = useId();
-  const now = useServerNow();
+  const remaining = deadlineAt - useServerNow();
+  const before = useRef(remaining);
+  const warn = useRef(onWarning);
+  useEffect(() => {
+    warn.current = onWarning;
+  });
+  useEffect(() => {
+    const minutes = passedWarning(before.current, remaining);
+    before.current = remaining;
+    if (minutes !== null) warn.current?.(minutes);
+  }, [remaining]);
   return (
     <p className="flex items-baseline gap-2">
       <span id={id} className="text-graphite">
         {t('attempt.timeLeft')}
       </span>
-      <span role="timer" aria-labelledby={id} className="font-display text-timer font-extrabold tabular">
-        {formatExamTimer(deadlineAt - now)}
+      <span
+        role="timer"
+        aria-labelledby={id}
+        className={cx(
+          'font-display text-timer font-extrabold tabular',
+          isFinalMinutes(remaining) ? 'text-redpen' : 'text-ink',
+        )}
+      >
+        {formatExamTimer(remaining)}
       </span>
+    </p>
+  );
+}
+
+/**
+ * The text of the `Time announcements` region and the function that sets it. Saying the same words again empties the
+ * region for a moment first, so screen readers read them again (A11Y-06).
+ */
+export function useTimeAnnouncer(): [string, (text: string) => void] {
+  const [text, setText] = useState('');
+  const shown = useRef('');
+  const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(pending.current), []);
+  const announce = useCallback((next: string) => {
+    const show = (v: string) => {
+      shown.current = v;
+      setText(v);
+    };
+    clearTimeout(pending.current);
+    if (shown.current !== next) return show(next);
+    show('');
+    pending.current = setTimeout(() => show(next), 150);
+  }, []);
+  return [text, announce];
+}
+
+/** The polite `Time announcements` region in the top bar: empty until the first announcement (A11Y-09). */
+export function TimeAnnouncements({ text }: { text: string }) {
+  return (
+    <p role="status" aria-live="polite" aria-label={t('attempt.timeAnnouncements')} className="font-bold text-ink">
+      {text}
     </p>
   );
 }
