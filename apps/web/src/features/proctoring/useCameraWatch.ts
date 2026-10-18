@@ -1,6 +1,6 @@
 'use client';
 
-import type { FaceIncident } from '@mitaoe/shared';
+import type { AttemptEventDetails, FaceIncident } from '@mitaoe/shared';
 import { useEffect, useState } from 'react';
 import { startCameraWatch } from './camera-watch';
 import { countFaces, loadFaceDetector } from './face-detector';
@@ -12,7 +12,7 @@ import { countFaces, loadFaceDetector } from './face-detector';
  */
 export function useCameraWatch(
   required: boolean,
-  report: (type: FaceIncident, details: Record<string, unknown>) => void,
+  report: (type: FaceIncident, details: AttemptEventDetails) => void,
 ): MediaStream | null {
   const [stream, setStream] = useState<MediaStream | null>(null);
   useEffect(() => {

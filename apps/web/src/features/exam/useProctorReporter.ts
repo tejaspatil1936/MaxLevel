@@ -1,6 +1,6 @@
 'use client';
 
-import type { AttemptEventResult, AttemptPayload } from '@mitaoe/shared';
+import type { AttemptEventDetails, AttemptEventResult, AttemptPayload } from '@mitaoe/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, serverNow } from '@/lib/api';
 import {
@@ -49,7 +49,7 @@ export function useProctorReporter(
   }, [attemptId, devtoolsPolicy, opened]);
 
   const report = useCallback(
-    (type: ClientEventType, details?: Record<string, unknown>) => reporter.current?.report(type, details),
+    (type: ClientEventType, details?: AttemptEventDetails) => reporter.current?.report(type, details),
     [],
   );
   const acknowledge = useCallback(() => reporter.current?.acknowledge(), []);

@@ -1,4 +1,5 @@
 import {
+  type AttemptEventDetails,
   countsAsNewStrike,
   isStrikeEvent,
   retryDelayMs,
@@ -42,7 +43,7 @@ export interface ProctorDeps {
 }
 
 export interface ProctorReporter {
-  report(type: ClientEventType, details?: Record<string, unknown>): void;
+  report(type: ClientEventType, details?: AttemptEventDetails): void;
   /** The student acknowledged the warning. */
   acknowledge(): void;
   dispose(): void;

@@ -163,12 +163,29 @@ export type AnswerBatchResult = z.infer<typeof answerBatchResultSchema>;
 export const navigateSchema = z.object({ questionId: id }).strict();
 export const navigateResultSchema = z.object({ servedAt: ms, serverTime: ms });
 
+/** Limits on a report's `details`, so a browser cannot store large blobs through the events route. */
+export const EVENT_DETAILS_LIMITS = { keys: 20, keyLength: 64, stringLength: 500, bytes: 4096 } as const;
+
+/** A report's `details` (PR-11): flat, at most 20 keys, strings up to 500 characters, at most 4 KB as JSON. */
+export const attemptEventDetailsSchema = z
+  .record(
+    z.string().min(1).max(EVENT_DETAILS_LIMITS.keyLength),
+    z.union([z.string().max(EVENT_DETAILS_LIMITS.stringLength), z.number(), z.boolean(), z.null()]),
+  )
+  .refine((d) => Object.keys(d).length <= EVENT_DETAILS_LIMITS.keys, {
+    message: `At most ${EVENT_DETAILS_LIMITS.keys} details.`,
+  })
+  .refine((d) => new TextEncoder().encode(JSON.stringify(d)).length <= EVENT_DETAILS_LIMITS.bytes, {
+    message: `Details are at most ${EVENT_DETAILS_LIMITS.bytes} bytes.`,
+  });
+export type AttemptEventDetails = z.infer<typeof attemptEventDetailsSchema>;
+
 /** POST /v1/attempts/{id}/events (PR-08): the client reports, the server counts. */
 export const attemptEventReportSchema = z
   .object({
     type: z.enum(CLIENT_EVENT_TYPES),
     clientTs: ms,
-    details: z.record(z.string(), z.unknown()).default({}),
+    details: attemptEventDetailsSchema.default({}),
   })
   .strict();
 export type AttemptEventReport = z.infer<typeof attemptEventReportSchema>;

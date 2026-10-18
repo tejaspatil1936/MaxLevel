@@ -1,4 +1,10 @@
-import { FACE_CHECK_INTERVAL_MS, initialFaceWatch, nextFaceWatch, type FaceIncident } from '@mitaoe/shared';
+import {
+  type AttemptEventDetails,
+  FACE_CHECK_INTERVAL_MS,
+  initialFaceWatch,
+  nextFaceWatch,
+  type FaceIncident,
+} from '@mitaoe/shared';
 
 // The laptop camera during an attempt (spec 7.6, PR-01 to PR-03; docs/testids/phase-3.md "Laptop camera"). The camera
 // stays on until the exam screen closes. Faces are counted on the device every 500 ms from a video element of its own,
@@ -18,7 +24,7 @@ export interface CameraWatchDeps {
   now: () => number;
   /** Runs `fn` every `ms`; returns a function that stops it. */
   every: (fn: () => void, ms: number) => () => void;
-  report: (type: FaceIncident, details: Record<string, unknown>) => void;
+  report: (type: FaceIncident, details: AttemptEventDetails) => void;
   /** The live camera stream for the self-view, or null once it is stopped. */
   onStream: (stream: MediaStream | null) => void;
 }

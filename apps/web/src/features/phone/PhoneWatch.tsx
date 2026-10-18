@@ -1,6 +1,12 @@
 'use client';
 
-import { initialPhoneWatch, nextPhoneWatch, type PairingToken, type PhoneLink } from '@mitaoe/shared';
+import {
+  type AttemptEventDetails,
+  initialPhoneWatch,
+  nextPhoneWatch,
+  type PairingToken,
+  type PhoneLink,
+} from '@mitaoe/shared';
 import { Dialog } from '@mitaoe/ui';
 import { Smartphone } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -21,7 +27,7 @@ const LOOK_MS = 1000;
  */
 export function usePhoneWatch(
   attempt: AttemptRef | null,
-  report: (type: 'phone_disconnected', details: Record<string, unknown>) => void,
+  report: (type: 'phone_disconnected', details: AttemptEventDetails) => void,
 ): { link: PhoneLink; reconnect: boolean } {
   const { connected, phoneOnline } = usePhoneLink(attempt);
   const [view, setView] = useState<{ link: PhoneLink; reconnect: boolean }>({ link: 'unavailable', reconnect: false });

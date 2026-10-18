@@ -1,4 +1,4 @@
-import type { Settings } from '@mitaoe/shared';
+import type { AttemptEventDetails, Settings } from '@mitaoe/shared';
 import type { ClientEventType } from './proctor-events';
 
 // Browser lockdown on the exam screen (spec 7.7, PR-04 to PR-06; docs/testids/phase-3.md "Strike warnings and
@@ -31,7 +31,7 @@ export function isPrintShortcut(e: Keys): boolean {
 export interface LockdownDeps {
   win: Pick<Window, 'addEventListener' | 'removeEventListener'>;
   doc: Pick<Document, 'addEventListener' | 'removeEventListener' | 'visibilityState' | 'fullscreenElement'>;
-  report: (type: ClientEventType, details?: Record<string, unknown>) => void;
+  report: (type: ClientEventType, details?: AttemptEventDetails) => void;
   fullscreenRequired: boolean;
   devtoolsPolicy: Settings['devtoolsPolicy'];
 }
