@@ -104,3 +104,4 @@ PHASE 3 DONE 13/13 features
 PHASE 4 START 6903f950a6771bd580414b3936e31b97a3fcd385
 Tests: 27 phase 4 acceptance tests by test-author for F-4.02 to F-4.06 (F-4.01 is unit-only), reviewed twice (3 blocking race fixes, then pass), locked.
 F-4.01 done — rankTest and rankSeries with shared ranks, missed tests as 0, only submitted and auto-submitted attempts ranked, board ids, 5,000-row paging, student top 50 plus own row, board schemas (shared, unit-tested)
+F-4.02 done — release modes (immediate, after window close via release task, manual, never), withdraw with "Results are being reviewed", admin results list and release region, student result view within the release level, leaderboard recompute queued on release (handler and read finished in F-4.05)
