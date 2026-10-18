@@ -77,6 +77,21 @@ describe('attempt schemas', () => {
     expect(attemptEventReportSchema.safeParse({ type: 'note', clientTs: now }).success).toBe(false);
   });
 
+  it('PR-08 PR-11 event details are small: at most 20 keys, strings up to 500 characters, about 4 KB in all', () => {
+    const ok = (details: unknown) => attemptEventReportSchema.safeParse({ type: 'tab_hidden', clientTs: now, details });
+    expect(ok({ source: 'blur', faces: 2, hidden: true, gone: null }).success).toBe(true);
+    expect(ok({ key: 'x'.repeat(500) }).success).toBe(true);
+    expect(ok({ key: 'x'.repeat(501) }).success, 'a 501-character string').toBe(false);
+    expect(ok({ blob: 'x'.repeat(900_000) }).success, 'a 900 KB string').toBe(false);
+    expect(ok(Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`k${i}`, i]))).success).toBe(true);
+    expect(ok(Object.fromEntries(Array.from({ length: 21 }, (_, i) => [`k${i}`, i]))).success, '21 keys').toBe(false);
+    expect(
+      ok(Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`k${i}`, 'y'.repeat(450)]))).success,
+      'over 4 KB in all',
+    ).toBe(false);
+    expect(ok({ nested: { deep: 'x'.repeat(5_000) } }).success, 'a nested value').toBe(false);
+  });
+
   it('EX-16 a submit is {} or { reason: "time_up" }', () => {
     expect(attemptSubmitSchema.safeParse({}).success).toBe(true);
     expect(attemptSubmitSchema.safeParse({ reason: 'time_up' }).success).toBe(true);
