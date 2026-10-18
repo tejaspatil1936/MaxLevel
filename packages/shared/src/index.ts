@@ -33,3 +33,4 @@ export * from './pairing';
 export * from './leaderboard';
 export * from './release';
 export * from './results';
+export * from './result-view';
