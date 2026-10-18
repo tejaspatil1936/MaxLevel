@@ -43,6 +43,32 @@ const withSeries = async (db: Firestore) => {
 };
 const noRules = { departmentIds: [], graduationYears: [], include: [], exclude: [] };
 
+/** A draft test with a fixed ID in each org's sample series. */
+const testIn = async (db: Firestore, orgId: string, id: string) => {
+  const seriesId = await seriesIn(db, orgId, `series-${orgId}`);
+  await db.doc(`organizations/${orgId}/tests/${id}`).set({
+    orgId,
+    seriesId,
+    title: `Test ${id}`,
+    dayHidden: false,
+    scheduledDate: '2026-11-02',
+    overrides: {},
+    eligibility: noRules,
+    sections: [],
+    status: 'draft',
+    questionSetVersion: 1,
+    totalMarks: 0,
+    attemptsStarted: false,
+    createdAt: 0,
+    updatedAt: 0,
+  });
+  return id;
+};
+const withTest = async (db: Firestore) => {
+  await testIn(db, 'org-b', 'test-org-b');
+  return { params: { id: await testIn(db, 'org-a', 'test-org-a') } };
+};
+
 export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'GET /v1/org': {},
   'PATCH /v1/org/settings': { body: { profileLocked: false } },
@@ -127,6 +153,25 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'POST /v1/series/:id/eligibility/preview': {
     foreignParams: { id: 'series-org-b' },
     fresh: async (db) => ({ ...(await withSeries(db)), body: { eligibility: noRules } }),
+  },
+
+  'GET /v1/tests': {
+    fresh: async (db) => {
+      await withSeries(db);
+      return {};
+    },
+    query: { seriesId: 'series-org-a' },
+  },
+  'POST /v1/tests': {
+    fresh: async (db, n) => {
+      await withSeries(db);
+      return { body: { seriesId: 'series-org-a', title: `Test ${n}`, scheduledDate: '2026-11-03' } };
+    },
+  },
+  'GET /v1/tests/:id': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
+  'PATCH /v1/tests/:id': {
+    foreignParams: { id: 'test-org-b' },
+    fresh: async (db, n) => ({ ...(await withTest(db)), body: { title: `Renamed ${n}` } }),
   },
 
   'GET /v1/audit': {},
