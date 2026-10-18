@@ -2,7 +2,7 @@
 
 import type { ExamSection } from '@mitaoe/shared';
 import { cx } from '@mitaoe/ui';
-import { useId } from 'react';
+import { useEffect, useId, useRef, type Ref } from 'react';
 import { t, type MessageKey } from '@/i18n';
 import type { QuestionState } from './exam-state';
 import { StateMark } from './StateMark';
@@ -23,35 +23,67 @@ export interface PaletteGroup {
   indexes: number[];
 }
 
-/** The question palette in the right rail (13.6, A11Y-08): numbered bubbles grouped by section, with a legend. */
+const stateName = (i: number, state: QuestionState) =>
+  t('exam.paletteItem', { n: i + 1, state: t(`exam.state.${state}` as MessageKey) });
+
+/**
+ * The question palette (13.6, A11Y-08, A11Y-15): numbered bubbles grouped by section, with a legend. From 1,280 px it
+ * is the right rail; below that it is a drawer that is hidden until `open`.
+ */
 export function QuestionPalette({
   groups,
   current,
   stateOf,
   onGoTo,
+  open,
+  onClose,
+  currentRef,
 }: {
   groups: readonly PaletteGroup[];
   current: number;
   stateOf: (index: number) => QuestionState;
   onGoTo: (index: number) => void;
+  open: boolean;
+  onClose: () => void;
+  currentRef?: Ref<HTMLButtonElement>;
 }) {
   const id = useId();
   return (
     <nav
       aria-label={t('exam.palette')}
-      className="flex w-64 shrink-0 flex-col gap-5 self-start rounded-panel border border-rule bg-surface p-4"
+      className={cx(
+        'w-64 shrink-0 flex-col gap-5 self-start rounded-panel border border-rule bg-surface p-4 xl:flex',
+        'max-xl:fixed max-xl:inset-y-0 max-xl:right-0 max-xl:z-30 max-xl:w-72 max-xl:overflow-y-auto max-xl:rounded-none max-xl:border-y-0 max-xl:border-r-0 max-xl:shadow-overlay',
+        open ? 'flex' : 'hidden',
+      )}
     >
+      <div className="flex items-center justify-between gap-2 xl:hidden">
+        <p className="font-bold">{t('exam.palette')}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="min-h-11 rounded-control px-3 font-bold text-ballpoint hover:bg-ballpoint-wash"
+        >
+          {t('exam.paletteClose')}
+        </button>
+      </div>
       {groups.map((g, gi) => (
-        <div key={g.section?.id ?? `loose-${gi}`} className="flex flex-col gap-2">
+        <div
+          key={g.section?.id ?? `loose-${gi}`}
+          role="group"
+          aria-labelledby={`${id}-${gi}`}
+          className="flex flex-col gap-2"
+        >
           <p id={`${id}-${gi}`} className="font-bold">
             {g.section ? g.section.name : t(groups.length > 1 ? 'exam.paletteOther' : 'exam.paletteAll')}
           </p>
-          <ul aria-labelledby={`${id}-${gi}`} className="grid grid-cols-5 gap-1">
+          <ul className="grid grid-cols-5 gap-1">
             {g.indexes.map((i) => {
               const state = stateOf(i);
               return (
                 <li key={i}>
                   <button
+                    ref={i === current ? currentRef : undefined}
                     type="button"
                     aria-current={i === current ? 'step' : undefined}
                     onClick={() => onGoTo(i)}
@@ -59,7 +91,7 @@ export function QuestionPalette({
                       'flex size-11 items-center justify-center rounded-full',
                       i === current && 'bg-ballpoint-wash',
                     )}
-                    aria-label={t('exam.paletteItem', { n: i + 1, state: t(`exam.state.${state}` as MessageKey) })}
+                    aria-label={stateName(i, state)}
                   >
                     <StateMark
                       state={state}
@@ -90,21 +122,46 @@ export function QuestionPalette({
   );
 }
 
-/** The timing track down the sheet's left edge (13.2): one mark per question, the current one longer. */
+/**
+ * The timing track down the sheet's left edge (13.2, 13.6, A11Y-08): one mark per question, the current one longer,
+ * each a button that opens its question. It scrolls by itself in a long test and keeps the current mark in view.
+ */
 export function TimingTrack({
   count,
   current,
   stateOf,
+  onGoTo,
 }: {
   count: number;
   current: number;
   stateOf: (index: number) => QuestionState;
+  onGoTo: (index: number) => void;
 }) {
+  const currentRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    currentRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [current]);
   return (
-    <div aria-hidden className="flex w-6 shrink-0 flex-col items-start gap-1.5 border-r border-dropout py-6 pl-1.5">
-      {Array.from({ length: count }, (_, i) => (
-        <StateMark key={i} state={stateOf(i)} shape="bar" className={cx('h-2', i === current ? 'w-4' : 'w-2.5')} />
-      ))}
-    </div>
+    <nav
+      aria-label={t('exam.track')}
+      className="sticky top-24 flex max-h-[calc(100dvh-14rem)] w-12 shrink-0 flex-col self-start overflow-y-auto border-r border-dropout py-4"
+    >
+      <ul className="flex flex-col">
+        {Array.from({ length: count }, (_, i) => (
+          <li key={i}>
+            <button
+              ref={i === current ? currentRef : undefined}
+              type="button"
+              aria-current={i === current ? 'step' : undefined}
+              aria-label={stateName(i, stateOf(i))}
+              onClick={() => onGoTo(i)}
+              className="flex h-7 w-full items-center pl-2 hover:bg-ballpoint-wash"
+            >
+              <StateMark state={stateOf(i)} shape="bar" className={cx('h-2.5', i === current ? 'w-8' : 'w-5')} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

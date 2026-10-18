@@ -14,6 +14,8 @@ export const exam = {
   'exam.paletteItem': 'Question {n}, {state}',
   'exam.paletteAll': 'Questions',
   'exam.paletteOther': 'Other questions',
+  'exam.paletteClose': 'Close',
+  'exam.track': 'Timing track',
   'exam.legend': 'Legend',
   'exam.legendList': 'Palette legend',
   'exam.state.notVisited': 'not visited',
