@@ -105,3 +105,17 @@ export type TestPatch = z.infer<typeof testPatchSchema>;
 
 export const approveResponseSchema = z.object({ status: z.literal('approved'), totalMarks: z.number() });
 export const publishResponseSchema = z.object({ status: z.literal('scheduled') });
+
+/**
+ * The status shown for a test at `now` (TST-04): a scheduled test is `live` while now is inside its resolved window
+ * and `closed` once the window has ended. Every other stored status is shown as stored.
+ */
+export function testStatusAt(
+  stored: TestStatus,
+  window: { start: number; end: number } | null | undefined,
+  now: number,
+): TestStatus {
+  if (stored !== 'scheduled' || !window) return stored;
+  if (now >= window.end) return 'closed';
+  return now >= window.start ? 'live' : 'scheduled';
+}
