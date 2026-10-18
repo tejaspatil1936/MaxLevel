@@ -24,7 +24,8 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey || inTextField(e.target)) return;
+      // A screen with its own list (the exam, EX-09) handles `?` first and marks the event handled.
+      if (e.key !== '?' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || inTextField(e.target)) return;
       e.preventDefault();
       setOpen(true);
     };

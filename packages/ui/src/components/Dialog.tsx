@@ -58,15 +58,20 @@ export interface DialogProps {
   footer?: ReactNode;
   /** `wide` for an editor with a side-by-side preview. */
   size?: 'default' | 'wide';
+  /**
+   * False leaves the page behind in the accessibility tree and clickable (a reference list such as the exam's
+   * shortcuts, which the screen behind keeps reading); focus still moves in and returns, and Escape closes it.
+   */
+  modal?: boolean;
 }
 
 /** Modal dialog: traps focus while open and returns it to the opener (A11Y-05). */
-export function Dialog({ open, onOpenChange, title, description, children, footer, size }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, size, modal = true }: DialogProps) {
   const focus = useReturnFocus();
   return (
-    <RDialog.Root open={open} onOpenChange={onOpenChange}>
+    <RDialog.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <RDialog.Portal>
-        <RDialog.Overlay className={overlay} />
+        {modal ? <RDialog.Overlay className={overlay} /> : null}
         <RDialog.Content
           className={size === 'wide' ? widePanel : panel}
           {...focus}

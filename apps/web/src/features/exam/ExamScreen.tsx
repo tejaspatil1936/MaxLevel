@@ -216,7 +216,13 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
           </div>
         </div>
       </main>
-      <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} title={t('exam.shortcuts')}>
+      <Dialog
+        open={shortcutsOpen}
+        onOpenChange={setShortcutsOpen}
+        modal={false}
+        title={t('exam.shortcuts')}
+        footer={<Button onClick={() => setShortcutsOpen(false)}>{t('common.close')}</Button>}
+      >
         <ul className="flex flex-col gap-2">
           {SHORTCUT_KEYS.map((key) => (
             <li key={key}>{t(key)}</li>
