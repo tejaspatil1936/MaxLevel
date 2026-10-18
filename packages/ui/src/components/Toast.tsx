@@ -3,8 +3,11 @@ import { Toaster as Sonner, toast } from 'sonner';
 /** Toasts restyled to the design system. Never used during the exam (13.6, sync status). */
 export function Toaster() {
   return (
+    // Above the sticky `Form actions` bar, so a notice never covers its buttons.
     <Sonner
       position="bottom-right"
+      offset={{ bottom: 88, right: 24 }}
+      mobileOffset={{ bottom: 88, right: 16 }}
       toastOptions={{
         unstyled: true,
         classNames: {
