@@ -52,11 +52,12 @@ answers `400 IDEMPOTENCY_KEY_REQUIRED`. A repeated key replays the stored respon
 | Request | Body | Expected |
 | --- | --- | --- |
 | `POST /v1/attempts` | `{ testId }` | `200` or `201`, the **exam payload** (below). Calling it again for the same test, with any key, returns the same attempt (same `attempt.id`, `deadlineAt` and question and option order) (EX-04). Concurrent calls create one attempt (DATA-02). `403 NOT_ELIGIBLE` for a student the series or test rules leave out (SER-08); `409 WINDOW_NOT_OPEN` before the start window; `409 WINDOW_CLOSED` after the last start time; `409 ATTEMPT_FINISHED` when the student's attempt is already submitted, auto-submitted or terminated; `404` for a test that is not `scheduled`, is in a series that is not `active`, or is in another organization |
-| `GET /v1/attempts/{id}` | | `200`, the exam payload of that attempt, with the saved answers (EX-05) |
+| `GET /v1/attempts/{id}` | | `200`, the exam payload of that attempt, with the saved answers (EX-05); also for a finished (`submitted`, `auto_submitted`, `terminated`) and graded attempt, with `attempt.status` the finished status and still no answer key (DATA-05) |
 | `PUT /v1/attempts/{id}/answers` | `{ answers: [{ questionId, optionId: string \| null, seq, clientTs, markedForReview? }], backlog, clockOffsetMs }` | `200` `{ saved: string[], stale: string[], rejected: [{ questionId, code }], serverTime }` (below); `409 ATTEMPT_FINISHED` once the attempt is finished; `429 RATE_LIMITED` beyond 10 saves per second per user, after a small burst (API-06) |
 | `POST /v1/attempts/{id}/navigate` | `{ questionId }` | `200` `{ servedAt, serverTime }`; records the first serve time of a timed question (Q-12); later calls keep the first time |
 | `POST /v1/attempts/{id}/events` | `{ type, clientTs, details }` | `200` `{ strikesCount, counted, status }` (below); `409 ATTEMPT_FINISHED` once finished; `429 RATE_LIMITED` beyond 5 reports per second per user (API-06) |
 | `POST /v1/attempts/{id}/submit` | `{}`, or `{ reason: "time_up" }` when the client submits because time ran out | `200` `{ status, submittedAt }`; the attempt is graded (EX-17). `status` is `submitted`, or `auto_submitted` for `time_up`. A second submit replays or returns the same finished attempt (`200`, same `submittedAt`) |
+| `POST /v1/tests/{testId}/pairing-token` | `{}` | phase 3 addition (Rules, "Phone pairing"): student only. `200` `{ attemptId, token, url, expiresAt }`; a repeat (same student, same test) returns the same `attemptId` with a new token; once `POST /v1/attempts` has started that attempt, the same `attemptId` again. Refusals, checked like a start and storing nothing (no `attemptIndex` entry, no `attemptOwners/{attemptId}`): `404` for a test of another organization or one that is not `scheduled`; `403 NOT_ELIGIBLE` for a student the rules leave out (SER-08); `403` for an admin or super-admin token (with or without `X-Org-Id`); `409 WINDOW_NOT_OPEN` before the start window and `409 WINDOW_CLOSED` after the last start time |
 | `POST /v1/attempts/{id}/pairing-token` | `{}` | `200` `{ token, url, expiresAt }`, a new single-use pairing link valid for 5 minutes (PR-13); `url` is `http://localhost:3000/pair/?token=<token>` (the web origin plus `/pair/?token=`) |
 | `POST /v1/pairing/redeem` | `{ token }`, no `Authorization` | `200` `{ customToken, orgId, testId, attemptId }`; `customToken`'s claims are `{ role: "device", orgId, attemptId }` (PR-14); `409 PAIRING_TOKEN_USED` for a used token, `410 PAIRING_TOKEN_EXPIRED` after 5 minutes, `404 PAIRING_TOKEN_INVALID` for an unknown one |
 | `GET /v1/attempts/{id}/events` | | admin: `200` `{ items: [{ id, type, details, clientTs, serverTs, strikeNumber? }] }` in `serverTs` order (PR-11) |
@@ -170,7 +171,7 @@ student never sat, and anything of another organization never appear (nor in `GE
 
 | Check | Shown | Passes when | Detail when passed | Fix line when failed (exact) |
 | --- | --- | --- | --- | --- |
-| `Screen width` | always | viewport at least 1,024 CSS px wide | `<n> px wide` | `Use a screen at least 1,024 px wide. If you zoomed in, zoom out until this check passes.` |
+| `Screen width` | always | viewport at least 1,024 CSS px wide | `<n> px wide`, n in en-IN (`1,024 px wide`) | `Use a screen at least 1,024 px wide. If you zoomed in, zoom out until this check passes.` |
 | `Fullscreen` | `fullscreenRequired` | `document.fullscreenEnabled` | | `Your browser can't go fullscreen. Use current Chrome, Edge or Firefox.` |
 | `Camera` | `cameraRequired` | camera permission granted and a video frame received (`getUserMedia` rejecting, for example `NotFoundError` or `NotAllowedError`, fails it) | | `Connect a camera and allow this site to use it, then press Check again.` |
 | `Face detection` | `cameraRequired` | the self-hosted MediaPipe model and WASM loaded and analysed a camera frame (a face need not be in view) | | `Face detection didn't load. Reload the page, or use current Chrome or Edge.` |
@@ -207,7 +208,10 @@ expiry the region shows `This code has expired.` until `New code` is pressed. Pa
 must not start the attempt's clock: the device token's `attemptId` is the attempt ID that `Start test` then opens, and
 `startedAt` and the deadline are set by Start (phase 3 addition: `POST /v1/tests/{testId}/pairing-token` for a student
 reserves that attempt ID on the attempt index, writes `attemptOwners/{attemptId}`, and returns `{ attemptId, token, url,
-expiresAt }`; `POST /v1/attempts` then uses the reserved ID).
+expiresAt }`; `POST /v1/attempts` then uses the reserved ID). **A reservation is not a started attempt**: it creates no
+attempt record, leaves the test's `attemptsStarted` unset, does not trigger the TST-06 lock (locked settings still
+save, and the Q-15 return to review still applies), and the test page still offers `Check your device`, not
+`Resume test`. The attempt starts, and the lock applies, only with `POST /v1/attempts`.
 
 ## Exam screen in attempt mode: `/exam/?attempt=<attemptId>`
 
@@ -409,7 +413,7 @@ export function answerVerdict(input: { seq: number; storedSeq?: number; clientTs
 | EX-04 | integration | a second start (any key) returns the same attempt; a replayed key returns the stored response byte for byte |
 | SER-08 | integration | eligibility is evaluated at start from the stored series and test rules and the student record: a student whose department or year was changed after the dashboard loaded, or who was added to the test's exclude list, gets `403 NOT_ELIGIBLE` |
 | DATA-02 | integration | ten concurrent starts by one student for one test create exactly one attempt and one attempt index entry |
-| DATA-05 | integration | every student-facing route's response schema strips `correctOptionIds` and `explanation`; a test walks start, resume, answers, events and submit and finds neither key in any body |
+| DATA-05 | integration | every student-facing route's response schema strips `correctOptionIds` and `explanation`; a test walks start, resume, answers, events and submit and finds neither key in any body, then reads `GET /v1/attempts/{id}` again after the attempt is graded as `submitted`, `auto_submitted` and `terminated`, and `GET /v1/student/dashboard` with a graded attempt under `completed`, and finds neither key nor any explanation text |
 | Q-06 | integration | the draw is made once, seeded by the attempt ID (the same ID gives the same draw and option order through shared `drawAttempt`), stored on the attempt with the option order, reused by resume and by grading |
 | TST-06 | integration | after an attempt starts, the PATCH and question routes above answer `409 TEST_LOCKED` and store nothing; release and visibility settings and a later flexible window end still save |
 | API-02 | integration | start and submit without `Idempotency-Key` are `400 IDEMPOTENCY_KEY_REQUIRED`; a repeated key within 24 hours (test clock) replays the stored status and body; after 24 hours it is treated as new |
@@ -429,6 +433,7 @@ export function answerVerdict(input: { seq: number; storedSeq?: number; clientTs
 | PR-08 | integration | `POST …/events` increments `strikesCount` in a transaction (concurrent reports of separate incidents never lose a count) and returns the new count; the client's own count is never read |
 | PR-10 | integration | the strike that reaches `maxStrikes` stores `terminated`, `terminationReason: "max_strikes"` and the graded result; later answers and events are `409 ATTEMPT_FINISHED`; a terminated attempt is left out of leaderboard rows (shared ranking input) |
 | PR-11 | integration | every event, counted or not, is stored with `serverTs`, `clientTs`, `type` and `details`, and `GET …/events` returns them in order (admin, ORG-05 404, ORG-14 super admin) |
+| PR-13 | integration | `POST /v1/tests/{testId}/pairing-token`: the refusals above (`404` other org or unpublished, `403 NOT_ELIGIBLE`, `403` for admin and super-admin tokens, `409 WINDOW_NOT_OPEN` and `WINDOW_CLOSED`) write no `attemptIndex` entry and no `attemptOwners`; a repeat returns the same `attemptId`; a reservation creates no attempt, leaves `attemptsStarted` unset and no TST-06 lock, and `POST /v1/attempts` then starts that same `attemptId`; tokens are single use and valid for 5 minutes on the Clock |
 | PR-14 | integration | `POST /v1/pairing/redeem` returns a custom token with claims `{ role: "device", orgId, attemptId }`; a token is single use and expires after 5 minutes on the Clock |
 | DATA-07 | rules | Realtime Database rules: no client may write `live`, `signals` or `attemptOwners` |
 | DATA-10 | rules | a student writes `presence/{orgId}/{testId}/{attemptId}/laptop` only when `attemptOwners/{attemptId}` is their uid; a device token writes `…/phone` only for its `attemptId` claim and nothing else; admins read `live/{orgId}` and `presence/{orgId}` only for their own `orgId`; super admins read all; a student reads only `signals/{orgId}/{attemptId}` and the phone presence of their own attempt |
