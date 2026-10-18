@@ -12,6 +12,7 @@ import { formatDay, formatWindow } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
 import { seriesUrl } from '../series/SeriesList';
+import { QuestionsTab } from '../questions/QuestionsTab';
 import { SeriesNotFound } from '../series/SeriesNotFound';
 import { TestDetailsDialog } from './TestDetailsDialog';
 import { TestEligibility } from './TestEligibility';
@@ -76,6 +77,7 @@ function EditorPage({ test }: { test: TestDetail }) {
   const stamp = `${test.updatedAt}:${series.data?.updatedAt}`;
   const loading = <Skeleton className="h-64 w-full" />;
   const panel = (value: string) => {
+    if (value === 'questions') return <QuestionsTab test={test} />;
     if (value === 'settings')
       return series.data ? <TestSettings key={stamp} test={test} series={series.data} /> : loading;
     if (value === 'eligibility')
