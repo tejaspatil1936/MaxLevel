@@ -120,3 +120,54 @@ describe('results exports API', () => {
     expect((await get('no-such-export')).status).toBe(404);
   });
 });
+
+describe('export downloads', () => {
+  /** An export the worker has finished: its file in Storage and the record ready. */
+  const readyExport = async (format: 'csv' | 'xlsx' = 'csv') => {
+    const t = await api.examTest();
+    const id = (await post({ scope: 'test', refId: t.testId, format }, `k-${format}`)).body.id as string;
+    const rec = (await db.doc(`${org}/exports/${id}`).get()).data()!;
+    await ctx.firebase.bucket.file(rec.filePath as string).save(Buffer.from('﻿Name,Email,PRN\r\n', 'utf8'));
+    await db.doc(`${org}/exports/${id}`).update({ status: 'ready' });
+    const url = new URL(String((await get(id)).body.url));
+    return { t, id, path: `${url.pathname}${url.search}`, url };
+  };
+  const download = (path: string) => ctx.app.inject({ method: 'GET', url: path });
+
+  it('EXP-03 DATA-09 the signed link downloads the file with no sign-in until 15 minutes after it was issued', async () => {
+    const { t, path } = await readyExport();
+    const res = await download(path);
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toBe('text/csv; charset=utf-8');
+    expect(res.headers['content-disposition']).toBe(`attachment; filename="results-${t.testId}.csv"`);
+    expect(res.headers['cache-control']).toBe('private, no-store');
+    expect(res.rawPayload.toString('utf8')).toBe('﻿Name,Email,PRN\r\n');
+
+    ctx.clock.advance(15 * MIN - 1);
+    expect((await download(path)).statusCode).toBe(200);
+    ctx.clock.advance(1);
+    const stale = await download(path);
+    expect([stale.statusCode, stale.json().error.code]).toEqual([403, 'LINK_EXPIRED']);
+    expect(stale.body).not.toContain('Name,Email,PRN');
+  });
+
+  it('EXP-03 ORG-05 a changed link opens nothing, and the XLSX downloads with its type', async () => {
+    const { id, url, t } = await readyExport('xlsx');
+    const res = await download(`${url.pathname}${url.search}`);
+    expect(res.headers['content-type']).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    expect(res.headers['content-disposition']).toContain(`results-${t.testId}.xlsx`);
+    const changed = (k: string, v: string) => {
+      const u = new URL(url);
+      u.searchParams.set(k, v);
+      return download(`${u.pathname}${u.search}`);
+    };
+    for (const res of [
+      await changed('org', SEED.orgB),
+      await changed('expires', String(Number(url.searchParams.get('expires')) + MIN)),
+      await changed('sig', '0'.repeat(64)),
+      await download(`/v1/exports/other/file${url.search}`),
+    ])
+      expect([res.statusCode, res.json().error.code]).toEqual([403, 'LINK_INVALID']);
+    expect((await download(`/v1/exports/${id}/file`)).statusCode).toBe(400);
+  });
+});
