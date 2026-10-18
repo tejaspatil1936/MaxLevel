@@ -102,4 +102,19 @@ describe('questions data access', () => {
       updatedAt: 2000,
     });
   });
+
+  it('Q-03 clearSection moves questions to no section and leaves the others in theirs', async () => {
+    const moved = await add('org-a', 't1', { sectionId: 'gone' });
+    const kept = await add('org-a', 't1', { sectionId: 'quant' });
+    const batch = db.batch();
+    data.questions.clearSection('org-a', batch, 't1', [moved], 2000);
+    await batch.commit();
+    const [a, b] = await Promise.all([
+      data.questions.getQuestion('org-a', 't1', moved),
+      data.questions.getQuestion('org-a', 't1', kept),
+    ]);
+    expect(a).not.toHaveProperty('sectionId');
+    expect(a?.updatedAt).toBe(2000);
+    expect(b).toMatchObject({ sectionId: 'quant', updatedAt: 1000 });
+  });
 });

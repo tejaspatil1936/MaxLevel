@@ -82,6 +82,13 @@ export function questionsData(db: Firestore) {
       writer(tx).delete(col(orgId, testId).doc(questionId));
     },
 
+    /** Moves these questions to no section, for example when their section is deleted (Q-03). */
+    clearSection(orgId: string, tx: Tx, testId: string, ids: readonly string[], now: number): void {
+      ids.forEach((id) =>
+        writer(tx).update(col(orgId, testId).doc(id), { sectionId: FieldValue.delete(), updatedAt: now }),
+      );
+    },
+
     /** Stores `order` 1, 2, … following `ids` (Q-01). */
     setOrder(orgId: string, tx: Tx, testId: string, ids: readonly string[], now: number): void {
       ids.forEach((id, i) => writer(tx).update(col(orgId, testId).doc(id), { order: i + 1, updatedAt: now }));
