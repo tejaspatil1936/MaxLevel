@@ -1,6 +1,8 @@
 import {
   answerBatchResultSchema,
   answerBatchSchema,
+  attemptEventReportSchema,
+  attemptEventResultSchema,
   attemptPayloadSchema,
   attemptStartSchema,
   attemptSubmitResultSchema,
@@ -11,7 +13,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../errors';
-import { ANSWER_RATE_LIMIT } from '../plugins/rate-limit';
+import { ANSWER_RATE_LIMIT, EVENT_RATE_LIMIT } from '../plugins/rate-limit';
 import { attemptService } from '../services/attempts';
 import type { ApiContext } from './context';
 
@@ -58,6 +60,20 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         schema: { params: idParams, body: answerBatchSchema, response: { 200: answerBatchResultSchema } },
       },
       async (req) => attempts.saveAnswers(req.orgId!, studentOf(req).studentId, req.params.id, req.body),
+    );
+
+    // PR-08: the client's proctoring reports, limited per user (API-06). Logging and counting come with F-3.10.
+    app.post(
+      '/v1/attempts/:id/events',
+      {
+        config: { ...student, rateLimit: EVENT_RATE_LIMIT },
+        schema: { params: idParams, body: attemptEventReportSchema, response: { 200: attemptEventResultSchema } },
+      },
+      async (req) => {
+        const attempt = await ctx.data.attempts.getAttempt(req.orgId!, req.params.id);
+        if (!attempt || attempt.studentId !== studentOf(req).studentId) throw notFound('Attempt');
+        throw new AppError(501, 'NOT_IMPLEMENTED', "Reporting events isn't available yet.");
+      },
     );
 
     // EX-15: submitting and grading come with F-3.08; the Idempotency-Key requirement (API-02) holds already.

@@ -5,7 +5,8 @@ import { attemptClient, errorCode, NOW, studentOf } from './test-support/attempt
 import { clearEmulators } from './test-support/emulators';
 import { seedBase } from './test-support/seed';
 
-// API-06: per-user rate limits on the exam's answer saves (10 a second after a burst), keyed by uid.
+// API-06: per-user rate limits on the exam's answer saves (10 a second) and event reports (5 a second), after a small
+// burst, keyed by uid.
 
 const { db, auth } = initFirebase();
 let api: ReturnType<typeof attemptClient>;
@@ -53,5 +54,28 @@ describe('rate limits', () => {
     // Another student is counted on their own.
     const other = await save(calm.id, calm.headers, calm.q[0]!, 1);
     expect(other.status, other.raw).toBe(200);
+  });
+
+  it('API-06 event reports beyond the burst within a second get 429 RATE_LIMITED, per user', async () => {
+    const t = await api.examTest();
+    const busy = await started(t, 1);
+    const calm = await started(t, 2);
+    const report = (s: { id: string; headers: Record<string, string> }, i: number) =>
+      ctx.app.inject({
+        method: 'POST',
+        url: `/v1/attempts/${s.id}/events`,
+        headers: s.headers,
+        payload: { type: 'context_menu', clientTs: NOW + i },
+      });
+
+    const burst = await Promise.all(Array.from({ length: 16 }, (_, i) => report(busy, i)));
+    const limited = burst.filter((r) => r.statusCode === 429);
+    expect(limited.length, 'reports refused beyond the burst').toBeGreaterThan(0);
+    expect(limited.map((r) => errorCode({ raw: r.body }))).toEqual(limited.map(() => 'RATE_LIMITED'));
+    expect(burst.filter((r) => r.statusCode !== 429).length, 'the burst itself goes through').toBeGreaterThanOrEqual(8);
+
+    // The answer and event limits count apart, and another student is counted on their own.
+    expect((await save(busy.id, busy.headers, busy.q[0]!, 1)).status).toBe(200);
+    expect((await report(calm, 0)).statusCode).not.toBe(429);
   });
 });
