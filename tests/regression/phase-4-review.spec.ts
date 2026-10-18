@@ -1,9 +1,11 @@
 import type { Page } from '@playwright/test';
-import { apiRequest, holdApiRequests } from '../acceptance/fixtures/network';
+import { anyMutation, apiRequest, holdApiRequests } from '../acceptance/fixtures/network';
 import { runLeaderboardTask, studentFacts } from '../acceptance/fixtures/results';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
+import { SettingsPage } from '../acceptance/pages/admin-pages';
 import { AdminSeriesResults, AdminTestResults, headerTexts } from '../acceptance/pages/results-pages';
+import { Shell } from '../acceptance/pages/shell';
 import { table } from '../acceptance/pages/ui';
 
 // Bugs found while verifying phase 4. Each test failed before its fix.
@@ -60,5 +62,36 @@ test.describe('phase 4 review', () => {
       'Department',
       'Total',
     ]);
+  });
+
+  test('STU-03 UX-07 ORG-12 a profile lock still in flight when the page reloads is saved, not lost', async ({
+    page,
+    signInAs,
+    emulators,
+  }) => {
+    await signInAs(accounts.superAdmin);
+    const shell = new Shell(page);
+    await shell.enterOrg(ORG_A.name);
+    await shell.goToAdmin('Settings');
+    const settings = new SettingsPage(page);
+    const held = await holdApiRequests(page, anyMutation);
+
+    await settings.profileLock.click();
+    await held.waitUntilHeld();
+    await expect(settings.profileLock).toBeChecked();
+    // The reload replaces the page while the save has not reached the API yet (a slow network or a busy server).
+    await page.reload({ waitUntil: 'commit' });
+    held.release();
+
+    await expect
+      .poll(async () => (await emulators.doc(`organizations/${ORG_A.id}`))!.data.profileLocked ?? false, {
+        message: 'the lock reached the API',
+      })
+      .toBe(true);
+    await page.reload();
+    await expect(settings.profileLock).toBeChecked();
+    const entries = await emulators.audit(ORG_A.id, 'org.settings.update');
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.data.actor).toMatchObject({ email: accounts.superAdmin.email, role: 'superAdmin' });
   });
 });
