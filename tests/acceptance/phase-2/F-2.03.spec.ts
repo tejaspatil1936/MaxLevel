@@ -47,7 +47,7 @@ test.describe('F-2.03 tests and the series timeline', () => {
     await series.add({ title: 'Reasoning', company: 'Infosys', scheduledDate: '2026-11-02' });
     await series.add({ title: 'Verbal ability', scheduledDate: '2026-11-04' });
 
-    expect(await series.timelineTitles()).toEqual(['Reasoning', 'Aptitude', 'Verbal ability']);
+    await series.expectTimeline(['Reasoning', 'Aptitude', 'Verbal ability']);
     await expect(series.item('Reasoning')).toHaveText(
       /Day 1[\s\S]*Reasoning[\s\S]*Infosys[\s\S]*2 Nov 2026, 10:00 to 11:00 IST[\s\S]*Draft/,
     );
@@ -125,7 +125,7 @@ test.describe('F-2.03 tests and the series timeline', () => {
 
     const series = new SeriesPage(page);
     await series.goto(seriesId, SEEDED_SERIES.title);
-    expect(await series.timelineTitles()).toEqual(['Reasoning', 'Aptitude', 'Verbal ability']);
+    await series.expectTimeline(['Reasoning', 'Aptitude', 'Verbal ability']);
     await expect(series.item('Reasoning')).not.toContainText(/Day \d/);
     await expect(series.item('Aptitude')).toHaveText(/Mock 1[\s\S]*Aptitude/);
     await expect(series.item('Aptitude')).not.toContainText(/Day \d/);

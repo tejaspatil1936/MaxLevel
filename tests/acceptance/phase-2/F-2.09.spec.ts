@@ -8,6 +8,7 @@ import {
   storedTest,
   testByTitle,
 } from '../fixtures/authoring';
+import { expectNoSeriousA11yViolations } from '../fixtures/axe';
 import { accounts, ORG_A, ORG_B } from '../fixtures/seed';
 import { expect, test } from '../fixtures/test';
 import { AuditPage } from '../pages/admin-pages';
@@ -155,6 +156,7 @@ test.describe('F-2.09 super-admin authoring parity', () => {
     await expect(notFound.heading('test')).toBeVisible();
     await expect(notFound.message('test', ORG_B.name)).toBeVisible();
     await expect(notFound.shell.main).not.toContainText('Secret aptitude');
+    await expectNoSeriousA11yViolations(page);
     await notFound.back.click();
     await expect(page).toHaveURL(pathPattern('/admin/series/'));
 

@@ -21,6 +21,8 @@ import { expectFieldError } from '../pages/ui';
 // (SER-06, SER-07) and window times in the org timezone (TST-07). Contract: docs/testids/phase-2.md, "Settings tab",
 // "Eligibility tab".
 
+const noRules = { departmentIds: [], graduationYears: [], include: [], exclude: [] };
+
 test.beforeEach(async ({ testApi }) => {
   await testApi.clock.set(AUTHORING_NOW);
 });
@@ -180,6 +182,7 @@ test.describe('F-2.04 inherited and overridden settings', () => {
     await expect(rules.department('IT')).toBeVisible();
     await expect(rules.department('ENTC'), 'only departments the series allows').toHaveCount(0);
     await rules.expectCount(10);
+    await expectNoSeriousA11yViolations(page);
 
     await rules.department('IT').check();
     await rules.expectCount(5);
@@ -204,7 +207,7 @@ test.describe('F-2.04 inherited and overridden settings', () => {
     expect(await auditFor(emulators, ORG_A.id, 'test.update', testId)).toHaveLength(1);
   });
 
-  test('ORG-05 ORG-14 US-AD-05 org B test settings are 404 for an org A admin, refused for students, and open to a super admin', async ({
+  test('ORG-05 ORG-14 US-AD-05 SER-07 org B test settings and eligibility previews are 404 for an org A admin, refused for students, and open to a super admin', async ({
     testApi,
     apiAs,
     emulators,
@@ -215,13 +218,25 @@ test.describe('F-2.04 inherited and overridden settings', () => {
 
     expect((await adminA.patch(`/v1/tests/${b.testId}`, { overrides: { maxStrikes: 9 } })).status).toBe(404);
     expect((await storedTest(emulators, ORG_B.id, b.testId)).overrides).toEqual({});
+    const civilB = { ...noRules, departmentIds: [departmentId(ORG_B, 'Civil')] };
+    expect((await adminA.post(`/v1/tests/${b.testId}/eligibility/preview`, { eligibility: civilB })).status).toBe(404);
     const student = await apiAs(accounts.studentA);
+    expect((await student.post(`/v1/tests/${a.testId}/eligibility/preview`, { eligibility: noRules })).status).toBe(
+      403,
+    );
     expect((await student.patch(`/v1/tests/${a.testId}`, { overrides: { maxStrikes: 9 } })).status).toBe(403);
     expect((await student.get(`/v1/tests/${a.testId}`)).status).toBe(403);
 
     const superB = await apiAs(accounts.superAdmin, { orgId: ORG_B.id });
     expect((await superB.patch(`/v1/tests/${b.testId}`, { overrides: { maxStrikes: 6 } })).status).toBe(200);
     expect((await storedTest(emulators, ORG_B.id, b.testId)).overrides).toEqual({ maxStrikes: 6 });
+    const preview = await superB.post<{ count: number; students: Array<{ id: string }> }>(
+      `/v1/tests/${b.testId}/eligibility/preview`,
+      { eligibility: civilB },
+    );
+    expect(preview.status).toBe(200);
+    expect(preview.body.count).toBe(10);
+    expect(preview.body.students).toHaveLength(10);
     const [entry] = await auditFor(emulators, ORG_B.id, 'test.settings.update', b.testId);
     expect(entry?.data.actor).toMatchObject({ email: accounts.superAdmin.email, role: 'superAdmin' });
     expect((await superB.inOrg(ORG_A.id).patch(`/v1/tests/${a.testId}`, { overrides: { maxStrikes: 2 } })).status).toBe(

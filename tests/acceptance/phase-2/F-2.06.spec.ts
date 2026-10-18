@@ -1,6 +1,7 @@
 import { errorCode } from '../fixtures/api';
 import { auditFor, AUTHORING_NOW, questionsOf, SEEDED_TEST, storedTest } from '../fixtures/authoring';
 import { expectNoSeriousA11yViolations } from '../fixtures/axe';
+import type { Emulators } from '../fixtures/emulators';
 import { accounts, ORG_A, ORG_B } from '../fixtures/seed';
 import { expect, test } from '../fixtures/test';
 import { MARKING_ERRORS, SECTION_ERRORS, SECTIONS_EMPTY, TestEditorPage } from '../pages/test-editor';
@@ -22,6 +23,12 @@ interface StoredSection {
 
 const sectionsOf = async (data: Record<string, unknown>) =>
   [...((data.sections as StoredSection[] | undefined) ?? [])].sort((a, b) => a.order - b.order);
+
+/** The stored time-limit choice of a test: `overrides.questionTimeMode` and `overrides.questionTimeLimitSec`. */
+async function timeLimitOverrides(emulators: Emulators, testId: string) {
+  const overrides = (await storedTest(emulators, ORG_A.id, testId)).overrides as Record<string, unknown>;
+  return { mode: overrides.questionTimeMode, seconds: overrides.questionTimeLimitSec };
+}
 
 test.beforeEach(async ({ testApi }) => {
   await testApi.clock.set(AUTHORING_NOW);
@@ -53,7 +60,7 @@ test.describe('F-2.06 sections, pools, difficulty mix, marking and timers', () =
     await dlg.fill({ name: 'Verbal' });
     await dlg.saveAndClose();
 
-    expect(await sections.names()).toEqual(['Quant', 'Verbal']);
+    await sections.expectNames(['Quant', 'Verbal']);
     await expect(await sections.cell('Quant', 'Order')).toHaveText('1');
     await expect(await sections.cell('Quant', 'Duration')).toHaveText('20 minutes');
     await expect(await sections.cell('Quant', 'Navigation')).toHaveText('Forward only');
@@ -65,7 +72,7 @@ test.describe('F-2.06 sections, pools, difficulty mix, marking and timers', () =
 
     await sections.choose('Verbal', 'Move up');
 
-    await expect.poll(() => sections.names()).toEqual(['Verbal', 'Quant']);
+    await sections.expectNames(['Verbal', 'Quant']);
     await expect
       .poll(async () => (await sectionsOf(await storedTest(emulators, ORG_A.id, testId))).map((s) => s.name))
       .toEqual(['Verbal', 'Quant']);
@@ -268,22 +275,12 @@ test.describe('F-2.06 sections, pools, difficulty mix, marking and timers', () =
     await expectFieldError(marking.panel, marking.seconds, MARKING_ERRORS.seconds);
     await marking.seconds.fill('90');
     await marking.saveAndConfirm();
-    await expect
-      .poll(
-        async () =>
-          ((await storedTest(emulators, ORG_A.id, testId)).overrides as Record<string, unknown>).questionTimeLimitSec,
-      )
-      .toBe(90);
+    await expect.poll(() => timeLimitOverrides(emulators, testId)).toEqual({ mode: 'same', seconds: 90 });
 
     await marking.limit('Set on each question').check();
     await expect(marking.seconds).toHaveCount(0);
     await marking.saveAndConfirm();
-    await expect
-      .poll(
-        async () =>
-          ((await storedTest(emulators, ORG_A.id, testId)).overrides as Record<string, unknown>).questionTimeLimitSec,
-      )
-      .toBeUndefined();
+    await expect.poll(() => timeLimitOverrides(emulators, testId)).toEqual({ mode: 'each', seconds: undefined });
     questions = await editor.questions();
     q = await questions.openEdit(1);
     await q.fill({ timeLimit: '45' });
