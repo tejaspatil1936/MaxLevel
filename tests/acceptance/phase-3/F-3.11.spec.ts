@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from '../fixtures/axe';
 import {
+  blurWindowAndReturn,
   dispatchPrevented,
   installPreventionRecorder,
   leaveTabAndReturn,
@@ -7,7 +9,10 @@ import {
   wasPrevented,
 } from '../fixtures/devices';
 import {
+  advanceExamTime,
   expectAttemptSoon,
+  expectEventsSoon,
+  strikeNumbersOf,
   listEvents,
   storedAttempt,
   storedEvents,
@@ -73,6 +78,7 @@ test.describe('F-3.11 browser lockdown @lockdown', () => {
     const back = warning.getByRole('button', { name: 'Return to fullscreen', exact: true });
     await expect(warning.getByRole('button')).toHaveCount(1);
     await expect(back).toBeFocused();
+    await expectNoSeriousA11yViolations(page);
     await page.keyboard.press('Escape');
     await expect(warning, 'Escape does not dismiss the warning').toBeVisible();
 
@@ -81,8 +87,14 @@ test.describe('F-3.11 browser lockdown @lockdown', () => {
     await expect(warning).toBeHidden();
     await expect.poll(() => isFullscreen(page), { message: 'back in fullscreen' }).toBe(true);
     await expect(exam.strikeTally(1, 3)).toBeVisible();
-    expect((await storedAttempt(emulators, ORG_A.id, attemptId)).strikesCount).toBe(1);
-    const events = await storedEvents(emulators, ORG_A.id, attemptId);
+    await expectAttemptSoon(emulators, ORG_A.id, attemptId, (a) => a.strikesCount === 1, 'one strike stored');
+    const events = await expectEventsSoon(
+      emulators,
+      ORG_A.id,
+      attemptId,
+      (evs) => evs.some((e) => e.data.strikeNumber === 1),
+      'the strike event stored',
+    );
     expect(events.filter((e) => e.data.strikeNumber === 1).map((e) => e.data.type)).toEqual(['fullscreen_exit']);
   });
 
@@ -121,6 +133,35 @@ test.describe('F-3.11 browser lockdown @lockdown', () => {
     ).toHaveLength(1);
   });
 
+  test('PR-05 the exam window losing focus, with the page still visible, records a strike for the lost focus', async ({
+    page,
+    signInAs,
+    apiAs,
+    testApi,
+    emulators,
+  }) => {
+    const { exam, attemptId } = await openExam({ page, signInAs, apiAs, testApi });
+
+    await blurWindowAndReturn(page);
+
+    const warning = exam.strikeWarning(1, 3);
+    await expect(warning).toBeVisible();
+    await expect(warning.getByText(STRIKE_REASONS.window_blur, { exact: true })).toBeVisible();
+    await expect(warning.getByText(strikesLeftText(2), { exact: true })).toBeVisible();
+    await warning.getByRole('button', { name: 'I understand', exact: true }).click();
+    await expect(warning).toBeHidden();
+    await expect(exam.strikeTally(1, 3)).toBeVisible();
+    const events = await expectEventsSoon(
+      emulators,
+      ORG_A.id,
+      attemptId,
+      (evs) => strikeNumbersOf(evs, 'window_blur').includes(1),
+      'window_blur stored as strike 1',
+    );
+    expect(strikeNumbersOf(events, 'window_blur')).toEqual([1]);
+    expect(strikeNumbersOf(events, 'tab_hidden'), 'the page never became hidden').toEqual([]);
+  });
+
   test('PR-10 PR-09 the last strike ends the test and the student is told why', async ({
     page,
     signInAs,
@@ -128,12 +169,14 @@ test.describe('F-3.11 browser lockdown @lockdown', () => {
     testApi,
     emulators,
   }) => {
+    await page.clock.install();
     const { exam, attemptId } = await openExam({ page, signInAs, apiAs, testApi }, { overrides: { maxStrikes: 2 } });
     await leaveTabAndReturn(page);
     const warning = exam.strikeWarning(1, 2);
     await expect(warning.getByText(strikesLeftText(1), { exact: true })).toBeVisible();
     await warning.getByRole('button', { name: 'I understand', exact: true }).click();
-    await testApi.clock.advance(5_000);
+    await expectAttemptSoon(emulators, ORG_A.id, attemptId, (a) => a.strikesCount === 1, 'first strike stored');
+    await advanceExamTime(page, testApi, 5_000);
 
     await leaveTabAndReturn(page);
 
@@ -141,6 +184,7 @@ test.describe('F-3.11 browser lockdown @lockdown', () => {
     await expect(ended.heading(SUBMITTED.ended)).toBeVisible({ timeout: 20_000 });
     await ended.expectShown(attemptId, SUBMITTED.ended);
     await expect(ended.text(terminatedText(2))).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
     expect(await storedAttempt(emulators, ORG_A.id, attemptId)).toMatchObject({
       status: 'terminated',
       terminationReason: 'max_strikes',
@@ -164,8 +208,10 @@ test.describe('F-3.11 copy, print and developer tools @exam', () => {
     await prompt.click({ clickCount: 3 });
     expect(await selectedText(page), 'question text cannot be selected').toBe('');
     expect(await cssOf(prompt, 'user-select')).toBe('none');
-    for (const type of ['copy', 'cut', 'paste', 'contextmenu'] as const)
+    for (const type of ['copy', 'cut', 'paste'] as const)
       expect(await dispatchPrevented(prompt, type), `${type} prevented`).toBe(true);
+    await prompt.click({ button: 'right' });
+    expect(await wasPrevented(page, 'contextmenu'), 'context menu prevented').toBe(true);
     await page.keyboard.press('Control+p');
     expect(await wasPrevented(page, 'keydown', 'p'), 'Ctrl+P prevented').toBe(true);
     await page.emulateMedia({ media: 'print' });
@@ -180,8 +226,14 @@ test.describe('F-3.11 copy, print and developer tools @exam', () => {
     await expect(warning.getByText(STRIKE_REASONS.devtools, { exact: true })).toBeVisible();
     await warning.getByRole('button', { name: 'I understand', exact: true }).click();
     await expect(warning).toBeHidden();
-    const events = await storedEvents(emulators, ORG_A.id, attemptId);
-    expect(events.filter((e) => e.data.type === 'devtools').map((e) => e.data.strikeNumber)).toEqual([1]);
+    const events = await expectEventsSoon(
+      emulators,
+      ORG_A.id,
+      attemptId,
+      (evs) => strikeNumbersOf(evs, 'devtools').includes(1) && evs.some((e) => e.data.type === 'context_menu'),
+      'devtools strike and context menu stored',
+    );
+    expect(strikeNumbersOf(events, 'devtools')).toEqual([1]);
     expect(
       events.map((e) => e.data.type),
       'context menu logged',
