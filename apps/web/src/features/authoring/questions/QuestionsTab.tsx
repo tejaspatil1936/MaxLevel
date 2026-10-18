@@ -1,22 +1,25 @@
 'use client';
 
 import type { Question, QuestionList as Listed, TestDetail } from '@mitaoe/shared';
-import { ConfirmDialog, EmptyState, InlineMessage, notify, Skeleton } from '@mitaoe/ui';
+import { Button, ConfirmDialog, EmptyState, InlineMessage, notify, Skeleton } from '@mitaoe/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { useWorkspace } from '@/lib/workspace';
+import { QuestionEditor } from './QuestionEditor';
 import { QuestionList } from './QuestionList';
 import { questionsPath, useQuestions, useQuestionsChanged } from './useQuestions';
 
-/** Q-01: the test's questions with reorder and delete. */
+/** Q-01: the test's questions: add and edit with a live student view, reorder and delete. */
 export function QuestionsTab({ test }: { test: TestDetail }) {
   const { readOnly } = useWorkspace();
   const qc = useQueryClient();
   const questions = useQuestions(test.id);
   const changed = useQuestionsChanged(test.id);
   const [deleting, setDeleting] = useState<{ question: Question; n: number } | null>(null);
+  // `null`: closed; `{}`: adding; `{ question, n }`: editing question n.
+  const [editing, setEditing] = useState<{ question?: Question; n?: number } | null>(null);
 
   // The new order shows at once and is saved straight away (Q-01).
   const reorder = useMutation({
@@ -47,22 +50,38 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
       </div>
     );
   const items = questions.data.items;
+  const add = (
+    <Button disabled={readOnly} onClick={() => setEditing({})}>
+      {t('questions.add')}
+    </Button>
+  );
   return (
     <div className="flex flex-col gap-4">
+      {items.length ? <div className="flex flex-wrap justify-end gap-3">{add}</div> : null}
       {reorder.isError ? (
         <InlineMessage>{t('questions.reorderFailed', { reason: reorder.error.message })}</InlineMessage>
       ) : null}
       {items.length === 0 ? (
-        <EmptyState message={t('questions.empty')} />
+        <EmptyState message={t('questions.empty')} action={add} />
       ) : (
         <QuestionList
           questions={items}
           sections={test.sections}
           readOnly={readOnly}
           onReorder={(ids) => reorder.mutate(ids)}
+          onEdit={(question, n) => setEditing({ question, n })}
           onDelete={(question, n) => setDeleting({ question, n })}
         />
       )}
+      {editing ? (
+        <QuestionEditor
+          test={test}
+          list={questions.data}
+          editing={editing.question && editing.n ? { question: editing.question, n: editing.n } : undefined}
+          onSaved={() => changed.refresh()}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
       {deleting ? (
         <ConfirmDialog
           open
