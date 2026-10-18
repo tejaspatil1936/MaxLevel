@@ -5,36 +5,17 @@ import { cx } from '@mitaoe/ui';
 import { useId } from 'react';
 import { t, type MessageKey } from '@/i18n';
 import type { QuestionState } from './exam-state';
+import { StateMark } from './StateMark';
 
-const STATES: QuestionState[] = ['notVisited', 'notAnswered', 'answered', 'marked', 'answeredMarked'];
-
-/**
- * Each state has its own shape as well as colour (UI-02, EX-07): dashed (not visited), outlined (not answered), solid
- * ballpoint (answered), highlighter (marked), highlighter with a ballpoint notch (answered and marked).
- */
-const SHAPE: Record<QuestionState, string> = {
-  notVisited: 'border-2 border-dashed border-graphite bg-surface text-ink',
-  notAnswered: 'border-2 border-ink bg-surface text-ink',
-  answered: 'border-2 border-ballpoint bg-ballpoint text-on-ballpoint',
-  marked: 'border-2 border-ink bg-highlighter text-highlighter-ink',
-  answeredMarked: 'border-2 border-ink bg-highlighter text-highlighter-ink',
-  lockedAnswered: 'border-2 border-ballpoint bg-ballpoint text-on-ballpoint',
-  lockedNotAnswered: 'border-2 border-graphite bg-surface-sunken text-ink',
-};
-
-function Bubble({ state, className, children }: { state: QuestionState; className?: string; children?: string }) {
-  return (
-    <span className={cx('relative flex items-center justify-center rounded-full font-bold', SHAPE[state], className)}>
-      {children}
-      {state === 'answeredMarked' ? (
-        <span
-          aria-hidden
-          className="absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-surface bg-ballpoint"
-        />
-      ) : null}
-    </span>
-  );
-}
+/** The legend's rows (EX-07); the locked sample stands for both locked states. */
+const LEGEND: Array<{ state: QuestionState; label: MessageKey }> = [
+  { state: 'notVisited', label: 'exam.legend.notVisited' },
+  { state: 'notAnswered', label: 'exam.legend.notAnswered' },
+  { state: 'answered', label: 'exam.legend.answered' },
+  { state: 'marked', label: 'exam.legend.marked' },
+  { state: 'answeredMarked', label: 'exam.legend.answeredMarked' },
+  { state: 'lockedNotAnswered', label: 'exam.legend.locked' },
+];
 
 export interface PaletteGroup {
   section: ExamSection | null;
@@ -80,9 +61,13 @@ export function QuestionPalette({
                     )}
                     aria-label={t('exam.paletteItem', { n: i + 1, state: t(`exam.state.${state}` as MessageKey) })}
                   >
-                    <Bubble state={state} className={cx('size-9 tabular', i === current && 'ring-2 ring-ink')}>
+                    <StateMark
+                      state={state}
+                      shape="bubble"
+                      className={cx('size-9 rounded-full tabular', i === current && 'ring-2 ring-ink ring-offset-1')}
+                    >
                       {String(i + 1)}
-                    </Bubble>
+                    </StateMark>
                   </button>
                 </li>
               );
@@ -91,14 +76,12 @@ export function QuestionPalette({
         </div>
       ))}
       <div className="flex flex-col gap-2 border-t border-rule pt-4">
-        <p id={`${id}-legend`} className="font-bold">
-          {t('exam.legend')}
-        </p>
-        <ul aria-labelledby={`${id}-legend`} className="flex flex-col gap-2 text-body-small">
-          {STATES.map((s) => (
-            <li key={s} className="flex items-center gap-2">
-              <Bubble state={s} className="size-5" />
-              {t(`exam.legend.${s}` as MessageKey)}
+        <p className="font-bold">{t('exam.legend')}</p>
+        <ul aria-label={t('exam.legendList')} className="flex flex-col gap-2 text-body-small">
+          {LEGEND.map(({ state, label }) => (
+            <li key={state} className="flex items-center gap-3">
+              <StateMark state={state} shape="bubble" className="size-6" testId="legend-sample" />
+              {t(label)}
             </li>
           ))}
         </ul>
@@ -120,18 +103,8 @@ export function TimingTrack({
   return (
     <div aria-hidden className="flex w-6 shrink-0 flex-col items-start gap-1.5 border-r border-dropout py-6 pl-1.5">
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} className={cx('block h-2 rounded-sm', i === current ? 'w-4' : 'w-2.5', TRACK[stateOf(i)])} />
+        <StateMark key={i} state={stateOf(i)} shape="bar" className={cx('h-2', i === current ? 'w-4' : 'w-2.5')} />
       ))}
     </div>
   );
 }
-
-const TRACK: Record<QuestionState, string> = {
-  notVisited: 'border border-dropout bg-surface',
-  notAnswered: 'border border-ink bg-surface',
-  answered: 'bg-ballpoint',
-  marked: 'bg-highlighter',
-  answeredMarked: 'bg-highlighter border-r-2 border-ballpoint',
-  lockedAnswered: 'bg-ballpoint',
-  lockedNotAnswered: 'border border-graphite bg-surface-sunken',
-};
