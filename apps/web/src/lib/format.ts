@@ -104,6 +104,12 @@ export function formatExamTimer(remainingMs: number): string {
   return h === 0 ? mmss : `${h}:${mmss}`;
 }
 
+/** The per-question timer (Q-11): `M:SS` (`0:20`, `1:05`), whole seconds rounded down. */
+export function formatQuestionTimer(remainingMs: number): string {
+  const s = Math.max(0, Math.floor(remainingMs / 1000));
+  return `${Math.floor(s / 60)}:${two(s % 60)}`;
+}
+
 /** `+1 for a correct answer, −0.25 for a wrong answer, 0 for no answer` (U+2212 minus, en-IN numbers). */
 export function formatMarking(m: { marks: number; negativeMarks: number }): string {
   return t('marking.summary', {

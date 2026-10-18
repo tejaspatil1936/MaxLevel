@@ -33,6 +33,13 @@ export interface ExamScreenProps {
   showAnswers?: boolean;
   /** The `T` key: say the time left (A11Y-06); attempts only. */
   onTimeKey?: () => void;
+  /**
+   * Per-question timers (Q-11): forward-only. Previous and every other question's track and palette button are
+   * unavailable, and Save and next (or `N`) locks the question it leaves.
+   */
+  forwardOnly?: boolean;
+  /** The current question's own countdown, beside its heading (Q-11). */
+  questionTimer?: ReactNode;
 }
 
 const SHORTCUT_KEYS = [
@@ -72,6 +79,8 @@ export function ExamScreen({
   dispatch,
   showAnswers = false,
   onTimeKey,
+  forwardOnly = false,
+  questionTimer,
 }: ExamScreenProps) {
   const groups = useMemo(() => paletteGroups(exam), [exam]);
   const total = exam.questions.length;
@@ -82,6 +91,8 @@ export function ExamScreen({
   const heading = t('exam.question', { n: state.index + 1, total });
   const first = state.index === 0;
   const last = state.index === total - 1;
+  // A locked question can't be opened again; with forward-only navigation, no other question can be chosen (Q-11).
+  const unavailable = (i: number) => !!state.locked[exam.questions[i]!.id] || (forwardOnly && i !== state.index);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -104,15 +115,20 @@ export function ExamScreen({
     },
     [dispatch, drawerOpen, closeDrawer],
   );
+  // Save and next and `N`: with forward-only navigation the question left locks (Q-11).
+  const next = useCallback(
+    () => (forwardOnly ? dispatch({ type: 'lock' }) : goTo(state.index + 1)),
+    [forwardOnly, dispatch, goTo, state.index],
+  );
 
   // The drawer takes focus on its current question when it opens, so the focused control is never covered.
   useEffect(() => {
     if (drawerOpen) currentBubble.current?.focus();
   }, [drawerOpen]);
 
-  const latest = useRef({ index: state.index, total, question, onTimeKey, drawerOpen });
+  const latest = useRef({ index: state.index, total, question, onTimeKey, drawerOpen, forwardOnly, next });
   useEffect(() => {
-    latest.current = { index: state.index, total, question, onTimeKey, drawerOpen };
+    latest.current = { index: state.index, total, question, onTimeKey, drawerOpen, forwardOnly, next };
   });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -130,9 +146,9 @@ export function ExamScreen({
         const option = now.question.options[shortcut.index];
         if (option) dispatch({ type: 'choose', optionId: option.id });
       } else if (shortcut.type === 'next') {
-        if (now.index < now.total - 1) goTo(now.index + 1);
+        if (now.index < now.total - 1) now.next();
       } else if (shortcut.type === 'previous') {
-        if (now.index > 0) goTo(now.index - 1);
+        if (now.index > 0 && !now.forwardOnly) goTo(now.index - 1);
       } else if (shortcut.type === 'mark') dispatch({ type: 'toggleMark' });
       else if (shortcut.type === 'time') now.onTimeKey?.();
       else setShortcutsOpen(true);
@@ -162,7 +178,13 @@ export function ExamScreen({
             </div>
             {notice}
             <article className="flex rounded-sheet border border-dropout bg-surface">
-              <TimingTrack count={total} current={state.index} stateOf={stateOf} onGoTo={goTo} />
+              <TimingTrack
+                count={total}
+                current={state.index}
+                stateOf={stateOf}
+                onGoTo={goTo}
+                unavailable={unavailable}
+              />
               <div className="flex min-w-0 flex-1 flex-col gap-4 p-6">
                 {section ? (
                   <div className="flex flex-col gap-1">
@@ -174,7 +196,10 @@ export function ExamScreen({
                     ) : null}
                   </div>
                 ) : null}
-                <h2 className="text-heading-2 font-bold">{heading}</h2>
+                <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                  <h2 className="text-heading-2 font-bold">{heading}</h2>
+                  {questionTimer}
+                </div>
                 <p className="sr-only" aria-live="polite">
                   {heading}
                 </p>
@@ -201,6 +226,7 @@ export function ExamScreen({
             current={state.index}
             stateOf={stateOf}
             onGoTo={goTo}
+            unavailable={unavailable}
             open={drawerOpen}
             onClose={closeDrawer}
             onFocusLeave={leaveDrawer}
@@ -213,8 +239,8 @@ export function ExamScreen({
             <Button
               variant="secondary"
               className={DIM}
-              aria-disabled={first}
-              onClick={() => (first ? undefined : goTo(state.index - 1))}
+              aria-disabled={first || forwardOnly}
+              onClick={() => (first || forwardOnly ? undefined : goTo(state.index - 1))}
             >
               {t('exam.previous')}
             </Button>
@@ -233,7 +259,7 @@ export function ExamScreen({
               size="lg"
               className={cx('ml-auto min-w-48', DIM)}
               aria-disabled={last}
-              onClick={() => (last ? undefined : goTo(state.index + 1))}
+              onClick={() => (last ? undefined : next())}
             >
               {t('exam.saveAndNext')}
             </Button>

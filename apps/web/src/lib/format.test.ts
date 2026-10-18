@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatCountdown,
   formatExamTimer,
+  formatQuestionTimer,
   formatDay,
   formatMarking,
   formatMinutes,
@@ -48,6 +49,13 @@ describe('student formats', () => {
     expect(formatExamTimer(9 * 60_000 + 59_000)).toBe('09:59');
     expect(formatExamTimer(3_600_000)).toBe('1:00:00');
     expect(formatExamTimer(-5)).toBe('00:00');
+  });
+
+  it('Q-11 the per-question timer reads M:SS', () => {
+    expect(formatQuestionTimer(20_000)).toBe('0:20');
+    expect(formatQuestionTimer(19_999)).toBe('0:19');
+    expect(formatQuestionTimer(65_000)).toBe('1:05');
+    expect(formatQuestionTimer(-1)).toBe('0:00');
   });
 
   it('UX-11 TST-07 times a student acts on read HH:mm in the org zone with the zone named', () => {

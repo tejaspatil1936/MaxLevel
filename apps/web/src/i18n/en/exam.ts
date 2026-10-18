@@ -51,6 +51,7 @@ export const exam = {
   'attempt.notSavedMany': "Your answers to questions {list} couldn't be saved.",
   'attempt.strikes': 'Strikes {n} of {max}',
   'attempt.timeLeft': 'Time left',
+  'attempt.questionTimeLeft': 'Time left for this question',
   'attempt.timeAnnouncements': 'Time announcements',
   'attempt.minutesLeft': '{n} minutes left',
   'attempt.oneMinuteLeft': '1 minute left',

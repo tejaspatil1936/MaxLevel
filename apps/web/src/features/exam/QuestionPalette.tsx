@@ -23,6 +23,10 @@ export interface PaletteGroup {
   indexes: number[];
 }
 
+const never = () => false;
+/** An unavailable bubble or mark stays focusable and named, but shows it can't be opened. */
+const UNAVAILABLE = 'aria-disabled:cursor-not-allowed aria-disabled:hover:bg-transparent';
+
 const stateName = (i: number, state: QuestionState) =>
   t('exam.paletteItem', { n: i + 1, state: t(`exam.state.${state}` as MessageKey) });
 
@@ -36,6 +40,7 @@ export function QuestionPalette({
   current,
   stateOf,
   onGoTo,
+  unavailable = never,
   open,
   onClose,
   onFocusLeave,
@@ -45,6 +50,8 @@ export function QuestionPalette({
   current: number;
   stateOf: (index: number) => QuestionState;
   onGoTo: (index: number) => void;
+  /** Questions that can't be opened (locked, or any other under forward-only navigation, Q-11). */
+  unavailable?: (index: number) => boolean;
   open: boolean;
   onClose: () => void;
   onFocusLeave?: (to: Element | null) => void;
@@ -89,16 +96,19 @@ export function QuestionPalette({
           <ul className="grid grid-cols-5 gap-1">
             {g.indexes.map((i) => {
               const state = stateOf(i);
+              const off = unavailable(i);
               return (
                 <li key={i}>
                   <button
                     ref={i === current ? currentRef : undefined}
                     type="button"
                     aria-current={i === current ? 'step' : undefined}
-                    onClick={() => onGoTo(i)}
+                    aria-disabled={off || undefined}
+                    onClick={() => (off ? undefined : onGoTo(i))}
                     className={cx(
                       'flex size-11 items-center justify-center rounded-full',
                       i === current && 'bg-ballpoint-wash',
+                      UNAVAILABLE,
                     )}
                     aria-label={stateName(i, state)}
                   >
@@ -140,11 +150,13 @@ export function TimingTrack({
   current,
   stateOf,
   onGoTo,
+  unavailable = never,
 }: {
   count: number;
   current: number;
   stateOf: (index: number) => QuestionState;
   onGoTo: (index: number) => void;
+  unavailable?: (index: number) => boolean;
 }) {
   const currentRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -163,8 +175,9 @@ export function TimingTrack({
               type="button"
               aria-current={i === current ? 'step' : undefined}
               aria-label={stateName(i, stateOf(i))}
-              onClick={() => onGoTo(i)}
-              className="flex h-7 w-full items-center pl-2 hover:bg-ballpoint-wash"
+              aria-disabled={unavailable(i) || undefined}
+              onClick={() => (unavailable(i) ? undefined : onGoTo(i))}
+              className={cx('flex h-7 w-full items-center pl-2 hover:bg-ballpoint-wash', UNAVAILABLE)}
             >
               <StateMark state={stateOf(i)} shape="bar" className={cx('h-2.5', i === current ? 'w-8' : 'w-5')} />
             </button>
