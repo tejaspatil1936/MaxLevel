@@ -10,6 +10,7 @@ import { platformData } from './platform';
 import { preferencesData } from './preferences';
 import { seriesData } from './series';
 import { studentsData } from './students';
+import { testsData } from './tests';
 import { usageData } from './usage';
 import { whitelistData } from './whitelist';
 
@@ -28,6 +29,7 @@ export function createData(db: Firestore) {
     platform: platformData(db),
     preferences: preferencesData(db),
     series: seriesData(db),
+    tests: testsData(db),
     usage: usageData(db),
   };
 }
