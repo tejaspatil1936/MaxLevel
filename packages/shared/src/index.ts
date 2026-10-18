@@ -26,3 +26,4 @@ export * from './strikes';
 export * from './sync';
 export * from './attempt';
 export * from './student-tests';
+export * from './tasks';
