@@ -31,6 +31,7 @@ import { SubmitSummary, type SummaryRow } from './SubmitSummary';
 import { CLOCK_REFRESH_MS, timeLeftText, warningText } from './time-left';
 
 const backLink = 'inline-flex min-h-11 items-center font-bold text-ballpoint underline';
+const submittedUrl = (attemptId: string) => `/exam/submitted/?attempt=${encodeURIComponent(attemptId)}`;
 
 /**
  * /exam/?attempt=<attemptId> (EX-05, spec 7.1 step 4): the student's own attempt on the exam screen. Opening it again
@@ -138,9 +139,13 @@ function AttemptLoader({ uid, orgId, attemptId }: { uid: string; orgId: string; 
     [query.data, finished, orgId, unreachable],
   );
   const opening = useOpenedExam(attemptId, uid, source);
+  const router = useRouter();
+  // A finished attempt opens the submitted screen; its answers are no longer kept on the device.
   useEffect(() => {
-    if (finished) void clearDeviceExam(attemptId);
-  }, [finished, attemptId]);
+    if (!finished) return;
+    void clearDeviceExam(attemptId);
+    router.replace(submittedUrl(attemptId));
+  }, [finished, attemptId, router]);
 
   if (opening.status === 'ready') return <AttemptExam {...opening.exam} />;
   if (!attemptId || (query.error instanceof ApiError && query.error.status === 404))
@@ -153,13 +158,6 @@ function AttemptLoader({ uid, orgId, attemptId }: { uid: string; orgId: string; 
     return (
       <Notice title={t('attempt.title')}>
         <InlineMessage>{t('attempt.loadFailed')}</InlineMessage>
-      </Notice>
-    );
-  // The submitted screen arrives with F-3.08; until then a finished attempt says so and links home.
-  if (query.data && finished)
-    return (
-      <Notice title={testHeading(query.data.test)}>
-        <p>{t('studentTest.finished')}</p>
       </Notice>
     );
   return <Loading />;
@@ -303,7 +301,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
       }),
     onSuccess: () => {
       void clearDeviceExam(attemptId);
-      router.replace(`/exam/submitted/?attempt=${encodeURIComponent(attemptId)}`);
+      router.replace(submittedUrl(attemptId));
     },
   });
 
