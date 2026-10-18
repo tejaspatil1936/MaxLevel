@@ -68,3 +68,4 @@ F-2.02 done — series API with SER-09 refusal and eligibility preview, student 
 F-2.03 done — tests API with derived live/closed status, authoring-test scenario, series timeline with day labels in the org timezone, Add test dialog, test editor shell
 F-2.04 done — test Settings tab with Inherited/Overridden groups and reset, test Eligibility tab narrowing the series rules with its own preview route
 F-2.05 done — question CRUD, reorder (drag and keyboard), image upload, JSON import (legacy and mitaoe-questions/1), editor with live Student view (markdown-it, KaTeX MathML, Shiki)
+F-2.06 done — sections table and dialog with draw and difficulty-mix validation (API 400s), whole-test draw, marking presets and per-question time limits
