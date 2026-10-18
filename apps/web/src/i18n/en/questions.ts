@@ -24,4 +24,7 @@ export const questions = {
   'questions.deleteBody': 'The question is removed from this test. The other questions keep their order.',
   'questions.deleteConfirm': 'Delete question',
   'questions.deleted': 'Question deleted',
+  'questions.marksInvalid': 'Enter a number greater than 0.',
+  'questions.negativeInvalid': 'Enter 0 or a positive number.',
+  'questions.timeLimitInvalid': 'Enter a whole number of seconds, from 1 to 3600.',
 } as const;
