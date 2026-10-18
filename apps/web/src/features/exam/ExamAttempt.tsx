@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
+import { useCameraWatch } from '@/features/proctoring/useCameraWatch';
 import { AccessibilityButton } from '@/features/shell/AccessibilityPanel';
 import { RoleGuard } from '@/features/shell/RoleGuard';
 import { testHeading } from '@/features/student/test-heading';
@@ -274,6 +275,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
     () => installLockdown({ win: window, doc: document, report, fullscreenRequired, devtoolsPolicy }),
     [report, fullscreenRequired, devtoolsPolicy],
   );
+  // The laptop camera (PR-01, PR-02): on for the whole exam, faces counted on the device, incidents reported as above.
+  useCameraWatch(payload.settings.cameraRequired, report);
   // Each timed question is reported as served when it shows (Q-12); until the server answers, its countdown runs from
   // the time it showed here (QuestionTimer).
   const [served, setServed] = useState<Record<string, number>>(payload.questionServedAt);
