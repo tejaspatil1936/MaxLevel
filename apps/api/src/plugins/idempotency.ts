@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Clock } from '@mitaoe/shared';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, preHandlerAsyncHookHandler } from 'fastify';
 import type { IdempotencyData } from '../data/idempotency';
 import { AppError } from '../errors';
 
@@ -23,13 +23,13 @@ declare module 'fastify' {
  * successful response is stored under the caller, the method and URL and the key; the same request with the same key
  * within 24 hours (on the Clock) gets that status and body again, byte for byte, without running the handler. Errors
  * are not stored, so a refused request can be retried with its key. Register before compression, so the body stored
- * is the JSON sent.
+ * is the JSON sent, and before the routes. The check is a route-level preHandler, so it runs after every app-level one
+ * (sign-in, account and org status, feature gate: AUTH-06, ORG-13): a refused caller never gets a stored response back.
  */
 export function registerIdempotency(app: FastifyInstance, deps: { store: IdempotencyData; clock: Clock }): void {
   const { store, clock } = deps;
 
-  app.addHook('preHandler', async (req, reply) => {
-    if (!req.routeOptions.config.idempotent) return;
+  const check: preHandlerAsyncHookHandler = async (req, reply) => {
     const key = req.headers['idempotency-key'];
     if (typeof key !== 'string' || !KEY.test(key))
       throw new AppError(400, 'IDEMPOTENCY_KEY_REQUIRED', 'Send an Idempotency-Key header with this request.', {
@@ -44,6 +44,11 @@ export function registerIdempotency(app: FastifyInstance, deps: { store: Idempot
       return reply.status(stored.status).type('application/json; charset=utf-8').send(stored.body);
     }
     req.idempotency = { id, replayed: false };
+  };
+
+  app.addHook('onRoute', (route) => {
+    if (!route.config?.idempotent) return;
+    route.preHandler = [...(route.preHandler ? [route.preHandler].flat() : []), check];
   });
 
   app.addHook('onSend', async (req, reply, payload) => {

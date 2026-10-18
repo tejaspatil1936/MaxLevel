@@ -64,7 +64,8 @@ export async function createServer(
   registerErrorHandling(app);
   registerServerTime(app, clock);
   registerRequestLog(app);
-  // Before compression: the stored replay is the JSON body itself (API-02).
+  // Before compression: the stored replay is the JSON body itself (API-02). Its key check runs at route level, after
+  // registerAuth's sign-in, status and feature preHandlers, so a refused caller gets no replay (AUTH-06).
   if (opts.idempotency) registerIdempotency(app, { store: opts.idempotency, clock });
   // CORS only for the app's own origins (SEC-05). X-Server-Time must be readable by the browser (API-03).
   await app.register(cors, {
