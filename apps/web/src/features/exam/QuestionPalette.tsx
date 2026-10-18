@@ -116,9 +116,9 @@ export function TimingTrack({
   stateOf: (index: number) => QuestionState;
 }) {
   return (
-    <div aria-hidden className="flex w-4 shrink-0 flex-col items-start gap-1 border-r border-dropout py-6 pl-1">
+    <div aria-hidden className="flex w-6 shrink-0 flex-col items-start gap-1.5 border-r border-dropout py-6 pl-1.5">
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} className={cx('block h-1.5 rounded-sm', i === current ? 'w-3' : 'w-2', TRACK[stateOf(i)])} />
+        <span key={i} className={cx('block h-2 rounded-sm', i === current ? 'w-4' : 'w-2.5', TRACK[stateOf(i)])} />
       ))}
     </div>
   );

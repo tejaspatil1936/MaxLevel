@@ -105,6 +105,7 @@ export function ExamScreen({ exam, title, bar, state, dispatch, showAnswers = fa
             </Button>
             <Button
               variant="secondary"
+              className="aria-pressed:border-ink aria-pressed:bg-highlighter aria-pressed:text-highlighter-ink"
               aria-pressed={!!state.marked[question.id]}
               onClick={() => dispatch({ type: 'toggleMark' })}
             >
