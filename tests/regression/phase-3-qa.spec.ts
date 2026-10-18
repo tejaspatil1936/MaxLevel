@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
-import { EXAM_HEADING, type ExamFixtures } from '../acceptance/fixtures/exam-session';
+import { BASIC_QUESTIONS, optionName } from '../acceptance/fixtures/authoring';
+import { EXAM_HEADING, openExam, type ExamFixtures } from '../acceptance/fixtures/exam-session';
 import { startAttempt, storedAttempt, storedEvents } from '../acceptance/fixtures/exam';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
@@ -99,5 +100,47 @@ test.describe('phase 3 QA: Realtime Database comes back after a network drop @ex
     expect((await storedAttempt(emulators, ORG_A.id, attemptId)).strikesCount).toBe(0);
     const events = await storedEvents(emulators, ORG_A.id, attemptId);
     expect(events.filter((e) => e.data.type === 'phone_disconnected')).toEqual([]);
+  });
+});
+
+test.describe('phase 3 QA: keyboard focus stays in the exam @lockdown', () => {
+  test('PR-05 A11Y-03 Tab past Save and next keeps focus inside the page and records no strike', async ({
+    page,
+    signInAs,
+    apiAs,
+    testApi,
+    emulators,
+  }) => {
+    const { exam, attemptId } = await openExam({ page, signInAs, apiAs, testApi });
+    await page.evaluate(() => {
+      const w = window as unknown as { windowBlurs: number };
+      w.windowBlurs = 0;
+      window.addEventListener('blur', (e) => {
+        if (e.target === window) w.windowBlurs++;
+      });
+    });
+    await exam.saveAndNext.focus();
+    await expect(exam.saveAndNext).toBeFocused();
+
+    await page.keyboard.press('Tab');
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const el = document.activeElement;
+            return document.hasFocus() && !!el && el !== document.body && document.body.contains(el);
+          }),
+        { message: 'focus is on an element inside the page' },
+      )
+      .toBe(true);
+    await page.keyboard.press('Shift+Tab');
+    await expect(exam.saveAndNext, 'Shift+Tab goes back to Save and next').toBeFocused();
+    expect(await page.evaluate(() => (window as unknown as { windowBlurs: number }).windowBlurs)).toBe(0);
+    // An answer round trip, so any strike report sent on the way has reached the server first.
+    await exam.choose(optionName(BASIC_QUESTIONS[0]!, 0));
+    await exam.expectSaved();
+    await expect(exam.warnings).toHaveCount(0);
+    expect((await storedAttempt(emulators, ORG_A.id, attemptId)).strikesCount).toBe(0);
   });
 });
