@@ -98,7 +98,6 @@ const core = {
   'account.menu': 'Account menu',
   'account.profile': 'Profile',
   'student.title': 'Your tests',
-  'student.lead': 'Live, upcoming and completed tests will appear here.',
   'status.active': 'Active',
   'status.suspended': 'Suspended',
   'status.archived': 'Archived',
