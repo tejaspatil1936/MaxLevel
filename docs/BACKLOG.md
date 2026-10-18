@@ -67,3 +67,10 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - (QA) Editing a live test with no attempts returns it to In review without a confirmation.
 - (QA) A section with no questions passes the draw check; a whole-test drawCount sent while the test has sections is accepted and ignored; unknown section IDs are accepted.
 - (QA) The super admin's first GET /v1/org on /platform/ can return 400 ORG_REQUIRED; the editor tab is not kept in the URL.
+
+## Phase 3 (test review)
+
+- F-3.11 counts focus events once after the strike count reaches 1; poll until both focus events are stored so a wrongly counted second event cannot slip by.
+- F-3.13 checks the absence of phone_disconnected with a single read; check after a later event round trip.
+- colourBlindShots leaves background-image (hatching) in colour, which is lenient for A11Y-14.
+- The browser DATA-05 dashboard check looks for field names only (the integration row checks explanation text).
