@@ -107,7 +107,7 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
       async (req) => {
         const run = SCENARIOS[req.params.scenario];
         if (!run) throw new AppError(404, 'NOT_FOUND', `No scenario named ${req.params.scenario}.`);
-        return run(deps.firebase.db, clock.now(), req.body);
+        return run(deps.firebase.db, clock.now(), req.body, deps.queue);
       },
     );
   };

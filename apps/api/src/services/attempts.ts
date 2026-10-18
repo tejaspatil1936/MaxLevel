@@ -2,6 +2,7 @@ import {
   answerVerdict,
   attemptDeadline,
   autoSubmitTask,
+  releaseResultsTask,
   canStart,
   dayLabels,
   drawAttempt,
@@ -163,7 +164,7 @@ export function attemptService(deps: AttemptDeps) {
      * POST /v1/attempts (EX-03, EX-04): a scheduled test of an active series that the student's series and test rules
      * admit (SER-08, checked now from the stored records), inside its start window; a repeat returns the same attempt.
      * A new attempt is drawn once, seeded by its ID (Q-06), with its deadline fixed (spec 5.5). Each start enqueues
-     * the auto-submit task (idempotent by name) and writes the attempt's owner for the Realtime Database rules.
+     * the auto-submit and release tasks (idempotent by name) and writes the attempt's owner for the Realtime Database rules.
      */
     async start(
       orgId: string,
@@ -219,6 +220,10 @@ export function attemptService(deps: AttemptDeps) {
       const [answers] = await Promise.all([
         created ? Promise.resolve({}) : data.attempts.getAnswers(orgId, attempt.id),
         queue.enqueue(autoSubmitTask(orgId, attempt.id, attempt.deadlineAt)),
+        // RES-01: the release task for the window end in force now, idempotent by name.
+        settings.window
+          ? queue.enqueue(releaseResultsTask({ orgId, testId, windowEnd: settings.window.end }))
+          : Promise.resolve(),
         withinLimit(
           rtdb.ref().update({
             [`attemptOwners/${attempt.id}`]: who.uid,

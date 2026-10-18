@@ -62,8 +62,8 @@ const audit = async (action: string) =>
   );
 
 describe('approval and publishing', () => {
-  it('TST-04 Q-14 a test moves draft, in review, approved, scheduled, then shows live and closed from the Clock', async () => {
-    const { app, clock } = await testApp();
+  it('TST-04 Q-14 RES-01 a test moves draft, in review, approved, scheduled, then shows live and closed from the Clock', async () => {
+    const { app, clock, queue } = await testApp();
     clock.set(START - 3_600_000);
     const id = await testWith(app, 0);
     expect((await testDoc(id).get()).get('status')).toBe('draft');
@@ -88,6 +88,9 @@ describe('approval and publishing', () => {
 
     const published = await call(app, 'POST', `/v1/tests/${id}/publish`);
     expect([published.statusCode, published.json()]).toEqual([200, { status: 'scheduled' }]);
+    expect(await queue.pending(), 'the release task at the window end').toEqual([
+      { name: `release-results-${orgA}-${id}-${END}`, path: '/tasks/release-results', scheduleTime: END },
+    ]);
     const status = async () => ((await call(app, 'GET', `/v1/tests/${id}`)).json() as { status: string }).status;
     expect(await status()).toBe('scheduled');
     clock.set(START);

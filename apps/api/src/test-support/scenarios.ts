@@ -1,11 +1,13 @@
 import {
   NO_RESTRICTION,
+  releaseResultsTask,
   resolveSettings,
   SYSTEM_DEFAULTS,
   testDrawPools,
   totalMarks as totalMarksOf,
   type Difficulty,
   type Section,
+  type TaskQueue,
 } from '@mitaoe/shared';
 import type { Firestore } from 'firebase-admin/firestore';
 import { AppError } from '../errors';
@@ -14,7 +16,13 @@ import { emailKey } from './seed';
 // Scenario data on top of the base seed for acceptance tests (POST /__test/seed/:scenario, docs/testids).
 
 export type ScenarioResult = Record<string, string | string[] | Record<string, string> | Record<string, number>>;
-type Scenario = (db: Firestore, now: number, body: Record<string, unknown>) => Promise<ScenarioResult>;
+/** `queue` is the API's task queue, for scenarios that queue what the real action would (publishing, RES-01). */
+type Scenario = (
+  db: Firestore,
+  now: number,
+  body: Record<string, unknown>,
+  queue?: TaskQueue,
+) => Promise<ScenarioResult>;
 
 const emptyOrg: Scenario = async (db, now) => {
   const batch = db.batch();
@@ -184,7 +192,7 @@ const sectioned = (): SeedQuestion[] =>
  * Phase 2: a test with a question set (docs/testids/phase-2.md, `authoring-test`), in a new default series unless
  * `seriesId` is given. `publish: true` stores it approved and scheduled with its settings snapshot.
  */
-const authoringTest: Scenario = async (db, now, body) => {
+const authoringTest: Scenario = async (db, now, body, queue) => {
   const orgId = String(body.orgId ?? '');
   const seriesId =
     typeof body.seriesId === 'string' ? body.seriesId : String((await authoringSeries(db, now, { orgId })).seriesId);
@@ -271,6 +279,9 @@ const authoringTest: Scenario = async (db, now, body) => {
   }
   batch.set(ref, test);
   await batch.commit();
+  // As publishing does (RES-01): the release task for the window end.
+  const window = (test.resolved as { window?: { end: number } | null } | undefined)?.window;
+  if (window && queue) await queue.enqueue(releaseResultsTask({ orgId, testId: ref.id, windowEnd: window.end }));
   return { seriesId, testId: ref.id, questionIds: stored.map((q) => q.id), sectionIds };
 };
 
@@ -288,7 +299,7 @@ const zonedDay = (ms: number, timeZone: string) =>
  * from the clock's current time, in a new active `Placement 2026` series unless `seriesId` is given. Proctoring that
  * needs hardware and shuffling are off unless `overrides` switch them on.
  */
-const examTest: Scenario = async (db, now, body) => {
+const examTest: Scenario = async (db, now, body, queue) => {
   const orgId = String(body.orgId ?? '');
   const org = await db.doc(`organizations/${orgId}`).get();
   if (!org.exists) throw new AppError(404, 'NOT_FOUND', 'No such organization for the scenario.');
@@ -327,18 +338,23 @@ const examTest: Scenario = async (db, now, body) => {
     });
     seriesId = ref.id;
   }
-  const ids = await authoringTest(db, now, {
-    orgId,
-    seriesId,
-    ...(typeof body.title === 'string' ? { title: body.title } : {}),
-    ...(typeof body.company === 'string' ? { company: body.company } : {}),
-    ...(body.questions !== undefined ? { questions: body.questions } : {}),
-    ...(body.sectionDraws !== undefined ? { sectionDraws: body.sectionDraws } : {}),
-    ...(body.testDraw !== undefined ? { testDraw: body.testDraw } : {}),
-    overrides,
-    scheduledDate,
-    publish: body.publish !== false,
-  });
+  const ids = await authoringTest(
+    db,
+    now,
+    {
+      orgId,
+      seriesId,
+      ...(typeof body.title === 'string' ? { title: body.title } : {}),
+      ...(typeof body.company === 'string' ? { company: body.company } : {}),
+      ...(body.questions !== undefined ? { questions: body.questions } : {}),
+      ...(body.sectionDraws !== undefined ? { sectionDraws: body.sectionDraws } : {}),
+      ...(body.testDraw !== undefined ? { testDraw: body.testDraw } : {}),
+      overrides,
+      scheduledDate,
+      publish: body.publish !== false,
+    },
+    queue,
+  );
   if (body.eligibility)
     await db
       .doc(`organizations/${orgId}/tests/${String(ids.testId)}`)

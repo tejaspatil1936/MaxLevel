@@ -77,6 +77,11 @@ describe('starting an attempt', () => {
     });
     expect((await db.doc(`${org}/tests/${t.testId}`).get()).get('attemptsStarted')).toBe(true);
     expect(await ctx.queue.pending()).toEqual([
+      {
+        name: `release-results-${SEED.orgA}-${t.testId}-${t.window.end}`,
+        path: '/tasks/release-results',
+        scheduleTime: t.window.end,
+      },
       { name: `auto-submit-${id}-${t.window.end}`, path: '/tasks/auto-submit', scheduleTime: t.window.end + 120_000 },
     ]);
     expect((await rtdb.ref(`attemptOwners/${id}`).get()).val()).toBe(stored.uid);
@@ -102,7 +107,7 @@ describe('starting an attempt', () => {
     expect(again.body.questions).toEqual(first.body.questions);
     expect(again.body.serverTime).toBe(NOW + MIN);
     expect((await db.collection(`${org}/attempts`).get()).size).toBe(1);
-    expect(await ctx.queue.pending(), 'still one auto-submit task').toHaveLength(1);
+    expect(await ctx.queue.pending(), 'still one auto-submit and one release task').toHaveLength(2);
   });
 
   it('EX-03 SER-08 refuses a student the stored rules leave out, outside the window, and tests not open to start', async () => {

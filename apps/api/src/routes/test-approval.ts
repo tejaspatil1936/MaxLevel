@@ -3,6 +3,7 @@ import {
   approveResponseSchema,
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
   publishResponseSchema,
+  releaseResultsTask,
   resolveSettings,
   settingsGaps,
   settingsProblems,
@@ -104,6 +105,9 @@ export function testApprovalRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           after: { status: 'scheduled', resolved: settings },
         });
         await batch.commit();
+        // RES-01: the release task at the window end (attempt starts queue it again, idempotently by name).
+        if (settings.window)
+          await ctx.queue.enqueue(releaseResultsTask({ orgId, testId: test.id, windowEnd: settings.window.end }));
         return { status: 'scheduled' as const };
       },
     );
