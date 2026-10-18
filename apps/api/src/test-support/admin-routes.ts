@@ -69,6 +69,43 @@ const withTest = async (db: Firestore) => {
   return { params: { id: await testIn(db, 'org-a', 'test-org-a') } };
 };
 
+/** A question with a fixed ID in each org's sample test; `n` makes a fresh one for routes that delete. */
+const questionIn = async (db: Firestore, orgId: string, id: string) => {
+  const testId = await testIn(db, orgId, `test-${orgId}`);
+  await db.doc(`organizations/${orgId}/tests/${testId}/questions/${id}`).set({
+    orgId,
+    testId,
+    order: 1,
+    type: 'single',
+    prompt: `Question ${id}`,
+    images: [],
+    options: [
+      { id: 'a', text: '3' },
+      { id: 'b', text: '4' },
+    ],
+    correctOptionIds: ['b'],
+    tags: [],
+    source: { kind: 'manual' },
+    status: 'approved',
+    createdAt: 0,
+    updatedAt: 0,
+  });
+  return { id: testId, questionId: id };
+};
+const withQuestion = async (db: Firestore, n = 0) => {
+  await questionIn(db, 'org-b', 'q-org-b');
+  return { params: await questionIn(db, 'org-a', n ? `q-fresh-${n}` : 'q-org-a') };
+};
+const questionBody = {
+  prompt: 'What is 2 + 2?',
+  options: [
+    { id: 'a', text: '3' },
+    { id: 'b', text: '4' },
+  ],
+  correctOptionIds: ['b'],
+};
+const foreignQuestion = { id: 'test-org-b', questionId: 'q-org-b' };
+
 export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'GET /v1/org': {},
   'PATCH /v1/org/settings': { body: { profileLocked: false } },
@@ -176,6 +213,19 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'POST /v1/tests/:id/eligibility/preview': {
     foreignParams: { id: 'test-org-b' },
     fresh: async (db) => ({ ...(await withTest(db)), body: { eligibility: noRules } }),
+  },
+  'GET /v1/tests/:id/questions': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
+  'POST /v1/tests/:id/questions': {
+    foreignParams: { id: 'test-org-b' },
+    fresh: async (db) => ({ ...(await withTest(db)), body: questionBody }),
+  },
+  'PATCH /v1/tests/:id/questions/:questionId': {
+    foreignParams: foreignQuestion,
+    fresh: async (db, n) => ({ ...(await withQuestion(db)), body: { prompt: `Edited ${n}` } }),
+  },
+  'DELETE /v1/tests/:id/questions/:questionId': {
+    foreignParams: foreignQuestion,
+    fresh: async (db, n) => withQuestion(db, n + 1),
   },
 
   'GET /v1/audit': {},
