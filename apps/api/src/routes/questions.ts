@@ -19,6 +19,7 @@ import type { QuestionRecord, QuestionUpdate } from '../data/questions';
 import type { TestRecord } from '../data/tests';
 import { AppError, notFound } from '../errors';
 import { questionImagePrefix } from '../services/question-images';
+import { editReturnsToReview } from '../services/test-review';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
@@ -76,14 +77,30 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
     ...q,
     problems: q.status === 'draft' ? questionProblems(q, othersOf(list, q.id)) : [],
   });
-  /** The first question moves a draft test to review (TST-04); every change bumps the question set version. */
-  const changed = (orgId: string, batch: FirebaseFirestore.WriteBatch, test: TestRecord, added: boolean) =>
+  /**
+   * A test whose question set is about to change, with whether the change sends it back to review: an approved or
+   * scheduled test with no attempts (Q-15).
+   */
+  const editedTest = async (orgId: string, testId: string) => {
+    const test = await testOf(orgId, testId);
+    return { test, review: await editReturnsToReview(data, orgId, test) };
+  };
+  /**
+   * The first question moves a draft test to review (TST-04), any change moves an approved one back (Q-15); every
+   * change bumps the question set version.
+   */
+  const changed = (
+    orgId: string,
+    batch: FirebaseFirestore.WriteBatch,
+    { test, review }: { test: TestRecord; review: boolean },
+    added: boolean,
+  ) =>
     data.tests.questionsChanged(
       orgId,
       batch,
       test.id,
       clock.now(),
-      added && test.status === 'draft' ? 'in_review' : undefined,
+      review || (added && test.status === 'draft') ? 'in_review' : undefined,
     );
 
   return async (app) => {
@@ -110,7 +127,8 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       },
       async (req, reply) => {
         const orgId = req.orgId!;
-        const test = await testOf(orgId, req.params.id);
+        const edit = await editedTest(orgId, req.params.id);
+        const { test } = edit;
         const input = withoutEmptyOptions(req.body);
         refuseForeignRefs(orgId, test, input);
         const list = await data.questions.listQuestions(orgId, test.id);
@@ -124,7 +142,7 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           { ...input, order, source: { kind: 'manual' }, status },
           clock.now(),
         );
-        changed(orgId, batch, test, true);
+        changed(orgId, batch, edit, true);
         audit(req, batch, { action: 'question.create', target: { type: 'question', id }, after: { ...input, status } });
         await batch.commit();
         return reply.status(201).send({ id, status });
@@ -139,7 +157,8 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       },
       async (req) => {
         const orgId = req.orgId!;
-        const test = await testOf(orgId, req.params.id);
+        const edit = await editedTest(orgId, req.params.id);
+        const { test } = edit;
         const before = await questionOf(orgId, test.id, req.params.questionId);
         const patch = withoutEmptyOptions(req.body);
         refuseForeignRefs(orgId, test, patch);
@@ -163,7 +182,7 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const keys = Object.keys(req.body) as Array<keyof QuestionRecord>;
         const batch = db.batch();
         data.questions.updateQuestion(orgId, batch, test.id, before.id, changes);
-        changed(orgId, batch, test, false);
+        changed(orgId, batch, edit, false);
         audit(req, batch, {
           action: 'question.update',
           target: { type: 'question', id: before.id },
@@ -180,7 +199,8 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       { config: admin, schema: { params: questionParams, response: { 200: z.object({ deleted: z.literal(true) }) } } },
       async (req) => {
         const orgId = req.orgId!;
-        const test = await testOf(orgId, req.params.id);
+        const edit = await editedTest(orgId, req.params.id);
+        const { test } = edit;
         const q = await questionOf(orgId, test.id, req.params.questionId);
         const rest = (await data.questions.listQuestions(orgId, test.id)).filter((x) => x.id !== q.id);
         const batch = db.batch();
@@ -193,7 +213,7 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           rest.map((x) => x.id),
           clock.now(),
         );
-        changed(orgId, batch, test, false);
+        changed(orgId, batch, edit, false);
         audit(req, batch, { action: 'question.delete', target: { type: 'question', id: q.id }, before: q });
         await batch.commit();
         return { deleted: true as const };
@@ -213,14 +233,15 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       },
       async (req) => {
         const orgId = req.orgId!;
-        const test = await testOf(orgId, req.params.id);
+        const edit = await editedTest(orgId, req.params.id);
+        const { test } = edit;
         const current = new Set((await data.questions.listQuestions(orgId, test.id)).map((q) => q.id));
         const ids = req.body.ids;
         if (ids.length !== current.size || new Set(ids).size !== ids.length || ids.some((id) => !current.has(id)))
           throw new AppError(400, 'VALIDATION', 'List every question of this test once.', { field: 'ids' });
         const batch = db.batch();
         data.questions.setOrder(orgId, batch, test.id, ids, clock.now());
-        changed(orgId, batch, test, false);
+        changed(orgId, batch, edit, false);
         audit(req, batch, { action: 'question.reorder', target: { type: 'test', id: test.id }, after: { ids } });
         await batch.commit();
         return { ids };
@@ -237,7 +258,8 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       },
       async (req, reply) => {
         const orgId = req.orgId!;
-        const test = await testOf(orgId, req.params.id);
+        const edit = await editedTest(orgId, req.params.id);
+        const { test } = edit;
         const inputs = req.body.questions.map(withoutEmptyOptions);
         for (const q of inputs) refuseForeignRefs(orgId, test, q);
         const list = await data.questions.listQuestions(orgId, test.id);
@@ -251,7 +273,7 @@ export function questionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           const input = { ...q, order: last + i + 1, source: { kind: 'json' as const }, status };
           return data.questions.createQuestion(orgId, batch, test.id, input, now);
         });
-        changed(orgId, batch, test, true);
+        changed(orgId, batch, edit, true);
         audit(req, batch, {
           action: 'question.import',
           target: { type: 'test', id: test.id },

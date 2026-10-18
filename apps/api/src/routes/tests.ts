@@ -14,8 +14,11 @@ import {
   testPatchSchema,
   testDrawPools,
   testStatusAt,
+  RELEASE_SETTING_KEYS,
   type DrawProblem,
   type Section,
+  type Settings,
+  type TestPatch,
   type Test,
   type TestDetail,
 } from '@mitaoe/shared';
@@ -23,8 +26,9 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { QuestionRecord } from '../data/questions';
 import type { SeriesRecord } from '../data/series';
-import type { TestRecord, TestUpdate } from '../data/tests';
+import { BACK_TO_REVIEW, type TestRecord, type TestUpdate } from '../data/tests';
 import { AppError, notFound } from '../errors';
+import { editReturnsToReview } from '../services/test-review';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
@@ -104,6 +108,45 @@ function refuseUnsatisfiableDraw(
   }
 }
 
+/** The same value, whatever the key order of the objects in it. */
+const same = (a: unknown, b: unknown): boolean => {
+  const sorted = (v: unknown): unknown =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v)
+            .filter(([, x]) => x !== undefined)
+            .sort(([x], [y]) => x.localeCompare(y))
+            .map(([k, x]) => [k, sorted(x)]),
+        )
+      : Array.isArray(v)
+        ? v.map(sorted)
+        : v;
+  return JSON.stringify(sorted(a)) === JSON.stringify(sorted(b));
+};
+
+const RELEASE_KEYS = new Set<string>(RELEASE_SETTING_KEYS);
+const releaseOf = (s: Settings) => Object.fromEntries(RELEASE_SETTING_KEYS.map((k) => [k, s[k]]));
+
+/**
+ * Q-15, DECISIONS Q16: whether a PATCH changes what approval checked: sections, the draw, the date (and so the
+ * window) or any setting but the five release and visibility ones. Details and eligibility (SER-08) do not.
+ */
+function lockedChange(before: TestRecord, body: TestPatch, sections: Section[] | undefined): boolean {
+  const { overrides } = body;
+  const keys = new Set([...Object.keys(before.overrides), ...Object.keys(overrides ?? {})]);
+  const settingChanged =
+    !!overrides &&
+    [...keys].some(
+      (k) => !RELEASE_KEYS.has(k) && !same(before.overrides[k as keyof Settings], overrides[k as keyof Settings]),
+    );
+  return (
+    settingChanged ||
+    (!!sections && !same(before.sections, sections)) ||
+    ('drawCount' in body && (body.drawCount ?? undefined) !== before.drawCount) ||
+    (!!body.scheduledDate && body.scheduledDate !== before.scheduledDate)
+  );
+}
+
 /** Tests of a series with their day labels and status (TST-01, TST-02, TST-04, TST-07, SER-03). */
 export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   const { data, audit, clock, eligibility } = ctx;
@@ -178,17 +221,17 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const s = await series(orgId, before.seriesId);
         const { overrides, sections, ...details } = req.body;
         if (details.scheduledDate) refuseDateOutside(s, details.scheduledDate);
-        if (overrides) {
-          const resolved = resolveSettings({
-            series: s,
-            test: { overrides, scheduledDate: details.scheduledDate ?? before.scheduledDate },
-            timezone: await timezone(orgId),
+        const fresh = overrides
+          ? resolveSettings({
+              series: s,
+              test: { overrides, scheduledDate: details.scheduledDate ?? before.scheduledDate },
+              timezone: await timezone(orgId),
+            })
+          : undefined;
+        if (fresh && settingsProblems(fresh).length)
+          throw new AppError(400, 'FULL_REVIEW_BEFORE_CLOSE', FULL_REVIEW_BEFORE_CLOSE_MESSAGE, {
+            field: 'resultRelease',
           });
-          if (settingsProblems(resolved).length)
-            throw new AppError(400, 'FULL_REVIEW_BEFORE_CLOSE', FULL_REVIEW_BEFORE_CLOSE_MESSAGE, {
-              field: 'resultRelease',
-            });
-        }
         const nextSections = sections?.map((x, i) => ({
           ...x,
           id: x.id ?? data.tests.newSectionId(orgId),
@@ -207,12 +250,16 @@ export function testsRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           orphaned = questions.filter((q) => q.sectionId && !listed.has(q.sectionId)).map((q) => q.id);
         }
         const now = clock.now();
+        const review = lockedChange(before, req.body, nextSections) && (await editReturnsToReview(data, orgId, before));
         const changes: TestUpdate = {
           ...details,
           ...('company' in details ? { company: details.company || null } : {}),
           ...('dayNumber' in details ? { dayNumber: details.dayNumber || null } : {}),
           ...(overrides ? { overrides } : {}),
           ...(nextSections ? { sections: nextSections } : {}),
+          // Q-15: back to review, or a release and visibility change written into the snapshot in place.
+          ...(review ? BACK_TO_REVIEW : {}),
+          ...(!review && fresh && before.resolved ? { resolved: { ...before.resolved, ...releaseOf(fresh) } } : {}),
           updatedAt: now,
         };
         const batch = db.batch();
