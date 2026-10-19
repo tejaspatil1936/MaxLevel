@@ -1,4 +1,5 @@
 import { systemClock, TestClock } from '@mitaoe/shared';
+import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 import { buildWorker } from './app';
 import { loadConfig } from './config';
@@ -6,8 +7,12 @@ import { workerData } from './data';
 import { ScriptedLlm } from './llm/scripted';
 import { initFirestore } from './firebase';
 
-// Unit tests never reach Firestore: they call task paths whose handlers read nothing. The queue is a no-op fake.
+// Unit tests never reach Firestore. The queue is a no-op fake. Auth is probed with a /tasks/prewarm body that fails
+// validation: 401 means the OIDC check refused it, 400 that it passed and the handler never ran.
 const stores = { data: workerData(initFirestore()), queue: { enqueue: async () => undefined } };
+const PASSED = 400;
+const probe = (app: FastifyInstance, headers: Record<string, string> = {}) =>
+  app.inject({ method: 'POST', url: '/tasks/prewarm', payload: {}, headers });
 
 describe('worker skeleton', () => {
   it('accepts task requests without OIDC in test mode', async () => {
@@ -16,8 +21,7 @@ describe('worker skeleton', () => {
       clock: systemClock,
       config: { ...loadConfig({ NODE_ENV: 'test' }), logLevel: 'silent' },
     });
-    const res = await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} });
-    expect(res.statusCode).toBe(200);
+    expect((await probe(app)).statusCode).toBe(PASSED);
   });
 
   it('refuses task requests whose OIDC check fails', async () => {
@@ -27,14 +31,8 @@ describe('worker skeleton', () => {
       config: { ...loadConfig({ NODE_ENV: 'production' }), logLevel: 'silent' },
       checkTaskAuth: async (h) => h === 'Bearer good',
     });
-    expect((await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} })).statusCode).toBe(401);
-    const ok = await app.inject({
-      method: 'POST',
-      url: '/tasks/migrate',
-      payload: {},
-      headers: { authorization: 'Bearer good' },
-    });
-    expect(ok.statusCode).toBe(200);
+    expect((await probe(app)).statusCode).toBe(401);
+    expect((await probe(app, { authorization: 'Bearer good' })).statusCode).toBe(PASSED);
   });
 
   it('refuses unsigned task requests when NODE_ENV is not set', async () => {
@@ -46,7 +44,7 @@ describe('worker skeleton', () => {
         logLevel: 'silent',
       },
     });
-    expect((await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} })).statusCode).toBe(401);
+    expect((await probe(app)).statusCode).toBe(401);
     await expect(
       buildWorker({ ...stores, clock: systemClock, config: { ...loadConfig({}), logLevel: 'silent' } }),
       'no OIDC settings and no NODE_ENV: the worker does not start',
@@ -60,7 +58,7 @@ describe('worker skeleton', () => {
         clock: systemClock,
         config: { ...loadConfig({ NODE_ENV }), logLevel: 'silent' },
       });
-      expect((await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} })).statusCode, NODE_ENV).toBe(200);
+      expect((await probe(app)).statusCode, NODE_ENV).toBe(PASSED);
     }
   });
 

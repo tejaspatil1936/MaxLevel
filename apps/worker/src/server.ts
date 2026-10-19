@@ -31,6 +31,7 @@ const app = await buildWorker({
     printer: chromiumPrinter(config.chromiumPath ? { executablePath: config.chromiumPath } : {}),
   },
   live: liveMirror(initRtdb()),
+  migrations: { db },
   ...(llm ? { llm } : {}),
 });
 await app.listen({ port: config.port, host: config.host });

@@ -1,5 +1,6 @@
 import { TestClock, type Clock, type TaskQueue } from '@mitaoe/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
+import type { Firestore } from 'firebase-admin/firestore';
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { WorkerConfig } from './config';
 import type { LlmDriver } from './llm/driver';
@@ -9,6 +10,8 @@ import type { ExportData } from './export-data';
 import type { ImportData } from './import-data';
 import type { FileStore } from './firebase';
 import type { LiveMirror } from './live';
+import { migrationData } from './migration-data';
+import { MIGRATION_BATCH_SIZE, MIGRATIONS, type Migration } from './migrations';
 import type { ReportData } from './report-data';
 import { reportFontUrl, type PdfPrinter } from './report-pdf';
 import { loggingInstanceScaler, type InstanceScaler } from './scaler';
@@ -16,6 +19,7 @@ import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit'
 import { exportHandler, exportPayloadSchema } from './tasks/export';
 import { importHandler, importPayloadSchema } from './tasks/import';
 import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
+import { migrateHandler, MigrationFailedError, migratePayloadSchema } from './tasks/migrate';
 import { prewarmHandler, prewarmPayloadSchema } from './tasks/prewarm';
 import { releaseResultsHandler, releaseResultsPayloadSchema } from './tasks/release-results';
 import { reportHandler, reportPayloadSchema } from './tasks/report';
@@ -40,6 +44,11 @@ export interface WorkerDeps {
   scaler?: InstanceScaler;
   /** The model AI imports and report summaries use (IMP-07): the scripted mock with LLM_PROVIDER=mock; none when unset. */
   llm?: LlmDriver;
+  /**
+   * Data migrations (CI-04): the Firestore they run on and its ledger; `list` and `batchSize` default to the shipped
+   * migrations (tests inject their own).
+   */
+  migrations?: { db: Firestore; list?: readonly Migration[]; batchSize?: number };
 }
 
 export const TASK_NAMES = [
@@ -174,6 +183,41 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
             const outcome = await run(req.body, { retryCount: Number.isFinite(retryCount) ? retryCount : 0 });
             req.log.info({ task: 'report', reportId: req.body.reportId, outcome }, 'task done');
             return { ok: true, outcome };
+          });
+      }
+      if (deps.migrations) {
+        const { db, list = MIGRATIONS, batchSize = MIGRATION_BATCH_SIZE } = deps.migrations;
+        const run = migrateHandler({
+          data: migrationData(db),
+          context: { db, batchSize },
+          migrations: list,
+          clock,
+          log: tasks.log,
+        });
+        handled.push('migrate');
+        tasks
+          .withTypeProvider<ZodTypeProvider>()
+          .post('/migrate', { schema: { body: migratePayloadSchema } }, async (req, reply) => {
+            try {
+              const outcome = await run(req.body);
+              req.log.info({ task: 'migrate', outcome }, 'task done');
+              if (outcome.kind === 'unknown')
+                return reply.status(400).send({
+                  error: { code: 'UNKNOWN_MIGRATION', message: 'No migration has that ID.', details: {} },
+                });
+              // Cloud Tasks retries a refused delivery; by then the other run has finished.
+              if (outcome.kind === 'running')
+                return reply.status(409).send({
+                  error: { code: 'MIGRATION_RUNNING', message: 'Another migrate run is working.', details: {} },
+                });
+              return { applied: outcome.applied };
+            } catch (err) {
+              if (!(err instanceof MigrationFailedError)) throw err;
+              req.log.error({ task: 'migrate', migrationId: err.migrationId, err: err.cause }, 'migration failed');
+              return reply.status(500).send({
+                error: { code: 'MIGRATION_FAILED', message: err.message, details: { migrationId: err.migrationId } },
+              });
+            }
           });
       }
       for (const name of TASK_NAMES.filter((n) => !handled.includes(n))) {
