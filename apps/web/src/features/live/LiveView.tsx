@@ -24,6 +24,7 @@ import { api, ApiError } from '@/lib/api';
 import { formatCount } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
+import { AttemptReasonDialog, type AttemptReasonAction } from './AttemptReasonDialog';
 import { ExtraTimeDialog } from './ExtraTimeDialog';
 import { LiveRoster } from './LiveRoster';
 import { TimelineDrawer } from './TimelineDrawer';
@@ -55,6 +56,12 @@ export function LiveView({ testId }: { testId: string }) {
   const [sort, setSort] = useState<{ key: LiveSortKey; dir: 'asc' | 'desc' }>({ key: 'student', dir: 'asc' });
   const [timeline, setTimeline] = useState<{ attemptId: string; name: string } | null>(null);
   const [granting, setGranting] = useState<{ attemptId: string; name: string; deadlineAt: number } | null>(null);
+  const [acting, setActing] = useState<{
+    action: AttemptReasonAction;
+    attemptId: string;
+    name: string;
+    deadlineAt: number | null;
+  } | null>(null);
 
   const rows = useMemo(
     () =>
@@ -123,6 +130,14 @@ export function LiveView({ testId }: { testId: string }) {
         ...(extraTimeOn ? {} : { disabled: true, hint: t('plan.notIncluded') }),
       });
     }
+    // OPS-04, OPS-10: every started attempt can be reset; one in progress terminated, a terminated one reinstated.
+    const act = (action: AttemptReasonAction): MenuItem => ({
+      label: t(`live.action.${action}`),
+      onSelect: () => setActing({ action, attemptId, name: r.name, deadlineAt: r.deadlineAt }),
+    });
+    items.push(act('reset'));
+    if (r.status === 'in_progress') items.push(act('terminate'));
+    if (r.status === 'terminated') items.push(act('reinstate'));
     return items;
   };
   const toggleFilter = (f: LiveFilter) => setFilters((on) => (on.includes(f) ? on.filter((x) => x !== f) : [...on, f]));
@@ -200,6 +215,14 @@ export function LiveView({ testId }: { testId: string }) {
           durationMin={durationMin}
           timezone={org?.timezone ?? 'Asia/Kolkata'}
           onClose={() => setGranting(null)}
+        />
+      ) : null}
+      {acting ? (
+        <AttemptReasonDialog
+          key={`${acting.action}-${acting.attemptId}`}
+          {...acting}
+          timezone={org?.timezone ?? 'Asia/Kolkata'}
+          onClose={() => setActing(null)}
         />
       ) : null}
     </>
