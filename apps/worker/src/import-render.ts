@@ -10,6 +10,17 @@ import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 /** 2× the PDF's 72 dpi, so an A4 page is 1190 × 1684 pixels and a cropped figure stays legible. */
 export const RENDER_SCALE = 2;
+/** The most pixels a rendered page may have (16 MiP, 64 MB of RGBA): a larger page is drawn at a smaller scale. */
+export const MAX_RENDER_PIXELS = 16 * 1024 * 1024;
+/** The widest or tallest a rendered page may be, in pixels. */
+const MAX_RENDER_SIDE = 16_384;
+
+/** RENDER_SCALE, or less for a page whose MediaBox would pass the pixel budget at it (a PDF page may be 200 inches). */
+export function renderScale(width: number, height: number): number {
+  const w = Math.max(width, 1);
+  const h = Math.max(height, 1);
+  return Math.min(RENDER_SCALE, Math.sqrt(MAX_RENDER_PIXELS / (w * h)), MAX_RENDER_SIDE / w, MAX_RENDER_SIDE / h);
+}
 
 const pdfjsDir = dirname(createRequire(import.meta.url).resolve('pdfjs-dist/package.json'));
 const standardFontDataUrl = join(pdfjsDir, 'standard_fonts') + '/';
@@ -35,8 +46,9 @@ export async function renderPdfPage(pdf: Uint8Array): Promise<RenderedPage> {
   const doc = await task.promise;
   try {
     const page = await doc.getPage(1);
-    const viewport = page.getViewport({ scale: RENDER_SCALE });
-    const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+    const natural = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: renderScale(natural.width, natural.height) });
+    const canvas = createCanvas(Math.max(1, Math.floor(viewport.width)), Math.max(1, Math.floor(viewport.height)));
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
