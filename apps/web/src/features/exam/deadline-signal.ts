@@ -2,7 +2,7 @@
 
 import { signalPath, signalRecordSchema, type SignalRecord } from '@mitaoe/shared';
 import { onValue, ref } from 'firebase/database';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { firebaseDatabase } from '@/lib/firebase';
 
 /**
@@ -21,7 +21,8 @@ export function signalledDeadline(
 
 /**
  * The student's own `signals/{orgId}/{attemptId}` (spec 11.3, DATA-10), which the API writes on every grant of extra
- * time. Returns the deadline to count down to, the notice to show and the Dismiss action. While the database can't be
+ * time. Returns the deadline to count down to, the notice to show, the Dismiss action and `adopt`, which takes a deadline
+ * the API sent. While the database can't be
  * reached the screen keeps the deadline it opened with (REL-05); the server's deadline still decides.
  */
 export function useDeadlineSignal(orgId: string | null, attemptId: string, openedDeadline: number) {
@@ -38,6 +39,14 @@ export function useDeadlineSignal(orgId: string | null, attemptId: string, opene
       () => undefined,
     );
   }, [orgId, attemptId]);
+  // A deadline the API answered with (a refused time-up, OPS-06) counts even before the signal arrives.
+  const [known, setKnown] = useState(openedDeadline);
+  const adopt = useCallback((deadlineAt: number) => setKnown((before) => Math.max(before, deadlineAt)), []);
   const shown = signalledDeadline(openedDeadline, signal, dismissed);
-  return { ...shown, dismiss: () => setDismissed(shown.deadlineAt) };
+  return {
+    ...shown,
+    deadlineAt: Math.max(shown.deadlineAt, known),
+    dismiss: () => setDismissed(shown.deadlineAt),
+    adopt,
+  };
 }

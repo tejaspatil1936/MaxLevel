@@ -94,7 +94,7 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Phone strike timing runs in the laptop tab and restarts on reload; time it on the server from presence data.
 - Start does not check on the server that the phone is paired (strikes during the exam still cover it).
 - API-06 rate limits use the in-memory store per instance, not per user across instances.
-- submit with reason time_up before the deadline stores auto_submitted; store submitted when the server time is before deadlineAt.
+- submit with reason time_up and no `deadlineAt` before the deadline stores auto_submitted (F-5.01's fixture relies on it); the exam screen always names its deadline, which the server checks (DECISIONS, 2026-10-19 time-up).
 - offline-store: a refused answer with a higher seq blocks keeping a later lower-seq answer on the device.
 - Closing Keyboard shortcuts with Escape sends focus to the page instead of where it was.
 - Reloading during one continuous no-face spell gives a second no_face strike.
@@ -128,7 +128,6 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 
 - Reinstate queues its auto-submit task after the commit; a failed enqueue past the old task's time leaves no task, and a retry gets 409 NOT_TERMINATED. A failed enqueue after an extra-time grant returns 500 although the grant was saved.
 - live-mirror pairing write is fire-and-forget; landing after the start write turns the live record back to pairing and the row loses its actions.
-- The exam screen's time-up submit uses its opening deadline if the extra-time signal arrives late; the server could refuse a time_up submit before the stored deadline.
 - Every answer batch reads the whole answers subcollection to mirror the answered count (extra reads at exam-day scale).
 - AccommodationsSection loads only /v1/series?limit=200.
 - The laptop presence write rule does not check that $testId is the attempt's test.

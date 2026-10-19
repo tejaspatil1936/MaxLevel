@@ -8,6 +8,7 @@ function harness() {
   const replies: Array<{ ok: () => void; fail: (e: unknown) => void }> = [];
   const timers: Array<{ ms: number; fn: () => void }> = [];
   const phases: SubmitPhase[] = [];
+  const deadlines: number[] = [];
   let done = 0;
   const submission = createSubmission({
     flush: () => flush,
@@ -18,6 +19,8 @@ function harness() {
       }),
     retryable: (e) => e === 'network',
     finished: (e) => e === 'finished',
+    notYet: (e) => (typeof e === 'number' ? e : null),
+    onDeadline: (at) => deadlines.push(at),
     schedule: (fn, ms) => {
       const timer = {
         ms,
@@ -33,7 +36,7 @@ function harness() {
     onDone: () => done++,
   });
   const settle = () => new Promise((r) => setTimeout(r, 0));
-  return { submission, flushed, sent, replies, timers, phases, settle, done: () => done };
+  return { submission, flushed, sent, replies, timers, phases, deadlines, settle, done: () => done };
 }
 
 describe('submission', () => {
@@ -97,6 +100,22 @@ describe('submission', () => {
     void r.submission.submit();
     await r.settle();
     expect(r.sent).toHaveLength(2);
+  });
+
+  it('EX-16 OPS-06 a time-up refused as early takes the stored deadline and can submit again at it', async () => {
+    const h = harness();
+    h.flushed();
+    void h.submission.submit('time_up');
+    await h.settle();
+    h.replies[0]!.fail(1_600_000);
+    await h.settle();
+    expect(h.deadlines).toEqual([1_600_000]);
+    expect(h.phases.at(-1)).toBe('idle');
+    expect(h.timers, 'no retry').toEqual([]);
+    expect(h.done()).toBe(0);
+    void h.submission.submit('time_up');
+    await h.settle();
+    expect(h.sent).toEqual(['time_up', 'time_up']);
   });
 
   it('EX-15 closing the summary stops a waiting submission', async () => {

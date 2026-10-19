@@ -53,6 +53,18 @@ export const getDeviceExam = (attemptId: string, uid: string) =>
     return exam?.uid === uid ? exam : undefined;
   }, undefined);
 
+/** Moves the kept exam's deadline later (extra time, OPS-06), so an offline reload counts down to the new one. */
+export const putDeviceDeadline = (attemptId: string, deadlineAt: number) =>
+  quietly(async (d) => {
+    const tx = d.transaction('exams', 'readwrite');
+    const exam = await tx.store.get(attemptId);
+    if (exam && exam.payload.attempt.deadlineAt < deadlineAt) {
+      const attempt = { ...exam.payload.attempt, deadlineAt };
+      await tx.store.put({ ...exam, payload: { ...exam.payload, attempt } });
+    }
+    await tx.done;
+  }, undefined);
+
 export const getDeviceAnswers = (attemptId: string) =>
   quietly((d) => d.getAllFromIndex('answers', 'attempt', attemptId), [] as DeviceAnswer[]);
 

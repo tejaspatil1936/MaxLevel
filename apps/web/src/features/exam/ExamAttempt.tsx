@@ -32,6 +32,7 @@ import {
   getDeviceExam,
   mergeDeviceAnswers,
   putDeviceAnswer,
+  putDeviceDeadline,
   putDeviceExam,
 } from './offline-store';
 import { createServeTracker, type ServeTracker } from './question-serves';
@@ -454,6 +455,13 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   // OPS-06: extra time reaches the screen through the attempt's signal record, with its notice.
   const extension = useDeadlineSignal(orgId, attemptId, payload.attempt.deadlineAt);
   const deadlineAt = extension.deadlineAt;
+  const { adopt } = extension;
+  // The device's copy follows a later deadline, so a reload while offline counts down to it (US-ST-05).
+  const sentDeadline = useRef(deadlineAt);
+  useEffect(() => {
+    sentDeadline.current = deadlineAt;
+    if (deadlineAt > payload.attempt.deadlineAt) void putDeviceDeadline(attemptId, deadlineAt);
+  }, [deadlineAt, attemptId, payload]);
   const [announcement, announce] = useTimeAnnouncer();
 
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -466,11 +474,17 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
       send: (reason) =>
         api(`/v1/attempts/${encodeURIComponent(attemptId)}/submit`, {
           method: 'POST',
-          body: reason ? { reason } : {},
+          // A time-up names the deadline this screen counted down to; the API refuses it if that moved (OPS-06).
+          body: reason ? { reason, deadlineAt: sentDeadline.current } : {},
           headers: { 'idempotency-key': submitKey },
         }),
       retryable: (e) => !(e instanceof ApiError) || e.status >= 500 || [408, 429].includes(e.status),
       finished: attemptFinished,
+      notYet: (e) =>
+        e instanceof ApiError && e.code === 'DEADLINE_NOT_REACHED' && typeof e.details.deadlineAt === 'number'
+          ? e.details.deadlineAt
+          : null,
+      onDeadline: adopt,
       schedule: (fn, ms) => {
         const timer = setTimeout(fn, ms);
         return () => clearTimeout(timer);
@@ -486,7 +500,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
       window.removeEventListener('online', online);
       s.dispose();
     };
-  }, [attemptId, submitKey]);
+  }, [attemptId, submitKey, adopt]);
   const submitOffline = phase === 'offline' || (phase === 'saving' && status.kind === 'offline');
 
   return (

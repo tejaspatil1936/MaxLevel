@@ -16,6 +16,10 @@ export interface SubmissionDeps {
   retryable: (error: unknown) => boolean;
   /** True when the API says the attempt is already finished (409 ATTEMPT_FINISHED): nothing is left to submit. */
   finished: (error: unknown) => boolean;
+  /** The stored deadline when the API refused a time-up as early (409 DEADLINE_NOT_REACHED, OPS-06), else null. */
+  notYet: (error: unknown) => number | null;
+  /** The exam goes on to the deadline the API holds (extra time this device missed). */
+  onDeadline: (deadlineAt: number) => void;
   /** Runs `fn` after `ms`; returns a function that cancels it. */
   schedule: (fn: () => void, ms: number) => () => void;
   onPhase: (phase: SubmitPhase) => void;
@@ -59,6 +63,11 @@ export function createSubmission(deps: SubmissionDeps): Submission {
     } catch (error) {
       if (deps.finished(error)) return finish();
       if (disposed) return;
+      const later = reason === 'time_up' ? deps.notYet(error) : null;
+      if (later !== null) {
+        set('idle');
+        return deps.onDeadline(later);
+      }
       if (!deps.retryable(error)) return set('failed');
       failures++;
       set('offline');
