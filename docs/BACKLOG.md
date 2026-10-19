@@ -121,3 +121,5 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 
 - RES-05: the submitted screen's release line follows the release mode, not the release state: a withdrawn immediate test shows `Your result is ready.` and an after_close test released early shows the after-close line next to `See your result`. The locked phase 3 contract (docs/testids/phase-3.md, Submit) fixes the line per mode, so it stays; owner to decide whether the line should use resultReleaseState (released, withdrawn) as the result page does.
 - The exam screen offline copy on the device keeps the deadline it opened with after extra time is granted (F-5.02 note); refresh it from the signal.
+- OPS-04: an attempt reinstated after its deadline is auto-submitted by its own task as soon as the dispatcher runs it, unless extra time is granted first; the reinstate dialog could take extra minutes in the same step (F-5.04 note).
+- OPS-04, DATA-05: the reinstate dialog could warn when the test's full review was already released, since the student may have read the answer key before the reinstate (F-5.04 note).
