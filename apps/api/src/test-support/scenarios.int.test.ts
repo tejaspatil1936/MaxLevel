@@ -133,6 +133,34 @@ describe('exam-test scenario', () => {
     });
   });
 
+  it('PERF-06 RES-01 publishing queues the release and pre-warm tasks as Publish test does', async () => {
+    const { app, clock, queue } = await testApp();
+    clock.set(NOW);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/__test/seed/exam-test',
+      headers: { 'x-test-secret': TEST_SECRET },
+      payload: { orgId: SEED.orgA, opensInMin: 90 },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const { testId, window } = res.json() as { testId: string; window: { start: number; end: number } };
+    const tasks = (await queue.pending()).filter((t) => t.name.includes(testId));
+    expect(tasks).toEqual(
+      expect.arrayContaining([
+        {
+          name: `prewarm-${SEED.orgA}-${testId}-${window.start}`,
+          path: '/tasks/prewarm',
+          scheduleTime: window.start - 30 * MIN,
+        },
+        {
+          name: `release-results-${SEED.orgA}-${testId}-${window.end}`,
+          path: '/tasks/release-results',
+          scheduleTime: window.end,
+        },
+      ]),
+    );
+  });
+
   it('US-ST-03 SER-06 applies timing, overrides, both rule sets, the series status and publish: false', async () => {
     const ids = await seedExam({
       title: 'Verbal ability',
