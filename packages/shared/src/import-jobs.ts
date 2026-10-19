@@ -109,6 +109,13 @@ export type ImportList = z.infer<typeof importListSchema>;
 export const importFilePath = (orgId: string, jobId: string, format: ImportFormat) =>
   `organizations/${orgId}/imports/${jobId}/source.${format}`;
 
+/** Where the worker keeps a PDF job's page `page` for the review screen: rendered as PNG, or the one-page PDF. */
+export const importPagePath = (orgId: string, jobId: string, page: number, ext: 'png' | 'pdf') =>
+  `organizations/${orgId}/imports/${jobId}/pages/${page}.${ext}`;
+
+/** The folder of a job's cropped figures (IMP-03); a draft may only point at images in it that it already has. */
+export const importFiguresFolder = (orgId: string, jobId: string) => `organizations/${orgId}/imports/${jobId}/figures/`;
+
 export interface ImportPayload {
   orgId: string;
   jobId: string;

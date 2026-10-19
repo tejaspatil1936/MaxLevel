@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { importCreateSchema, importFilePath, importRetryTask, importTask } from './import-jobs';
+import {
+  importCreateSchema,
+  importFiguresFolder,
+  importFilePath,
+  importPagePath,
+  importRetryTask,
+  importTask,
+} from './import-jobs';
 
 describe('import jobs', () => {
   it('IMP-01 the source file is kept at the job path with its lower-case extension', () => {
@@ -12,6 +19,12 @@ describe('import jobs', () => {
       path: '/tasks/import',
       payload: { orgId: 'org-a', jobId: 'job1' },
     });
+  });
+
+  it('IMP-03 ORG-03 page images and figures are kept under the job, in the organization', () => {
+    expect(importPagePath('org-a', 'job1', 2, 'png')).toBe('organizations/org-a/imports/job1/pages/2.png');
+    expect(importPagePath('org-a', 'job1', 3, 'pdf')).toBe('organizations/org-a/imports/job1/pages/3.pdf');
+    expect(importFiguresFolder('org-a', 'job1')).toBe('organizations/org-a/imports/job1/figures/');
   });
 
   it('REL-06 a retry run is the same task at its schedule time, named apart from the first run', () => {
