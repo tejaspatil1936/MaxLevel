@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@mitaoe/shared": "workspace:*",
+    "@napi-rs/canvas": "0.1.88",
     "exceljs": "4.4.0",
     "fastify": "5.12.7",
     "fastify-type-provider-zod": "7.0.0",
@@ -20,6 +21,7 @@
     "google-auth-library": "11.3.1",
     "papaparse": "5.7.0",
     "pdf-lib": "1.17.1",
+    "pdfjs-dist": "5.4.624",
     "zod": "4.6.7"
   },
   "devDependencies": {
