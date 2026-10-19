@@ -18,3 +18,4 @@ minimumReleaseAgeExclude:
 # Security fixes for transitive dependencies (pnpm audit --prod).
 overrides:
   '@grpc/grpc-js': 1.14.6
+  undici: 6.28.1
