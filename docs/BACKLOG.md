@@ -132,3 +132,9 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Every answer batch reads the whole answers subcollection to mirror the answered count (extra reads at exam-day scale).
 - AccommodationsSection loads only /v1/series?limit=200.
 - The laptop presence write rule does not check that $testId is the attempt's test.
+
+## Phase 5 (release-gate review, minor)
+
+- Pre-warm sets min instances per test, not per slot; two tests in one slot each set their own floor, and the later one can lower the other's. The Cloud Run driver should take the max or the sum per slot.
+- Pre-warm holds until window.end, lowering the floor while students with extra time or accommodations are still writing; use the latest deadline.
+- A11Y-18: the accessibility statement half is left to F-8.01 (A11Y-22); it must carry the real-time exception text.
