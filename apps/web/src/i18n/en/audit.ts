@@ -1,4 +1,4 @@
-// English messages (A11Y-23). Audit logs, settings and reports.
+// English messages (A11Y-23). Audit logs and settings.
 export const audit = {
   'audit.lead': 'Every change in this organization: who made it, when, and what changed.',
   'audit.platformLead': 'Every change across organizations, newest first.',
@@ -21,5 +21,4 @@ export const audit = {
   'settings.lock': 'Lock student profiles',
   'settings.plan': 'Plan and features',
   'settings.features': 'Features',
-  'reports.soon': 'Analytics reports appear here once your first tests are graded.',
 } as const;
