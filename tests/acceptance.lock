@@ -61,6 +61,10 @@
       "tests/acceptance/phase-6/F-6.02.spec.ts": "58e0efbc11b5c2380bbc202a61c5dd53f3eda56365ca20ae5fe4edc77b94b096",
       "tests/acceptance/phase-6/F-6.03.spec.ts": "ed766dbcb7f281a687ffbef47a7f8a9d679c3335db7a4f8cf9aff1f68518528b",
       "tests/acceptance/phase-6/F-6.04.spec.ts": "1b25fb14b755f082b77c1ce0456b65af0ed40615291bc2741ded011416da87c0"
+    },
+    "7": {
+      "tests/acceptance/phase-7/F-7.02.spec.ts": "673a712acffef5a28dcd3e8839fdacbd8c7a962344a50b089348fefbb452bd82",
+      "tests/acceptance/phase-7/F-7.03.spec.ts": "ae4d574aeff7b6b471a73b7dda9cc636a73ceefdb8de6130b26355bfded7ca8e"
     }
   }
 }
