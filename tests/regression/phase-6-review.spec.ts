@@ -1,12 +1,15 @@
 import { AUTHORING_NOW } from '../acceptance/fixtures/authoring';
-import { questionsJson } from '../acceptance/fixtures/import-files';
-import { IMPORT_TEXTS, importReady } from '../acceptance/fixtures/imports';
+import { llmFixture, questionsJson, quantPaperPdf } from '../acceptance/fixtures/import-files';
+import { IMPORT_TEXTS, importFile, importReady, waitForJob, waitForJobState } from '../acceptance/fixtures/imports';
 import { recordApiCalls } from '../acceptance/fixtures/network';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
 import { ImportReviewPage } from '../acceptance/pages/import-pages';
+import { exactly } from '../acceptance/pages/ui';
 
 // Bugs found by the phase 6 review. Each test failed before its fix.
+
+const MIN = 60_000;
 
 test.describe('phase 6 review', () => {
   test.beforeEach(async ({ testApi }) => {
@@ -38,5 +41,36 @@ test.describe('phase 6 review', () => {
       'one approve was sent',
     ).toHaveLength(1);
     await expect(page.getByRole('alert'), 'no error was shown').toHaveCount(0);
+  });
+
+  test('REL-06 Try again moves focus to the import status, so it is not lost with the button', async ({
+    page,
+    signInAs,
+    apiAs,
+    testApi,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const { testId } = await testApi.seedAuthoringTest({ orgId: ORG_A.id });
+    const paper = llmFixture('quant-paper');
+    await testApi.llm.script({ pages: paper.pages, failures: { '1': 4 } });
+    const admin = await apiAs(accounts.adminA);
+    const id = await importFile(admin, request, testId, quantPaperPdf());
+    for (const delay of [MIN, 2 * MIN, 4 * MIN]) {
+      const now = await testApi.clock.now();
+      await waitForJobState(admin, testApi, id, (j) => j.retryAt === now + delay, `retry ${delay / MIN} min`);
+      await testApi.clock.advance(delay);
+    }
+    await waitForJob(admin, testApi, id, ['failed', 'ready']);
+
+    await signInAs(accounts.adminA);
+    const review = new ImportReviewPage(page);
+    await review.goto(id, 'quant-paper.pdf');
+    await expect(review.failed).toHaveText(exactly(IMPORT_TEXTS.failed(IMPORT_TEXTS.llmGaveUp)));
+    await review.tryAgain.focus();
+    await page.keyboard.press('Enter');
+    await expect(review.status, 'focus moves to the status').toBeFocused();
+    await expect(review.summaryItem('Questions found: 9')).toBeVisible({ timeout: 15_000 });
+    await expect(review.status, 'and stays there once the import is ready').toBeFocused();
   });
 });
