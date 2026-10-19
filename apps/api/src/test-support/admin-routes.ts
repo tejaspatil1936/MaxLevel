@@ -367,6 +367,17 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     body: {},
     fresh: withImportJob,
   },
+  'POST /v1/imports/:id/retry': {
+    params: { id: 'import-org-a' },
+    foreignParams: { id: 'import-org-b' },
+    body: {},
+    fresh: withImportJob,
+  },
+  'GET /v1/imports/:id/pages/:page': {
+    params: { id: 'import-org-a', page: '1' },
+    foreignParams: { id: 'import-org-b', page: '1' },
+    fresh: async (db) => ({ params: { ...(await withImportJob(db)).params, page: '1' } }),
+  },
   'GET /v1/tests/:id/questions': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'GET /v1/tests/:id/preview': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'POST /v1/tests/:id/questions': {

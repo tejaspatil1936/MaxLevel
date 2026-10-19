@@ -9,6 +9,9 @@ import {
   importJobViewSchema,
   importListQuerySchema,
   importListSchema,
+  importPageLinkSchema,
+  importPagePath,
+  importRetryTask,
   importStartedSchema,
   importTask,
   isAiFormat,
@@ -23,7 +26,7 @@ import { z } from 'zod';
 import type { ImportJobRecord } from '../data/imports';
 import { AppError, notFound } from '../errors';
 import { ORG_ID } from '../plugins/auth';
-import { importSources, importUploadLinks } from '../services/import-uploads';
+import { importPageLinks, importSources, importUploadLinks } from '../services/import-uploads';
 import type { ApiContext } from './context';
 import { originOf } from './exports';
 
@@ -35,6 +38,12 @@ const linkQuery = z.object({
   sig: z.string().max(128),
 });
 const ok = z.object({ ok: z.literal(true) });
+const pageParams = idParams.extend({ page: z.coerce.number().int().min(1).max(1000) });
+/** How a kept source page is stored, in the order the route looks for it. */
+const PAGE_FILES = [
+  { ext: 'png', contentType: 'image/png' },
+  { ext: 'pdf', contentType: 'application/pdf' },
+] as const;
 
 /** A refusal the job keeps as its `error` (not retryable), with the HTTP status the request gets. */
 type Refusal = { status: number; error: ImportError; details: Record<string, unknown> };
@@ -57,6 +66,11 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   const sources = importSources(ctx.firebase);
   const secret = ctx.config.exportLinkSecret;
   const signer = secret ? importUploadLinks(secret, clock) : null;
+  const pageSigner = secret ? importPageLinks(secret, clock) : null;
+  const pageLinks = () => {
+    if (!pageSigner) throw new AppError(503, 'IMPORTS_UNAVAILABLE', 'Imports are not available right now.');
+    return pageSigner;
+  };
   /** Production without the link secret signs nothing, so no file can be uploaded (OWNER_SETUP 0.4). */
   const links = () => {
     if (!signer) throw new AppError(503, 'IMPORTS_UNAVAILABLE', 'Imports are not available right now.');
@@ -243,6 +257,70 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           ...(job.costEstimate !== undefined ? { costEstimate: job.costEstimate } : {}),
         };
         return view;
+      },
+    );
+
+    // REL-06: an admin's retry of a job that failed retryably; pages done stay done and the import is not counted again.
+    app.post(
+      '/v1/imports/:id/retry',
+      {
+        config: admin,
+        schema: { params: idParams, body: z.object({}).strict(), response: { 202: importStartedSchema } },
+      },
+      async (req, reply) => {
+        const orgId = req.orgId!;
+        const now = clock.now();
+        const outcome = await db.runTransaction(async (tx) => {
+          const job = await data.imports.readImport(tx, orgId, req.params.id);
+          if (!job) return null;
+          if (job.status !== 'failed' || !job.error?.retryable) return 'refused' as const;
+          data.imports.requeue(orgId, tx, job.id);
+          audit(req, tx, { action: 'import.retry', target: { type: 'importJob', id: job.id } });
+          return 'queued' as const;
+        });
+        if (!outcome) throw notFound('Import');
+        if (outcome === 'refused')
+          throw new AppError(409, 'IMPORT_NOT_RETRYABLE', 'This import has not failed in a way that can be retried.');
+        await queue.enqueue(importRetryTask(orgId, req.params.id, `manual-${now}`));
+        return reply.status(202).send({ id: req.params.id, status: 'queued' as const });
+      },
+    );
+
+    // IMP-03: a signed link to a source page of a PDF job, as the worker kept it (a PNG, or the one-page PDF).
+    app.get(
+      '/v1/imports/:id/pages/:page',
+      { config: admin, schema: { params: pageParams, response: { 200: importPageLinkSchema } } },
+      async (req) => {
+        const orgId = req.orgId!;
+        const job = await data.imports.getImport(orgId, req.params.id);
+        if (!job) throw notFound('Import');
+        const { page } = req.params;
+        if (job.format !== 'pdf' || page > job.progress.pagesTotal) throw notFound('Page');
+        for (const f of PAGE_FILES)
+          if ((await sources.size(importPagePath(orgId, job.id, page, f.ext))) !== null)
+            return { ...pageLinks().issue(originOf(req), orgId, job.id, page), contentType: f.contentType };
+        throw notFound('Page');
+      },
+    );
+
+    app.get(
+      '/v1/imports/:id/pages/:page/file',
+      {
+        config: { access: 'public' as const },
+        schema: { params: pageParams, querystring: linkQuery, response: { 200: z.custom<Buffer>() } },
+      },
+      async (req, reply) => {
+        const { id, page } = req.params;
+        const verdict = pageLinks().verify(id, page, req.query);
+        if (verdict === 'expired')
+          throw new AppError(403, 'LINK_EXPIRED', 'This page link has expired. Open the page again.');
+        if (verdict !== 'ok') throw new AppError(403, 'LINK_INVALID', 'This page link is not valid.');
+        for (const f of PAGE_FILES) {
+          const body = await sources.read(importPagePath(req.query.org, id, page, f.ext));
+          if (body)
+            return reply.header('content-type', f.contentType).header('cache-control', 'private, no-store').send(body);
+        }
+        throw notFound('Page');
       },
     );
   };
