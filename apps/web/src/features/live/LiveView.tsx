@@ -9,10 +9,11 @@ import {
   matchesLiveSearch,
   sortLiveRows,
   type LiveFilter,
+  type LiveRow,
   type LiveRoster as Roster,
   type LiveSortKey,
 } from '@mitaoe/shared';
-import { Button, EmptyState, InlineMessage, PageHeader, Skeleton } from '@mitaoe/ui';
+import { Button, EmptyState, InlineMessage, PageHeader, Skeleton, type MenuItem } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -23,6 +24,7 @@ import { api, ApiError } from '@/lib/api';
 import { formatCount } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
+import { ExtraTimeDialog } from './ExtraTimeDialog';
 import { LiveRoster } from './LiveRoster';
 import { liveUrl } from './live-url';
 import { useLiveMirror } from './useLiveMirror';
@@ -35,7 +37,7 @@ const toggle = 'aria-pressed:border-ink aria-pressed:bg-highlighter aria-pressed
  * of eligible students is the one API read (PERF-04); every status after that comes from Realtime Database.
  */
 export function LiveView({ testId }: { testId: string }) {
-  const { orgId, org } = useWorkspace();
+  const { orgId, org, features } = useWorkspace();
   const roster = useQuery({
     queryKey: qk.orgItem(orgId, 'live-roster', testId),
     queryFn: () => api<Roster>(`/v1/tests/${encodeURIComponent(testId)}/live`),
@@ -50,6 +52,7 @@ export function LiveView({ testId }: { testId: string }) {
   const [filters, setFilters] = useState<LiveFilter[]>([]);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<{ key: LiveSortKey; dir: 'asc' | 'desc' }>({ key: 'student', dir: 'asc' });
+  const [granting, setGranting] = useState<{ attemptId: string; name: string; deadlineAt: number } | null>(null);
 
   const rows = useMemo(
     () =>
@@ -101,6 +104,21 @@ export function LiveView({ testId }: { testId: string }) {
     );
 
   const counts = liveCounts(rows, roster.data.students.length);
+  const { durationMin } = roster.data.test;
+  // FF-03: with extra_time_grants off the item stays in the menu, disabled, saying why.
+  const extraTimeOn = features?.extra_time_grants !== false;
+  const actions = (r: LiveRow): MenuItem[] => {
+    const items: MenuItem[] = [];
+    if (r.status === 'in_progress' && r.attemptId && r.deadlineAt !== null) {
+      const grant = { attemptId: r.attemptId, name: r.name, deadlineAt: r.deadlineAt };
+      items.push({
+        label: t('live.action.grantExtra'),
+        onSelect: () => setGranting(grant),
+        ...(extraTimeOn ? {} : { disabled: true, hint: t('plan.notIncluded') }),
+      });
+    }
+    return items;
+  };
   const toggleFilter = (f: LiveFilter) => setFilters((on) => (on.includes(f) ? on.filter((x) => x !== f) : [...on, f]));
   const clear = () => {
     setFilters([]);
@@ -149,6 +167,7 @@ export function LiveView({ testId }: { testId: string }) {
         now={now}
         sort={sort}
         onSortChange={setSort}
+        actions={actions}
         empty={
           <EmptyState
             message={t('live.noMatch')}
@@ -160,6 +179,14 @@ export function LiveView({ testId }: { testId: string }) {
           />
         }
       />
+      {granting ? (
+        <ExtraTimeDialog
+          {...granting}
+          durationMin={durationMin}
+          timezone={org?.timezone ?? 'Asia/Kolkata'}
+          onClose={() => setGranting(null)}
+        />
+      ) : null}
     </>
   );
 }

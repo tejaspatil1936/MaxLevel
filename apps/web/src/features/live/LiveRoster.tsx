@@ -1,7 +1,7 @@
 'use client';
 
 import { lastSeenOf, timeLeftOf, type LiveRow, type LiveRowStatus, type LiveSortKey } from '@mitaoe/shared';
-import { Button, Menu, StatusPill, Table, type Column, type Tone } from '@mitaoe/ui';
+import { Button, Menu, StatusPill, Table, type Column, type MenuItem, type Tone } from '@mitaoe/ui';
 import { MoreHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { t } from '@/i18n';
@@ -32,7 +32,7 @@ const hasActions = (row: LiveRow) => row.status !== 'not_started' && row.status 
 /**
  * The live view's roster (OPS-01, OPS-03): one row per student with status, answered out of total, strikes, phone,
  * last seen and time left by the server's clock, sortable on every column but Actions. The row actions menu gets
- * its items from the features that own them (timeline, extra time, terminate, reinstate, reset).
+ * its items from `actions`, which the live view builds from the features that own them (OPS-04).
  */
 export function LiveRoster(p: {
   rows: LiveRow[];
@@ -40,6 +40,8 @@ export function LiveRoster(p: {
   sort: { key: LiveSortKey; dir: 'asc' | 'desc' };
   onSortChange: (sort: { key: LiveSortKey; dir: 'asc' | 'desc' }) => void;
   empty: ReactNode;
+  /** The row actions menu of a started row, in the contract's order. */
+  actions: (row: LiveRow) => MenuItem[];
 }) {
   const sortable = (key: LiveSortKey, header: string, cell: (r: LiveRow) => ReactNode): Column<LiveRow> => ({
     key,
@@ -72,7 +74,7 @@ export function LiveRoster(p: {
         hasActions(r) ? (
           <Menu
             label={t('live.actionsFor', { name: r.name })}
-            items={[]}
+            items={p.actions(r)}
             trigger={
               <Button variant="ghost" className="px-2">
                 <MoreHorizontal aria-hidden size={20} />
