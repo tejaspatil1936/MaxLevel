@@ -12,8 +12,10 @@
     "test:int": "vitest run --config vitest.int.config.ts"
   },
   "dependencies": {
+    "@ai-sdk/google-vertex": "3.0.180",
     "@mitaoe/shared": "workspace:*",
     "@napi-rs/canvas": "0.1.88",
+    "ai": "5.0.271",
     "exceljs": "4.4.0",
     "fastify": "5.12.7",
     "fastify-type-provider-zod": "7.0.0",
