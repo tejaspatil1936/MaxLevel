@@ -277,6 +277,20 @@ describe('report task', () => {
     expect(await tasks(failing)).toEqual([]);
   });
 
+  it('REL-06 a retry delivered before its retryAt queues the run again for retryAt', async () => {
+    llm.setScript({ report: { answers: [GOOD], failures: 1 } });
+    const id = await create('r7');
+    expect(await run(id)).toBe(`retrying at ${NOW + MIN}`);
+    // The retry task itself arrives a second early (the queue's clock runs ahead): it is used up by this delivery.
+    await markRun(id);
+    clock.advance(MIN - 1000);
+    expect(await run(id)).toBe(`skipped: waiting until ${NOW + MIN}`);
+    expect((await tasks(id)).map((t) => t.scheduleTime)).toEqual([NOW + MIN]);
+    await markRun(id);
+    clock.advance(1000);
+    expect(await run(id)).toBe('ready: summary accepted');
+  });
+
   it('REL-04 a delivery while another run holds the report queues a check for when its lease ends', async () => {
     const id = await create('r6');
     await org
