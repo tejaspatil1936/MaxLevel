@@ -26,3 +26,20 @@ Locked acceptance tests the build believes are wrong. The owner decides; the bui
   (or `toHaveCount(2)`).
 - Effect until then: `scripts/verify.sh feature F-4.03` fails on this one assertion; no application change can pass it
   without rendering the prompt wrongly.
+
+## 2026-10-19 — the acceptance lock counts the F-5.05 screenshot baselines as added tests
+
+- What happens: after the UI-15 baselines are committed where the contract puts them
+  (`tests/acceptance/phase-5/F-5.05.spec.ts-snapshots/*.png`, docs/testids/phase-5.md "Screenshot tests"),
+  `scripts/verify.sh` fails its `acceptance-lock` step with `added to locked phase 5: …-snapshots/<name>.png` for
+  each of the twelve images. Every other step passes and `.verify/status.json` shows F-5.05 true.
+- Why: `scripts/locks.mjs acceptance check` reports every file under a locked phase directory that is not in
+  `tests/acceptance.lock`, while `acceptance write` locks only `*.spec.ts`; so no baseline beside a spec can pass, and
+  the harness files may not be edited by the build.
+- Proposed change: in `scripts/locks.mjs`, either skip `*-snapshots/` paths in the "added" check, or lock them too
+  (`acceptance write` taking every file of the phase, so a regenerated baseline is a reviewed lock change, which fits
+  the contract's "regenerated only together with an intended visual change"), then re-lock phase 5. Alternative
+  without a harness change: a `snapshotPathTemplate` in playwright.config.ts outside `tests/acceptance/phase-*/`,
+  which moves the baselines away from where the contract and docs/MANUAL_CHECKS.md say they live.
+- Effect until then: `scripts/verify.sh feature F-5.05` and every later phase 5 verify print FAIL on
+  `acceptance-lock` alone.
