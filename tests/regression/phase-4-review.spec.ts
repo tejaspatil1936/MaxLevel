@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
-import { anyMutation, apiRequest, holdApiRequests } from '../acceptance/fixtures/network';
-import { runLeaderboardTask, studentFacts } from '../acceptance/fixtures/results';
+import { anyMutation, apiRequest, holdApiRequests, recordApiCalls } from '../acceptance/fixtures/network';
+import { runLeaderboardTask, setFeature, studentFacts } from '../acceptance/fixtures/results';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
 import { SettingsPage } from '../acceptance/pages/admin-pages';
@@ -62,6 +62,40 @@ test.describe('phase 4 review', () => {
       'Department',
       'Total',
     ]);
+  });
+
+  test('FF-03 RES-01 EXP-01 with public leaderboards off the admin results pages show the plan notice and work', async ({
+    page,
+    signInAs,
+    apiAs,
+    testApi,
+  }) => {
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id, overrides: { resultRelease: 'manual' } });
+    await setFeature(await apiAs(accounts.superAdmin), ORG_A.id, 'public_leaderboards', false);
+    await signInAs(accounts.adminA);
+    const calls = recordApiCalls(page);
+    const boardCalls = () => calls().filter((c) => c.startsWith('GET /v1/leaderboards/')).length;
+
+    const heading = page.getByRole('heading', { level: 1, name: /^Results for / });
+    const notice = page.getByRole('main').getByText("Not included in your organization's plan", { exact: true });
+    await page.goto(AdminTestResults.url(t.testId));
+    const results = new AdminTestResults(page);
+    await expect(heading).toBeVisible();
+    await expect(results.leaderboardHeading).toBeVisible();
+    await expect(notice).toBeVisible();
+    await results.release.releaseAndConfirm();
+    await expect(results.release.withdraw).toBeVisible();
+    expect(boardCalls(), 'the test board is asked for once, not in a loop').toBeLessThanOrEqual(2);
+
+    const before = boardCalls();
+    await page.goto(AdminSeriesResults.url(t.seriesId));
+    const series = new AdminSeriesResults(page);
+    await expect(heading).toBeVisible();
+    await expect(notice).toBeVisible();
+    const started = page.waitForResponse((r) => r.request().method() === 'POST' && r.url().endsWith('/v1/exports'));
+    await series.exports.csv.click();
+    expect((await started).status(), 'the export starts').toBe(202);
+    expect(boardCalls() - before, 'the series board is asked for once, not in a loop').toBeLessThanOrEqual(2);
   });
 
   test('STU-03 UX-07 ORG-12 a profile lock still in flight when the page reloads is saved, not lost', async ({
