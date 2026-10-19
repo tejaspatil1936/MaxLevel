@@ -20,6 +20,7 @@ import { DraftArticle, DraftBody } from './DraftArticle';
 import { DraftEditForm } from './DraftEditForm';
 import { useShortcutList } from '../../shell/Shortcuts';
 import { isRunning, JobFailed, JobProgress } from './JobProgress';
+import { nextAnnouncement, type Announced } from './job-announcement';
 import { REVIEW_KEYS, reviewKeyHandler } from './review-keys';
 import { SourcePage } from './SourcePage';
 import { DRAFT_GROUPS, displayOrder, draftGroup, statusWordKey, summaryCounts } from './review-order';
@@ -61,6 +62,15 @@ export function ImportReview() {
   return <ReviewPage job={job.data} test={test.data} />;
 }
 
+/** The text of the page's polite status region (WCAG 4.1.3), updated as the polled job view changes. */
+function useJobAnnouncement(job: ImportJobView): string {
+  const [said, setSaid] = useState<{ last: Announced | null; text: string }>({ last: null, text: '' });
+  const next = nextAnnouncement(said.last, job);
+  // nextAnnouncement keeps `last` as it is when nothing new is to be said, so this settles after one update.
+  if (next.last !== said.last) setSaid({ last: next.last, text: next.text ?? said.text });
+  return next.text ?? said.text;
+}
+
 const TONES: Partial<Record<ImportJobView['status'], Tone>> = { failed: 'danger', ready: 'info', retrying: 'muted' };
 
 function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
@@ -70,6 +80,7 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
   const review = useDraftReview(job);
   useShortcutList('imports.shortcuts', REVIEW_KEYS);
   const [importing, setImporting] = useState(false);
+  const announcement = useJobAnnouncement(job);
   const zone = org?.timezone ?? 'Asia/Kolkata';
   const drafts = job.drafts;
   const counts = summaryCounts(drafts);
@@ -111,6 +122,9 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
           ) : null
         }
       />
+      <p role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
       {isRunning(job.status) ? <JobProgress job={job} timeZone={zone} /> : null}
       <JobFailed job={job} retrying={retry.isPending} onRetry={() => retry.mutate()} />
       {retry.isError ? <InlineMessage>{retry.error.message}</InlineMessage> : null}
