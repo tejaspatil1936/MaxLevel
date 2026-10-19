@@ -96,6 +96,21 @@ describe('Realtime Database rules', () => {
       await assertSucceeds(get(ref(superAdmin(), path)));
   });
 
+  it("OPS-02 a test's live and presence records are read only by its org's admins and super admins, written by no client", async () => {
+    for (const path of ['live/org-a/t1', 'presence/org-a/t1']) {
+      await assertSucceeds(get(ref(adminOf('org-a'), path)));
+      await assertSucceeds(get(ref(superAdmin(), path)));
+      for (const client of [adminOf('org-b'), studentA(), device(), db(null)])
+        await assertFails(get(ref(client, path)));
+    }
+    await assertFails(get(ref(studentA(), 'live')));
+    for (const client of [studentA(), adminOf('org-a'), superAdmin()]) {
+      await assertFails(update(ref(client, 'live/org-a/t1/att-1'), { status: 'submitted' }));
+      await assertFails(set(ref(client, 'live/org-a/t2/att-9'), { status: 'in_progress' }));
+      await assertFails(set(ref(client, 'signals/org-a/att-1/notice'), 'Your time was extended by 1 minute.'));
+    }
+  });
+
   it('DATA-10 a student reads only their own signals and the phone presence of their own attempt', async () => {
     await assertSucceeds(get(ref(studentA(), 'signals/org-a/att-1')));
     await assertSucceeds(get(ref(studentA(), `${P}/phone`)));
