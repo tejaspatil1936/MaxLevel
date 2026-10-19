@@ -138,3 +138,4 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Pre-warm holds until window.end, lowering the floor while students with extra time or accommodations are still writing; use the latest deadline.
 - DATA-05: `immediate` release with `resultDetail: full` in a fixed window shows a submitted student the answer key while others (or extended students) still answer; the spec defines immediate as on submit, so it was left as it is.
 - A11Y-18: the accessibility statement half is left to F-8.01 (A11Y-22); it must carry the real-time exception text.
+- IMP-11 (F-6.04): for TXT, MD and sheet imports the `Source page` region shows a note, not the text of the part with the question in a `mark` (contract, "Current draft and source page"). The API may not parse source files (SEC-06), so the worker should keep each part's text beside the job (as it keeps PDF page PNGs) and a small read route serve it.
