@@ -176,18 +176,21 @@ describe('draftsFromModel', () => {
   });
 
   it('IMP-05 sets correctOptionIds only from correct, never inventing one', () => {
-    const [none, two, outside] = draftsFromModel(
+    const [none, two, outside, past] = draftsFromModel(
       1,
       [
         { ...q, correct: [] },
         { ...q, correct: [2, 0, 2] },
-        { ...q, correct: [6] },
+        { ...q, correct: [6, 1_000_000] },
+        { ...q, options: ['A', 'B'], correct: [1, 2, 3] },
       ],
       1,
     );
     expect(none!.correctOptionIds).toEqual([]);
     expect(two!.correctOptionIds).toEqual(['a', 'c']);
-    expect(outside!.correctOptionIds).toEqual(['g']);
+    // An index past the options names no option: it is dropped, so the draft is flagged NO_CORRECT_ANSWER.
+    expect(outside!.correctOptionIds).toEqual([]);
+    expect(past!.correctOptionIds).toEqual(['b']);
   });
 
   it('IMP-05 leaves explanation absent when the model gave none and keeps it as given otherwise', () => {
