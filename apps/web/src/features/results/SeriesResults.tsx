@@ -57,7 +57,7 @@ export function SeriesResults({ seriesId }: { seriesId: string }) {
     <>
       <PageHeader title={t('results.testHeading', { heading: query.data.title })} actions={back} />
       <ExportRegion scope="series" refId={seriesId} />
-      <AdminLeaderboard boardId={seriesBoardId(seriesId)} />
+      <AdminLeaderboard query={board} />
     </>
   );
 }

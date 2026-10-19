@@ -58,7 +58,7 @@ export function TestResults({ testId }: { testId: string }) {
       <PageHeader title={t('results.testHeading', { heading: testHeading(query.data) })} actions={back} />
       <ReleaseRegion summary={query.data} />
       <ExportRegion scope="test" refId={testId} />
-      <AdminLeaderboard boardId={testBoardId(testId)} />
+      <AdminLeaderboard query={board} />
     </>
   );
 }
