@@ -38,6 +38,22 @@ describe('attempt data access', () => {
     expect(await data.attempts.listStudentAttempts('org-c', 'stu-1')).toEqual([]);
   });
 
+  it('OPS-02 ORG-03 lists every attempt of one test in one org, reset ones included, earliest start first', async () => {
+    const put = (orgId: string, id: string, fields: object) =>
+      db.doc(`organizations/${orgId}/attempts/${id}`).set({ orgId, seriesId: 's1', deadlineAt: 5000, ...fields });
+    await Promise.all([
+      put('org-a', 'a1', { testId: 't1', studentId: 'stu-1', status: 'reset', startedAt: 100, extraTimeSec: 60 }),
+      put('org-a', 'a2', { testId: 't1', studentId: 'stu-1', status: 'in_progress', startedAt: 300, strikesCount: 2 }),
+      put('org-a', 'a3', { testId: 't2', studentId: 'stu-2', status: 'submitted', startedAt: 200 }),
+      put('org-b', 'b1', { testId: 't1', studentId: 'stu-9', status: 'submitted', startedAt: 50 }),
+    ]);
+    const base = { studentId: 'stu-1', deadlineAt: 5000 };
+    expect(await data.attempts.listTestAttempts('org-a', 't1')).toEqual([
+      { ...base, id: 'a1', status: 'reset', startedAt: 100, extraTimeSec: 60, strikesCount: 0 },
+      { ...base, id: 'a2', status: 'in_progress', startedAt: 300, extraTimeSec: 0, strikesCount: 2 },
+    ]);
+  });
+
   it('US-ST-08 ORG-03 lists one student’s finished attempts in one org with their scores only', async () => {
     const put = (orgId: string, id: string, fields: object) =>
       db.doc(`organizations/${orgId}/attempts/${id}`).set({ orgId, testId: 't1', seriesId: 's1', ...fields });

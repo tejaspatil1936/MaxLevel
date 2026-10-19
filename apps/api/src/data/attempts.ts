@@ -4,6 +4,7 @@ import {
   type AnswerVerdict,
   type AttemptRecord,
   type AttemptStatus,
+  type TestAttemptList,
 } from '@mitaoe/shared';
 import {
   FieldPath,
@@ -278,6 +279,28 @@ export function attemptsData(db: Firestore) {
     async hasAttempts(orgId: string, testId: string): Promise<boolean> {
       const snap = await attempts(orgId).where('testId', '==', testId).limit(1).get();
       return !snap.empty;
+    },
+
+    /**
+     * Every attempt of a test in the organization, `reset` ones included, earliest start first, read with only the
+     * fields the admin list shows (never a draw, answer or result).
+     */
+    async listTestAttempts(orgId: string, testId: string): Promise<TestAttemptList['items']> {
+      const snap = await attempts(orgId)
+        .where('testId', '==', testId)
+        .select('studentId', 'status', 'startedAt', 'deadlineAt', 'extraTimeSec', 'strikesCount')
+        .get();
+      return snap.docs
+        .map((d) => ({
+          id: d.id,
+          studentId: d.get('studentId') as string,
+          status: d.get('status') as AttemptStatus,
+          startedAt: (d.get('startedAt') as number | undefined) ?? 0,
+          deadlineAt: (d.get('deadlineAt') as number | undefined) ?? 0,
+          extraTimeSec: (d.get('extraTimeSec') as number | undefined) ?? 0,
+          strikesCount: (d.get('strikesCount') as number | undefined) ?? 0,
+        }))
+        .sort((a, b) => a.startedAt - b.startedAt || a.id.localeCompare(b.id));
     },
 
     /** A student's attempts in their organization, newest start first, read with only the fields listed above. */
