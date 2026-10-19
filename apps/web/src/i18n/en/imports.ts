@@ -39,6 +39,11 @@ export const imports = {
   'imports.retryAt': "The AI service didn't answer. The import will try again at {time}.",
   'imports.importFailed': 'The import failed. {message}',
   'imports.tryAgain': 'Try again',
+  // The review page's polite status region (WCAG 4.1.3): status changes and progress every few pages.
+  'imports.announce.status': 'Import status: {status}',
+  'imports.announce.ready': 'Import status: Ready for review. Questions found: {n}',
+  'imports.announce.failed': 'Import status: Failed. {message}',
+  'imports.announce.progress': 'Pages processed: {done} of {total}. Questions found: {n}',
   'imports.summary': 'Import summary',
   'imports.summary.found': 'Questions found: {n}',
   'imports.summary.fix': 'Need fixing: {n}',
