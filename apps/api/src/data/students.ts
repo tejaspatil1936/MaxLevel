@@ -1,5 +1,5 @@
-import type { WhitelistStatus } from '@mitaoe/shared';
-import type { Firestore } from 'firebase-admin/firestore';
+import type { Accommodation, WhitelistStatus } from '@mitaoe/shared';
+import { FieldPath, FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { normalizeEmail } from './keys';
 import { writer, type Tx } from './tx';
 
@@ -16,6 +16,8 @@ export interface StudentRecord {
   consentAt: number | null;
   createdAt: number;
   updatedAt: number;
+  /** Standing accommodations by series ID (OPS-07); `{}` when the student has none. */
+  accommodations: Record<string, Accommodation>;
 }
 
 export function studentsData(db: Firestore) {
@@ -32,6 +34,7 @@ export function studentsData(db: Firestore) {
     consentAt: d.get('consentAt') ?? null,
     createdAt: d.get('createdAt') ?? 0,
     updatedAt: d.get('updatedAt') ?? 0,
+    accommodations: d.get('accommodations') ?? {},
   });
   return {
     async linkStudentUid(orgId: string, studentId: string, uid: string): Promise<void> {
@@ -67,7 +70,7 @@ export function studentsData(db: Firestore) {
     },
 
     /** Generates the studentId here (DATA-01): a manually added student has no Firebase user yet. */
-    createStudent(orgId: string, tx: Tx, input: Omit<StudentRecord, 'id'>): string {
+    createStudent(orgId: string, tx: Tx, input: Omit<StudentRecord, 'id' | 'accommodations'>): string {
       const ref = col(orgId).doc();
       // uid and consentAt stay absent until the student signs in and agrees (DATA-01, SEC-08).
       const { uid, consentAt, ...rest } = input;
@@ -82,8 +85,21 @@ export function studentsData(db: Firestore) {
       return ref.id;
     },
 
-    updateStudent(orgId: string, tx: Tx, studentId: string, patch: Partial<Omit<StudentRecord, 'id'>>): void {
+    updateStudent(
+      orgId: string,
+      tx: Tx,
+      studentId: string,
+      patch: Partial<Omit<StudentRecord, 'id' | 'accommodations'>>,
+    ): void {
       writer(tx).update(col(orgId).doc(studentId), { ...patch });
+    },
+
+    /**
+     * OPS-07: stores the student's accommodation for a series, replacing any earlier one, or removes it (`null`). The
+     * series ID is one field path segment, so no character in it can reach another field.
+     */
+    setAccommodation(orgId: string, tx: Tx, studentId: string, seriesId: string, a: Accommodation | null): void {
+      writer(tx).update(col(orgId).doc(studentId), new FieldPath('accommodations', seriesId), a ?? FieldValue.delete());
     },
 
     deleteStudent(orgId: string, tx: Tx, studentId: string): void {
