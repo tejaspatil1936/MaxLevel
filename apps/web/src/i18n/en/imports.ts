@@ -69,4 +69,11 @@ export const imports = {
   'imports.section': 'Section: {name}',
   'imports.explanation': 'Explanation',
   'imports.addedAs': 'Added to the test as question {m}.',
+  'imports.approve': 'Approve question {n}',
+  'imports.edit': 'Edit question {n}',
+  'imports.discard': 'Discard question {n}',
+  'imports.fixFirst': 'Fix the reasons above before approving.',
+  'imports.fixBeforeApproving': 'Fix the reasons before approving this question.',
+  'imports.discardedOne': 'Question {n} discarded',
+  'imports.saved': 'Question {n} saved',
 } as const;

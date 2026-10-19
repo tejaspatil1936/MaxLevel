@@ -15,18 +15,18 @@ import { FileImportDialog } from '../questions/FileImportDialog';
 import { useQuestions } from '../questions/useQuestions';
 import { SeriesNotFound } from '../series/SeriesNotFound';
 import { testHeading, testUrl } from '../tests/test-view';
+import { DraftActions } from './DraftActions';
 import { DraftArticle, DraftBody } from './DraftArticle';
 import { isRunning, JobFailed, JobProgress } from './JobProgress';
-import { DRAFT_GROUPS, displayOrder, draftGroup, firstCurrent, statusWordKey, summaryCounts } from './review-order';
-
-const jobPath = (id: string) => `/v1/imports/${encodeURIComponent(id)}`;
+import { DRAFT_GROUPS, displayOrder, draftGroup, statusWordKey, summaryCounts } from './review-order';
+import { importJobPath, useDraftReview } from './useDraftReview';
 
 /** The job view, polled every 2 seconds while the worker reads the file (IMP-04: no reload needed). */
 export function useImportJob(id: string) {
   const { orgId } = useWorkspace();
   return useQuery({
     queryKey: qk.orgItem(orgId, 'imports', id),
-    queryFn: () => api<ImportJobView>(jobPath(id)),
+    queryFn: () => api<ImportJobView>(importJobPath(id)),
     enabled: !!id,
     retry: (n, e) => !(e instanceof ApiError && e.status === 404) && n < 2,
     refetchInterval: (q) => (q.state.data && !isRunning(q.state.data.status) ? false : 2000),
@@ -60,20 +60,19 @@ export function ImportReview() {
 const TONES: Partial<Record<ImportJobView['status'], Tone>> = { failed: 'danger', ready: 'info', retrying: 'muted' };
 
 function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
-  const { orgId, org } = useWorkspace();
+  const { orgId, org, readOnly } = useWorkspace();
   const qc = useQueryClient();
   const questions = useQuestions(test.id);
+  const review = useDraftReview(job);
   const [importing, setImporting] = useState(false);
-  const [chosen, setChosen] = useState<string | null>(null);
   const zone = org?.timezone ?? 'Asia/Kolkata';
   const drafts = job.drafts;
   const counts = summaryCounts(drafts);
   const pending = drafts.filter((d) => d.status === 'pending').length;
-  const current = chosen && drafts.some((d) => d.id === chosen) ? chosen : firstCurrent(drafts);
   const positions = new Map(questions.data?.items.map((q, i) => [q.id, i + 1]) ?? []);
 
   const retry = useMutation({
-    mutationFn: () => api(`${jobPath(job.id)}/retry`, { method: 'POST', body: {} }),
+    mutationFn: () => api(`${importJobPath(job.id)}/retry`, { method: 'POST', body: {} }),
     onSettled: () => qc.invalidateQueries({ queryKey: qk.orgItem(orgId, 'imports', job.id) }),
   });
 
@@ -98,6 +97,13 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
           <span data-testid="import-status">
             <StatusPill tone={TONES[job.status] ?? 'neutral'}>{t(statusWordKey(job.status, pending))}</StatusPill>
           </span>
+        }
+        actions={
+          ready && drafts.length ? (
+            <Button disabled={readOnly || counts.ready === 0 || review.busy} onClick={review.approveAll}>
+              {t('imports.approveAll')}
+            </Button>
+          ) : null
         }
       />
       {isRunning(job.status) ? <JobProgress job={job} timeZone={zone} /> : null}
@@ -128,11 +134,22 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
                   {t(`imports.group.${g}`)}
                 </h2>
                 {inGroup.map((d) => (
-                  <DraftArticle key={d.id} draft={d} current={d.id === current} onSelect={() => setChosen(d.id)}>
+                  <DraftArticle
+                    key={d.id}
+                    draft={d}
+                    current={d.id === review.current}
+                    onSelect={() => review.select(d.id)}
+                  >
                     <DraftBody job={job} draft={d} imageUrls={job.imageUrls ?? {}} />
                     {d.status === 'approved' && d.questionId && positions.has(d.questionId) ? (
                       <p>{t('imports.addedAs', { m: formatCount(positions.get(d.questionId)!) })}</p>
                     ) : null}
+                    <DraftActions
+                      draft={d}
+                      readOnly={readOnly}
+                      onApprove={() => review.approveOne(d)}
+                      onDiscard={() => review.discardOne(d)}
+                    />
                   </DraftArticle>
                 ))}
               </section>
