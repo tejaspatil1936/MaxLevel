@@ -10,7 +10,7 @@ import {
 } from '@mitaoe/shared';
 import { Button, Dialog, FileField, InlineMessage } from '@mitaoe/ui';
 import { useRouter } from 'next/navigation';
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { uploadToSignedUrl } from '@/lib/files';
@@ -50,6 +50,9 @@ export function FileImportDialog({ testId, onClose }: { testId: string; onClose:
   const [problem, setProblem] = useState<Problem | null>(null);
   const [busy, setBusy] = useState(false);
   const aiOff = features ? !features.ai_question_import : false;
+  /** The import in progress; closing the dialog (Cancel, Escape) aborts it, so nothing is uploaded or started. */
+  const running = useRef<AbortController | null>(null);
+  useEffect(() => () => running.current?.abort(), []);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -62,16 +65,28 @@ export function FileImportDialog({ testId, onClose }: { testId: string; onClose:
     setProblem(null);
     setBusy(true);
     const contentType = file.type || 'application/octet-stream';
+    const controller = new AbortController();
+    running.current = controller;
+    const { signal } = controller;
     try {
       const created = await api<ImportCreated>('/v1/imports', {
         method: 'POST',
         body: { testId, filename: file.name, contentType, sizeBytes: file.size },
         headers: { 'idempotency-key': crypto.randomUUID() },
+        signal,
       });
-      await uploadToSignedUrl(created.uploadUrl, file, contentType);
-      await api<ImportStarted>(`/v1/imports/${encodeURIComponent(created.id)}/start`, { method: 'POST', body: {} });
+      await uploadToSignedUrl(created.uploadUrl, file, contentType, signal);
+      signal.throwIfAborted();
+      await api<ImportStarted>(`/v1/imports/${encodeURIComponent(created.id)}/start`, {
+        method: 'POST',
+        body: {},
+        signal,
+      });
+      signal.throwIfAborted();
       router.push(`/admin/imports/review/?id=${encodeURIComponent(created.id)}`);
     } catch (err) {
+      // A closed dialog says nothing more and goes nowhere.
+      if (signal.aborted) return;
       setProblem(problemOf(err, format));
       setBusy(false);
     }

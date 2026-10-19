@@ -13,10 +13,18 @@ export async function readLogo(file: File): Promise<LogoUpload | null> {
 }
 
 /** PUTs a file to a signed upload link the API gave (no sign-in; DATA-09); throws when it is not stored. */
-export async function uploadToSignedUrl(url: string, file: File, contentType: string): Promise<void> {
-  const res = await fetch(url, { method: 'PUT', headers: { 'content-type': contentType }, body: file }).catch(
-    () => null,
-  );
+export async function uploadToSignedUrl(
+  url: string,
+  file: File,
+  contentType: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'content-type': contentType },
+    body: file,
+    ...(signal ? { signal } : {}),
+  }).catch(() => null);
   if (!res?.ok) throw new Error('The upload failed.');
 }
 

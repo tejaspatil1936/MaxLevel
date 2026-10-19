@@ -35,6 +35,8 @@ export interface ApiOptions {
   /** For an optimistic change (UX-07): the request outlives the page, so a reload or a link right after still saves.
    * Only small bodies opt in: every keepalive request in flight shares the browser's 64 KiB budget. */
   keepalive?: boolean;
+  /** Stops the request (its promise rejects with an AbortError), for one a closed dialog no longer wants. */
+  signal?: AbortSignal;
 }
 
 export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
@@ -53,6 +55,7 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
     headers,
     body,
     ...(opts.keepalive ? { keepalive: true } : {}),
+    ...(opts.signal ? { signal: opts.signal } : {}),
   });
   const serverTime = Number(res.headers.get('x-server-time'));
   if (serverTime) {
