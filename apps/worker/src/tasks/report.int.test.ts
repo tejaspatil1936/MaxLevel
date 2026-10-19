@@ -8,7 +8,7 @@ import { workerData } from '../data';
 import { initFileStore, initFirestore } from '../firebase';
 import { ScriptedLlm } from '../llm/scripted';
 import { reportData } from '../report-data';
-import { chromiumPrinter } from '../report-pdf';
+import { chromiumPrinter, type PdfPrinter } from '../report-pdf';
 import { clearFirestore } from '../test-support/emulators';
 import { localTaskQueue } from './local-queue';
 
@@ -20,7 +20,17 @@ const db = initFirestore();
 const files = initFileStore();
 const clock = new TestClock();
 const llm = new ScriptedLlm();
-const printer = chromiumPrinter();
+const chromium = chromiumPrinter();
+/** Chromium, except that the next print fails while `failNextPrint` is set (a print that crashed). */
+let failNextPrint = false;
+const printer: PdfPrinter = {
+  print: (html) => {
+    if (!failNextPrint) return chromium.print(html);
+    failNextPrint = false;
+    return Promise.reject(new Error('print crashed'));
+  },
+  close: () => chromium.close(),
+};
 const NOW = 1_792_476_900_000; // 20 Oct 2026, 11:45 IST
 const MIN = 60_000;
 const org = db.doc('organizations/org-a');
@@ -289,6 +299,18 @@ describe('report task', () => {
     await markRun(id);
     clock.advance(1000);
     expect(await run(id)).toBe('ready: summary accepted');
+  });
+
+  it('REL-04 an accepted summary is stored before the print, so a delivery after a failed print asks nothing', async () => {
+    llm.setScript({ report: { answers: [GOOD] } });
+    const id = await create('r8');
+    failNextPrint = true;
+    const res = await app.inject({ method: 'POST', url: '/tasks/report', payload: { orgId: 'org-a', reportId: id } });
+    expect(res.statusCode, 'the queue delivers it again').toBe(500);
+    expect(await stored(id)).toMatchObject({ summaryStatus: 'accepted', summary: GOOD.summary, summaryCalls: 1 });
+    expect(await run(id)).toBe('ready: summary accepted');
+    expect(llm.reportCalls(), 'the model is not asked again').toHaveLength(1);
+    expect(await stored(id)).toMatchObject({ status: 'ready', summary: GOOD.summary, summaryCalls: 1 });
   });
 
   it('REL-04 a delivery while another run holds the report queues a check for when its lease ends', async () => {
