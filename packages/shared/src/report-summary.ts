@@ -54,19 +54,69 @@ export function summaryMessages(
   return { system, prompt: JSON.stringify(metrics) };
 }
 
-/**
- * A number written with digits: an optional minus sign (only where no letter or digit comes before it, so the hyphens
- * of `2026-11-01` are not signs), digits with optional grouping commas (`1,234`, `1,00,000`), an optional decimal part.
- * Digits joined to letters count (`Q4`, `4th`); a `%` after the number is ignored.
- */
-const NUMBER = /(?<![\p{L}\p{N}])[-−](?=\d)|\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/gu;
+/** Vulgar fractions (`½`, `⅔`) and the fraction slash (`1⁄3`): no reading of them is safe, so they are never supported. */
+const FRACTION = '[\\u00BC-\\u00BE\\u2150-\\u215F\\u2189]|\\d*\\u2044\\d*';
 
-/** Each number of a text as written and as a value, in order. */
-function numberTokens(text: string): Array<{ written: string; value: number }> {
-  const tokens: Array<{ written: string; value: number }> = [];
+/**
+ * A number written with digits, read from the normalised text: an optional minus sign (only where no letter or digit
+ * comes before it, so the hyphens of `2026-11-01` are not signs), digits grouped by commas (`1,234`, `1,00,000`) or by
+ * spaces (`1 234`), or plain, with an optional decimal part; a leading point is a decimal (`.5` is 0.5). Digits joined
+ * to letters count (`Q4`, `4th`); a `%` after the number is ignored. A fraction, or a numeral left that is not an
+ * ASCII digit, is a number the check cannot read.
+ */
+const NUMBER = new RegExp(
+  [
+    FRACTION,
+    '(?<![\\p{L}\\p{N}])[-−](?=\\.?\\d)',
+    '\\d{1,3}(?:,\\d{2,3})+(?:\\.\\d+)?',
+    '(?<!\\d)\\d{1,3}(?: \\d{3})+(?!\\d)(?:\\.\\d+)?',
+    '\\d+(?:\\.\\d+)?',
+    '(?<!\\d)\\.\\d+',
+    '[^\\P{N}0-9]',
+  ].join('|'),
+  'gu',
+);
+const UNREADABLE = new RegExp(`^(?:${FRACTION}|[^\\P{N}0-9])$`, 'u');
+const DECIMAL = /\p{Nd}/u;
+
+/** The value of a Unicode decimal digit: each script's digits run 0 to 9 in consecutive code points. */
+function digitValue(d: string): number {
+  const cp = d.codePointAt(0)!;
+  let back = 0;
+  while (DECIMAL.test(String.fromCodePoint(cp - back - 1))) back++;
+  return back % 10;
+}
+
+/**
+ * The text with each character in NFKC form (fullwidth `１` is `1`, a no-break space is a space) and every decimal
+ * digit as its ASCII digit (Devanagari `९` is `9`), fractions kept as written; `from[i]` is where the character at `i`
+ * came from in the text.
+ */
+function normalise(text: string): { text: string; from: number[] } {
+  let out = '';
+  const from: number[] = [];
+  let i = 0;
+  for (const ch of text) {
+    const n = /^[\u00BC-\u00BE\u2150-\u215F\u2189]$/u.test(ch)
+      ? ch
+      : ch.normalize('NFKC').replace(/\p{Nd}/gu, (d) => String(digitValue(d)));
+    for (const c of n) {
+      out += c;
+      for (let k = 0; k < c.length; k++) from.push(i);
+    }
+    i += ch.length;
+  }
+  from.push(text.length);
+  return { text: out, from };
+}
+
+/** Each number of a text as written and as a value (null for one the check cannot read), in order. */
+function numberTokens(text: string): Array<{ written: string; value: number | null }> {
+  const norm = normalise(text);
+  const tokens: Array<{ written: string; value: number | null }> = [];
   let sign = '';
   let signAt = -1;
-  for (const m of text.matchAll(NUMBER)) {
+  for (const m of norm.text.matchAll(NUMBER)) {
     if (m[0] === '-' || m[0] === '−') {
       sign = m[0];
       signAt = m.index + m[0].length;
@@ -74,14 +124,21 @@ function numberTokens(text: string): Array<{ written: string; value: number }> {
     }
     const negative = sign !== '' && signAt === m.index;
     sign = '';
-    const value = Number(m[0].replace(/,/g, ''));
-    tokens.push({ written: negative ? `-${m[0]}` : m[0], value: negative ? -value : value });
+    const start = norm.from[negative ? m.index - 1 : m.index]!;
+    const end = norm.from[m.index + m[0].length]!;
+    const written = text.slice(start, end);
+    const value = UNREADABLE.test(m[0]) ? NaN : Number(m[0].replace(/[, ]/g, ''));
+    tokens.push({
+      written: negative && !/^[-−]/.test(written) ? `-${written}` : written,
+      value: Number.isFinite(value) ? (negative ? -value : value) : null,
+    });
   }
   return tokens;
 }
 
 /** Every number written with digits in a text, in order (`1,234.5` is 1234.5; `Q4` and `4th` are 4; `-3` is −3). */
-export const numbersIn = (text: string): number[] => numberTokens(text).map((t) => t.value);
+export const numbersIn = (text: string): number[] =>
+  numberTokens(text).flatMap((t) => (t.value === null ? [] : [t.value]));
 
 /**
  * Every number the metrics support: each number in them, and each number written inside one of their strings (an
@@ -111,7 +168,7 @@ const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 export function unsupportedNumbers(text: string, metrics: ReportMetrics): string[] {
   const allowed = supportedNumbers(metrics).flatMap((v) => [v, roundTo(v, 0), roundTo(v, 1), roundTo(v, 2)]);
   return numberTokens(text)
-    .filter((t) => !allowed.some((v) => near(v, t.value)))
+    .filter((t) => t.value === null || !allowed.some((v) => near(v, t.value!)))
     .map((t) => t.written);
 }
 
