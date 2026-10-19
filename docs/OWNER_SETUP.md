@@ -117,16 +117,26 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 
 ## Phase 5
 
-### 5.1 Pre-warming scheduler and monitoring
-- What: a Cloud Scheduler job that calls the worker's `/tasks/prewarm` every 15 minutes (it raises API minimum
-  instances 30 minutes before each slot); the alert policies in OBS-04 and the exam-day dashboard in OBS-05.
-- Where: Cloud Scheduler; Cloud Monitoring.
-- Confirm: the dashboard shows active attempts during a staging run; a forced 5xx burst fires the alert.
+### 5.1 Pre-warming and monitoring
+- What: no scheduler job is needed for pre-warming. Publishing a test queues one task per slot on the `prewarm` queue
+  (3.2), named `prewarm-<orgId>-<testId>-<windowStart>`, due 30 minutes before the window start; the worker's
+  `/tasks/prewarm` handler then raises the API minimum instances (docs/runbooks/exam-day.md). Locally the scaler only
+  logs; when the Cloud Run scaler arrives with deployment, `worker@` needs permission to update the api service
+  (Cloud Run Developer on that service). Also: the alert policies in OBS-04 and the exam-day dashboard in OBS-05.
+- Where: Cloud Tasks (the `prewarm` queue); Cloud Monitoring.
+- Confirm: after publishing a staging test, `gcloud tasks list --queue prewarm --location asia-south1` shows its
+  `prewarm-…` task; the dashboard shows active attempts during a staging run; a forced 5xx burst fires the alert.
 - Unblocks: PERF-06, OBS-04, OBS-05.
 
 ### 5.2 Staging load test
-- What: run `k6 run tests/load/exam-500.js` against staging (docs/MANUAL_CHECKS.md PERF-07).
-- Where: a machine with k6, using staging test accounts created by `pnpm --filter @mitaoe/api run seed:load -- --project <staging>`.
+- What: run `k6 run -e API_URL=<staging api> -e TEST_ID=<published test> -e TOKENS=tokens.json tests/load/exam-500.js`
+  against staging (docs/MANUAL_CHECKS.md PERF-07), with a test that is live for the whole run.
+- Tokens: `tokens.json` is a JSON array of Firebase ID tokens of 500 registered students eligible for that test, one
+  per virtual user. The repo has no script that makes them: create the students in staging (the student import), then
+  on your own machine mint an ID token for each with the Firebase Admin SDK (`createCustomToken`, exchanged through
+  the Identity Toolkit `signInWithCustomToken` endpoint). ID tokens last one hour, so mint them just before the run and
+  keep the test's duration under about 50 minutes. Never commit the file.
+- Where: a machine with k6.
 - Confirm: k6 thresholds pass.
 - Unblocks: PERF-07, phase 5 "done when".
 
