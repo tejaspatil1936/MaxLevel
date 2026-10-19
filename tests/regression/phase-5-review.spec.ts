@@ -4,8 +4,10 @@ import {
   startAttempt,
   storedEvents,
   STRIKE_REASONS,
+  storedAttempt,
   strikeNumbersOf,
 } from '../acceptance/fixtures/exam';
+import { postExtraTime } from '../acceptance/fixtures/live';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
 import type { TestApi } from '../acceptance/fixtures/test-api';
@@ -109,5 +111,40 @@ test.describe('phase 5 review @lockdown', () => {
     const events = await storedEvents(emulators, ORG_A.id, attemptId);
     expect(events.filter((e) => e.data.strikeNumber !== undefined).map((e) => e.data.type)).toEqual([]);
     await expect(exam.strikeTally(0, 3)).toBeVisible();
+  });
+});
+
+test.describe('phase 5 review @live', () => {
+  test('OPS-06 EX-16 extra time granted while the student is offline is kept when the old deadline passes offline', async ({
+    apiAs,
+    testApi,
+    newSession,
+    emulators,
+  }) => {
+    test.setTimeout(120_000);
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id, timingMode: 'flexible', durationMin: 10 });
+    const page = await newSession(accounts.studentA);
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.clock.install();
+    const { attempt } = await startAttempt(await apiAs(accounts.studentA), t.testId);
+    const exam = new ExamScreen(page);
+    await exam.gotoAttempt(attempt.id);
+    await exam.options.getByRole('radio').first().check();
+    await exam.expectSaved();
+
+    await page.context().setOffline(true);
+    const grant = await postExtraTime(await apiAs(accounts.adminA), attempt.id, { minutes: 10, reason: 'Outage' });
+    expect(grant.status).toBe(200);
+    const jump = attempt.deadlineAt - (await testApi.clock.now()) + 5_000;
+    await testApi.clock.advance(jump);
+    await page.clock.fastForward(jump);
+    await expect(exam.timer, 'the old deadline passed on the device').toHaveText('00:00');
+
+    const submitted = page.waitForResponse((r) => r.url().includes(`/v1/attempts/${attempt.id}/submit`));
+    await page.context().setOffline(false);
+    expect((await submitted).status(), 'the time-up submit before the new deadline is refused').toBe(409);
+    await expect(exam.timer, 'the screen counts down to the new deadline').toHaveText(/^(09:5\d|10:00)$/);
+    expect((await storedAttempt(emulators, ORG_A.id, attempt.id)).status).toBe('in_progress');
+    await expect(page).toHaveURL(/\/exam\/\?attempt=/);
   });
 });
