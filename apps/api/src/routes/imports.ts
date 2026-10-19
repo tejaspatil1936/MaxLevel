@@ -169,12 +169,18 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
             body: z.custom<Buffer>((b) => Buffer.isBuffer(b)),
             response: { 200: ok },
           },
+          // The link is checked before the body is read (onRequest runs before parsing), so a forged or expired
+          // link costs no upload of up to 25 MB.
+          onRequest: async (req) => {
+            const params = idParams.safeParse(req.params);
+            const query = linkQuery.safeParse(req.query);
+            const verdict = params.success && query.success ? links().verify(params.data.id, query.data) : 'invalid';
+            if (verdict === 'expired')
+              throw new AppError(403, 'LINK_EXPIRED', 'This upload link has expired. Start the import again.');
+            if (verdict !== 'ok') throw new AppError(403, 'LINK_INVALID', 'This upload link is not valid.');
+          },
         },
         async (req) => {
-          const verdict = links().verify(req.params.id, req.query);
-          if (verdict === 'expired')
-            throw new AppError(403, 'LINK_EXPIRED', 'This upload link has expired. Start the import again.');
-          if (verdict !== 'ok') throw new AppError(403, 'LINK_INVALID', 'This upload link is not valid.');
           const job = await data.imports.getImport(req.query.org, req.params.id);
           if (!job) throw notFound('Import');
           if (job.status !== 'awaiting_upload')
