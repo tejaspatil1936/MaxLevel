@@ -113,7 +113,7 @@ export const testReleaseSummarySchema = z.object({
   state: releaseStateSchema,
   windowEnd: z.number().int().nullable(),
   resultsReleasedAt: z.number().int().nullable(),
-  refusal: z.enum(['RESULTS_NOT_RELEASABLE', 'FULL_REVIEW_BEFORE_CLOSE']).nullable(),
+  refusal: z.enum(['RESULTS_NOT_RELEASABLE', 'FULL_REVIEW_BEFORE_CLOSE', 'FULL_REVIEW_WHILE_ANSWERING']).nullable(),
 });
 export type TestReleaseSummary = z.infer<typeof testReleaseSummarySchema>;
 

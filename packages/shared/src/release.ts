@@ -39,17 +39,35 @@ export function resultsPublic(input: ReleaseInput, now: number): boolean {
   return input.settings.timingMode !== 'flexible' || windowClosed(input.settings, now);
 }
 
-export type ReleaseRefusal = 'RESULTS_NOT_RELEASABLE' | 'FULL_REVIEW_BEFORE_CLOSE';
+export type ReleaseRefusal = 'RESULTS_NOT_RELEASABLE' | 'FULL_REVIEW_BEFORE_CLOSE' | 'FULL_REVIEW_WHILE_ANSWERING';
 
 /**
- * Why Release results is refused now, or null: a test set to `never`, or a full review in a flexible window that has
- * not closed, since students who haven't started would see the answers (SER-09, DATA-05).
+ * DATA-05, OPS-06, OPS-07: the latest deadline among a test's attempts still in progress that is after `now` (extra
+ * time or an accommodation can take it past the window end), or null when nobody is still answering.
  */
-export function manualReleaseRefusal(input: ReleaseInput, now: number): null | ReleaseRefusal {
+export function answeringUntil(
+  attempts: ReadonlyArray<{ status: string; deadlineAt: number }>,
+  now: number,
+): number | null {
+  const open = attempts.filter((a) => a.status === 'in_progress' && a.deadlineAt > now).map((a) => a.deadlineAt);
+  return open.length ? Math.max(...open) : null;
+}
+
+/**
+ * Why Release results is refused now, or null: a test set to `never`; a full review in a flexible window that has
+ * not closed, since students who haven't started would see the answers (SER-09, DATA-05); or a full review while an
+ * attempt is still being answered (`answering`, from `answeringUntil`), for the same reason.
+ */
+export function manualReleaseRefusal(
+  input: ReleaseInput,
+  now: number,
+  answering: number | null = null,
+): null | ReleaseRefusal {
   const { settings } = input;
   if (settings.resultRelease === 'never') return 'RESULTS_NOT_RELEASABLE';
   if (settings.timingMode === 'flexible' && settings.resultDetail === 'full' && !windowClosed(settings, now))
     return 'FULL_REVIEW_BEFORE_CLOSE';
+  if (settings.resultDetail === 'full' && answering !== null) return 'FULL_REVIEW_WHILE_ANSWERING';
   return null;
 }
 
@@ -60,7 +78,8 @@ export interface ReleaseTaskPayload {
 
 /**
  * RES-01: the task that runs at the window end, queued (idempotently by name) at publish and at every attempt start.
- * A moved window end is a new name, so the new end gets a task of its own.
+ * A moved window end is a new name, so the new end gets a task of its own. `windowEnd` is the time it runs: a run that
+ * finds an attempt still being answered queues it again for that attempt's deadline (OPS-06).
  */
 export function releaseResultsTask(input: {
   orgId: string;
@@ -78,13 +97,20 @@ export function releaseResultsTask(input: {
 /**
  * What a release task run does on the server clock: nothing before the window end (`early`); at or after it, a
  * leaderboard recompute, and for `after_close` results not yet released or withdrawn also storing
- * `resultsReleasedAt` (`release`). Running it again after a release finds it released, so twice equals once.
+ * `resultsReleasedAt` (`release`), unless an attempt is still being answered (`answering`, from `answeringUntil`):
+ * then it waits for that deadline (`wait`, DATA-05, OPS-06). Running it again after a release finds it released, so
+ * twice equals once.
  */
-export function releaseTaskAction(input: ReleaseInput, now: number): 'early' | 'recompute' | 'release' {
+export function releaseTaskAction(
+  input: ReleaseInput,
+  now: number,
+  answering: number | null = null,
+): 'early' | 'wait' | 'recompute' | 'release' {
   const { settings } = input;
   if (!settings.window || now < settings.window.end) return 'early';
   const unreleased = typeof input.resultsReleasedAt !== 'number' && input.resultsWithdrawn !== true;
-  return settings.resultRelease === 'after_close' && unreleased ? 'release' : 'recompute';
+  if (settings.resultRelease !== 'after_close' || !unreleased) return 'recompute';
+  return answering === null ? 'release' : 'wait';
 }
 
 /**

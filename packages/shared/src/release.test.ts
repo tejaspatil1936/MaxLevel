@@ -4,6 +4,7 @@ import {
   manualReleaseRefusal,
   releaseResultsTask,
   releaseTaskAction,
+  answeringUntil,
   resultReleaseState,
   resultsPublic,
   type ReleaseInput,
@@ -105,5 +106,39 @@ describe('leaderboardRecomputeTask', () => {
       payload,
       scheduleTime: 42,
     });
+  });
+});
+
+describe('answeringUntil', () => {
+  it('DATA-05 OPS-06 is the latest future deadline of an attempt in progress', () => {
+    const now = 1_000;
+    expect(
+      answeringUntil(
+        [
+          { status: 'in_progress', deadlineAt: 5_000 },
+          { status: 'in_progress', deadlineAt: 9_000 },
+          { status: 'submitted', deadlineAt: 20_000 },
+          { status: 'in_progress', deadlineAt: 900 },
+        ],
+        now,
+      ),
+    ).toBe(9_000);
+    expect(answeringUntil([{ status: 'in_progress', deadlineAt: now }], now), 'its deadline reached').toBeNull();
+    expect(answeringUntil([], now)).toBeNull();
+  });
+
+  it('DATA-05 OPS-06 an attempt still answered holds an after_close release and refuses a full review', () => {
+    const settings = {
+      resultRelease: 'after_close' as const,
+      resultDetail: 'full' as const,
+      timingMode: 'fixed' as const,
+      window: { start: 0, end: 1_000 },
+    };
+    expect(releaseTaskAction({ settings }, 2_000, 9_000)).toBe('wait');
+    expect(releaseTaskAction({ settings }, 2_000, null)).toBe('release');
+    expect(releaseTaskAction({ settings: { ...settings, resultRelease: 'manual' } }, 2_000, 9_000)).toBe('recompute');
+    expect(manualReleaseRefusal({ settings }, 2_000, 9_000)).toBe('FULL_REVIEW_WHILE_ANSWERING');
+    expect(manualReleaseRefusal({ settings: { ...settings, resultDetail: 'sections' } }, 2_000, 9_000)).toBeNull();
+    expect(manualReleaseRefusal({ settings }, 2_000, null)).toBeNull();
   });
 });
