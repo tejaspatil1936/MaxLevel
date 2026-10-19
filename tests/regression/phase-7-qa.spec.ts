@@ -60,3 +60,32 @@ test('US-AD-15 a long unbroken report title wraps, so the Status and Files colum
   const region = reports.table.locator('xpath=..');
   expect(await region.evaluate((el) => el.scrollWidth - el.clientWidth), 'the table does not scroll sideways').toBe(0);
 });
+
+test('A11Y-03 all four arrow keys move and check the choice in a horizontal radio group', async ({
+  page,
+  signInAs,
+  apiAs,
+}) => {
+  await setReportEntitlements(await apiAs(accounts.superAdmin), ORG_A.id);
+  await signInAs(accounts.adminA);
+  const reports = new ReportsPage(page);
+  await reports.goto();
+  const dlg = await reports.openGenerate();
+  await expect(dlg.kind).toHaveAttribute('aria-orientation', 'horizontal');
+  await dlg.aTest.check();
+  await dlg.aTest.focus();
+  for (const [key, checked] of [
+    ['ArrowDown', dlg.aSeries],
+    ['ArrowUp', dlg.aTest],
+    ['ArrowRight', dlg.aSeries],
+    ['ArrowLeft', dlg.aTest],
+  ] as const) {
+    await page.keyboard.press(key);
+    await expect(checked, key).toBeChecked();
+    await expect(checked, key).toBeFocused();
+  }
+  await page.keyboard.press('End');
+  await expect(dlg.aSeries, 'End moves to the last choice').toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(dlg.aTest, 'Home moves to the first choice').toBeFocused();
+});
