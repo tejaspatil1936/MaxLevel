@@ -16,6 +16,7 @@ import {
   monthKey,
   parseQuestionJson,
   importPartText,
+  sheetCellTooLong,
   sheetParts,
   sheetPartTexts,
   sheetRowText,
@@ -101,6 +102,9 @@ async function readSource(job: ImportJob, bytes: Buffer): Promise<Read> {
       const { rows } = sheet;
       const count = sheetRowCount(rows);
       if (count > IMPORT_MAX_SHEET_ROWS) return refused('TOO_MANY_ROWS', IMPORT_MESSAGES.tooManyRows(count));
+      // A cell longer than a question field is refused before any write: a draft must fit one Firestore document.
+      const long = sheetCellTooLong(rows);
+      if (long) return refused('CELL_TOO_LONG', IMPORT_MESSAGES.cellTooLong(long.row, long.max));
       const template = templateRowsToDrafts(rows);
       if (!('error' in template)) {
         const header = rows[0] ?? [];
