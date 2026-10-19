@@ -57,3 +57,5 @@ run by a person.
 | Browser upload to a real signed Storage URL | Staging bucket with its CORS setting (OWNER_SETUP 6.x) | IMP-01 | Owner runs in staging |
 | AI report summary from the real model avoids unsupported numbers and reads correctly | Provider key on staging (OWNER_SETUP 6.1) | EXP-05 | Owner runs once per model or prompt change |
 | Report PDF layout, fonts and page breaks look right as rendered in the Cloud Run worker image | Staging worker | EXP-06 | Owner reviews once after phase 7 |
+| The accessibility statement's known gaps are true and its contact mailbox is answered | A person, before launch and after each release that changes accessibility | A11Y-22 | Owner |
+| The deploy pipeline queues /tasks/migrate on staging after a deploy | GitHub Actions with Cloud Tasks on staging (OWNER_SETUP) | CI-03, CI-04 | Owner runs on the first staging deploy |
