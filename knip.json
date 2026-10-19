@@ -12,7 +12,8 @@
     },
     "apps/worker": {
       "entry": ["src/server.ts", "src/**/*.test.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@fontsource-variable/.+"]
     },
     "apps/web": {
       "entry": ["app/**/*.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
