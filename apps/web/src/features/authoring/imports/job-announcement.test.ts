@@ -44,4 +44,23 @@ describe('import review announcements', () => {
     // A view polled again with nothing new says nothing again.
     expect(said([job('running', 0), job('running', 5), job('running', 5)])).toHaveLength(1);
   });
+
+  it('IMP-04 REL-06 A11Y-12 waiting to retry is said with its time, once', () => {
+    const retryAt = 1_792_476_120_000; // 20 Oct 2026, 11:32 IST
+    const retrying = { ...job('retrying', 1), retryAt };
+    expect(said([job('running', 1), retrying, retrying])).toEqual([
+      "Import status: Waiting to retry. The AI service didn't answer. The import will try again at 11:32 IST.",
+    ]);
+  });
+
+  it('IMP-04 A11Y-12 a status change says the pages done since the last summary in the same sentence', () => {
+    expect(said([job('queued', 0), job('running', 2), job('running', 3)])).toEqual([
+      'Import status: Processing. Pages processed: 2 of 12. Questions found: 4',
+    ]);
+    // Progress is then counted from that summary: 5 more pages say it again.
+    expect(said([job('queued', 0), job('running', 2), job('running', 6), job('running', 7)])).toEqual([
+      'Import status: Processing. Pages processed: 2 of 12. Questions found: 4',
+      'Pages processed: 7 of 12. Questions found: 14',
+    ]);
+  });
 });
