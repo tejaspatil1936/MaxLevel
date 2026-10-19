@@ -5,7 +5,7 @@ import { Button, EmptyState, InlineMessage, PageHeader, Skeleton, StatusPill, ty
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
 import { formatCount } from '@/lib/format';
@@ -80,6 +80,7 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
   const review = useDraftReview(job);
   useShortcutList('imports.shortcuts', REVIEW_KEYS);
   const [importing, setImporting] = useState(false);
+  const statusRef = useRef<HTMLSpanElement>(null);
   const zone = org?.timezone ?? 'Asia/Kolkata';
   const announcement = useJobAnnouncement(job, zone);
   const drafts = job.drafts;
@@ -110,7 +111,7 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
       <PageHeader
         title={t('imports.reviewTitle', { filename: job.filename })}
         subtitle={
-          <span data-testid="import-status">
+          <span data-testid="import-status" ref={statusRef} tabIndex={-1}>
             <StatusPill tone={TONES[job.status] ?? 'neutral'}>{t(statusWordKey(job.status, pending))}</StatusPill>
           </span>
         }
@@ -126,7 +127,15 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
         {announcement}
       </p>
       {isRunning(job.status) ? <JobProgress job={job} timeZone={zone} /> : null}
-      <JobFailed job={job} retrying={retry.isPending} onRetry={() => retry.mutate()} />
+      <JobFailed
+        job={job}
+        retrying={retry.isPending}
+        onRetry={() => {
+          // Try again goes once the job is queued: focus moves to the status it changes, not to the page (WCAG 2.4.3).
+          statusRef.current?.focus();
+          retry.mutate();
+        }}
+      />
       {retry.isError ? <InlineMessage>{retry.error.message}</InlineMessage> : null}
       {ready ? (
         <ul aria-label={t('imports.summary')} className="mb-6 flex flex-wrap gap-x-6 gap-y-2">
