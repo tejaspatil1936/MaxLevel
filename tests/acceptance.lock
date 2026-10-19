@@ -49,6 +49,13 @@
       "tests/acceptance/phase-4/F-4.04.spec.ts": "422f939f4c61fa99ebb2dc94e380bde72d3297a8a89b14a02bc5f597be589305",
       "tests/acceptance/phase-4/F-4.05.spec.ts": "90e37aa946935985e751d69701d179f572575c9cf58744e4aa8d6ede098e1d97",
       "tests/acceptance/phase-4/F-4.06.spec.ts": "a4101b95e4538d18c8273001f3d3debda4d1dae27540200aaded3200acacb023"
+    },
+    "5": {
+      "tests/acceptance/phase-5/F-5.01.spec.ts": "82b58b64a6e66caca734d711db40a00005db80857dd0ad1ba605630b198564c5",
+      "tests/acceptance/phase-5/F-5.02.spec.ts": "45fe664f89299cb975d7c83bef6cb46f06a6dc3a98ad0d81e9ad4af85971cccd",
+      "tests/acceptance/phase-5/F-5.03.spec.ts": "5325b5dd7fd541def5343c7337980ee21c79df81b37e72c535c3e2c19a94b655",
+      "tests/acceptance/phase-5/F-5.04.spec.ts": "88c0ba976ec54af3e65b388bb4cde31bbdb40eaf7e088d7574a2575e30eefd15",
+      "tests/acceptance/phase-5/F-5.05.spec.ts": "b861a24f42b84bb6cf7df84907e7b04575d7e33251c4bf075c3938e5da33c7e5"
     }
   }
 }
