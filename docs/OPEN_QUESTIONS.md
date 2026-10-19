@@ -282,6 +282,17 @@ Answer: AUTO-DECIDED, allowed as proposed (DECISIONS 2026-10-19).
 - Needed by: phase 6
 
 Answer: AUTO-DECIDED, Gemini on Vertex AI through the AI SDK, set by configuration. All tests use the AI SDK mock model; the real-provider smoke test runs only when a key is present.
+### 36. Two functions named retryDelayMs
+- Question: The phase 3 contract exports `retryDelayMs(failures)` (answer sync, 1 to 15 seconds) from `@mitaoe/shared`,
+  and the phase 6 contract exports another `retryDelayMs(failuresInARow)` (imports, 1, 2 and 4 minutes, then null)
+  from the same package. Contradiction: one package root cannot export both.
+- REQ: EX-12, REL-06
+- Proposed default: `import-llm.ts` defines `retryDelayMs` as the phase 6 contract says; the package root keeps the
+  phase 3 one under its name and re-exports the import schedule as `importRetryDelayMs`.
+- Impact if wrong: a rename.
+- Needed by: phase 6
+
+Answer: AUTO-DECIDED, as proposed (DECISIONS 2026-10-19).
 ## Phase 8
 
 ### 31. Retention periods

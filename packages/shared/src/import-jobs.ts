@@ -118,3 +118,20 @@ export interface ImportPayload {
 export function importTask(orgId: string, jobId: string): TaskRequest<ImportPayload> {
   return { name: `import-${jobId}`, path: '/tasks/import', payload: { orgId, jobId } };
 }
+
+/**
+ * A later run of the same import, due at `scheduleTime` (now when omitted): a model retry (REL-06) or an admin's
+ * retry. `run` makes the name unique among the job's tasks, so a done task never hides it; the name holds the job ID.
+ */
+export function importRetryTask(
+  orgId: string,
+  jobId: string,
+  run: string,
+  scheduleTime?: number,
+): TaskRequest<ImportPayload> {
+  return {
+    ...importTask(orgId, jobId),
+    name: `import-${jobId}-${run}`,
+    ...(scheduleTime === undefined ? {} : { scheduleTime }),
+  };
+}

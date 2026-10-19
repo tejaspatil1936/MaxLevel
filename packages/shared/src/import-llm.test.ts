@@ -2,11 +2,14 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  costEstimateUsd,
   draftsFromModel,
   EXTRACTION_INSTRUCTIONS,
   extractionPrompt,
   LlmAnswerSchema,
   LlmQuestionSchema,
+  MOCK_LLM_PRICES,
+  retryDelayMs,
   type LlmQuestion,
 } from './import-llm';
 
@@ -221,5 +224,37 @@ describe('draftsFromModel', () => {
     expect(drafts.filter((d) => d.explanation !== undefined)).toHaveLength(
       questions.filter((x) => x.explanation !== undefined).length,
     );
+  });
+});
+
+describe('costEstimateUsd', () => {
+  it('IMP-07 is input / 1e6 × input price + output / 1e6 × output price', () => {
+    expect(costEstimateUsd({ input: 3000, output: 600 }, MOCK_LLM_PRICES)).toBeCloseTo(0.0054, 10);
+    expect(costEstimateUsd({ input: 1_000_000, output: 0 }, { inputPerMTok: 0.3, outputPerMTok: 2.5 })).toBeCloseTo(
+      0.3,
+      10,
+    );
+    expect(costEstimateUsd({ input: 0, output: 2_000_000 }, { inputPerMTok: 0.3, outputPerMTok: 2.5 })).toBeCloseTo(
+      5,
+      10,
+    );
+    expect(costEstimateUsd({ input: 0, output: 0 }, MOCK_LLM_PRICES)).toBe(0);
+  });
+
+  it('IMP-07 the mock model costs 1 USD per million input tokens and 4 per million output tokens', () => {
+    expect(MOCK_LLM_PRICES).toEqual({ inputPerMTok: 1, outputPerMTok: 4 });
+  });
+});
+
+describe('retryDelayMs', () => {
+  it('REL-06 waits 1, 2 and 4 minutes after the first three failures in a row, then gives up', () => {
+    expect([1, 2, 3, 4].map(retryDelayMs)).toEqual([60_000, 120_000, 240_000, null]);
+    expect(retryDelayMs(5)).toBeNull();
+  });
+
+  it('REL-06 has no delay for a count that is not a failure', () => {
+    expect(retryDelayMs(0)).toBeNull();
+    expect(retryDelayMs(-1)).toBeNull();
+    expect(retryDelayMs(1.5)).toBeNull();
   });
 });

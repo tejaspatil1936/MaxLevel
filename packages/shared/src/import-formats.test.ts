@@ -92,4 +92,9 @@ describe('IMPORT_MESSAGES', () => {
     expect(IMPORT_MESSAGES.tooManyRows(5001)).toBe('This sheet has 5,001 rows. The limit is 5,000 rows.');
     expect(IMPORT_MESSAGES.mismatch('pdf')).toBe("This file isn't a real PDF file. Check the file and try again.");
   });
+
+  it('REL-06 the model failure messages are exact', () => {
+    expect(IMPORT_MESSAGES.llmUnavailable).toBe("The AI service didn't answer.");
+    expect(IMPORT_MESSAGES.llmGaveUp).toBe("The AI service didn't answer after 4 tries.");
+  });
 });

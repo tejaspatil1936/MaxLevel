@@ -110,4 +110,6 @@ export const IMPORT_MESSAGES = {
   aiOff: "AI import isn't included in your organization's plan. Use the template columns or a JSON file.",
   uploadMissing: 'Upload the file before starting the import.',
   invalidJson: "This JSON file isn't in a question format we can read. Check the file and try again.",
+  llmUnavailable: "The AI service didn't answer.",
+  llmGaveUp: "The AI service didn't answer after 4 tries.",
 } as const;

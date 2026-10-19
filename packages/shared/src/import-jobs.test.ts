@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { importCreateSchema, importFilePath, importTask } from './import-jobs';
+import { importCreateSchema, importFilePath, importRetryTask, importTask } from './import-jobs';
 
 describe('import jobs', () => {
   it('IMP-01 the source file is kept at the job path with its lower-case extension', () => {
@@ -12,6 +12,16 @@ describe('import jobs', () => {
       path: '/tasks/import',
       payload: { orgId: 'org-a', jobId: 'job1' },
     });
+  });
+
+  it('REL-06 a retry run is the same task at its schedule time, named apart from the first run', () => {
+    expect(importRetryTask('org-a', 'job1', 'retry-1', 60_000)).toEqual({
+      name: 'import-job1-retry-1',
+      path: '/tasks/import',
+      payload: { orgId: 'org-a', jobId: 'job1' },
+      scheduleTime: 60_000,
+    });
+    expect(importRetryTask('org-a', 'job1', 'manual-5')).not.toHaveProperty('scheduleTime');
   });
 
   it('IMP-02 the create request needs every field and a whole, non-negative size', () => {

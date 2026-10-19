@@ -157,6 +157,32 @@ export function draftsFromModel(page: number, questions: ReadonlyArray<LlmQuesti
   });
 }
 
+/** Prices of a model in USD per million tokens (IMP-07), from LLM_PRICE_INPUT_USD_PER_MTOK and …_OUTPUT_…. */
+export interface LlmPrices {
+  inputPerMTok: number;
+  outputPerMTok: number;
+}
+
+/** The mock model's prices, the defaults when LLM_PROVIDER=mock. */
+export const MOCK_LLM_PRICES: LlmPrices = { inputPerMTok: 1, outputPerMTok: 4 };
+
+/** The estimated cost of a job in USD: input / 1e6 × input price + output / 1e6 × output price (IMP-07). */
+export function costEstimateUsd(tokens: { input: number; output: number }, prices: LlmPrices): number {
+  return (tokens.input / 1_000_000) * prices.inputPerMTok + (tokens.output / 1_000_000) * prices.outputPerMTok;
+}
+
+/** A job fails for good on this many model failures in a row (REL-06). */
+export const LLM_MAX_TRIES = 4;
+
+/**
+ * How long the worker waits before trying the model again after `failuresInARow` failures (REL-06): 1, 2 and 4
+ * minutes, then null, meaning the job fails (retryable by an admin).
+ */
+export function retryDelayMs(failuresInARow: number): number | null {
+  if (!Number.isInteger(failuresInARow) || failuresInARow < 1 || failuresInARow >= LLM_MAX_TRIES) return null;
+  return 60_000 * 2 ** (failuresInARow - 1);
+}
+
 /**
  * The test-only script of the mock model (`POST /__test/llm`, docs/testids/phase-6.md "Test-only routes"). Its pages
  * are answered as the model's structured output, unchecked here, so the worker's own validation runs on them.

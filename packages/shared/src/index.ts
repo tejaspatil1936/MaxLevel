@@ -49,3 +49,7 @@ export * from './import-llm';
 export * from './import-formats';
 export * from './import-jobs';
 export * from './import-drafts';
+// Two contracts name a `retryDelayMs` (phase 3 answer sync, phase 6 imports): the root keeps the sync one and gives
+// the import schedule of import-llm.ts the name importRetryDelayMs (DECISIONS 2026-10-19, OPEN_QUESTIONS 36).
+export { retryDelayMs } from './sync';
+export { retryDelayMs as importRetryDelayMs } from './import-llm';
