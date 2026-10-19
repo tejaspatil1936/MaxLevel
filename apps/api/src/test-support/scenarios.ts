@@ -1,16 +1,17 @@
 import {
   NO_RESTRICTION,
-  releaseResultsTask,
   resolveSettings,
   SYSTEM_DEFAULTS,
   testDrawPools,
   totalMarks as totalMarksOf,
   type Difficulty,
   type Section,
+  type Settings,
   type TaskQueue,
 } from '@mitaoe/shared';
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { AppError } from '../errors';
+import { queuePublishTasks } from '../services/publish-tasks';
 import { emailKey, SEED_ORGS, writeSeedStudent } from './seed';
 
 // Scenario data on top of the base seed for acceptance tests (POST /__test/seed/:scenario, docs/testids).
@@ -283,9 +284,9 @@ const authoringTest: Scenario = async (db, now, body, queue) => {
   }
   batch.set(ref, test);
   await batch.commit();
-  // As publishing does (RES-01): the release task for the window end.
-  const window = (test.resolved as { window?: { end: number } | null } | undefined)?.window;
-  if (window && queue) await queue.enqueue(releaseResultsTask({ orgId, testId: ref.id, windowEnd: window.end }));
+  // As publishing does (RES-01, PERF-06): the release and pre-warm tasks, through the same code.
+  const resolved = test.resolved as Pick<Settings, 'window'> | undefined;
+  if (resolved && queue) await queuePublishTasks(queue, { orgId, testId: ref.id, settings: resolved, now });
   return { seriesId, testId: ref.id, questionIds: stored.map((q) => q.id), sectionIds };
 };
 

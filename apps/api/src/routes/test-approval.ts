@@ -2,9 +2,7 @@ import {
   approvalChecklist,
   approveResponseSchema,
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
-  prewarmTask,
   publishResponseSchema,
-  releaseResultsTask,
   resolveSettings,
   settingsGaps,
   settingsProblems,
@@ -12,6 +10,7 @@ import {
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../errors';
+import { queuePublishTasks } from '../services/publish-tasks';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
@@ -106,14 +105,8 @@ export function testApprovalRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           after: { status: 'scheduled', resolved: settings },
         });
         await batch.commit();
-        // RES-01: the release task at the window end (attempt starts queue it again, idempotently by name).
-        // PERF-06: the pre-warm 30 minutes before the slot. A moved date sends the test back to review, so the next
-        // publish queues a task for the new start and the old one skips.
-        if (settings.window)
-          await Promise.all([
-            ctx.queue.enqueue(releaseResultsTask({ orgId, testId: test.id, windowEnd: settings.window.end })),
-            ctx.queue.enqueue(prewarmTask({ orgId, testId: test.id, windowStart: settings.window.start }, now)),
-          ]);
+        // RES-01, PERF-06: the release task at the window end and the pre-warm before the slot.
+        await queuePublishTasks(ctx.queue, { orgId, testId: test.id, settings, now });
         return { status: 'scheduled' as const };
       },
     );
