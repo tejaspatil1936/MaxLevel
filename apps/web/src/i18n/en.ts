@@ -15,6 +15,7 @@ import { result } from './en/result';
 import { reports } from './en/reports';
 import { results } from './en/results';
 import { sections } from './en/sections';
+import { statement } from './en/statement';
 import { student } from './en/student';
 
 const core = {
@@ -141,6 +142,7 @@ export const en = {
   ...history,
   ...leaderboards,
   ...live,
+  ...statement,
 } as const;
 
 export type MessageKey = keyof typeof en;

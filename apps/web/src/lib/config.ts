@@ -9,4 +9,6 @@ export const config = {
   },
   authEmulatorHost: process.env.NEXT_PUBLIC_AUTH_EMULATOR_HOST,
   databaseEmulatorHost: process.env.NEXT_PUBLIC_DATABASE_EMULATOR_HOST,
+  /** A11Y-22: the mailbox on the public accessibility statement; a placeholder until the owner sets it (OWNER_SETUP 0.8). */
+  accessibilityEmail: process.env.NEXT_PUBLIC_ACCESSIBILITY_EMAIL || 'accessibility@mitaoe.example',
 } as const;
