@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, type FormEvent } from 'react';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
+import { uploadToSignedUrl } from '@/lib/files';
 import { useWorkspace } from '@/lib/workspace';
 
 /** Where a refusal shows: on the file field, or as the dialog's alert. */
@@ -35,14 +36,6 @@ function problemOf(err: unknown, format: ImportFormat): Problem {
     default:
       return { alert: t('imports.failed', { reason: err.message }) };
   }
-}
-
-/** PUTs the file to the signed upload link the API gave (no sign-in; DATA-09). */
-async function uploadFile(url: string, file: File, contentType: string): Promise<void> {
-  const res = await fetch(url, { method: 'PUT', headers: { 'content-type': contentType }, body: file }).catch(
-    () => null,
-  );
-  if (!res?.ok) throw new Error('upload');
 }
 
 /**
@@ -75,7 +68,7 @@ export function FileImportDialog({ testId, onClose }: { testId: string; onClose:
         body: { testId, filename: file.name, contentType, sizeBytes: file.size },
         headers: { 'idempotency-key': crypto.randomUUID() },
       });
-      await uploadFile(created.uploadUrl, file, contentType);
+      await uploadToSignedUrl(created.uploadUrl, file, contentType);
       await api<ImportStarted>(`/v1/imports/${encodeURIComponent(created.id)}/start`, { method: 'POST', body: {} });
       router.push(`/admin/imports/review/?id=${encodeURIComponent(created.id)}`);
     } catch (err) {

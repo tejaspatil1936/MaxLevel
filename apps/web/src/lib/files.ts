@@ -12,6 +12,14 @@ export async function readLogo(file: File): Promise<LogoUpload | null> {
   return { contentType: type, data: btoa(binary) };
 }
 
+/** PUTs a file to a signed upload link the API gave (no sign-in; DATA-09); throws when it is not stored. */
+export async function uploadToSignedUrl(url: string, file: File, contentType: string): Promise<void> {
+  const res = await fetch(url, { method: 'PUT', headers: { 'content-type': contentType }, body: file }).catch(
+    () => null,
+  );
+  if (!res?.ok) throw new Error('The upload failed.');
+}
+
 /** Starts a download of a text file made in the browser (CSV exports). */
 export function downloadText(filename: string, text: string, type = 'text/csv'): void {
   const url = URL.createObjectURL(new Blob([text], { type }));
