@@ -89,6 +89,7 @@ export function liveRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
             title: test.title,
             dayLabel: info.labels[test.id] ?? null,
             secondCamera: test.resolved.secondCamera === true,
+            durationMin: test.resolved.durationMin,
           },
           students: students.map((s) => ({ id: s.id, name: s.name, prn: s.prn })),
         };

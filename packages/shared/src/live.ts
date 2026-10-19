@@ -67,7 +67,14 @@ export type LiveTestList = z.infer<typeof liveTestListSchema>;
 
 /** GET /v1/tests/{id}/live: the live view's one API read, the eligible roster (PERF-04). */
 export const liveRosterSchema = z.object({
-  test: z.object({ id, title: z.string(), dayLabel: z.string().nullable(), secondCamera: z.boolean() }),
+  test: z.object({
+    id,
+    title: z.string(),
+    dayLabel: z.string().nullable(),
+    secondCamera: z.boolean(),
+    /** The resolved duration (a fixed slot's length), for the extra-time confirmation (OPS-08). */
+    durationMin: z.number().int().min(0),
+  }),
   students: z.array(z.object({ id, name: z.string(), prn: z.string() })),
 });
 export type LiveRoster = z.infer<typeof liveRosterSchema>;

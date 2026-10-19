@@ -33,7 +33,7 @@ const get = async <T>(url: string, headers: Record<string, string>) => {
 const COMPUTER = { departmentIds: [`dept-${SEED.orgA}-computer`] };
 
 describe('live view reads', () => {
-  it('PERF-04 OPS-01 the roster is the eligible registered students, loaded once with the test heading and camera setting', async () => {
+  it('PERF-04 OPS-01 the roster is the eligible registered students, loaded once with the test heading, camera setting and duration', async () => {
     const t = await api.examTest({ seriesEligibility: COMPUTER, overrides: { secondCamera: true } });
     const roster = await get<LiveRoster>(`/v1/tests/${t.testId}/live`, await adminA());
     expect(roster.status).toBe(200);
@@ -42,6 +42,7 @@ describe('live view reads', () => {
       title: 'Quantitative aptitude',
       dayLabel: 'Day 1',
       secondCamera: true,
+      durationMin: 60,
     });
     expect(roster.body.students.map((s) => s.id)).toEqual(
       [1, 5, 9, 13, 17]
