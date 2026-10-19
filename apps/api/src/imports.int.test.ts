@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { Readable } from 'node:stream';
 import { IMPORT_MAX_BYTES } from '@mitaoe/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initFirebase } from './firebase';
@@ -281,5 +282,28 @@ describe('import upload and job API', () => {
       payload: { testId: `${testId}/x`, filename: 'q.json', contentType: 'application/json', sizeBytes: 10 },
     });
     expect([res.statusCode, (res.json() as { error?: { code?: string } }).error?.code]).toEqual([400, 'VALIDATION']);
+  });
+
+  it('IMP-02 SEC-06 a forged upload link is refused before its body is read', async () => {
+    const a = await create('questions.json');
+    const u = new URL(a.body.uploadUrl as string);
+    const forged = `${u.pathname}${u.search.replace(/sig=[0-9a-f]/, 'sig=0')}`;
+    const put = (payload: Buffer | Readable, headers: Record<string, string> = {}) =>
+      ctx.app.inject({
+        method: 'PUT',
+        url: forged,
+        headers: { 'content-type': 'application/octet-stream', ...headers },
+        payload,
+      });
+    // Over the limit: refused as forged, not as too large, so nothing of it was read.
+    const big = await put(Buffer.alloc(IMPORT_MAX_BYTES + 1, 0x20));
+    expect([big.statusCode, big.json().error?.code]).toEqual([403, 'LINK_INVALID']);
+    // A body that never ends: the answer comes without waiting for it.
+    const endless = new Readable({ read() {} });
+    endless.push(Buffer.alloc(1024, 0x20));
+    const open = await put(endless, { 'content-length': '1000000' });
+    expect([open.statusCode, open.json().error?.code]).toEqual([403, 'LINK_INVALID']);
+    endless.destroy();
+    expect(await stored(`${org}/imports/${a.body.id}/source.json`)).toBeNull();
   });
 });
