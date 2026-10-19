@@ -47,3 +47,62 @@ describe('import task on hostile files', () => {
     expect(await jobs.tasks(id)).toEqual([]);
   });
 });
+
+describe('import task on sheets too large to store', () => {
+  const csv = (rows: string[][]) => Buffer.from(rows.map((r) => r.join(',')).join('\n') + '\n');
+
+  it('IMP-02 SEC-06 a template cell of 1,100,000 characters fails the job CELL_TOO_LONG before any write', async () => {
+    const id = await jobs.create(
+      'hugecell.csv',
+      'csv',
+      csv([
+        ['Question', 'Option A', 'Option B', 'Correct'],
+        ['W'.repeat(1_100_000), 'x', 'y', 'A'],
+      ]),
+    );
+    expect(await jobs.run(id)).toBe('failed: CELL_TOO_LONG');
+    expect(await jobs.job(id)).toMatchObject({
+      status: 'failed',
+      error: {
+        code: 'CELL_TOO_LONG',
+        message: 'Row 2 has a cell longer than 20,000 characters. Shorten it and try again.',
+        retryable: false,
+      },
+    });
+    expect(await jobs.drafts(id)).toEqual([]);
+    expect((await jobs.org.collection(`importJobs/${id}/parts`).get()).size).toBe(0);
+    expect(llm.calls()).toEqual([]);
+  });
+
+  it('IMP-02 SEC-06 a free sheet and a template option over their limits fail the job before any model call', async () => {
+    const free = await jobs.create(
+      'free.csv',
+      'csv',
+      csv([
+        ['Q', 'Choices'],
+        ['Largest planet?', 'Mars; Jupiter'],
+        ['Notes', 'n'.repeat(20_001)],
+      ]),
+    );
+    expect(await jobs.run(free)).toBe('failed: CELL_TOO_LONG');
+    expect((await jobs.job(free)).error).toEqual({
+      code: 'CELL_TOO_LONG',
+      message: 'Row 3 has a cell longer than 20,000 characters. Shorten it and try again.',
+      retryable: false,
+    });
+    const option = await jobs.create(
+      'option.csv',
+      'csv',
+      csv([
+        ['Question', 'Option A', 'Option B', 'Correct'],
+        ['Short?', 'o'.repeat(5_001), 'y', 'A'],
+      ]),
+    );
+    expect(await jobs.run(option)).toBe('failed: CELL_TOO_LONG');
+    expect((await jobs.job(option)).error).toMatchObject({
+      message: 'Row 2 has a cell longer than 5,000 characters. Shorten it and try again.',
+    });
+    expect(await jobs.drafts(option)).toEqual([]);
+    expect(llm.calls()).toEqual([]);
+  });
+});
