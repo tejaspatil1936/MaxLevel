@@ -126,6 +126,22 @@ export const importPageLinkSchema = z.object({
 });
 export type ImportPageLink = z.infer<typeof importPageLinkSchema>;
 
+/** The most of a part's text the worker keeps for the review screen; a longer part is cut and marked `truncated`. */
+export const IMPORT_PART_TEXT_MAX = 100_000;
+/**
+ * `GET /v1/imports/{id}/parts/{part}` (TXT, MD and sheet jobs; IMP-11): the text of the draft's source part as the
+ * worker kept it, `part` being the draft's `sourcePage` (a part, or a template sheet's row). Shown as text, never HTML.
+ */
+export const importPartTextSchema = z.object({ part: z.number().int(), text: z.string(), truncated: z.boolean() });
+export type ImportPartText = z.infer<typeof importPartTextSchema>;
+
+/** A part's text as the worker stores it: at most IMPORT_PART_TEXT_MAX characters. */
+export const importPartText = (part: number, text: string): ImportPartText => ({
+  part,
+  text: text.slice(0, IMPORT_PART_TEXT_MAX),
+  truncated: text.length > IMPORT_PART_TEXT_MAX,
+});
+
 /** `GET /v1/imports?testId=`: the test's jobs, newest first. */
 export const importListQuerySchema = z.object({ testId: id });
 export const importListSchema = z.object({

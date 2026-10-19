@@ -141,3 +141,32 @@ export function sheetParts(rows: ReadonlyArray<ReadonlyArray<string>>, perPart =
     parts.push([header, ...body.slice(i, i + perPart)].map(line).join('\n') + '\n');
   return parts;
 }
+
+/**
+ * A sheet row as the review screen shows it (IMP-11): one `<header>: <value>` line per cell that holds a value, in
+ * column order; a column without a header is `Column <n>`.
+ */
+export function sheetRowText(header: ReadonlyArray<string>, row: ReadonlyArray<string>): string {
+  const lines: string[] = [];
+  for (let i = 0; i < Math.max(header.length, row.length); i++) {
+    const value = row[i] ?? '';
+    if (value.trim() === '') continue;
+    lines.push(`${(header[i] ?? '').trim() || `Column ${i + 1}`}: ${value}`);
+  }
+  return lines.join('\n');
+}
+
+/** The text of each part sheetParts makes, for the review screen: its rows as sheetRowText, a blank line apart. */
+export function sheetPartTexts(rows: ReadonlyArray<ReadonlyArray<string>>, perPart = IMPORT_SHEET_PART_ROWS): string[] {
+  const header = rows[0] ?? [];
+  const body = rows.slice(1).filter((r) => !blank(r));
+  const texts: string[] = [];
+  for (let i = 0; i < body.length; i += perPart)
+    texts.push(
+      body
+        .slice(i, i + perPart)
+        .map((r) => sheetRowText(header, r))
+        .join('\n\n'),
+    );
+  return texts;
+}

@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { importProblems } from './import-checks';
-import { jsonQuestionsToDrafts, sheetParts, sheetRowCount, templateRowsToDrafts, textParts } from './import-drafts';
+import {
+  jsonQuestionsToDrafts,
+  sheetPartTexts,
+  sheetParts,
+  sheetRowCount,
+  sheetRowText,
+  templateRowsToDrafts,
+  textParts,
+} from './import-drafts';
 
 const HEADER = ['Question', 'Option A', 'Option B', 'Option C', 'Option D', 'Correct', 'Explanation', 'Difficulty'];
 
@@ -88,6 +96,29 @@ describe('sheet rows and parts', () => {
     expect(sheetRowCount(rows)).toBe(1);
     expect(sheetParts(rows)).toEqual([`${HEADER.join(',')}\nWhat is 2 + 2?,3,4,,,B\n`]);
     expect(templateRowsToDrafts(rows)).toMatchObject([{ order: 1, sourcePage: 4, correctOptionIds: ['b'] }]);
+  });
+});
+
+describe('sheet text for the review screen', () => {
+  it('IMP-11 a row is its cells as <header>: <value> lines, empty cells left out', () => {
+    expect(sheetRowText(['Question', 'Option A', '', 'Correct'], ['What is 2 + 2?', '4', 'x', ''])).toBe(
+      'Question: What is 2 + 2?\nOption A: 4\nColumn 3: x',
+    );
+  });
+
+  it('IMP-11 a free sheet part is the text of its rows, a blank line apart, part for part with sheetParts', () => {
+    const rows = [
+      ['Q', 'Answer'],
+      ['Largest planet?', 'Jupiter'],
+      [''],
+      ['Smallest?', 'Mercury'],
+      ['Hottest?', 'Venus'],
+    ];
+    expect(sheetPartTexts(rows, 2)).toEqual([
+      'Q: Largest planet?\nAnswer: Jupiter\n\nQ: Smallest?\nAnswer: Mercury',
+      'Q: Hottest?\nAnswer: Venus',
+    ]);
+    expect(sheetPartTexts(rows, 2)).toHaveLength(sheetParts(rows, 2).length);
   });
 });
 

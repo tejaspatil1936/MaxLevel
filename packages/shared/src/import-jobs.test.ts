@@ -8,6 +8,7 @@ import {
   importJobViewSchema,
   importPagePath,
   importPageTask,
+  importPartText,
   importRetryTask,
   importTask,
 } from './import-jobs';
@@ -55,6 +56,12 @@ describe('import jobs', () => {
       scheduleTime: 60_000,
     });
     expect(importRetryTask('org-a', 'job1', 'manual-5')).not.toHaveProperty('scheduleTime');
+  });
+
+  it('IMP-11 a part keeps at most 100,000 characters of its text, marked truncated when cut', () => {
+    expect(importPartText(2, 'abc')).toEqual({ part: 2, text: 'abc', truncated: false });
+    const long = importPartText(1, 'x'.repeat(100_001));
+    expect([long.text.length, long.truncated]).toEqual([100_000, true]);
   });
 
   it('REL-06 the next page is a task of its own, due at once, named by the job and the page', () => {
