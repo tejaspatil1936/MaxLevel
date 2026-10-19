@@ -1,5 +1,3 @@
-import type { Question } from './question';
-
 // Question checks (DECISIONS Q17, A11Y-10, IMP-09). No problem: stored `approved`; any problem: stored `draft`.
 
 export type QuestionProblem =
@@ -11,7 +9,7 @@ export type QuestionProblem =
   | { code: 'IMAGE_WITHOUT_ALT'; image: number };
 
 /** Prompts compared for duplicates: case, spacing and closing punctuation ignored (symbols inside matter: 2+3, 2-3). */
-const normalize = (prompt: string) =>
+export const normalizePrompt = (prompt: string): string =>
   prompt
     .toLowerCase()
     .replace(/\s+/g, ' ')
@@ -24,19 +22,24 @@ const normalize = (prompt: string) =>
  * with an empty prompt to keep the numbering). Only the first duplicate is reported.
  */
 export function questionProblems(
-  q: Pick<Question, 'prompt' | 'options' | 'correctOptionIds' | 'images'>,
-  others: ReadonlyArray<Pick<Question, 'prompt'>>,
+  q: {
+    prompt: string;
+    options: ReadonlyArray<{ id: string; text: string }>;
+    correctOptionIds: ReadonlyArray<string>;
+    images: ReadonlyArray<{ alt: string }>;
+  },
+  others: ReadonlyArray<{ prompt: string }>,
 ): QuestionProblem[] {
   const problems: QuestionProblem[] = [];
   const optionIds = new Set(q.options.filter((o) => o.text.trim() !== '').map((o) => o.id));
   const correct = q.correctOptionIds.filter((id) => optionIds.has(id));
   if (correct.length === 0) problems.push({ code: 'NO_CORRECT_ANSWER' });
   if (optionIds.size < 2) problems.push({ code: 'TOO_FEW_OPTIONS' });
-  const prompt = normalize(q.prompt);
+  const prompt = normalizePrompt(q.prompt);
   if (prompt === '') problems.push({ code: 'EMPTY_PROMPT' });
   if (correct.length > 1) problems.push({ code: 'MULTIPLE_CORRECT' });
   if (prompt !== '') {
-    const dup = others.findIndex((o) => normalize(o.prompt) === prompt);
+    const dup = others.findIndex((o) => normalizePrompt(o.prompt) === prompt);
     if (dup >= 0) problems.push({ code: 'DUPLICATE', of: dup + 1 });
   }
   q.images.forEach((img, i) => {
