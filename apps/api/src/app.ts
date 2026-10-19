@@ -69,6 +69,9 @@ export async function createServer(
     // One hop: the Google front end (load balancer) appends the client address; anything earlier is client-supplied.
     trustProxy: (_address: string, hop: number) => hop < 1,
     bodyLimit: 1024 * 1024,
+    // Past find-my-way's default of 100 characters a path parameter is refused before any hook, so without CORS
+    // headers or the error shape; up to this length the route's own schema refuses it (API-01, SEC-05).
+    routerOptions: { maxParamLength: 2048 },
   });
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
