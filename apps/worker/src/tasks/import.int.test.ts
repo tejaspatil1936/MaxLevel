@@ -261,4 +261,18 @@ describe('import task', () => {
     expect(await aiImports()).toBe(1);
     expect(llm.calls()).toEqual([]);
   });
+
+  it('IMP-08 a model job whose organization is gone fails instead of staying running', async () => {
+    await org.delete();
+    const gone = await runImport('notes.md', 'md', Buffer.from('1. Find the next number\n'));
+    expect(gone.job).toMatchObject({
+      status: 'failed',
+      error: {
+        code: 'ORG_NOT_FOUND',
+        message: 'This organization no longer exists, so the import stopped.',
+        retryable: false,
+      },
+    });
+    expect(llm.calls()).toEqual([]);
+  });
 });
