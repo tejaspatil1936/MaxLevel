@@ -83,5 +83,7 @@ export const studentTestPageSchema = studentTestSummarySchema.extend({
   marking: markingSchema,
   maxStrikes: z.number().int(),
   exam: examEntrySchema,
+  /** The student's standing accommodation for this test's series, in whole minutes (OPS-07); absent without one. */
+  extraMin: z.number().int().positive().optional(),
 });
 export type StudentTestPage = z.infer<typeof studentTestPageSchema>;
