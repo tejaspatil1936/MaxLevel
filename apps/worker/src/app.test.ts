@@ -15,7 +15,7 @@ describe('worker skeleton', () => {
       clock: systemClock,
       config: { ...loadConfig({ NODE_ENV: 'test' }), logLevel: 'silent' },
     });
-    const res = await app.inject({ method: 'POST', url: '/tasks/prewarm', payload: {} });
+    const res = await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} });
     expect(res.statusCode).toBe(200);
   });
 
@@ -26,10 +26,10 @@ describe('worker skeleton', () => {
       config: { ...loadConfig({ NODE_ENV: 'production' }), logLevel: 'silent' },
       checkTaskAuth: async (h) => h === 'Bearer good',
     });
-    expect((await app.inject({ method: 'POST', url: '/tasks/prewarm', payload: {} })).statusCode).toBe(401);
+    expect((await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} })).statusCode).toBe(401);
     const ok = await app.inject({
       method: 'POST',
-      url: '/tasks/prewarm',
+      url: '/tasks/migrate',
       payload: {},
       headers: { authorization: 'Bearer good' },
     });
@@ -45,7 +45,7 @@ describe('worker skeleton', () => {
         logLevel: 'silent',
       },
     });
-    expect((await app.inject({ method: 'POST', url: '/tasks/prewarm', payload: {} })).statusCode).toBe(401);
+    expect((await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} })).statusCode).toBe(401);
     await expect(
       buildWorker({ ...stores, clock: systemClock, config: { ...loadConfig({}), logLevel: 'silent' } }),
       'no OIDC settings and no NODE_ENV: the worker does not start',
@@ -59,7 +59,7 @@ describe('worker skeleton', () => {
         clock: systemClock,
         config: { ...loadConfig({ NODE_ENV }), logLevel: 'silent' },
       });
-      expect((await app.inject({ method: 'POST', url: '/tasks/prewarm', payload: {} })).statusCode, NODE_ENV).toBe(200);
+      expect((await app.inject({ method: 'POST', url: '/tasks/migrate', payload: {} })).statusCode, NODE_ENV).toBe(200);
     }
   });
 

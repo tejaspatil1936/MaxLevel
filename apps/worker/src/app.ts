@@ -8,9 +8,11 @@ import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 import type { ExportData } from './export-data';
 import type { FileStore } from './firebase';
 import type { LiveMirror } from './live';
+import { loggingInstanceScaler, type InstanceScaler } from './scaler';
 import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit';
 import { exportHandler, exportPayloadSchema } from './tasks/export';
 import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
+import { prewarmHandler, prewarmPayloadSchema } from './tasks/prewarm';
 import { releaseResultsHandler, releaseResultsPayloadSchema } from './tasks/release-results';
 
 export interface WorkerDeps {
@@ -24,6 +26,8 @@ export interface WorkerDeps {
   exports?: { data: ExportData; files: FileStore };
   /** The live mirror in Realtime Database (OPS-02), written when a task finishes an attempt. */
   live?: LiveMirror;
+  /** Raises the API's minimum instances before a slot (PERF-06); the logging driver when absent. */
+  scaler?: InstanceScaler;
 }
 
 export const TASK_NAMES = [
@@ -106,7 +110,15 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           req.log.info({ task: 'leaderboard', testId: req.body.testId, outcome }, 'task done');
           return { ok: true, outcome };
         });
-      const handled: string[] = ['auto-submit', 'release-results', 'leaderboard'];
+      const prewarm = prewarmHandler({ ...deps, scaler: deps.scaler ?? loggingInstanceScaler(tasks.log) });
+      tasks
+        .withTypeProvider<ZodTypeProvider>()
+        .post('/prewarm', { schema: { body: prewarmPayloadSchema } }, async (req) => {
+          const outcome = await prewarm(req.body);
+          req.log.info({ task: 'prewarm', testId: req.body.testId, outcome }, 'task done');
+          return { ok: true, outcome };
+        });
+      const handled: string[] = ['auto-submit', 'release-results', 'leaderboard', 'prewarm'];
       if (deps.exports) {
         const run = exportHandler({ exports: deps.exports.data, files: deps.exports.files, clock });
         handled.push('export');

@@ -10,7 +10,8 @@ import { localTaskQueue } from './tasks/local-queue';
 const config = loadConfig();
 const clock = config.env === 'test' ? new TestClock() : systemClock;
 const db = initFirestore();
-// TASK_QUEUE=local until the Cloud Tasks driver arrives with deployment (as in the API).
+// TASK_QUEUE=local until the Cloud Tasks driver arrives with deployment (as in the API). No scaler is passed, so
+// pre-warming (PERF-06) uses the logging driver until the Cloud Run Admin API driver arrives with deployment too.
 const app = await buildWorker({
   clock,
   config,
