@@ -3,7 +3,7 @@
 import type { ReleaseResponse, TestReleaseSummary, WithdrawResponse } from '@mitaoe/shared';
 import { Button, ConfirmDialog, InlineMessage, notify } from '@mitaoe/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { t, type MessageKey } from '@/i18n';
 import { api } from '@/lib/api';
 import { formatZonedTime } from '@/lib/format';
@@ -28,6 +28,8 @@ export function ReleaseRegion({ summary }: { summary: TestReleaseSummary }) {
   const headingId = useId();
   const blockedId = useId();
   const [confirm, setConfirm] = useState<'release' | 'withdraw' | null>(null);
+  // `isPending` only disables the confirm button after a render, so a double click would send twice without this.
+  const sending = useRef(false);
   const zone = org?.timezone ?? 'Asia/Kolkata';
   const at = (ms: number | null) => (ms === null ? '' : formatZonedTime(ms, zone));
 
@@ -42,6 +44,10 @@ export function ReleaseRegion({ summary }: { summary: TestReleaseSummary }) {
       void qc.invalidateQueries({ queryKey: qk.orgList(orgId, 'results') });
       setConfirm(null);
       notify.success(t(kind === 'release' ? 'results.releasedNotice' : 'results.withdrawnNotice'));
+    },
+    // Here rather than on `mutate`, so it also runs when the dialog is closed (and the mutation reset) mid-request.
+    onSettled: () => {
+      sending.current = false;
     },
   });
 
@@ -97,7 +103,11 @@ export function ReleaseRegion({ summary }: { summary: TestReleaseSummary }) {
         confirmLabel={t(confirm === 'withdraw' ? 'results.withdrawAction' : 'results.releaseAction')}
         destructive={confirm === 'withdraw'}
         confirmDisabled={action.isPending}
-        onConfirm={() => confirm && action.mutate(confirm)}
+        onConfirm={() => {
+          if (!confirm || sending.current) return;
+          sending.current = true;
+          action.mutate(confirm);
+        }}
       >
         {action.isError ? <InlineMessage>{action.error.message}</InlineMessage> : null}
       </ConfirmDialog>
