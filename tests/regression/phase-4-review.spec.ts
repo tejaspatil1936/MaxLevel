@@ -129,6 +129,32 @@ test.describe('phase 4 review', () => {
     expect(await emulators.audit(ORG_A.id, 'test.results.withdraw')).toHaveLength(1);
   });
 
+  test('EXP-01 a double click on Export CSV, or a click while it is aria-disabled, starts one export', async ({
+    page,
+    signInAs,
+    testApi,
+  }) => {
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id, overrides: { resultRelease: 'immediate' } });
+    await signInAs(accounts.adminA);
+    const calls = recordApiCalls(page);
+    await page.goto(AdminTestResults.url(t.testId));
+    const { exports } = new AdminTestResults(page);
+    const held = await holdApiRequests(page, apiRequest('POST', '/v1/exports'));
+    const started = page.waitForResponse((r) => r.request().method() === 'POST' && r.url().endsWith('/v1/exports'));
+
+    await exports.csv.dblclick();
+    await held.waitUntilHeld();
+    await expect(exports.csv).toHaveAttribute('aria-disabled', 'true');
+    // A person can still press an aria-disabled button; Playwright would wait for it to be enabled without force.
+    await exports.xlsx.click({ force: true });
+    held.release();
+    expect((await started).status()).toBe(202);
+    expect(
+      calls().filter((c) => c === 'POST /v1/exports'),
+      'one export started',
+    ).toHaveLength(1);
+  });
+
   test('STU-03 UX-07 ORG-12 a profile lock still in flight when the page reloads is saved, not lost', async ({
     page,
     signInAs,
