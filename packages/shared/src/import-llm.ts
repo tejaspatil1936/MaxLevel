@@ -156,3 +156,26 @@ export function draftsFromModel(page: number, questions: ReadonlyArray<LlmQuesti
     return draft;
   });
 }
+
+/**
+ * The test-only script of the mock model (`POST /__test/llm`, docs/testids/phase-6.md "Test-only routes"). Its pages
+ * are answered as the model's structured output, unchecked here, so the worker's own validation runs on them.
+ */
+export const llmScriptSchema = z.object({
+  pages: z.record(z.string(), z.array(z.unknown())).optional(),
+  usage: z
+    .object({ inputTokens: z.number().int().nonnegative(), outputTokens: z.number().int().nonnegative() })
+    .optional(),
+  failures: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  hold: z.array(z.number().int().positive()).optional(),
+});
+export type LlmScript = z.infer<typeof llmScriptSchema>;
+
+/** One call the mock model received, as `GET /__test/llm/calls` lists it: its page and its user-message parts. */
+export const llmCallSchema = z.object({
+  page: z.number().int(),
+  parts: z.array(
+    z.union([z.object({ type: z.literal('text') }), z.object({ type: z.literal('file'), mediaType: z.string() })]),
+  ),
+});
+export type LlmCall = z.infer<typeof llmCallSchema>;
