@@ -82,8 +82,11 @@ async function readSource(job: ImportJob, bytes: Buffer): Promise<Read> {
     }
     case 'csv':
     case 'xlsx': {
-      const rows = job.format === 'csv' ? readCsv(bytes) : await readXlsx(bytes);
-      if (!rows) return mismatch;
+      const sheet = job.format === 'csv' ? readCsv(bytes) : await readXlsx(bytes);
+      if (!sheet) return mismatch;
+      if ('unzippedTooLarge' in sheet) return refused('INVALID_FILE', IMPORT_MESSAGES.unzippedTooLarge);
+      if ('tooManyRows' in sheet) return refused('TOO_MANY_ROWS', IMPORT_MESSAGES.tooManyRows(sheet.tooManyRows));
+      const { rows } = sheet;
       const count = sheetRowCount(rows);
       if (count > IMPORT_MAX_SHEET_ROWS) return refused('TOO_MANY_ROWS', IMPORT_MESSAGES.tooManyRows(count));
       const template = templateRowsToDrafts(rows);

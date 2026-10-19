@@ -16,21 +16,24 @@ describe('import source readers', () => {
   });
 
   it('IMP-01 CSV rows follow RFC 4180 and drop a BOM; the first XLSX worksheet is read as text', async () => {
-    expect(readCsv(Buffer.from('﻿Question,Option A\n"Say ""hi"", then",x\n'))).toEqual([
-      ['Question', 'Option A'],
-      ['Say "hi", then', 'x'],
-      [''],
-    ]);
+    expect(readCsv(Buffer.from('﻿Question,Option A\n"Say ""hi"", then",x\n'))).toEqual({
+      rows: [
+        ['Question', 'Option A'],
+        ['Say "hi", then', 'x'],
+      ],
+    });
     const wb = new ExcelJS.Workbook();
     wb.addWorksheet('First').addRows([
       ['Question', 'Option A'],
       ['What is 2 + 2?', 4],
     ]);
     wb.addWorksheet('Second').addRow(['ignored']);
-    expect(await readXlsx(Buffer.from(await wb.xlsx.writeBuffer()))).toEqual([
-      ['Question', 'Option A'],
-      ['What is 2 + 2?', '4'],
-    ]);
+    expect(await readXlsx(Buffer.from(await wb.xlsx.writeBuffer()))).toEqual({
+      rows: [
+        ['Question', 'Option A'],
+        ['What is 2 + 2?', '4'],
+      ],
+    });
     expect(await readXlsx(Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.alloc(60)]))).toBeNull();
     expect(utf8Text(Buffer.from('﻿abc'))).toBe('abc');
   });
