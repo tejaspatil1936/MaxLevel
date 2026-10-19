@@ -13,6 +13,9 @@ const envSchema = z.object({
   // The model AI imports use (IMP-07, DECISIONS Q30); `mock` is the scripted test model, refused in production.
   LLM_PROVIDER: z.string().optional(),
   LLM_MODEL: z.string().optional(),
+  // USD per million tokens for the job's cost estimate (IMP-07); each driver has defaults (the mock: 1 and 4).
+  LLM_PRICE_INPUT_USD_PER_MTOK: z.coerce.number().nonnegative().optional(),
+  LLM_PRICE_OUTPUT_USD_PER_MTOK: z.coerce.number().nonnegative().optional(),
 });
 
 export type WorkerConfig = {
@@ -25,6 +28,8 @@ export type WorkerConfig = {
   testApiSecret?: string;
   llmProvider?: string;
   llmModel?: string;
+  llmPriceInput?: number;
+  llmPriceOutput?: number;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
@@ -39,5 +44,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
     ...(e.TEST_API_SECRET ? { testApiSecret: e.TEST_API_SECRET } : {}),
     ...(e.LLM_PROVIDER ? { llmProvider: e.LLM_PROVIDER } : {}),
     ...(e.LLM_MODEL ? { llmModel: e.LLM_MODEL } : {}),
+    ...(e.LLM_PRICE_INPUT_USD_PER_MTOK === undefined ? {} : { llmPriceInput: e.LLM_PRICE_INPUT_USD_PER_MTOK }),
+    ...(e.LLM_PRICE_OUTPUT_USD_PER_MTOK === undefined ? {} : { llmPriceOutput: e.LLM_PRICE_OUTPUT_USD_PER_MTOK }),
   };
 }

@@ -134,6 +134,7 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           files: deps.imports.files,
           clock,
           queue: deps.queue,
+          log: tasks.log,
           ...(deps.llm ? { llm: deps.llm } : {}),
         });
         handled.push('import');

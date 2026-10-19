@@ -3,6 +3,8 @@
 // (LLM_PROVIDER=mock, scripted.ts) and, from F-6.03, the AI SDK adapter set by configuration. The worker validates
 // every answer with LlmAnswerSchema itself, so a driver returns the model's structured output unchecked.
 
+import type { LlmPrices } from '@mitaoe/shared';
+
 export type LlmPart = { type: 'text'; text: string } | { type: 'file'; mediaType: string; data: Uint8Array };
 
 export interface LlmRequest {
@@ -34,6 +36,8 @@ export interface LlmDriver {
   readonly provider: string;
   /** The `LLM_MODEL` setting or the driver's default, recorded on the job. */
   readonly model: string;
+  /** USD per million tokens, for the job's cost estimate (LLM_PRICE_…_USD_PER_MTOK or the driver's defaults). */
+  readonly prices: LlmPrices;
   /** One model call; throws LlmUnavailableError when the provider fails. */
   generate(request: LlmRequest): Promise<LlmResponse>;
 }

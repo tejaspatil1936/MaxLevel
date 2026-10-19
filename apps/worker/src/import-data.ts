@@ -39,6 +39,8 @@ export interface ImportUpdate {
   provider?: string;
   model?: string;
   tokens?: { input: number; output: number };
+  /** USD, from the tokens and the model's prices (IMP-07). */
+  costEstimate?: number;
 }
 
 /** A stored draft, before and after the checks. */

@@ -1,4 +1,4 @@
-import type { LlmCall, LlmScript } from '@mitaoe/shared';
+import { MOCK_LLM_PRICES, type LlmCall, type LlmPrices, type LlmScript } from '@mitaoe/shared';
 import { LlmUnavailableError, type LlmDriver, type LlmRequest, type LlmResponse } from './driver';
 
 const DEFAULT_USAGE = { inputTokens: 1000, outputTokens: 200 };
@@ -16,7 +16,10 @@ export class ScriptedLlm implements LlmDriver {
   private waiting: Array<() => void> = [];
   private log: LlmCall[] = [];
 
-  constructor(readonly model = 'mock-model') {}
+  constructor(
+    readonly model = 'mock-model',
+    readonly prices: LlmPrices = MOCK_LLM_PRICES,
+  ) {}
 
   /** Replaces the script and clears the call log; calls already held stay held until released. */
   setScript(script: LlmScript): void {

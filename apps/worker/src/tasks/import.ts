@@ -1,4 +1,5 @@
 import {
+  costEstimateUsd,
   draftsFromModel,
   extractionPrompt,
   IMPORT_MAX_BYTES,
@@ -27,13 +28,20 @@ import { z } from 'zod';
 import type { FileStore } from '../firebase';
 import type { ImportData, ImportJob } from '../import-data';
 import { readCsv, readPdf, readXlsx, utf8Text } from '../import-files';
-import { LlmUnavailableError, type LlmDriver, type LlmPart } from '../llm/driver';
+import { LlmUnavailableError, type LlmDriver, type LlmPart, type LlmResponse } from '../llm/driver';
 
 export const importPayloadSchema = z.object({
   orgId: z.string().min(1).max(128),
   jobId: z.string().min(1).max(128),
 });
 export type ImportRun = z.infer<typeof importPayloadSchema>;
+
+type ImportTokens = { input: number; output: number };
+
+/** A pino or Fastify logger. */
+export interface ImportLog {
+  info(obj: object, msg: string): void;
+}
 
 /** One page (PDF) or part (TXT, MD, a sheet outside the template) the model reads. */
 type ModelPart = { text: string } | { file: () => Promise<Uint8Array> };
@@ -104,8 +112,10 @@ export function importHandler(deps: {
   clock: Clock;
   queue: TaskQueue;
   llm?: LlmDriver;
+  /** Where the `import.job.done` line goes (the task route's logger). */
+  log?: ImportLog;
 }) {
-  const { imports: data, files, clock, queue, llm } = deps;
+  const { imports: data, files, clock, queue, llm, log } = deps;
 
   return async ({ orgId, jobId }: ImportRun): Promise<string> => {
     const job = await data.getJob(orgId, jobId);
@@ -121,6 +131,7 @@ export function importHandler(deps: {
     if ('error' in read) return fail(read);
 
     let progress = { ...job.progress };
+    let modelUsage: { provider: string; model: string; tokens: ImportTokens; costEstimate: number } | undefined;
     if ('drafts' in read) {
       progress = { pagesDone: 1, pagesTotal: 1, questionsFound: read.drafts.length };
       await data.saveDrafts(orgId, jobId, read.drafts, { progress });
@@ -136,20 +147,25 @@ export function importHandler(deps: {
 
       progress.pagesTotal = read.parts.length;
       let tokens = job.tokens ?? { input: 0, output: 0 };
-      const usedModel = { provider: llm.provider, model: llm.model };
+      /** What the job records of the model (IMP-07): the tokens of every successful call and their estimated cost. */
+      const usage = () => ({
+        provider: llm.provider,
+        model: llm.model,
+        tokens,
+        costEstimate: costEstimateUsd(tokens, llm.prices),
+      });
       /** Keeps the pages done and waits to retry, or fails on the fourth failure in a row (REL-06). */
       const modelFailed = async (): Promise<string> => {
         const failures = (job.failures ?? 0) + 1;
         const delay = importRetryDelayMs(failures);
         if (delay === null) {
-          await data.update(orgId, jobId, { ...usedModel, tokens, failures });
+          await data.update(orgId, jobId, { ...usage(), failures });
           return fail(refused('LLM_UNAVAILABLE', IMPORT_MESSAGES.llmGaveUp, true));
         }
         const retryAt = clock.now() + delay;
         await queue.enqueue(importRetryTask(orgId, jobId, `retry-${failures}-${retryAt}`, retryAt));
         await data.update(orgId, jobId, {
-          ...usedModel,
-          tokens,
+          ...usage(),
           failures,
           status: 'retrying',
           error: LLM_UNAVAILABLE.error,
@@ -170,23 +186,23 @@ export function importHandler(deps: {
         });
         const parts: LlmPart[] = [{ type: 'text', text: prompt.userText }];
         if ('file' in part) parts.push({ type: 'file', mediaType: 'application/pdf', data: await part.file() });
-        let output: unknown;
+        let res: LlmResponse;
         try {
-          const res = await llm.generate({ page, system: prompt.system, parts });
-          output = res.output;
-          tokens = { input: tokens.input + res.usage.inputTokens, output: tokens.output + res.usage.outputTokens };
+          res = await llm.generate({ page, system: prompt.system, parts });
         } catch (err) {
           if (!(err instanceof LlmUnavailableError)) throw err;
           return modelFailed();
         }
-        const answer = LlmAnswerSchema.safeParse(output);
+        const answer = LlmAnswerSchema.safeParse(res.output);
         if (!answer.success) return modelFailed();
+        tokens = { input: tokens.input + res.usage.inputTokens, output: tokens.output + res.usage.outputTokens };
         const drafts = draftsFromModel(page, answer.data.questions, progress.questionsFound + 1);
         for (const d of drafts) if (d.sectionName && !hints.includes(d.sectionName)) hints.push(d.sectionName);
         progress = { ...progress, pagesDone: page, questionsFound: progress.questionsFound + drafts.length };
         job.failures = 0;
-        await data.saveDrafts(orgId, jobId, drafts, { progress, tokens, failures: 0, ...usedModel });
+        await data.saveDrafts(orgId, jobId, drafts, { progress, failures: 0, ...usage() });
       }
+      modelUsage = usage();
     }
 
     // Every page is done: the checks run on every draft, in order (IMP-09).
@@ -198,6 +214,19 @@ export function importHandler(deps: {
       drafts.map((d, i) => [d.id, importFlags(d, { earlierPending: drafts.slice(0, i), testQuestions })] as const),
     );
     await data.finish(orgId, jobId, flags, { status: 'ready', progress });
+    // IMP-07: one structured line per finished job, with the model's usage when the model was used.
+    log?.info(
+      {
+        event: 'import.job.done',
+        orgId,
+        jobId,
+        format: job.format,
+        pages: progress.pagesTotal,
+        drafts: drafts.length,
+        ...modelUsage,
+      },
+      'import.job.done',
+    );
     return `ready: ${drafts.length} drafts`;
   };
 }
