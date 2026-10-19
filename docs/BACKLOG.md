@@ -139,3 +139,4 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - DATA-05: `immediate` release with `resultDetail: full` in a fixed window shows a submitted student the answer key while others (or extended students) still answer; the spec defines immediate as on submit, so it was left as it is.
 - A11Y-18: the accessibility statement half is left to F-8.01 (A11Y-22); it must carry the real-time exception text.
 - The worker image needs a Chromium and CHROMIUM_PATH for report PDFs (F-7.02); there is no Dockerfile yet (OWNER_SETUP deploy step).
+- FF-02 / API-02 (F-7.03): move the feature gate and the account status check to preValidation so report routes refuse with FEATURE_DISABLED before VALIDATION, and IDEMPOTENCY_KEY_REQUIRED before VALIDATION, as phase-7.md orders them (DECISIONS 2026-10-19, report refusal order).
