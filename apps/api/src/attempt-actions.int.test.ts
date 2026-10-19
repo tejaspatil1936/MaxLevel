@@ -2,7 +2,7 @@ import { liveRecordPath, type AuditEntry } from '@mitaoe/shared';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { initFirebase } from './firebase';
 import { testApp } from './test-support/app';
-import { attemptClient, errorCode, NOW, studentOf } from './test-support/attempts';
+import { attemptClient, errorCode, leaks, MIN, NOW, studentOf } from './test-support/attempts';
 import { clearEmulators } from './test-support/emulators';
 import { SEED, seedBase } from './test-support/seed';
 import { asClaims } from './test-support/tokens';
@@ -121,5 +121,48 @@ describe('terminate and reinstate', () => {
     expect((await stored(id)).status).toBe('in_progress');
     expect(await entries('attempt.terminate', id)).toEqual([]);
     expect(await entries('attempt.reinstate', id)).toEqual([]);
+  });
+
+  it('DATA-05 OPS-04 a full review released before a reinstate is closed while the attempt is in progress again', async () => {
+    const { t, s1, id, q } = await started();
+    const admin = await adminA();
+    expect((await act(id, 'terminate', admin, { reason: 'Phone' })).status).toBe(200);
+    // After the slot, the full review is released to the student (SER-09).
+    ctx.clock.set(t.window.end + MIN);
+    await db.doc(`${org}/tests/${t.testId}`).update({
+      'resolved.resultRelease': 'manual',
+      'resolved.resultDetail': 'full',
+      resultsReleasedAt: t.window.end + MIN,
+    });
+    const result = (h: Record<string, string>) =>
+      ctx.app.inject({ method: 'GET', url: `/v1/student/results/${id}`, headers: h });
+    const before = await result(s1);
+    expect(before.statusCode, before.body).toBe(200);
+    expect(leaks(before.body), 'the review was open before the reinstate').toContain('"correctOptionIds"');
+
+    // Extra time keeps the reinstated attempt open past the slot.
+    expect((await act(id, 'reinstate', admin, { reason: 'Reviewed the recording' })).status).toBe(200);
+    expect(
+      (
+        await ctx.app.inject({
+          method: 'POST',
+          url: `/v1/attempts/${id}/extra-time`,
+          headers: admin,
+          payload: { minutes: 30, reason: 'Make up the lost time' },
+        })
+      ).statusCode,
+    ).toBe(200);
+    const resumed = await api.resume(id, s1);
+    expect(resumed.status).toBe(200);
+    expect(leaks(resumed.raw)).toEqual([]);
+    const during = await result(s1);
+    expect([during.statusCode, errorCode({ raw: during.body })]).toEqual([409, 'ATTEMPT_IN_PROGRESS']);
+    expect(leaks(during.body)).toEqual([]);
+    const saved = await api.answers(id, s1, {
+      answers: [{ questionId: q[1]!, optionId: 'b', seq: 1, clientTs: ctx.clock.now() }],
+      backlog: 0,
+      clockOffsetMs: 0,
+    });
+    expect(saved.body.saved).toEqual([q[1]]);
   });
 });
