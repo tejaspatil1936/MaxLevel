@@ -467,6 +467,22 @@ const moreStudents: Scenario = async (db, now, body) => {
   return { studentIds };
 };
 
+/**
+ * Phase 8 (docs/testids/phase-8.md, `pre-migration-students`): removes the `accommodations` field from these student
+ * records of the organization, the shape before phase 5, and writes nothing else. 404 when one does not exist.
+ */
+const preMigrationStudents: Scenario = async (db, _now, body) => {
+  const orgId = String(body.orgId ?? '');
+  const studentIds = Array.isArray(body.studentIds) ? body.studentIds.map(String) : [];
+  const refs = studentIds.map((id) => db.doc(`organizations/${orgId}/students/${id}`));
+  const found = refs.length ? await db.getAll(...refs) : [];
+  if (!orgId || found.some((d) => !d.exists)) throw new AppError(404, 'NOT_FOUND', 'No such student for the scenario.');
+  const batch = db.batch();
+  for (const ref of refs) batch.update(ref, { accommodations: FieldValue.delete() });
+  await batch.commit();
+  return { studentIds };
+};
+
 export const SCENARIOS: Record<string, Scenario> = {
   'empty-org': emptyOrg,
   'student-attempts': studentAttempts,
@@ -475,4 +491,5 @@ export const SCENARIOS: Record<string, Scenario> = {
   'exam-test': examTest,
   'graded-attempts': gradedAttempts,
   'more-students': moreStudents,
+  'pre-migration-students': preMigrationStudents,
 };

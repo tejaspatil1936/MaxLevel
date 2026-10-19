@@ -3,8 +3,9 @@ import { initFirebase } from '../firebase';
 import { TEST_SECRET, testApp } from './app';
 import { clearEmulators } from './emulators';
 import { seedBase, SEED } from './seed';
+import { asClaims } from './tokens';
 
-const { db } = initFirebase();
+const { db, auth } = initFirebase();
 const org = db.doc(`organizations/${SEED.orgA}`);
 
 beforeEach(async () => {
@@ -275,5 +276,35 @@ describe('more-students scenario', () => {
     const b21 = (await db.doc(`organizations/${SEED.orgB}/students/stu-org-b-21`).get()).data();
     expect(b21).toMatchObject({ email: 'student21@b.test', prn: 'B22010121', departmentId: 'dept-org-b-computer' });
     expect((await post('org-zzz', 1)).statusCode).toBe(404);
+  });
+});
+
+describe('pre-migration-students scenario', () => {
+  it('CI-04 removes accommodations from the named students only, and the API has no migrate route', async () => {
+    const { app } = await testApp();
+    const post = (orgId: string, studentIds: string[]) =>
+      app.inject({
+        method: 'POST',
+        url: '/__test/seed/pre-migration-students',
+        headers: { 'x-test-secret': TEST_SECRET },
+        payload: { orgId, studentIds },
+      });
+    const students = org.collection('students');
+    const other = await students.doc('stu-org-a-03').get();
+    expect(other.get('accommodations'), 'the base seed has the field').toEqual({});
+    const res = await post(SEED.orgA, ['stu-org-a-01', 'stu-org-a-02']);
+    expect(res.json()).toEqual({ studentIds: ['stu-org-a-01', 'stu-org-a-02'] });
+    const s1 = (await students.doc('stu-org-a-01').get()).data()!;
+    expect('accommodations' in s1).toBe(false);
+    expect(s1).toMatchObject({ name: expect.any(String), status: 'registered' });
+    expect((await students.doc('stu-org-a-03').get()).updateTime?.valueOf(), 'others not written').toBe(
+      other.updateTime?.valueOf(),
+    );
+    expect((await post(SEED.orgA, ['stu-org-a-99'])).statusCode).toBe(404);
+
+    // Migrations run only as worker tasks (CI-04): the API answers 404 whoever asks.
+    const sa = await asClaims(auth, SEED.superAdmin, { role: 'superAdmin' });
+    const migrate = await app.inject({ method: 'POST', url: '/tasks/migrate', headers: sa, payload: {} });
+    expect(migrate.statusCode).toBe(404);
   });
 });
