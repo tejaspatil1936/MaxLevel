@@ -219,6 +219,22 @@ describe('reports API', () => {
     expect((await get('/v1/reports/no-such-report')).status).toBe(404);
   });
 
+  it('FF-02 API-02 the feature gate and a missing Idempotency-Key are refused before the request is validated', async () => {
+    const bad = { scope: 'course' };
+    const noKey = await post(bad, null);
+    expect([noKey.status, code(noKey)]).toEqual([400, 'IDEMPOTENCY_KEY_REQUIRED']);
+    expect(code(await post(bad)), 'with a key, the body is checked').toBe('VALIDATION');
+    await fresh({ analytics_reports: false });
+    for (const r of [
+      await post(bad),
+      await post(bad, null),
+      await get('/v1/reports?limit=0'),
+      await get('/v1/reports/a%2Fb'),
+    ])
+      expect([r.status, code(r)]).toEqual([403, 'FEATURE_DISABLED']);
+    expect(await reports()).toEqual([]);
+  });
+
   it('EXP-07 FF-04 FF-02 the usage counts this month in the organization timezone against the effective limit', async () => {
     const t = await api.examTest();
     await finished(t.testId);
