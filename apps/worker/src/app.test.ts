@@ -120,4 +120,28 @@ describe('worker test-only model routes', () => {
     expect((await send('GET', '/__test/llm/calls')).json()).toEqual({ calls: [] });
     expect((await send('POST', '/__test/llm', { pages: { '1': 'not a list' } })).statusCode).toBe(400);
   });
+
+  it('EXP-05 the report call log lists each summary call with its messages, and a new script or reset clears it', async () => {
+    const llm = new ScriptedLlm();
+    const app = await buildWorker({
+      ...stores,
+      clock: new TestClock(),
+      config: { ...loadConfig({ NODE_ENV: 'test', TEST_API_SECRET: 's' }), logLevel: 'silent' },
+      llm,
+    });
+    const send = (method: 'GET' | 'POST', url: string, payload?: object) =>
+      app.inject({ method, url, headers: { 'x-test-secret': 's' }, ...(payload ? { payload } : {}) });
+    const answer = { summary: 'S.', recommendations: ['R.'] };
+    expect((await send('POST', '/__test/llm', { report: { answers: [answer], failures: 1 } })).statusCode).toBe(200);
+    await expect(llm.summarize({ system: 'sys', prompt: '{}' })).rejects.toThrow();
+    expect((await llm.summarize({ system: 'sys 2', prompt: '{}' })).output).toEqual(answer);
+    expect((await send('GET', '/__test/llm/report-calls')).json()).toEqual({
+      calls: [
+        { system: 'sys', prompt: '{}' },
+        { system: 'sys 2', prompt: '{}' },
+      ],
+    });
+    expect((await send('POST', '/__test/llm/reset', {})).statusCode).toBe(200);
+    expect((await send('GET', '/__test/llm/report-calls')).json()).toEqual({ calls: [] });
+  });
 });

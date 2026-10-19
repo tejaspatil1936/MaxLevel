@@ -1,5 +1,5 @@
 import type { TestClock } from '@mitaoe/shared';
-import { llmCallSchema, llmScriptSchema } from '@mitaoe/shared';
+import { llmCallSchema, llmScriptSchema, reportLlmCallSchema } from '@mitaoe/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -10,7 +10,7 @@ const ok = { 200: z.object({ ok: z.literal(true) }) };
 
 /**
  * Test-only routes the API forwards to (PLAN section 6; docs/testids/phase-6.md "Test-only routes"): the clock, and
- * the mock model's script, release, call log and reset. Absent unless NODE_ENV=test with a secret.
+ * the mock model's script, release, call logs (imports and, phase 7, reports) and reset. Absent unless NODE_ENV=test with a secret.
  */
 export async function registerTestRoutes(
   app: FastifyInstance,
@@ -47,6 +47,11 @@ export async function registerTestRoutes(
       async () => ({
         calls: llm.calls(),
       }),
+    );
+    t.get(
+      '/__test/llm/report-calls',
+      { schema: { response: { 200: z.object({ calls: z.array(reportLlmCallSchema) }) } } },
+      async () => ({ calls: llm.reportCalls() }),
     );
   });
 }

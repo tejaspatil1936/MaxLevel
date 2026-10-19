@@ -1,4 +1,4 @@
-import { llmCallSchema, llmScriptSchema, pendingTaskSchema, TestClock } from '@mitaoe/shared';
+import { llmCallSchema, llmScriptSchema, pendingTaskSchema, reportLlmCallSchema, TestClock } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { Deps } from '../deps';
@@ -88,6 +88,12 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
       '/__test/llm/calls',
       { schema: { response: { 200: z.object({ calls: z.array(llmCallSchema) }) } } },
       async () => z.object({ calls: z.array(llmCallSchema) }).parse(await toWorker('GET', '/__test/llm/calls')),
+    );
+
+    // Phase 7: every report summary call with its system and user messages (docs/testids/phase-7.md).
+    const reportCalls = z.object({ calls: z.array(reportLlmCallSchema) });
+    app.get('/__test/llm/report-calls', { schema: { response: { 200: reportCalls } } }, async () =>
+      reportCalls.parse(await toWorker('GET', '/__test/llm/report-calls')),
     );
 
     app.post('/__test/clock/real', { schema: { response: clockReply } }, async () => {
