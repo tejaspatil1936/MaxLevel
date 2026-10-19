@@ -1,4 +1,11 @@
-import { extractionPrompt, LlmAnswerSchema } from '@mitaoe/shared';
+import {
+  computeTestMetrics,
+  extractionPrompt,
+  LlmAnswerSchema,
+  ReportSummarySchema,
+  summaryMessages,
+  unsupportedInAnswer,
+} from '@mitaoe/shared';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { loadConfig } from '../config';
@@ -50,6 +57,41 @@ describe('real provider smoke test', () => {
         found.push(...answer.questions.map((q) => q.prompt));
       }
       expect(found.length).toBeGreaterThanOrEqual(2);
+    },
+  );
+
+  it(
+    'EXP-05 the configured provider writes a report summary from a sample metrics JSON that ReportSummarySchema accepts',
+    { timeout: 120_000 },
+    async (ctx) => {
+      if (!credentials)
+        ctx.skip('no provider credentials: set GOOGLE_VERTEX_PROJECT and GOOGLE_APPLICATION_CREDENTIALS to run it');
+      const llm = selectLlm(loadConfig({ ...process.env, NODE_ENV: 'test', LLM_PROVIDER: 'vertex' }))!;
+      const metrics = computeTestMetrics({
+        title: 'Day 1: Quantitative aptitude',
+        maxScore: 1,
+        eligible: 4,
+        inProgress: 0,
+        questions: [{ id: 'q1', sectionId: null, options: [{ id: 'a', text: '20 m/s' }], correctOptionIds: ['a'] }],
+        sections: [],
+        departments: [{ id: 'cs', name: 'Computer' }],
+        attempts: [1, 0].map((score, i) => ({
+          studentId: `s${i}`,
+          departmentId: 'cs',
+          status: 'submitted' as const,
+          score,
+          durationSec: 300,
+          strikesCount: 0,
+          sections: {},
+          answers: { q1: score ? 'a' : null },
+          drawQuestionIds: ['q1'],
+        })),
+      });
+      const res = await llm.summarize(summaryMessages(metrics));
+      const answer = ReportSummarySchema.parse(res.output);
+      expect(res.usage.inputTokens).toBeGreaterThan(0);
+      // Whether the real model keeps to the metrics' numbers is a manual check (docs/testids/phase-7.md); log it.
+      console.info('unsupported numbers in the real answer:', unsupportedInAnswer(answer, metrics));
     },
   );
 });
