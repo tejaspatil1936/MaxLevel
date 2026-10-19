@@ -342,6 +342,22 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     }),
   },
 
+  'PUT /v1/students/:id/accommodations/:seriesId': {
+    foreignParams: { id: 'stu-org-b-01', seriesId: 'series-org-b' },
+    body: { extraPct: 10 },
+    fresh: async (db) => ({ params: { id: 'stu-org-a-01', seriesId: await seriesIn(db, 'org-a', 'series-org-a') } }),
+  },
+  'DELETE /v1/students/:id/accommodations/:seriesId': {
+    foreignParams: { id: 'stu-org-b-01', seriesId: 'series-org-b' },
+    fresh: async (db) => {
+      const seriesId = await seriesIn(db, 'org-a', 'series-org-a');
+      await db
+        .doc('organizations/org-a/students/stu-org-a-01')
+        .update({ [`accommodations.${seriesId}`]: { extraMin: 5 } });
+      return { params: { id: 'stu-org-a-01', seriesId } };
+    },
+  },
+
   'GET /v1/attempts/:id/events': { foreignParams: { id: 'att-org-b' }, fresh: withAttempt },
   'POST /v1/attempts/:id/extra-time': { foreignParams: { id: 'att-org-b' }, fresh: withTimedAttempt },
 

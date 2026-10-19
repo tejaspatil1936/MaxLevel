@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { accommodationsSchema } from './accommodations';
 import { auditEntrySchema } from './audit';
 import { pageOf, pageQuerySchema } from './page';
 
@@ -151,6 +152,8 @@ export const attemptSummarySchema = z.object({
 /** GET /v1/students/:id: the profile, the student's attempts and their audit trail, newest first (STU-10). */
 export const studentDetailSchema = z.object({
   student: studentSchema,
+  /** Standing accommodations by series ID (OPS-07). */
+  accommodations: accommodationsSchema,
   attempts: z.array(attemptSummarySchema),
   history: z.array(auditEntrySchema),
 });

@@ -146,7 +146,7 @@ export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const [student] = await withDepartments(orgId, [s]);
         const history = await data.audit.listAudit(orgId, { target: s.id });
         const attempts = (await data.attempts.listAttemptsForStudent(orgId, s.id)).map(({ testId: _t, ...a }) => a);
-        return { student: student!, attempts, history };
+        return { student: student!, accommodations: s.accommodations, attempts, history };
       },
     );
 
