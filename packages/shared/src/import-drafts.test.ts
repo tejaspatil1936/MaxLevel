@@ -80,6 +80,15 @@ describe('sheet rows and parts', () => {
     expect(parts[0]?.split('\n')[1]).toBe('"Q0, ""x""",a; b');
     expect(parts[2]?.trim().split('\n')).toHaveLength(2);
   });
+
+  it('IMP-02 blank rows may be holes, as the worker reads them: counts, parts and row numbers stay the same', () => {
+    const rows: string[][] = [];
+    rows[0] = HEADER;
+    rows[3] = ['What is 2 + 2?', '3', '4', '', '', 'B'];
+    expect(sheetRowCount(rows)).toBe(1);
+    expect(sheetParts(rows)).toEqual([`${HEADER.join(',')}\nWhat is 2 + 2?,3,4,,,B\n`]);
+    expect(templateRowsToDrafts(rows)).toMatchObject([{ order: 1, sourcePage: 4, correctOptionIds: ['b'] }]);
+  });
 });
 
 describe('textParts', () => {
