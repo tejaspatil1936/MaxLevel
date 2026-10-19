@@ -116,3 +116,7 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - XLSX text cells keep a visible leading apostrophe from the owner's formula rule (e.g. `'-Rahul`), since ExcelJS writes literal strings; owner may relax the rule for XLSX.
 - refId accepts `/`, so `a/b` makes getTest throw a 500 instead of 404; restrict IDs to a Firestore ID pattern.
 - ExportRegion polls without a ceiling; a stuck export shows Preparing indefinitely.
+
+## Phase 4 QA (minor)
+
+- RES-05: the submitted screen's release line follows the release mode, not the release state: a withdrawn immediate test shows `Your result is ready.` and an after_close test released early shows the after-close line next to `See your result`. The locked phase 3 contract (docs/testids/phase-3.md, Submit) fixes the line per mode, so it stays; owner to decide whether the line should use resultReleaseState (released, withdrawn) as the result page does.
