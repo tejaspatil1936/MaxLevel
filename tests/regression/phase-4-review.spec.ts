@@ -6,7 +6,7 @@ import { expect, test } from '../acceptance/fixtures/test';
 import { SettingsPage } from '../acceptance/pages/admin-pages';
 import { AdminSeriesResults, AdminTestResults, headerTexts } from '../acceptance/pages/results-pages';
 import { Shell } from '../acceptance/pages/shell';
-import { table } from '../acceptance/pages/ui';
+import { button, exactly, table } from '../acceptance/pages/ui';
 
 // Bugs found while verifying phase 4. Each test failed before its fix.
 
@@ -96,6 +96,37 @@ test.describe('phase 4 review', () => {
     await series.exports.csv.click();
     expect((await started).status(), 'the export starts').toBe(202);
     expect(boardCalls() - before, 'the series board is asked for once, not in a loop').toBeLessThanOrEqual(2);
+  });
+
+  test('RES-01 RES-05 AUD-02 a double click in the release and withdraw dialogs sends one request', async ({
+    page,
+    signInAs,
+    testApi,
+    emulators,
+  }) => {
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id, overrides: { resultRelease: 'manual' } });
+    await signInAs(accounts.adminA);
+    const calls = recordApiCalls(page);
+    const sent = (action: string) => calls().filter((c) => c === `POST /v1/tests/${t.testId}/${action}`).length;
+    await page.goto(AdminTestResults.url(t.testId));
+    const { release } = new AdminTestResults(page);
+    const notice = (text: string) =>
+      page
+        .getByRole('status')
+        .filter({ hasText: exactly(text) })
+        .first();
+
+    await release.release.click();
+    await button(release.releaseDialog, 'Release results').dblclick();
+    await expect(notice('Results released')).toBeVisible();
+    expect(sent('release'), 'one release request').toBe(1);
+
+    await release.withdraw.click();
+    await button(release.withdrawDialog, 'Withdraw results').dblclick();
+    await expect(notice('Results withdrawn')).toBeVisible();
+    expect(sent('withdraw-results'), 'one withdraw request').toBe(1);
+    expect(await emulators.audit(ORG_A.id, 'test.results.release')).toHaveLength(1);
+    expect(await emulators.audit(ORG_A.id, 'test.results.withdraw')).toHaveLength(1);
   });
 
   test('STU-03 UX-07 ORG-12 a profile lock still in flight when the page reloads is saved, not lost', async ({
