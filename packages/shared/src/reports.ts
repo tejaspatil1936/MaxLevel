@@ -61,6 +61,17 @@ export const reportViewSchema = reportListItemSchema.extend({
 });
 export type ReportView = z.infer<typeof reportViewSchema>;
 
+/**
+ * `GET /v1/reports/usage`: the reports made this month (`month`, `yyyy-mm` on the clock in the organization's
+ * timezone) against the effective `ai_reports_per_month` (EXP-07, FF-04). A new month starts again from 0.
+ */
+export const reportUsageSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  used: z.number().int().nonnegative(),
+  limit: z.number().int().nonnegative(),
+});
+export type ReportUsage = z.infer<typeof reportUsageSchema>;
+
 export const REPORT_CONTENT_TYPES = {
   pdf: 'application/pdf',
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

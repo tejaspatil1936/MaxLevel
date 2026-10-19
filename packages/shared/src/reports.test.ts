@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { llmScriptSchema } from './import-llm';
-import { reportFilename, reportFilePath, reportRequestSchema, reportTask } from './reports';
+import { reportFilename, reportFilePath, reportRequestSchema, reportTask, reportUsageSchema } from './reports';
 
 describe('report requests, files and tasks', () => {
   it('EXP-06 a request names a test or a series, with an optional XLSX', () => {
@@ -8,6 +8,19 @@ describe('report requests, files and tasks', () => {
     expect(reportRequestSchema.parse({ scope: 'series', refId: 's1', includeXlsx: true }).includeXlsx).toBe(true);
     for (const bad of [{ scope: 'course', refId: 't1' }, { scope: 'test', refId: '' }, { scope: 'test' }])
       expect(reportRequestSchema.safeParse(bad).success).toBe(false);
+  });
+
+  it('EXP-07 FF-04 the usage names its month and counts whole reports against the limit', () => {
+    expect(reportUsageSchema.parse({ month: '2026-10', used: 1, limit: 20 })).toEqual({
+      month: '2026-10',
+      used: 1,
+      limit: 20,
+    });
+    for (const bad of [
+      { month: 'October', used: 1, limit: 20 },
+      { month: '2026-10', used: -1, limit: 20 },
+    ])
+      expect(reportUsageSchema.safeParse(bad).success).toBe(false);
   });
 
   it('EXP-06 files are stored at the exact paths and downloaded under the exact names', () => {
