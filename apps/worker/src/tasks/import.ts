@@ -28,6 +28,7 @@ import { z } from 'zod';
 import type { FileStore } from '../firebase';
 import type { ImportData, ImportJob } from '../import-data';
 import { readCsv, readPdf, readXlsx, utf8Text } from '../import-files';
+import { storePdfPage } from './import-pages';
 import { LlmUnavailableError, type LlmDriver, type LlmPart, type LlmResponse } from '../llm/driver';
 
 export const importPayloadSchema = z.object({
@@ -185,7 +186,8 @@ export function importHandler(deps: {
           sectionHints: hints.filter((h): h is string => !!h),
         });
         const parts: LlmPart[] = [{ type: 'text', text: prompt.userText }];
-        if ('file' in part) parts.push({ type: 'file', mediaType: 'application/pdf', data: await part.file() });
+        const pageFile = 'file' in part ? await part.file() : null;
+        if (pageFile) parts.push({ type: 'file', mediaType: 'application/pdf', data: pageFile });
         let res: LlmResponse;
         try {
           res = await llm.generate({ page, system: prompt.system, parts });
@@ -196,7 +198,9 @@ export function importHandler(deps: {
         const answer = LlmAnswerSchema.safeParse(res.output);
         if (!answer.success) return modelFailed();
         tokens = { input: tokens.input + res.usage.inputTokens, output: tokens.output + res.usage.outputTokens };
-        const drafts = draftsFromModel(page, answer.data.questions, progress.questionsFound + 1);
+        let drafts = draftsFromModel(page, answer.data.questions, progress.questionsFound + 1);
+        if (pageFile)
+          drafts = await storePdfPage({ files, ...(log ? { log } : {}) }, { orgId, jobId, page }, pageFile, drafts);
         for (const d of drafts) if (d.sectionName && !hints.includes(d.sectionName)) hints.push(d.sectionName);
         progress = { ...progress, pagesDone: page, questionsFound: progress.questionsFound + drafts.length };
         job.failures = 0;

@@ -182,35 +182,40 @@ describe('import task', () => {
     expect(await aiImports()).toBe(3);
   });
 
-  it('IMP-02 100 pages and 5,000 rows pass; 101 pages and 5,001 rows fail before any model call, uncounted', async () => {
-    llm.setScript({});
-    expect((await runImport('ok.pdf', 'pdf', await pdf(100))).job).toMatchObject({
-      status: 'ready',
-      progress: { pagesDone: 100 },
-    });
-    expect((await runImport('ok.csv', 'csv', csv(templateRows(5000)))).job.status).toBe('ready');
-    llm.setScript({});
-    await org.collection('usage').doc('2026-10').delete();
-    const long = await runImport('long.pdf', 'pdf', await pdf(101));
-    expect(long.job).toMatchObject({
-      status: 'failed',
-      error: { code: 'TOO_MANY_PAGES', message: 'This PDF has 101 pages. The limit is 100 pages.', retryable: false },
-    });
-    for (const [name, format, bytes] of [
-      ['rows.csv', 'csv', csv(templateRows(5001))],
-      ['rows.xlsx', 'xlsx', await xlsx(templateRows(5001))],
-    ] as const) {
-      const r = await runImport(name, format, bytes);
-      expect(r.job.error, name).toEqual({
-        code: 'TOO_MANY_ROWS',
-        message: 'This sheet has 5,001 rows. The limit is 5,000 rows.',
-        retryable: false,
+  // Each of the 100 pages is split, sent, rendered and stored, so this test gets a minute.
+  it(
+    'IMP-02 100 pages and 5,000 rows pass; 101 pages and 5,001 rows fail before any model call, uncounted',
+    { timeout: 60_000 },
+    async () => {
+      llm.setScript({});
+      expect((await runImport('ok.pdf', 'pdf', await pdf(100))).job).toMatchObject({
+        status: 'ready',
+        progress: { pagesDone: 100 },
       });
-      expect(r.drafts).toEqual([]);
-    }
-    expect(llm.calls()).toEqual([]);
-    expect(await aiImports()).toBe(0);
-  });
+      expect((await runImport('ok.csv', 'csv', csv(templateRows(5000)))).job.status).toBe('ready');
+      llm.setScript({});
+      await org.collection('usage').doc('2026-10').delete();
+      const long = await runImport('long.pdf', 'pdf', await pdf(101));
+      expect(long.job).toMatchObject({
+        status: 'failed',
+        error: { code: 'TOO_MANY_PAGES', message: 'This PDF has 101 pages. The limit is 100 pages.', retryable: false },
+      });
+      for (const [name, format, bytes] of [
+        ['rows.csv', 'csv', csv(templateRows(5001))],
+        ['rows.xlsx', 'xlsx', await xlsx(templateRows(5001))],
+      ] as const) {
+        const r = await runImport(name, format, bytes);
+        expect(r.job.error, name).toEqual({
+          code: 'TOO_MANY_ROWS',
+          message: 'This sheet has 5,001 rows. The limit is 5,000 rows.',
+          retryable: false,
+        });
+        expect(r.drafts).toEqual([]);
+      }
+      expect(llm.calls()).toEqual([]);
+      expect(await aiImports()).toBe(0);
+    },
+  );
 
   it('SEC-06 the worker checks the signature again before parsing; a ZIP without a workbook is no XLSX', async () => {
     const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d]);
