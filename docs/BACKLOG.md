@@ -123,3 +123,12 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - The exam screen offline copy on the device keeps the deadline it opened with after extra time is granted (F-5.02 note); refresh it from the signal.
 - OPS-04: an attempt reinstated after its deadline is auto-submitted by its own task as soon as the dispatcher runs it, unless extra time is granted first; the reinstate dialog could take extra minutes in the same step (F-5.04 note).
 - OPS-04, DATA-05: the reinstate dialog could warn when the test's full review was already released, since the student may have read the answer key before the reinstate (F-5.04 note).
+
+## Phase 5 checkpoint review
+
+- Reinstate queues its auto-submit task after the commit; a failed enqueue past the old task's time leaves no task, and a retry gets 409 NOT_TERMINATED. A failed enqueue after an extra-time grant returns 500 although the grant was saved.
+- live-mirror pairing write is fire-and-forget; landing after the start write turns the live record back to pairing and the row loses its actions.
+- The exam screen's time-up submit uses its opening deadline if the extra-time signal arrives late; the server could refuse a time_up submit before the stored deadline.
+- Every answer batch reads the whole answers subcollection to mirror the answered count (extra reads at exam-day scale).
+- AccommodationsSection loads only /v1/series?limit=200.
+- The laptop presence write rule does not check that $testId is the attempt's test.
