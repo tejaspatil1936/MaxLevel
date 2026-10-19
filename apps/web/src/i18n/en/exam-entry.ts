@@ -31,6 +31,8 @@ export const examEntry = {
   'preflight.fix.browser': 'Use current Chrome, Edge or Firefox, or Safari 17 or later.',
   'rules.title': 'Exam rules',
   'rules.list': 'Rules for this test',
+  'rules.extraTime': 'Extra time: {n} minutes',
+  'rules.extraTimeOne': 'Extra time: 1 minute',
   'rules.deadlineFixed': 'Deadline: {time}',
   'rules.deadlineFlexible': 'Deadline: {n} minutes after you start',
   'rules.deadlineHardClose': 'Deadline: {n} minutes after you start, and no later than {time}',

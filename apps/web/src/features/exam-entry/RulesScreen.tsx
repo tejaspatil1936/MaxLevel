@@ -26,15 +26,22 @@ const BLOCKED: Record<StartBlock, MessageKey> = {
 };
 const START_ERRORS = ['WINDOW_NOT_OPEN', 'WINDOW_CLOSED', 'ATTEMPT_FINISHED', 'NOT_ELIGIBLE'] as const;
 
-/** The deadline as the student will meet it: the slot end, or minutes from their start (spec 5.5). */
+/**
+ * The deadline as the student will meet it: the slot end, or minutes from their start (spec 5.5), with a standing
+ * accommodation on top (OPS-07).
+ */
 function deadlineLine(p: StudentTestPage): string {
-  const n = formatCount(p.durationMin);
-  if (p.exam.timingMode === 'fixed')
-    return t('rules.deadlineFixed', { time: formatZonedTime(p.window.end, p.timezone) });
-  if (p.exam.windowEndPolicy === 'hard_close')
-    return t('rules.deadlineHardClose', { n, time: formatZonedTime(p.window.end, p.timezone) });
+  const extra = p.extraMin ?? 0;
+  const n = formatCount(p.durationMin + extra);
+  const end = formatZonedTime(p.window.end + extra * 60_000, p.timezone);
+  if (p.exam.timingMode === 'fixed') return t('rules.deadlineFixed', { time: end });
+  if (p.exam.windowEndPolicy === 'hard_close') return t('rules.deadlineHardClose', { n, time: end });
   return t('rules.deadlineFlexible', { n });
 }
+
+/** A11Y-17: the standing accommodation's extra time, shown right after the duration. */
+const extraTimeLine = (extraMin: number) =>
+  extraMin === 1 ? t('rules.extraTimeOne') : t('rules.extraTime', { n: formatCount(extraMin) });
 
 /**
  * /exam/rules/?test=<testId> (EX-02, spec 7.1 step 3): duration, deadline, strikes, marking and sections, the privacy
@@ -111,6 +118,7 @@ function Rules({ page, orgId }: { page: StudentTestPage; orgId: string }) {
 
   const rules = [
     t('studentTests.duration', { n: formatCount(page.durationMin) }),
+    ...(page.extraMin ? [extraTimeLine(page.extraMin)] : []),
     deadlineLine(page),
     t('studentTest.maxStrikes', { n: formatCount(page.maxStrikes) }),
     t('studentTest.marking', { marking: formatMarking(page.marking) }),
