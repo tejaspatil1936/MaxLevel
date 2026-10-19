@@ -11,16 +11,24 @@ export function inTextField(target: EventTarget | null): boolean {
   return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
 }
 
+interface Shortcut {
+  keys: string;
+  label: MessageKey;
+}
+
 interface ShortcutsApi {
   /** Screens add their own shortcuts to the list while they are shown (the admin shell adds the palette). */
   register: (keys: string, label: MessageKey) => () => void;
+  /** A screen's own named list of keys that act only in one part of it (the import review's drafts, IMP-13). */
+  registerList: (title: MessageKey, items: readonly Shortcut[]) => () => void;
 }
 const Ctx = createContext<ShortcutsApi | null>(null);
 
 /** `?` opens the list of keyboard shortcuts on every screen (A11Y-03). */
 export function ShortcutsProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [extra, setExtra] = useState<Array<{ keys: string; label: MessageKey }>>([]);
+  const [extra, setExtra] = useState<Shortcut[]>([]);
+  const [lists, setLists] = useState<Array<{ title: MessageKey; items: readonly Shortcut[] }>>([]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -38,6 +46,10 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
       register(keys, label) {
         setExtra((list) => [...list, { keys, label }]);
         return () => setExtra((list) => list.filter((s) => s.keys !== keys));
+      },
+      registerList(title, items) {
+        setLists((all) => [...all.filter((l) => l.title !== title), { title, items }]);
+        return () => setLists((all) => all.filter((l) => l.title !== title));
       },
     }),
     [],
@@ -63,6 +75,23 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
             </div>
           ))}
         </dl>
+        {lists.map((l) => (
+          <div key={l.title} className="mt-6">
+            <p id={`shortcuts-${l.title}`} className="mb-3 font-bold">
+              {t(l.title)}
+            </p>
+            <ul aria-labelledby={`shortcuts-${l.title}`} className="flex flex-col gap-3">
+              {l.items.map((s) => (
+                <li key={s.keys} className="flex items-center gap-6">
+                  <kbd className="min-w-8 rounded-control border border-rule bg-surface-sunken px-2 py-1 text-center font-code">
+                    {s.keys}
+                  </kbd>{' '}
+                  <span>{t(s.label)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </Dialog>
     </Ctx.Provider>
   );
@@ -71,4 +100,10 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
 export function useShortcut(keys: string, label: MessageKey): void {
   const ctx = useContext(Ctx);
   useEffect(() => ctx?.register(keys, label), [ctx, keys, label]);
+}
+
+/** Lists a screen's own keys under a title in the shortcuts dialog while the screen is shown (pass a stable array). */
+export function useShortcutList(title: MessageKey, items: readonly Shortcut[]): void {
+  const ctx = useContext(Ctx);
+  useEffect(() => ctx?.registerList(title, items), [ctx, title, items]);
 }
