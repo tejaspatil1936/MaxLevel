@@ -1,4 +1,5 @@
 import {
+  accommodationExtraSec,
   answeredCount,
   answerVerdict,
   attemptDeadline,
@@ -167,7 +168,8 @@ export function attemptService(deps: AttemptDeps) {
     /**
      * POST /v1/attempts (EX-03, EX-04): a scheduled test of an active series that the student's series and test rules
      * admit (SER-08, checked now from the stored records), inside its start window; a repeat returns the same attempt.
-     * A new attempt is drawn once, seeded by its ID (Q-06), with its deadline fixed (spec 5.5). Each start enqueues
+     * A new attempt is drawn once, seeded by its ID (Q-06), with its deadline fixed (spec 5.5), a standing accommodation
+     * for the series on top (OPS-07). Each start enqueues
      * the auto-submit and release tasks (idempotent by name) and writes the attempt's owner for the Realtime Database rules.
      */
     async start(
@@ -186,6 +188,8 @@ export function attemptService(deps: AttemptDeps) {
       const { settings, student } = admitStudent(test, series, stored);
 
       const now = clock.now();
+      // OPS-07: a standing accommodation for the test's series is fixed into the deadline once, at start (spec 5.5).
+      const extraTimeSec = accommodationExtraSec(settings.durationMin, student.accommodations[test.seriesId]);
       const { attempt, created } = await data.attempts.startAttempt(
         orgId,
         { testId, studentId: who.studentId, firstStart: !test.attemptsStarted },
@@ -200,8 +204,8 @@ export function attemptService(deps: AttemptDeps) {
             uid: who.uid,
             status: 'in_progress',
             startedAt: now,
-            deadlineAt: attemptDeadline(settings, now),
-            extraTimeSec: 0,
+            deadlineAt: attemptDeadline(settings, now, extraTimeSec),
+            extraTimeSec,
             draw: drawAttempt(set.pools, set.options, settings, id),
             questionServedAt: {},
             strikesCount: 0,
