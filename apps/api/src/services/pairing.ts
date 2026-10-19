@@ -14,6 +14,7 @@ import type { Data } from '../data';
 import { AppError, notFound } from '../errors';
 import { ORG_ID } from '../plugins/auth';
 import { admitStudent, assertStartWindow } from './attempts';
+import { liveMirror } from './live-mirror';
 import { withinLimit, type WarnLogger } from './rtdb-writes';
 
 export interface PairingDeps {
@@ -38,6 +39,7 @@ const keyOf = (secret: string) => createHash('sha256').update(secret).digest('he
  */
 export function pairingService(deps: PairingDeps) {
   const { data, clock, rtdb, auth, webOrigin, log } = deps;
+  const live = liveMirror(rtdb, log);
 
   async function issue(
     orgId: string,
@@ -55,7 +57,7 @@ export function pairingService(deps: PairingDeps) {
     /**
      * POST /v1/tests/{testId}/pairing-token: pairing on the rules screen, before Start. Checked like a start (404,
      * 403 NOT_ELIGIBLE, the start window), it reserves the attempt ID Start will use (or returns the started attempt's)
-     * and writes the attempt's owner for the Realtime Database rules (waiting at most OWNER_WRITE_LIMIT_MS, REL-05); a
+     * and writes the attempt's owner for the Realtime Database rules and the `pairing` live record (waiting at most OWNER_WRITE_LIMIT_MS, REL-05); a
      * refusal stores nothing.
      */
     async reserve(orgId: string, who: { uid: string; studentId: string }, testId: string): Promise<PairingReservation> {
@@ -65,7 +67,7 @@ export function pairingService(deps: PairingDeps) {
         data.series.getSeries(orgId, test.seriesId),
         data.students.getStudent(orgId, who.studentId),
       ]);
-      const { settings } = admitStudent(test, series, student);
+      const { settings, student: admitted } = admitStudent(test, series, student);
       const now = clock.now();
       const { attemptId, status } = await data.attempts.reserveAttempt(
         orgId,
@@ -73,6 +75,8 @@ export function pairingService(deps: PairingDeps) {
         () => assertStartWindow(settings, now),
       );
       if (status && isFinishedAttempt(status)) throw finished();
+      // OPS-02: a reservation without an attempt shows as `pairing` in the live view.
+      if (!status) live.reserved(orgId, testId, attemptId, admitted, now);
       await withinLimit(rtdb.ref(`attemptOwners/${attemptId}`).set(who.uid), log, `attemptOwners/${attemptId}`);
       return { attemptId, ...(await issue(orgId, { testId, attemptId, ...who })) };
     },

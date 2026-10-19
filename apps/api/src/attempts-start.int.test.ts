@@ -86,6 +86,7 @@ describe('starting an attempt', () => {
     ]);
     expect((await rtdb.ref(`attemptOwners/${id}`).get()).val()).toBe(stored.uid);
     expect((await rtdb.ref(`live/${SEED.orgA}/${t.testId}/${id}`).get()).val()).toEqual({
+      studentId: `stu-${SEED.orgA}-01`,
       name: 'Aarav Kulkarni',
       prn: '22010101',
       status: 'in_progress',
@@ -93,6 +94,7 @@ describe('starting an attempt', () => {
       total: 4,
       strikes: 0,
       deadlineAt: t.window.end,
+      startedAt: NOW,
       updatedAt: NOW,
     });
 

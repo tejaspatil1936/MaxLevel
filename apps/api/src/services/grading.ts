@@ -6,15 +6,20 @@ import {
   type Clock,
   type TaskQueue,
 } from '@mitaoe/shared';
+import type { Database } from 'firebase-admin/database';
 import type { Data } from '../data';
 import { notFound } from '../errors';
+import { liveMirror } from './live-mirror';
 import type { PublishedTestCache } from './published-tests';
+import type { WarnLogger } from './rtdb-writes';
 
 export interface GraderDeps {
   data: Data;
   clock: Clock;
   queue: TaskQueue;
   published: PublishedTestCache;
+  rtdb: Database;
+  log: WarnLogger;
 }
 
 export type FinishedStatus = Extract<AttemptStatus, 'submitted' | 'auto_submitted' | 'terminated'>;
@@ -22,10 +27,12 @@ export type FinishedStatus = Extract<AttemptStatus, 'submitted' | 'auto_submitte
 /**
  * Grading on the server (EX-17, spec 11.1): an attempt still in progress is finished with this status and graded by
  * shared `gradeAttempt` from its stored draw, its stored answers (read in the finishing transaction) and the test's
- * answer key, never the client's view. A newly finished attempt queues a leaderboard recompute for its test (LB-03);
+ * answer key, never the client's view. A newly finished attempt queues a leaderboard recompute for its test (LB-03)
+ * and is mirrored to `live/…` (OPS-02);
  * one finished before is returned as stored (REL-04).
  */
-export function attemptGrader({ data, clock, queue, published }: GraderDeps) {
+export function attemptGrader({ data, clock, queue, published, rtdb, log }: GraderDeps) {
+  const live = liveMirror(rtdb, log);
   return {
     async finish(
       orgId: string,
@@ -52,7 +59,10 @@ export function attemptGrader({ data, clock, queue, published }: GraderDeps) {
         ...(extra.terminationReason ? { terminationReason: extra.terminationReason } : {}),
       }));
       if (!done) throw notFound('Attempt');
-      if (done.finalized) await queue.enqueue(leaderboardTask(orgId, attempt.testId, attempt.seriesId, now));
+      if (done.finalized) {
+        live.finished(orgId, done.attempt, now);
+        await queue.enqueue(leaderboardTask(orgId, attempt.testId, attempt.seriesId, now));
+      }
       return done.attempt;
     },
   };

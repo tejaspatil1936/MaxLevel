@@ -1,4 +1,5 @@
 import {
+  answeredCount,
   answerVerdict,
   attemptDeadline,
   autoSubmitTask,
@@ -8,6 +9,7 @@ import {
   drawAttempt,
   isEligible,
   isFinishedAttempt,
+  liveRecordPath,
   questionTimeLimit,
   strikeVerdict,
   type AnswerBatch,
@@ -31,7 +33,8 @@ import { AppError, notFound } from '../errors';
 import { asEligibility } from './eligibility';
 import { attemptGrader } from './grading';
 import type { PublishedQuestions, PublishedTestCache } from './published-tests';
-import { fireAndForget, withinLimit, type WarnLogger } from './rtdb-writes';
+import { liveMirror, startedRecord } from './live-mirror';
+import { withinLimit, type WarnLogger } from './rtdb-writes';
 
 const REFUSALS = {
   WINDOW_NOT_OPEN: "This test hasn't opened yet.",
@@ -81,6 +84,7 @@ export interface AttemptDeps {
 export function attemptService(deps: AttemptDeps) {
   const { data, clock, queue, rtdb, published, log } = deps;
   const grader = attemptGrader(deps);
+  const live = liveMirror(rtdb, log);
 
   /** Everything the exam screen needs in one response (PERF-03); the response schema strips any answer key. */
   function payload(
@@ -207,16 +211,6 @@ export function attemptService(deps: AttemptDeps) {
       if (isFinishedAttempt(attempt.status))
         throw new AppError(409, 'ATTEMPT_FINISHED', "You've already finished this test.");
 
-      const live = {
-        name: student.name ?? '',
-        prn: student.prn ?? '',
-        status: attempt.status,
-        answered: 0,
-        total: attempt.draw.questionIds.length,
-        strikes: 0,
-        deadlineAt: attempt.deadlineAt,
-        updatedAt: now,
-      };
       const [answers] = await Promise.all([
         created ? Promise.resolve({}) : data.attempts.getAnswers(orgId, attempt.id),
         queue.enqueue(autoSubmitTask(orgId, attempt.id, attempt.deadlineAt)),
@@ -227,7 +221,7 @@ export function attemptService(deps: AttemptDeps) {
         withinLimit(
           rtdb.ref().update({
             [`attemptOwners/${attempt.id}`]: who.uid,
-            ...(created ? { [`live/${orgId}/${testId}/${attempt.id}`]: live } : {}),
+            ...(created ? { [liveRecordPath(orgId, testId, attempt.id)]: startedRecord(attempt, student, now) } : {}),
           }),
           log,
           `attemptOwners/${attempt.id}`,
@@ -294,9 +288,12 @@ export function attemptService(deps: AttemptDeps) {
       );
       if (verdicts.some((v) => v.verdict === 'ATTEMPT_FINISHED')) throw finishedError();
       const sync = { backlog: batch.backlog, clockOffsetMs: batch.clockOffsetMs, at: now };
-      const livePath = `live/${orgId}/${attempt.testId}/${attempt.id}`;
-      fireAndForget(rtdb.ref(livePath).update({ backlog: batch.backlog, updatedAt: now }), log, livePath);
-      await data.attempts.recordSync(orgId, attempt.id, sync);
+      // OPS-02: the answered count is read after this batch's saves, beside the sync write.
+      const [answers] = await Promise.all([
+        data.attempts.getAnswers(orgId, attempt.id),
+        data.attempts.recordSync(orgId, attempt.id, sync),
+      ]);
+      live.answered(orgId, attempt, answeredCount(attempt.draw.questionIds, answers), batch.backlog, now);
       const result: AnswerBatchResult = { saved: [], stale: [], rejected: [], serverTime: now };
       for (const { questionId, verdict } of verdicts) {
         if (verdict === 'saved' || verdict === 'late_sync') result.saved.push(questionId);
@@ -364,10 +361,7 @@ export function attemptService(deps: AttemptDeps) {
       if (!done) throw notFound('Attempt');
       if (done === 'ATTEMPT_FINISHED') throw finishedError();
       const { verdict } = done;
-      if (verdict.counted) {
-        const livePath = `live/${orgId}/${attempt.testId}/${attempt.id}`;
-        fireAndForget(rtdb.ref(livePath).update({ strikes: done.attempt.strikesCount, updatedAt: now }), log, livePath);
-      }
+      if (verdict.counted) live.strikes(orgId, done.attempt, now);
       const status = verdict.terminates
         ? (await grader.finish(orgId, done.attempt, 'terminated', { terminationReason: 'max_strikes' })).status
         : done.attempt.status;
