@@ -8,7 +8,7 @@ import {
   storedAttempt,
   strikeNumbersOf,
 } from '../acceptance/fixtures/exam';
-import { postAttemptAction, postExtraTime } from '../acceptance/fixtures/live';
+import { extensionNotice, postAttemptAction, postExtraTime } from '../acceptance/fixtures/live';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
 import type { TestApi } from '../acceptance/fixtures/test-api';
@@ -217,5 +217,30 @@ test.describe('phase 5 review @live', () => {
         .map((q) => q.id)
         .sort(),
     );
+  });
+
+  test('OPS-06 A11Y-03 dismissing the extra-time notice gives focus back to where it was, never to the page body', async ({
+    apiAs,
+    testApi,
+    newSession,
+  }) => {
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id });
+    const page = await newSession(accounts.studentA);
+    await page.setViewportSize({ width: 1024, height: 768 });
+    const { attempt } = await startAttempt(await apiAs(accounts.studentA), t.testId);
+    const exam = new ExamScreen(page);
+    await exam.gotoAttempt(attempt.id);
+    expect((await postExtraTime(await apiAs(accounts.adminA), attempt.id, { minutes: 4, reason: 'x' })).status).toBe(
+      200,
+    );
+    const notice = exam.notice(extensionNotice(4));
+    await expect(notice).toBeVisible();
+
+    const option = exam.options.getByRole('radio').first();
+    await option.focus();
+    await exam.dismissNotice.focus();
+    await page.keyboard.press('Enter');
+    await expect(notice).toBeHidden();
+    await expect(option).toBeFocused();
   });
 });
