@@ -8,6 +8,7 @@ import {
   attemptStartSchema,
   attemptSubmitResultSchema,
   attemptSubmitSchema,
+  docIdSchema,
   navigateResultSchema,
   navigateSchema,
   type AttemptPayload,
@@ -22,7 +23,7 @@ import type { ApiContext } from './context';
 
 const student = { access: 'student' as const };
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 
 /** The signed-in student; staff tokens are 403 (the route's `student` access already refuses them). */
 export const studentOf = (req: FastifyRequest) => {

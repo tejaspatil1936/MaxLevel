@@ -1,4 +1,5 @@
 import {
+  docIdSchema,
   pairingRedeemResultSchema,
   pairingRedeemSchema,
   pairingReservationSchema,
@@ -12,8 +13,8 @@ import { studentOf } from './attempts';
 import type { ApiContext } from './context';
 
 const student = { access: 'student' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
-const testParams = z.object({ testId: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
+const testParams = z.object({ testId: docIdSchema });
 const empty = z.object({}).strict();
 /** The phone is not signed in, so redeeming is limited per address: 30 a minute is far above any real pairing. */
 const REDEEM_RATE_LIMIT: RateLimitOptions = { max: 30, timeWindow: 60_000 };

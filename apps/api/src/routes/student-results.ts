@@ -1,5 +1,6 @@
 import {
   dayLabels,
+  docIdSchema,
   resultDetailShown,
   studentHistory,
   studentHistorySchema,
@@ -16,7 +17,7 @@ import { studentOf } from './attempts';
 import type { ApiContext } from './context';
 
 const student = { access: 'student' as const };
-const params = z.object({ attemptId: z.string().min(1).max(128) });
+const params = z.object({ attemptId: docIdSchema });
 
 /**
  * GET /v1/student/results/{attemptId} (US-ST-07, RES-01 to RES-03, RES-05, RES-06, DATA-05): the caller's own finished

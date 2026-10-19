@@ -1,4 +1,4 @@
-import { studentDashboardSchema, studentTestPageSchema } from '@mitaoe/shared';
+import { docIdSchema, studentDashboardSchema, studentTestPageSchema } from '@mitaoe/shared';
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import { studentTestsService } from '../services/student-tests';
 import type { ApiContext } from './context';
 
 const student = { access: 'student' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 
 const studentIdOf = (req: FastifyRequest) => {
   const id = req.user?.studentId;
