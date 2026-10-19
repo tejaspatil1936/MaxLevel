@@ -18,6 +18,7 @@ import {
   importTask,
   isAiFormat,
   monthKey,
+  QUEUED_STALE_MS,
   signatureMatches,
   type ImportError,
   type ImportFormat,
@@ -217,7 +218,11 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         }
         const moved = await data.imports.leaveAwaitingUpload(orgId, job.id, clock.now(), { status: 'queued' });
         if (!moved) throw notFound('Import');
-        if (moved.changed) await queue.enqueue(importTask(orgId, job.id));
+        // The job is queued: a failed enqueue is logged, and reading the job a minute later queues it (REL-04).
+        if (moved.changed)
+          await queue
+            .enqueue(importTask(orgId, job.id))
+            .catch((err: unknown) => req.log.error({ err, jobId: job.id }, 'import.enqueue_failed'));
         return reply.status(202).send({ id: job.id, status: moved.status });
       },
     );
@@ -249,6 +254,11 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const orgId = req.orgId!;
         const job = await data.imports.getImport(orgId, req.params.id);
         if (!job) throw notFound('Import');
+        // REL-04: still queued a minute after it was queued, its task was lost: queue a run named for that time.
+        if (job.status === 'queued' && job.queuedAt !== undefined && job.queuedAt < clock.now() - QUEUED_STALE_MS)
+          await queue
+            .enqueue(importRetryTask(orgId, job.id, `requeue-${job.queuedAt}`))
+            .catch((err: unknown) => req.log.warn({ err, jobId: job.id }, 'import.requeue_failed'));
         const drafts = job.status === 'ready' ? await data.imports.listDrafts(orgId, job.id) : [];
         const view: ImportJobView = {
           id: job.id,
@@ -295,7 +305,9 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         if (!outcome) throw notFound('Import');
         if (outcome === 'refused')
           throw new AppError(409, 'IMPORT_NOT_RETRYABLE', 'This import has not failed in a way that can be retried.');
-        await queue.enqueue(importRetryTask(orgId, req.params.id, `manual-${now}`));
+        await queue
+          .enqueue(importRetryTask(orgId, req.params.id, `manual-${now}`))
+          .catch((err: unknown) => req.log.error({ err, jobId: req.params.id }, 'import.enqueue_failed'));
         return reply.status(202).send({ id: req.params.id, status: 'queued' as const });
       },
     );
