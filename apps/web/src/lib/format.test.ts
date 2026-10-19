@@ -10,6 +10,7 @@ import {
   formatMinutes,
   formatWindow,
   formatZonedDay,
+  formatZonedSeconds,
   formatZonedTime,
   parseMinutes,
   zonedParts,
@@ -34,6 +35,11 @@ describe('authoring formats', () => {
     expect(zonedParts(Date.UTC(2026, 10, 2, 20, 0), 'Asia/Kolkata')).toEqual({ day: '2026-11-03', time: '01:30' });
     const overnight = { start: Date.UTC(2026, 10, 2, 17, 30), end: Date.UTC(2026, 10, 2, 19, 30) };
     expect(formatWindow(overnight, 'Asia/Kolkata')).toBe('2 Nov 2026, 23:00 to 3 Nov 2026, 01:00 IST');
+  });
+
+  it('PR-11 OPS-04 timeline times read HH:mm:ss in the org zone named IST', () => {
+    expect(formatZonedSeconds(Date.UTC(2026, 10, 2, 4, 0, 7), 'Asia/Kolkata')).toBe('09:30:07 IST');
+    expect(formatZonedSeconds(Date.UTC(2026, 10, 2, 18, 30, 0), 'Asia/Kolkata')).toBe('00:00:00 IST');
   });
 });
 

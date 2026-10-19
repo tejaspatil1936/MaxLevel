@@ -26,6 +26,7 @@ import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
 import { ExtraTimeDialog } from './ExtraTimeDialog';
 import { LiveRoster } from './LiveRoster';
+import { TimelineDrawer } from './TimelineDrawer';
 import { liveUrl } from './live-url';
 import { useLiveMirror } from './useLiveMirror';
 
@@ -52,6 +53,7 @@ export function LiveView({ testId }: { testId: string }) {
   const [filters, setFilters] = useState<LiveFilter[]>([]);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<{ key: LiveSortKey; dir: 'asc' | 'desc' }>({ key: 'student', dir: 'asc' });
+  const [timeline, setTimeline] = useState<{ attemptId: string; name: string } | null>(null);
   const [granting, setGranting] = useState<{ attemptId: string; name: string; deadlineAt: number } | null>(null);
 
   const rows = useMemo(
@@ -108,9 +110,13 @@ export function LiveView({ testId }: { testId: string }) {
   // FF-03: with extra_time_grants off the item stays in the menu, disabled, saying why.
   const extraTimeOn = features?.extra_time_grants !== false;
   const actions = (r: LiveRow): MenuItem[] => {
-    const items: MenuItem[] = [];
-    if (r.status === 'in_progress' && r.attemptId && r.deadlineAt !== null) {
-      const grant = { attemptId: r.attemptId, name: r.name, deadlineAt: r.deadlineAt };
+    if (!r.attemptId) return [];
+    const attemptId = r.attemptId;
+    const items: MenuItem[] = [
+      { label: t('live.action.timeline'), onSelect: () => setTimeline({ attemptId, name: r.name }) },
+    ];
+    if (r.status === 'in_progress' && r.deadlineAt !== null) {
+      const grant = { attemptId, name: r.name, deadlineAt: r.deadlineAt };
       items.push({
         label: t('live.action.grantExtra'),
         onSelect: () => setGranting(grant),
@@ -179,6 +185,15 @@ export function LiveView({ testId }: { testId: string }) {
           />
         }
       />
+      {timeline ? (
+        <TimelineDrawer
+          key={timeline.attemptId}
+          {...timeline}
+          orgId={orgId}
+          timezone={org?.timezone ?? 'Asia/Kolkata'}
+          onClose={() => setTimeline(null)}
+        />
+      ) : null}
       {granting ? (
         <ExtraTimeDialog
           {...granting}

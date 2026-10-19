@@ -76,6 +76,18 @@ export function zonedParts(ms: number, timeZone: string): { day: string; time: s
   return { day: `${get('year')}-${get('month')}-${get('day')}`, time: `${get('hour')}:${get('minute')}` };
 }
 
+/** An instant as `HH:mm:ss IST`, 24-hour with seconds in the organization's timezone (the event timeline, PR-11). */
+export function formatZonedSeconds(ms: number, timeZone: string): string {
+  const time = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(ms);
+  return t('time.zoned', { time, zone: zoneName(timeZone, ms) });
+}
+
 /** A window as `2 Nov 2026, 10:00 to 11:00 IST`, in the organization's timezone with the zone named (UX-11). */
 export function formatWindow(window: { start: number; end: number }, timeZone: string): string {
   const start = zonedParts(window.start, timeZone);
