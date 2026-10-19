@@ -14,19 +14,36 @@ export interface PdfPrinter {
 }
 
 /** How long one page may take to load and print before the run fails. */
-const PRINT_TIMEOUT_MS = 60_000;
+export const PRINT_TIMEOUT_MS = 60_000;
+/** How long closing a timed-out print's context may take before the whole browser is closed instead. */
+const CLOSE_TIMEOUT_MS = 5_000;
+
+/** A print that took longer than its timeout; its context was closed and the run counts it as a failure. */
+export class PrintTimeoutError extends Error {
+  constructor(readonly timeoutMs: number) {
+    super(`The report print took longer than ${timeoutMs} ms.`);
+    this.name = 'PrintTimeoutError';
+  }
+}
+
+const after = (ms: number) => new Promise<'timeout'>((resolve) => setTimeout(resolve, ms, 'timeout').unref());
 
 /**
  * One headless Chromium, started on the first print and started again if it dies; each print gets a fresh context
- * that refuses every network request (the page needs none: its font is a data: URL). `executablePath`
- * (CHROMIUM_PATH) names the browser; without it playwright-core uses its own install (PLAYWRIGHT_BROWSERS_PATH).
+ * that runs no page script (the template has none) and refuses every network request (the page needs none: its font
+ * is a data: URL). A print that is not done within `timeoutMs` (the load, the fonts and the PDF together) fails with
+ * PrintTimeoutError and its context is closed, so a hung page never holds the worker or the report's lease.
+ * `executablePath` (CHROMIUM_PATH) names the browser; without it playwright-core uses its own install
+ * (PLAYWRIGHT_BROWSERS_PATH). Chromium's sandbox is off (`--no-sandbox`, DECISIONS 2026-10-19, report print sandbox).
  */
-export function chromiumPrinter(opts: { executablePath?: string } = {}): PdfPrinter {
+export function chromiumPrinter(opts: { executablePath?: string; timeoutMs?: number } = {}): PdfPrinter {
+  const timeoutMs = opts.timeoutMs ?? PRINT_TIMEOUT_MS;
   let browser: Promise<Browser> | null = null;
   const launch = () => {
     if (!browser) {
       const started = chromium.launch({
         headless: true,
+        chromiumSandbox: false,
         timeout: PRINT_TIMEOUT_MS,
         ...(opts.executablePath ? { executablePath: opts.executablePath } : {}),
       });
@@ -38,31 +55,44 @@ export function chromiumPrinter(opts: { executablePath?: string } = {}): PdfPrin
     }
     return browser;
   };
+  /** Closes the browser; the next print starts another. */
+  const closeBrowser = async () => {
+    const open = browser;
+    browser = null;
+    if (open) await (await open.catch(() => null))?.close();
+  };
 
   return {
     async print(html) {
-      const context = await (await launch()).newContext();
-      try {
+      const context = await (await launch()).newContext({ javaScriptEnabled: false });
+      const work = (async () => {
         await context.route('**/*', (route) => route.abort());
         const page = await context.newPage();
-        page.setDefaultTimeout(PRINT_TIMEOUT_MS);
+        page.setDefaultTimeout(timeoutMs);
         await page.setContent(html, { waitUntil: 'load' });
         await page.evaluate('document.fonts.ready.then(() => true)');
-        return await page.pdf({
+        return page.pdf({
           format: 'A4',
           printBackground: true,
           displayHeaderFooter: false,
           preferCSSPageSize: true,
+          tagged: true,
+          outline: true,
         });
+      })();
+      // Once the timeout wins, the closed context fails the print still running; that failure is expected.
+      work.catch(() => undefined);
+      try {
+        const done = await Promise.race([work, after(timeoutMs)]);
+        if (done === 'timeout') throw new PrintTimeoutError(timeoutMs);
+        return done;
       } finally {
-        await context.close();
+        // A context that cannot even close in time means a hung browser: close it, the next print starts another.
+        if ((await Promise.race([context.close().catch(() => undefined), after(CLOSE_TIMEOUT_MS)])) === 'timeout')
+          await closeBrowser().catch(() => undefined);
       }
     },
-    async close() {
-      const open = browser;
-      browser = null;
-      if (open) await (await open.catch(() => null))?.close();
-    },
+    close: closeBrowser,
   };
 }
 

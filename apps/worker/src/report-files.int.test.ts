@@ -2,7 +2,7 @@ import { computeSeriesMetrics, computeTestMetrics, type MetricsAttempt } from '@
 import ExcelJS from 'exceljs';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { afterAll, describe, expect, it } from 'vitest';
-import { chromiumPrinter, reportFontUrl } from './report-pdf';
+import { chromiumPrinter, PrintTimeoutError, reportFontUrl } from './report-pdf';
 import { renderReportHtml } from './report-render';
 import { reportXlsx } from './report-xlsx';
 
@@ -91,7 +91,7 @@ describe('report files', () => {
     expect(read.text).not.toContain('about:blank');
     expect(await reportFontUrl()).toMatch(/^data:font\/woff2;base64,/);
     expect(read.markInfo, 'a tagged PDF that screen readers can read').toMatchObject({ Marked: true });
-    expect(read.outline, 'an outline from the headings').toContain('Analytics report');
+    expect(read.outline, 'an outline from the headings').toContain('Day 1: Quantitative aptitude');
   });
 
   it('EXP-06 a page script never runs while printing, so a page that never finishes loading cannot hold it', async () => {
@@ -99,6 +99,22 @@ describe('report files', () => {
     const read = await readPdf(await printer.print(html));
     expect(read.text).toContain('Printedwithoutitsscript.');
   }, 15_000);
+
+  it('EXP-06 a print that is not done in time fails with its timeout, and the printer prints again after it', async () => {
+    const hurried = chromiumPrinter({
+      ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
+      timeoutMs: 1,
+    });
+    try {
+      const html = '<!doctype html><title>Slow</title><p>Too slow.</p>';
+      const failed = hurried.print(html);
+      await expect(failed).rejects.toBeInstanceOf(PrintTimeoutError);
+      await expect(failed).rejects.toThrow('The report print took longer than 1 ms.');
+      expect((await printer.print(html)).subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    } finally {
+      await hurried.close();
+    }
+  });
 
   it('EXP-06 the XLSX holds the raw statistics sheet by sheet, numbers as numbers and text formula-safe', async () => {
     const wb = new ExcelJS.Workbook();
