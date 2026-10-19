@@ -18,9 +18,10 @@ const draft = (order: number): ImportDraft => ({
 });
 const drafts = [draft(1), draft(2), draft(3)];
 
-function setup() {
+function setup(readOnly = false) {
   const review = {
     current: 'd2',
+    readOnly,
     goTo: vi.fn(),
     approveOne: vi.fn(),
     startEdit: vi.fn(),
@@ -59,5 +60,17 @@ describe('import review keys', () => {
     expect(press('x')).not.toHaveBeenCalled();
     expect(review.approveOne).not.toHaveBeenCalled();
     expect(review.discardOne).not.toHaveBeenCalled();
+  });
+
+  it('IMP-13 ORG-07 in an archived organization A, E and D do nothing; J and K still move', () => {
+    const { review, press } = setup(true);
+    press('a');
+    press('e');
+    press('d');
+    expect(review.approveOne).not.toHaveBeenCalled();
+    expect(review.startEdit).not.toHaveBeenCalled();
+    expect(review.discardOne).not.toHaveBeenCalled();
+    press('j');
+    expect(review.goTo).toHaveBeenLastCalledWith('d3');
   });
 });
