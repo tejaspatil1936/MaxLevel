@@ -141,7 +141,7 @@ export function importHandler(deps: {
       await data.saveDrafts(orgId, jobId, read.drafts, { progress });
     } else {
       const ent = await data.entitlements(orgId);
-      if (!ent) return 'skipped';
+      if (!ent) return fail(refused('ORG_NOT_FOUND', IMPORT_MESSAGES.orgMissing));
       if (read.sheet && !ent.features.ai_question_import)
         return fail(refused('FEATURE_DISABLED', IMPORT_MESSAGES.aiOff));
       if (!llm) return fail(LLM_UNAVAILABLE);
