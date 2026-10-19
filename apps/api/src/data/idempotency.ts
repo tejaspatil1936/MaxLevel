@@ -11,12 +11,6 @@ export interface StoredResponse {
 export function idempotencyData(db: Firestore) {
   const col = (orgId: string) => db.collection(`organizations/${orgId}/idempotencyKeys`);
   return {
-    async getResponse(orgId: string, id: string): Promise<StoredResponse | null> {
-      const d = await col(orgId).doc(id).get();
-      if (!d.exists) return null;
-      return { status: d.get('status'), body: d.get('body'), createdAt: d.get('createdAt') };
-    },
-
     /**
      * Claims the key for one request, atomically (API-02): in one transaction, a stored response younger than `ttlMs`
      * is returned for replay; a claim another request holds until after `now` is `in_progress`; otherwise the record

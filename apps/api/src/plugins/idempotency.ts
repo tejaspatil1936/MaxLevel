@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { Clock } from '@mitaoe/shared';
 import type { FastifyInstance, preHandlerAsyncHookHandler } from 'fastify';
 import type { IdempotencyData } from '../data/idempotency';
@@ -6,6 +6,8 @@ import { AppError } from '../errors';
 
 /** API-02: a repeated key replays the stored response for 24 hours. */
 export const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
+/** How long a request holds its key while it runs; a holder that stopped without an answer frees it after this. */
+export const IDEMPOTENCY_LOCK_MS = 60_000;
 const KEY = /^[\x21-\x7e]{1,200}$/;
 
 declare module 'fastify' {
@@ -14,7 +16,7 @@ declare module 'fastify' {
     idempotent?: boolean;
   }
   interface FastifyRequest {
-    idempotency?: { id: string; replayed: boolean };
+    idempotency?: { id: string; replayed: boolean; token?: string };
   }
 }
 
@@ -22,7 +24,9 @@ declare module 'fastify' {
  * API-02: routes marked `idempotent` refuse a request without an Idempotency-Key (400 IDEMPOTENCY_KEY_REQUIRED). A
  * successful response is stored under the caller, the method and URL and the key; the same request with the same key
  * within 24 hours (on the Clock) gets that status and body again, byte for byte, without running the handler. Errors
- * are not stored, so a refused request can be retried with its key. Register before compression, so the body stored
+ * are not stored, so a refused request can be retried with its key. The key is claimed in a transaction before the
+ * handler runs, so requests sent together with one key run it once: while the first runs, the others get 409
+ * IDEMPOTENCY_IN_PROGRESS and can be sent again. Register before compression, so the body stored
  * is the JSON sent, and before the routes. The check is a route-level preHandler, so it runs after every app-level one
  * (sign-in, account and org status, feature gate: AUTH-06, ORG-13): a refused caller never gets a stored response back.
  */
@@ -38,12 +42,21 @@ export function registerIdempotency(app: FastifyInstance, deps: { store: Idempot
     const orgId = req.orgId;
     if (!orgId || !req.user) throw new AppError(403, 'FORBIDDEN', 'Your account cannot use this.');
     const id = createHash('sha256').update(`${req.user.uid}\n${req.method} ${req.url}\n${key}`).digest('hex');
-    const stored = await store.getResponse(orgId, id);
-    if (stored && clock.now() - stored.createdAt < IDEMPOTENCY_TTL_MS) {
+    const token = randomUUID();
+    const now = clock.now();
+    const claim = await store.reserve(orgId, id, {
+      token,
+      now,
+      ttlMs: IDEMPOTENCY_TTL_MS,
+      lockedUntil: now + IDEMPOTENCY_LOCK_MS,
+    });
+    if (claim === 'in_progress')
+      throw new AppError(409, 'IDEMPOTENCY_IN_PROGRESS', 'This request is still being handled. Try again shortly.');
+    if (claim !== 'reserved') {
       req.idempotency = { id, replayed: true };
-      return reply.status(stored.status).type('application/json; charset=utf-8').send(stored.body);
+      return reply.status(claim.replay.status).type('application/json; charset=utf-8').send(claim.replay.body);
     }
-    req.idempotency = { id, replayed: false };
+    req.idempotency = { id, replayed: false, token };
   };
 
   app.addHook('onRoute', (route) => {
@@ -53,7 +66,12 @@ export function registerIdempotency(app: FastifyInstance, deps: { store: Idempot
 
   app.addHook('onSend', async (req, reply, payload) => {
     const pending = req.idempotency;
-    if (!pending || pending.replayed || reply.statusCode >= 300 || typeof payload !== 'string') return payload;
+    if (!pending || pending.replayed) return payload;
+    // A refused request frees its key, so it can be sent again (only 2xx answers are kept).
+    if (reply.statusCode >= 300 || typeof payload !== 'string') {
+      if (pending.token) await store.release(req.orgId!, pending.id, pending.token);
+      return payload;
+    }
     const createdAt = clock.now();
     await store.putResponse(
       req.orgId!,
