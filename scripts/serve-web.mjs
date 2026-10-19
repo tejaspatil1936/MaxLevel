@@ -37,7 +37,7 @@ function headersFor(path) {
     out['Content-Security-Policy'] = out['Content-Security-Policy']
       .replace('connect-src ', `connect-src ${LOCAL} `)
       .replace('script-src ', `script-src ${RTDB_LONG_POLL} `)
-      .replace('frame-src ', 'frame-src http://127.0.0.1:9099 ');
+      .replace('frame-src ', `frame-src http://127.0.0.1:9099 ${RTDB_LONG_POLL} `);
   }
   delete out['Strict-Transport-Security']; // plain HTTP locally
   return out;
