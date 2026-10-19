@@ -98,6 +98,17 @@ export function workerData(db: Firestore) {
       return d.exists && d.get('resolved') ? toReleaseTest(d) : null;
     },
 
+    /** DATA-05, OPS-06: the status and deadline of a test's attempts still in progress (the release task waits). */
+    async listAnsweringAttempts(orgId: string, testId: string): Promise<Array<{ status: string; deadlineAt: number }>> {
+      const snap = await org(orgId)
+        .collection('attempts')
+        .where('testId', '==', testId)
+        .where('status', '==', 'in_progress')
+        .select('status', 'deadlineAt')
+        .get();
+      return snap.docs.map((d) => ({ status: d.get('status') as string, deadlineAt: d.get('deadlineAt') as number }));
+    },
+
     /**
      * RES-01, REL-04: stores `resultsReleasedAt` in a transaction when `decide` still says so on the stored test, so a
      * Release or Withdraw results racing the task is never overwritten. True when it stored.
