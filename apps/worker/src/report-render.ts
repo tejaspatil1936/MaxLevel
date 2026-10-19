@@ -95,7 +95,11 @@ export function reportLines(m: ReportMetrics) {
   };
 }
 
-/** The page's style: fixed text, plus the font's data: URL; nothing from the report goes into it. */
+/**
+ * The page's style: fixed text, plus the font's data: URL; nothing from the report goes into it. A long unbroken word
+ * (a title, a department or option text) breaks at the page edge; text cells use `anywhere` so a table can shrink to
+ * fit, while number cells keep their numbers whole.
+ */
 const CSS = (fontUrl?: string) => `
 ${fontUrl ? `@font-face { font-family: Atkinson Hyperlegible Next; src: url(${fontUrl}); font-weight: 200 800; }` : ''}
 @page { size: A4; margin: 18mm 16mm; }
@@ -118,6 +122,8 @@ thead { display: table-header-group; }
 tr { break-inside: avoid; }
 th, td { border-bottom: 1px solid #d3d9e2; padding: 3pt 6pt; text-align: left; }
 .n { text-align: right; font-variant-numeric: tabular-nums; }
+h1, h2, p, li { overflow-wrap: break-word; }
+th:not(.n), td:not(.n) { overflow-wrap: anywhere; }
 `;
 
 const list = (items: string[]) =>
