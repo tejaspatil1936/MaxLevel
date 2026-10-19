@@ -52,7 +52,7 @@ export function SubmittedScreen() {
   const result = useQuery({
     queryKey: qk.orgItem(orgId, 'result', attemptId),
     queryFn: () => api<StudentResult>(`/v1/student/results/${encodeURIComponent(attemptId)}`),
-    enabled: !!orgId && !!attemptId && !!status && status !== 'in_progress',
+    enabled: !!orgId && !!attemptId && !!status && status !== 'in_progress' && status !== 'reset',
     retry: false,
   });
   useEffect(() => {
@@ -92,12 +92,24 @@ export function SubmittedScreen() {
     );
 
   const { attempt, settings } = query.data;
+  // OPS-10: a reset attempt is kept for the record only; the student starts again from the test page.
+  if (attempt.status === 'reset')
+    return (
+      <div className="flex flex-col items-start gap-4">
+        <h1 className="font-display text-display-2 font-bold">{t('attempt.reset')}</h1>
+        <p>{t('attempt.resetBody')}</p>
+        {back}
+      </div>
+    );
   const ended = attempt.status === 'terminated';
+  // RES-06, OPS-04: an admin's termination names its reason; a strike termination names the maximum.
+  const byAdmin = ended && !!attempt.terminationReason && attempt.terminationReason !== 'max_strikes';
   return (
     <div className="flex flex-col items-start gap-4">
       {ended ? null : <CircleCheck aria-hidden size={40} className="text-ballpoint" />}
       <h1 className="font-display text-display-2 font-bold">{ended ? t('submitted.ended') : t('submitted.title')}</h1>
-      {ended ? <p>{t('submitted.endedBody', { max: attempt.maxStrikes })}</p> : null}
+      {byAdmin ? <p>{t('submitted.endedByAdmin', { reason: attempt.terminationReason ?? '' })}</p> : null}
+      {ended && !byAdmin ? <p>{t('submitted.endedBody', { max: attempt.maxStrikes })}</p> : null}
       {attempt.status === 'auto_submitted' ? <p>{t('submitted.auto')}</p> : null}
       <p>{releaseLine(settings, me?.org?.timezone ?? 'Asia/Kolkata')}</p>
       {result.data?.release === 'released' ? (

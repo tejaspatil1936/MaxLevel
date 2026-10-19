@@ -143,12 +143,16 @@ function AttemptLoader({ uid, orgId, attemptId }: { uid: string; orgId: string; 
     refetchOnReconnect: false,
     retry: (n, e) => !(e instanceof ApiError && e.status < 500) && n < 2,
   });
-  const finished = !!query.data && (isFinishedAttempt(query.data.attempt.status) || query.data.questions.length === 0);
+  // OPS-10: a reset attempt is kept for the record only; the student starts again from the test page.
+  const reset = query.data?.attempt.status === 'reset';
+  const finished =
+    !!query.data && !reset && (isFinishedAttempt(query.data.attempt.status) || query.data.questions.length === 0);
   // A network failure (no API answer at all) opens the exam kept on this device while the query keeps retrying.
   const unreachable = query.failureCount > 0 && !(query.failureReason instanceof ApiError);
   const source = useMemo(
-    () => (query.data && !finished ? { payload: query.data, orgId } : unreachable ? ('device' as const) : null),
-    [query.data, finished, orgId, unreachable],
+    () =>
+      query.data && !finished && !reset ? { payload: query.data, orgId } : unreachable ? ('device' as const) : null,
+    [query.data, finished, reset, orgId, unreachable],
   );
   const opening = useOpenedExam(attemptId, uid, source);
   const router = useRouter();
@@ -158,7 +162,16 @@ function AttemptLoader({ uid, orgId, attemptId }: { uid: string; orgId: string; 
     void clearDeviceExam(attemptId);
     router.replace(submittedUrl(attemptId));
   }, [finished, attemptId, router]);
+  useEffect(() => {
+    if (reset) void clearDeviceExam(attemptId);
+  }, [reset, attemptId]);
 
+  if (reset)
+    return (
+      <Notice title={t('attempt.reset')}>
+        <p>{t('attempt.resetBody')}</p>
+      </Notice>
+    );
   if (opening.status === 'ready') return <AttemptExam {...opening.exam} />;
   if (!attemptId || (query.error instanceof ApiError && query.error.status === 404))
     return (
