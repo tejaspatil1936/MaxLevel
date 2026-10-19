@@ -48,6 +48,19 @@ export function importJobs(db: Firestore, files: FileStore, app: () => FastifyIn
   const drafts = async (id: string) =>
     (await org.collection(`importJobs/${id}/drafts`).orderBy('order').get()).docs.map((d) => d.data());
 
+  /** Takes the job's queued next-page task, once (pending to done), as the dispatcher claims a task. */
+  const takePageTask = async (id: string) => {
+    const snap = await db.collection('_localTasks').where('status', '==', 'pending').get();
+    const ref = snap.docs.find((d) => d.id.startsWith(`import-${id}-page-`))?.ref;
+    if (!ref) return null;
+    return db.runTransaction(async (tx) => {
+      const task = await tx.get(ref);
+      if (task.get('status') !== 'pending') return null;
+      tx.update(ref, { status: 'done' });
+      return task.get('payload') as { orgId: string; jobId: string; page?: number };
+    });
+  };
+
   return {
     org,
     job,
@@ -75,11 +88,27 @@ export function importJobs(db: Firestore, files: FileStore, app: () => FastifyIn
       return id;
     },
 
-    /** Posts the job's task to the worker, which must answer 200; returns its outcome. */
+    /**
+     * Runs the job's task with `post`, then each next-page task it queues, as the dispatcher would, until a run
+     * queues none or loses the job (`superseded`); returns the last outcome.
+     */
+    async drive(id: string, post: (payload: { orgId: string; jobId: string; page?: number }) => Promise<string>) {
+      let outcome = await post({ orgId, jobId: id });
+      while (outcome !== 'superseded') {
+        const next = await takePageTask(id);
+        if (!next) break;
+        outcome = await post(next);
+      }
+      return outcome;
+    },
+
+    /** Posts the job's task to the worker (each answer must be 200) and its page tasks after it; the last outcome. */
     async run(id: string): Promise<string> {
-      const res = await app().inject({ method: 'POST', url: '/tasks/import', payload: { orgId, jobId: id } });
-      if (res.statusCode !== 200) throw new Error(`/tasks/import answered ${res.statusCode}: ${res.body}`);
-      return (res.json() as { outcome: string }).outcome;
+      return this.drive(id, async (payload) => {
+        const res = await app().inject({ method: 'POST', url: '/tasks/import', payload });
+        if (res.statusCode !== 200) throw new Error(`/tasks/import answered ${res.statusCode}: ${res.body}`);
+        return (res.json() as { outcome: string }).outcome;
+      });
     },
 
     /** The job's queued tasks, as the local queue stores them. */

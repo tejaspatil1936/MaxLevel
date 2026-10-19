@@ -9,7 +9,7 @@ import {
   type ImportProgress,
   type ImportStatus,
 } from '@mitaoe/shared';
-import { FieldValue, type Firestore } from 'firebase-admin/firestore';
+import { FieldValue, type DocumentReference, type Firestore, type Transaction } from 'firebase-admin/firestore';
 
 // The import task's data access (ORG-03: orgId first): the job record and its drafts
 // (docs/testids/phase-6.md "Job record", "Draft"), the AI import counter (IMP-08) and what the checks read.
@@ -26,7 +26,25 @@ export interface ImportJob {
   tokens?: { input: number; output: number };
   /** Model failures in a row (REL-06); a page read by the model sets it back to 0. */
   failures?: number;
+  /** When a job `retrying` runs again. */
+  retryAt?: number;
+  /** The run that holds the job while it is `running`, until `leaseUntil` on the Clock. */
+  runId?: string;
+  leaseUntil?: number;
 }
+
+/** How long a claimed run holds a job: longer than one page takes (a model call times out after 120 s). */
+export const IMPORT_LEASE_MS = 5 * 60_000;
+
+/** A write of a run that no longer holds its job: another run took it over after the lease ran out. */
+export class ImportLeaseLost extends Error {
+  constructor() {
+    super('This import run no longer holds its job.');
+  }
+}
+
+/** What a claim gave: the job, now held by the run; the time another run holds it until; or nothing to do. */
+export type ImportClaim = { job: ImportJob } | { heldUntil: number } | null;
 
 /** What the task records as it goes; `error` and `retryAt` are removed when not given. */
 export interface ImportUpdate {
@@ -41,6 +59,20 @@ export interface ImportUpdate {
   tokens?: { input: number; output: number };
   /** USD, from the tokens and the model's prices (IMP-07). */
   costEstimate?: number;
+  /** Renews the run's lease to this time; null releases it. Any status but `running` releases it as well. */
+  leaseUntil?: number | null;
+}
+
+/** The job fields an update writes. */
+function updateFields(u: ImportUpdate) {
+  const { error, leaseUntil, ...rest } = u;
+  return {
+    ...rest,
+    ...(error === undefined ? {} : { error: error ?? FieldValue.delete() }),
+    ...(leaseUntil === undefined ? {} : { leaseUntil: leaseUntil ?? FieldValue.delete() }),
+    ...(u.status && u.status !== 'retrying' ? { retryAt: FieldValue.delete() } : {}),
+    ...(u.status && u.status !== 'running' ? { leaseUntil: FieldValue.delete() } : {}),
+  };
 }
 
 /** A stored draft, before and after the checks. */
@@ -54,6 +86,18 @@ export const draftId = (order: number) => `d${String(order).padStart(4, '0')}`;
 
 export function importData(db: Firestore) {
   const job = (orgId: string, jobId: string) => db.doc(`organizations/${orgId}/importJobs/${jobId}`);
+  /** Runs `write` in a transaction only while `runId` holds the job; ImportLeaseLost otherwise, writing nothing. */
+  const held = (
+    orgId: string,
+    jobId: string,
+    runId: string,
+    write: (tx: Transaction, ref: DocumentReference) => void,
+  ): Promise<void> =>
+    db.runTransaction(async (tx) => {
+      const ref = job(orgId, jobId);
+      if ((await tx.get(ref)).get('runId') !== runId) throw new ImportLeaseLost();
+      write(tx, ref);
+    });
 
   return {
     async getJob(orgId: string, jobId: string): Promise<ImportJob | null> {
@@ -62,37 +106,61 @@ export function importData(db: Firestore) {
     },
 
     /**
-     * Moves a started job to `running`, clearing a retry's wait; false (changing nothing) unless it is queued, running
-     * or retrying with its `retryAt` reached, so an early or repeated delivery of a task leaves the wait as it is.
+     * Moves a started job to `running`, held by `runId` until `leaseUntil` (REL-06), clearing a retry's wait. Claims
+     * nothing unless the job is queued, retrying with its `retryAt` reached, or running with no lease held: a job
+     * another run holds gives the time it is held until, so a task delivered again starts no second run. A page
+     * task's `page` must be the first page not done, so a page task delivered twice reads its page once.
      */
-    async claim(orgId: string, jobId: string, now: number): Promise<boolean> {
+    async claim(
+      orgId: string,
+      jobId: string,
+      run: { runId: string; now: number; leaseUntil: number; page?: number },
+    ): Promise<ImportClaim> {
       return db.runTransaction(async (tx) => {
         const snap = await tx.get(job(orgId, jobId));
-        const status = snap.get('status') as string;
-        if (!['queued', 'running', 'retrying'].includes(status)) return false;
-        if (status === 'retrying' && Number(snap.get('retryAt') ?? 0) > now) return false;
-        tx.update(job(orgId, jobId), { status: 'running', error: FieldValue.delete(), retryAt: FieldValue.delete() });
-        return true;
+        if (!snap.exists) return null;
+        const current = { ...snap.data(), id: snap.id } as ImportJob;
+        const { status } = current;
+        if (!['queued', 'running', 'retrying'].includes(status)) return null;
+        if (status === 'retrying' && Number(current.retryAt ?? 0) > run.now) return null;
+        if (status === 'running' && Number(current.leaseUntil ?? 0) > run.now)
+          return { heldUntil: Number(current.leaseUntil) };
+        if (run.page !== undefined && current.progress.pagesDone + 1 !== run.page) return null;
+        tx.update(job(orgId, jobId), {
+          status: 'running',
+          runId: run.runId,
+          leaseUntil: run.leaseUntil,
+          error: FieldValue.delete(),
+          retryAt: FieldValue.delete(),
+        });
+        return {
+          job: { ...current, status: 'running', runId: run.runId, leaseUntil: run.leaseUntil },
+        };
       });
     },
 
-    async update(orgId: string, jobId: string, u: ImportUpdate): Promise<void> {
-      const { error, ...rest } = u;
-      await job(orgId, jobId).update({
-        ...rest,
-        ...(error === undefined ? {} : { error: error ?? FieldValue.delete() }),
-        ...(u.status && u.status !== 'retrying' ? { retryAt: FieldValue.delete() } : {}),
-      });
+    async update(orgId: string, jobId: string, runId: string, u: ImportUpdate): Promise<void> {
+      await held(orgId, jobId, runId, (tx, ref) => void tx.update(ref, updateFields(u)));
+    },
+
+    /** Lets the job go after a run stopped on an unexpected error, so the queue's next delivery can claim it. */
+    async release(orgId: string, jobId: string, runId: string): Promise<void> {
+      await held(orgId, jobId, runId, (tx, ref) => void tx.update(ref, { leaseUntil: FieldValue.delete() })).catch(
+        (err: unknown) => {
+          if (!(err instanceof ImportLeaseLost)) throw err;
+        },
+      );
     },
 
     /**
      * Counts the job as one AI import of the month, once (IMP-08): in one transaction, unless `aiCounted` is set it
      * raises `usage/{month}.aiImports` when below `limit` and sets `aiCounted`. False at the limit, changing nothing.
      */
-    async countAiImport(orgId: string, jobId: string, month: string, limit: number): Promise<boolean> {
+    async countAiImport(orgId: string, jobId: string, runId: string, month: string, limit: number): Promise<boolean> {
       const usage = db.doc(`organizations/${orgId}/usage/${month}`);
       return db.runTransaction(async (tx) => {
         const [j, u] = await Promise.all([tx.get(job(orgId, jobId)), tx.get(usage)]);
+        if (j.get('runId') !== runId) throw new ImportLeaseLost();
         if (j.get('aiCounted') === true) return true;
         if (((u.get('aiImports') as number | undefined) ?? 0) >= limit) return false;
         tx.set(usage, { orgId, month, aiImports: FieldValue.increment(1) }, { merge: true });
@@ -101,13 +169,13 @@ export function importData(db: Firestore) {
       });
     },
 
-    /** Saves one page's drafts with the job's progress in one batch. */
-    async saveDrafts(orgId: string, jobId: string, drafts: DraftInput[], u: ImportUpdate): Promise<void> {
-      const batch = db.batch();
-      for (const { figure: _figure, ...d } of drafts)
-        batch.set(job(orgId, jobId).collection('drafts').doc(draftId(d.order)), { ...d, flags: [], status: 'pending' });
-      batch.update(job(orgId, jobId), { ...u });
-      await batch.commit();
+    /** Saves one page's drafts with the job's progress in one transaction, while the run holds the job. */
+    async saveDrafts(orgId: string, jobId: string, runId: string, drafts: DraftInput[], u: ImportUpdate) {
+      await held(orgId, jobId, runId, (tx, ref) => {
+        for (const { figure: _figure, ...d } of drafts)
+          tx.set(ref.collection('drafts').doc(draftId(d.order)), { ...d, flags: [], status: 'pending' });
+        tx.update(ref, updateFields(u));
+      });
     },
 
     async listDrafts(orgId: string, jobId: string): Promise<Array<StoredDraftFields & { id: string }>> {
@@ -115,12 +183,18 @@ export function importData(db: Firestore) {
       return snap.docs.map((d) => ({ ...(d.data() as StoredDraftFields), id: d.id }));
     },
 
-    /** Stores each draft's flags and the job's final fields in one batch. */
-    async finish(orgId: string, jobId: string, flags: Map<string, StoredDraftFields['flags']>, u: ImportUpdate) {
-      const batch = db.batch();
-      for (const [id, f] of flags) batch.update(job(orgId, jobId).collection('drafts').doc(id), { flags: f });
-      batch.update(job(orgId, jobId), { ...u, error: FieldValue.delete(), retryAt: FieldValue.delete() });
-      await batch.commit();
+    /** Stores each draft's flags and the job's final fields in one transaction, while the run holds the job. */
+    async finish(
+      orgId: string,
+      jobId: string,
+      runId: string,
+      flags: Map<string, StoredDraftFields['flags']>,
+      u: ImportUpdate,
+    ) {
+      await held(orgId, jobId, runId, (tx, ref) => {
+        for (const [id, f] of flags) tx.update(ref.collection('drafts').doc(id), { flags: f });
+        tx.update(ref, { ...updateFields(u), error: FieldValue.delete(), retryAt: FieldValue.delete() });
+      });
     },
 
     /** The prompts of the test's questions in test order, for the duplicate check. */

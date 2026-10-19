@@ -8,6 +8,7 @@ import {
   IMPORT_MESSAGES,
   IMPORT_SIGNATURE_BYTES,
   importFlags,
+  importPageTask,
   importRetryDelayMs,
   importRetryTask,
   jsonQuestionsToDrafts,
@@ -24,9 +25,10 @@ import {
   type ImportError,
   type TaskQueue,
 } from '@mitaoe/shared';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { FileStore } from '../firebase';
-import type { ImportData, ImportJob } from '../import-data';
+import { IMPORT_LEASE_MS, ImportLeaseLost, type ImportData, type ImportJob } from '../import-data';
 import { readCsv, readPdf, readXlsx, utf8Text } from '../import-files';
 import { storePdfPage } from './import-pages';
 import { LlmUnavailableError, type LlmDriver, type LlmPart, type LlmResponse } from '../llm/driver';
@@ -34,6 +36,8 @@ import { LlmUnavailableError, type LlmDriver, type LlmPart, type LlmResponse } f
 export const importPayloadSchema = z.object({
   orgId: z.string().min(1).max(128),
   jobId: z.string().min(1).max(128),
+  /** A page task's page (importPageTask); the first task and retries read the first page not done. */
+  page: z.number().int().min(1).optional(),
 });
 export type ImportRun = z.infer<typeof importPayloadSchema>;
 
@@ -102,13 +106,18 @@ async function readSource(job: ImportJob, bytes: Buffer): Promise<Read> {
 /**
  * /tasks/import (spec 6.2; docs/testids/phase-6.md "Worker pipeline"): sets the job `running`, checks the stored file
  * again (size, signature) and its page or row limit before any model call, reads JSON and template sheets directly,
- * and sends every other file to the model one page (or part) per call, in page order, one call at a time, saving each
- * page's drafts with the progress. An AI job is counted once against `ai_imports_per_month` before its first call
- * (IMP-08). A model failure (a provider error or an answer outside LlmAnswerSchema) stops at that page: the job waits
- * `retrying` for 1, 2, then 4 minutes, with the next run queued at `retryAt`, which resumes at the first page not done;
- * the fourth failure in a row fails it, retryable by an admin (REL-06). When every page is done the checks run on
- * every draft and the job is `ready`. A job that is not started, already finished, or still waiting for its retry is
- * left as it is, so a task delivered twice or early changes nothing.
+ * and sends every other file to the model one page (or part) per call, in page order, one call at a time. An AI job
+ * is counted once against `ai_imports_per_month` before its first call (IMP-08). Each task reads one page: it saves
+ * that page's drafts with the progress and queues the next page's task, so no request runs long; the task of the last
+ * page runs the checks on every draft and sets the job `ready`. A model failure (a provider error or an answer outside
+ * LlmAnswerSchema) stops at that page: the job waits `retrying` for 1, 2, then 4 minutes, with the next run queued at
+ * `retryAt`, which resumes at the first page not done; the fourth failure in a row fails it, retryable by an admin
+ * (REL-06).
+ *
+ * A run holds the job under a lease (`runId`, `leaseUntil` on the Clock) and every write checks it in a transaction:
+ * a task delivered again while a run holds the job starts no second run (it queues a check for when the lease runs
+ * out, in case the holder died), and a run whose lease ran out writes nothing more. A job that is not started, already
+ * finished, or still waiting for its retry is left as it is, so a task delivered twice or early changes nothing.
  */
 export function importHandler(deps: {
   imports: ImportData;
@@ -120,12 +129,13 @@ export function importHandler(deps: {
   log?: ImportLog;
 }) {
   const { imports: data, files, clock, queue, llm, log } = deps;
+  const lease = () => clock.now() + IMPORT_LEASE_MS;
 
-  return async ({ orgId, jobId }: ImportRun): Promise<string> => {
-    const job = await data.getJob(orgId, jobId);
-    if (!job || !(await data.claim(orgId, jobId, clock.now()))) return 'skipped';
+  /** One run of a claimed job: the file is read again and the first page not done is read by the model. */
+  async function run(orgId: string, job: ImportJob, runId: string): Promise<string> {
+    const jobId = job.id;
     const fail = async ({ error }: { error: ImportError }) => {
-      await data.update(orgId, jobId, { status: 'failed', error });
+      await data.update(orgId, jobId, runId, { status: 'failed', error });
       return `failed: ${error.code}`;
     };
 
@@ -138,7 +148,7 @@ export function importHandler(deps: {
     let modelUsage: { provider: string; model: string; tokens: ImportTokens; costEstimate: number } | undefined;
     if ('drafts' in read) {
       progress = { pagesDone: 1, pagesTotal: 1, questionsFound: read.drafts.length };
-      await data.saveDrafts(orgId, jobId, read.drafts, { progress });
+      await data.saveDrafts(orgId, jobId, runId, read.drafts, { progress, leaseUntil: lease() });
     } else {
       const ent = await data.entitlements(orgId);
       if (!ent) return fail(refused('ORG_NOT_FOUND', IMPORT_MESSAGES.orgMissing));
@@ -146,10 +156,10 @@ export function importHandler(deps: {
         return fail(refused('FEATURE_DISABLED', IMPORT_MESSAGES.aiOff));
       if (!llm) return fail(LLM_UNAVAILABLE);
       const limit = ent.limits.ai_imports_per_month;
-      if (!(await data.countAiImport(orgId, jobId, monthKey(clock.now(), ent.timezone), limit)))
+      if (!(await data.countAiImport(orgId, jobId, runId, monthKey(clock.now(), ent.timezone), limit)))
         return fail(refused('LIMIT_REACHED', IMPORT_MESSAGES.limitReached(limit)));
 
-      progress.pagesTotal = read.parts.length;
+      const total = read.parts.length;
       let tokens = job.tokens ?? { input: 0, output: 0 };
       /** What the job records of the model (IMP-07): the tokens of every successful call and their estimated cost. */
       const usage = () => ({
@@ -163,12 +173,12 @@ export function importHandler(deps: {
         const failures = (job.failures ?? 0) + 1;
         const delay = importRetryDelayMs(failures);
         if (delay === null) {
-          await data.update(orgId, jobId, { ...usage(), failures });
+          await data.update(orgId, jobId, runId, { ...usage(), failures });
           return fail(refused('LLM_UNAVAILABLE', IMPORT_MESSAGES.llmGaveUp, true));
         }
         const retryAt = clock.now() + delay;
         await queue.enqueue(importRetryTask(orgId, jobId, `retry-${failures}-${retryAt}`, retryAt));
-        await data.update(orgId, jobId, {
+        await data.update(orgId, jobId, runId, {
           ...usage(),
           failures,
           status: 'retrying',
@@ -177,16 +187,24 @@ export function importHandler(deps: {
         });
         return `retrying at ${retryAt}`;
       };
-      await data.update(orgId, jobId, { progress });
-      const hints =
-        progress.pagesDone > 0 ? [...new Set((await data.listDrafts(orgId, jobId)).map((d) => d.sectionName))] : [];
-      for (let page = progress.pagesDone + 1; page <= read.parts.length; page++) {
+      if (progress.pagesTotal !== total) {
+        progress.pagesTotal = total;
+        await data.update(orgId, jobId, runId, { progress, leaseUntil: lease() });
+      }
+      const page = progress.pagesDone + 1;
+      if (page <= total) {
         const part = read.parts[page - 1]!;
+        const hints =
+          progress.pagesDone > 0
+            ? [...new Set((await data.listDrafts(orgId, jobId)).map((d) => d.sectionName))].filter(
+                (h): h is string => !!h,
+              )
+            : [];
         const prompt = extractionPrompt({
           page,
           ...('text' in part ? { text: part.text } : {}),
           hasPageFile: 'file' in part,
-          sectionHints: hints.filter((h): h is string => !!h),
+          sectionHints: hints,
         });
         const parts: LlmPart[] = [{ type: 'text', text: prompt.userText }];
         let pageFile: Uint8Array | null = null;
@@ -197,8 +215,8 @@ export function importHandler(deps: {
           } catch {
             return fail(refused('INVALID_FILE', IMPORT_MESSAGES.pageUnreadable(page)));
           }
+          parts.push({ type: 'file', mediaType: 'application/pdf', data: pageFile });
         }
-        if (pageFile) parts.push({ type: 'file', mediaType: 'application/pdf', data: pageFile });
         let res: LlmResponse;
         try {
           res = await llm.generate({ page, system: prompt.system, parts });
@@ -212,10 +230,19 @@ export function importHandler(deps: {
         let drafts = draftsFromModel(page, answer.data.questions, progress.questionsFound + 1);
         if (pageFile)
           drafts = await storePdfPage({ files, ...(log ? { log } : {}) }, { orgId, jobId, page }, pageFile, drafts);
-        for (const d of drafts) if (d.sectionName && !hints.includes(d.sectionName)) hints.push(d.sectionName);
         progress = { ...progress, pagesDone: page, questionsFound: progress.questionsFound + drafts.length };
-        job.failures = 0;
-        await data.saveDrafts(orgId, jobId, drafts, { progress, failures: 0, ...usage() });
+        const last = page === total;
+        // A page before the last lets the job go, so the next page's task can claim it at once.
+        await data.saveDrafts(orgId, jobId, runId, drafts, {
+          progress,
+          failures: 0,
+          ...usage(),
+          leaseUntil: last ? lease() : null,
+        });
+        if (!last) {
+          await queue.enqueue(importPageTask(orgId, jobId, page + 1));
+          return `page ${page} of ${total} done`;
+        }
       }
       modelUsage = usage();
     }
@@ -228,7 +255,7 @@ export function importHandler(deps: {
     const flags = new Map(
       drafts.map((d, i) => [d.id, importFlags(d, { earlierPending: drafts.slice(0, i), testQuestions })] as const),
     );
-    await data.finish(orgId, jobId, flags, { status: 'ready', progress });
+    await data.finish(orgId, jobId, runId, flags, { status: 'ready', progress });
     // IMP-07: one structured line per finished job, with the model's usage when the model was used.
     log?.info(
       {
@@ -243,5 +270,28 @@ export function importHandler(deps: {
       'import.job.done',
     );
     return `ready: ${drafts.length} drafts`;
+  }
+
+  return async ({ orgId, jobId, page }: ImportRun): Promise<string> => {
+    const runId = randomUUID();
+    const claim = await data.claim(orgId, jobId, {
+      runId,
+      now: clock.now(),
+      leaseUntil: lease(),
+      ...(page === undefined ? {} : { page }),
+    });
+    if (!claim) return 'skipped';
+    if ('heldUntil' in claim) {
+      // Another run holds the job. Should it have died, this check claims the job once its lease has run out.
+      await queue.enqueue(importRetryTask(orgId, jobId, `lease-${claim.heldUntil}`, claim.heldUntil));
+      return `skipped: held until ${claim.heldUntil}`;
+    }
+    try {
+      return await run(orgId, claim.job, runId);
+    } catch (err) {
+      if (err instanceof ImportLeaseLost) return 'superseded';
+      await data.release(orgId, jobId, runId);
+      throw err;
+    }
   };
 }

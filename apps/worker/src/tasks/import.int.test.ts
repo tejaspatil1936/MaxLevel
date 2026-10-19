@@ -10,6 +10,7 @@ import { initFileStore, initFirestore } from '../firebase';
 import { importData } from '../import-data';
 import { ScriptedLlm } from '../llm/scripted';
 import { clearFirestore } from '../test-support/emulators';
+import { importJobs } from '../test-support/import-jobs';
 import { localTaskQueue } from './local-queue';
 
 // /tasks/import on the Firestore and Storage emulators with the scripted mock model (IMP-01, IMP-02, IMP-08, SEC-06).
@@ -21,6 +22,7 @@ const llm = new ScriptedLlm();
 const org = db.doc('organizations/org-a');
 const NOW = 1_792_476_000_000; // 20 Oct 2026, 11:30 IST
 let app: FastifyInstance;
+const jobs = importJobs(db, files, () => app);
 let n = 0;
 
 beforeAll(async () => {
@@ -72,8 +74,7 @@ async function runImport(filename: string, format: ImportFormat, bytes: Buffer |
       createdBy: 'uid-1',
       createdAt: NOW,
     });
-  const res = await app.inject({ method: 'POST', url: '/tasks/import', payload: { orgId: 'org-a', jobId: id } });
-  expect(res.statusCode).toBe(200);
+  await jobs.run(id);
   const job = (await org.collection('importJobs').doc(id).get()).data()!;
   const drafts = (await org.collection(`importJobs/${id}/drafts`).orderBy('order').get()).docs.map((d) => d.data());
   return { id, job, drafts };

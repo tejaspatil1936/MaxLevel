@@ -32,7 +32,7 @@ function worker(env: NodeJS.ProcessEnv) {
     llm,
     log: { info: (obj, msg) => lines.push({ obj: obj as Record<string, unknown>, msg }) },
   });
-  return { llm, lines, run: (jobId: string) => run({ orgId: 'org-a', jobId }) };
+  return { llm, lines, run: (jobId: string) => jobs.drive(jobId, run) };
 }
 
 beforeEach(async () => {
