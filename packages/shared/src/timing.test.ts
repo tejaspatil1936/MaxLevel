@@ -53,6 +53,21 @@ describe('canStart and lastStartAt', () => {
     expect(canStart({ ...fixed, window: null }, start)).toEqual({ ok: false, code: 'WINDOW_NOT_OPEN' });
     expect(() => lastStartAt({ ...fixed, window: null })).toThrow();
   });
+
+  it('OPS-10 TST-07 after a reset a start is open past the late-entry cutoff until strictly before the window end', () => {
+    const afterReset = { afterReset: true };
+    expect(lastStartAt(fixed, afterReset)).toBe(window.end);
+    expect(canStart(fixed, start + 20 * MIN, afterReset)).toEqual({ ok: true });
+    expect(canStart(fixed, window.end - 1, afterReset)).toEqual({ ok: true });
+    expect(canStart(fixed, window.end, afterReset)).toEqual({ ok: false, code: 'WINDOW_CLOSED' });
+    expect(canStart(fixed, start - 1, afterReset)).toEqual({ ok: false, code: 'WINDOW_NOT_OPEN' });
+    const end = fullDuration.window.end;
+    expect(canStart(fullDuration, start + 150 * MIN, afterReset)).toEqual({ ok: true });
+    expect(canStart(fullDuration, end, afterReset)).toEqual({ ok: false, code: 'WINDOW_CLOSED' });
+    expect(canStart(hardClose, end - 1, afterReset)).toEqual({ ok: true });
+    // The deadline still follows the timing mode: a fixed slot ends at the slot end.
+    expect(attemptDeadline(fixed, start + 20 * MIN)).toBe(window.end);
+  });
 });
 
 describe('attemptDeadline', () => {

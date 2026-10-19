@@ -36,6 +36,13 @@ describe('studentTestState', () => {
       expect(studentTestState(fixed, late, status)).toBe('finished');
     expect(studentTestState(fixed, start, 'reset')).toBe('live');
   });
+
+  it('OPS-10 US-AD-13 after a reset the test stays live past the late-entry cutoff until the window end (Q25)', () => {
+    expect(studentTestState(fixed, start + 20 * MIN)).toBeNull();
+    expect(studentTestState(fixed, start + 20 * MIN, 'reset')).toBe('live');
+    expect(studentTestState(fixed, start + 60 * MIN, 'reset')).toBeNull();
+    expect(studentTestState(flexible, start + 170 * MIN, 'reset')).toBe('live');
+  });
 });
 
 describe('student dashboard schemas', () => {

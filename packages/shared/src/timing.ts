@@ -14,12 +14,19 @@ function windowOf(s: { window: Settings['window'] }): NonNullable<Settings['wind
   return s.window;
 }
 
+/** How a start is judged: `afterReset` when the student's newest attempt of the test was reset (OPS-10, Q25). */
+export interface StartOptions {
+  afterReset?: boolean;
+}
+
 /**
  * The last moment an attempt can start: fixed slot, slot start + late entry cutoff (never past the slot end);
  * flexible `full_duration`, window end − duration; flexible `hard_close`, window end (a start must come before it).
+ * After a reset (DECISIONS Q25) the student may start again until the window end in every mode.
  */
-export function lastStartAt(s: StartSettings): number {
+export function lastStartAt(s: StartSettings, options: StartOptions = {}): number {
   const w = windowOf(s);
+  if (options.afterReset) return w.end;
   if (s.timingMode === 'fixed') return Math.min(w.start + s.lateEntryCutoffMin * MIN, w.end);
   return s.windowEndPolicy === 'full_duration' ? w.end - s.durationMin * MIN : w.end;
 }
@@ -27,13 +34,19 @@ export function lastStartAt(s: StartSettings): number {
 /**
  * Whether an attempt may start at `now` (spec 5.5): fixed slot from slot start to slot start + cutoff, both inclusive;
  * flexible `full_duration` from window start to window end − duration, inclusive; flexible `hard_close` from window
- * start to strictly before window end. A test without a window never opens.
+ * start to strictly before window end. After a reset (Q25) a start is open from window start to strictly before the
+ * window end, past the late-entry cutoff; the deadline still follows the timing mode. A test without a window never
+ * opens.
  */
-export function canStart(s: StartSettings, now: number): { ok: true } | { ok: false; code: StartRefusal } {
+export function canStart(
+  s: StartSettings,
+  now: number,
+  options: StartOptions = {},
+): { ok: true } | { ok: false; code: StartRefusal } {
   if (!s.window || now < s.window.start) return { ok: false, code: 'WINDOW_NOT_OPEN' };
-  const last = lastStartAt(s);
-  const open = s.timingMode === 'flexible' && s.windowEndPolicy === 'hard_close' ? now < last : now <= last;
-  return open ? { ok: true } : { ok: false, code: 'WINDOW_CLOSED' };
+  const last = lastStartAt(s, options);
+  const strict = options.afterReset || (s.timingMode === 'flexible' && s.windowEndPolicy === 'hard_close');
+  return (strict ? now < last : now <= last) ? { ok: true } : { ok: false, code: 'WINDOW_CLOSED' };
 }
 
 /**

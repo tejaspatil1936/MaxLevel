@@ -14,7 +14,8 @@ export type StudentTestState = 'upcoming' | 'live' | 'in_progress' | 'finished';
 /**
  * US-ST-03: a finished attempt makes the test finished and one in progress keeps it open to resume; otherwise the test
  * is upcoming before its window, live while an attempt can start (canStart), and not shown once the last start time
- * has passed (a test the student missed) or when it has no window.
+ * has passed (a test the student missed) or when it has no window. A newest attempt that was `reset` counts as none,
+ * except that the test stays live until the window end, past the late-entry cutoff (OPS-10, DECISIONS Q25).
  */
 export function studentTestState(
   settings: Pick<Settings, 'timingMode' | 'window' | 'durationMin' | 'lateEntryCutoffMin' | 'windowEndPolicy'>,
@@ -25,7 +26,7 @@ export function studentTestState(
   if (attemptStatus === 'in_progress') return 'in_progress';
   if (!settings.window) return null;
   if (now < settings.window.start) return 'upcoming';
-  return canStart(settings, now).ok ? 'live' : null;
+  return canStart(settings, now, { afterReset: attemptStatus === 'reset' }).ok ? 'live' : null;
 }
 
 /** A live or upcoming test as the dashboard lists it. The heading is `<dayLabel>: <title>`, or the title alone. */
