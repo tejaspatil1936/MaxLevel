@@ -137,3 +137,7 @@ F-6.04 done — import review page with live progress, retry, flagged-first grou
 Checkpoints: mid-phase review found 3 blocking issues (XLSX cell-grid and zip-bomb memory blow-up, uncapped PDF canvas and unreadable pages retried forever, parallel import runs from re-delivered tasks), fixed with one page per task under a run lease; release-gate review found an import stuck running after a failed enqueue or finish; verify full found high advisories in undici (pnpm override) and a changed editor screenshot (intended Import from file button, baselines regenerated); QA found a cell over 1 MB leaving an import running forever and progress not announced (WCAG 4.1.3). Each fixed after a regression test; five minor QA items fixed too (parallel Idempotency-Key, double approve all, focus after Try again, malformed id page, upload not aborted).
 VERIFY full FAIL fb6ed1e64be86a0a2a1fa26ed7b1a9cb3629cf73 (docs/verification/phase-6.md): acceptance-lock fails on the F-5.05 screenshot baselines and the only failing test is the locked F-4.03.spec.ts:171 assertion; every phase 6 feature's tests pass.
 PHASE 6 DONE 4/4 features
+
+## Phase 7
+
+PHASE 7 START e2a359d71ba37b0d7da14e7e08f0e5dd4ccec2a0
