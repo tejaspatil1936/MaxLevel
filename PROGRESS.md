@@ -117,3 +117,4 @@ PHASE 4 DONE 5/6 features
 
 PHASE 5 START 0f6ce3ea0677262200e00e6e345b50fdf9335dbb
 Tests: 24 phase 5 acceptance tests by test-author (9 e2e REQs, 9 more partly end to end; integration, unit and manual REQs named in the contract), reviewed (no blocking gaps; 5 robustness and contract fixes applied), locked.
+F-5.01 done — Live exams page and live view: one roster load plus the RTDB live mirror (start, answered count, strikes, finishes, auto-submit), filters, search and sorting, live/ and presence/ rules tests
