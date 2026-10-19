@@ -202,8 +202,13 @@ export const attemptEventResultSchema = z.object({
 });
 export type AttemptEventResult = z.infer<typeof attemptEventResultSchema>;
 
-/** POST /v1/attempts/{id}/submit: `time_up` when the client submits because time ran out (EX-16). */
-export const attemptSubmitSchema = z.object({ reason: z.literal('time_up').optional() }).strict();
+/**
+ * POST /v1/attempts/{id}/submit: `time_up` when the client submits because time ran out (EX-16), with the deadline it
+ * counted down to; before the stored deadline that is 409 DEADLINE_NOT_REACHED with `details.deadlineAt`.
+ */
+export const attemptSubmitSchema = z
+  .object({ reason: z.literal('time_up').optional(), deadlineAt: ms.optional() })
+  .strict();
 export const attemptSubmitResultSchema = z.object({ status: attemptStatusSchema, submittedAt: ms });
 
 // ---------- admin ----------

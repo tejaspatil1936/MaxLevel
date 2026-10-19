@@ -4,6 +4,17 @@
 export const LATE_SYNC_GRACE_MS = 120_000;
 /** A timed question accepts answers up to its limit plus 2 seconds after it was first served (Q-12). */
 export const QUESTION_TIME_GRACE_MS = 2_000;
+/** How far before the stored deadline a device's time-up submit is still taken (its clock's error, EX-16). */
+export const TIME_UP_GRACE_MS = 5_000;
+
+/**
+ * EX-16, OPS-06: a time-up submit that names the deadline the device counted down to is refused while the stored
+ * deadline (moved by extra time the device missed) is more than the clock grace away. A manual submit, and a time-up
+ * that names no deadline (API callers), are taken at any time.
+ */
+export function timeUpTooEarly(input: { deadlineAt: number; claimedDeadlineAt?: number; now: number }): boolean {
+  return input.claimedDeadlineAt !== undefined && input.now < input.deadlineAt - TIME_UP_GRACE_MS;
+}
 
 const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000] as const;
 const RETRY_STEADY_MS = 15_000;

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { LATE_SYNC_GRACE_MS, QUESTION_TIME_GRACE_MS, answerVerdict, retryDelayMs } from './sync';
+import {
+  LATE_SYNC_GRACE_MS,
+  QUESTION_TIME_GRACE_MS,
+  TIME_UP_GRACE_MS,
+  answerVerdict,
+  retryDelayMs,
+  timeUpTooEarly,
+} from './sync';
 
 describe('retryDelayMs', () => {
   it('EX-12 retries wait 1, 2, 4 and 8 seconds, then every 15 seconds', () => {
@@ -48,5 +55,24 @@ describe('answerVerdict', () => {
     const servedAt = base.serverNow - 30_000;
     expect(answerVerdict({ ...base, storedSeq: 2, servedAt, timeLimitSec: 20 })).toBe('stale');
     expect(answerVerdict({ ...base, storedSeq: 2, serverNow: deadlineAt + LATE_SYNC_GRACE_MS + 1 })).toBe('stale');
+  });
+});
+
+describe('timeUpTooEarly', () => {
+  const deadlineAt = 1_000_000;
+  it('EX-16 OPS-06 a time-up naming a deadline is refused until the clock grace before the stored deadline', () => {
+    expect(timeUpTooEarly({ deadlineAt, claimedDeadlineAt: deadlineAt - 600_000, now: deadlineAt - 595_000 })).toBe(
+      true,
+    );
+    expect(timeUpTooEarly({ deadlineAt, claimedDeadlineAt: deadlineAt, now: deadlineAt - TIME_UP_GRACE_MS - 1 })).toBe(
+      true,
+    );
+    expect(timeUpTooEarly({ deadlineAt, claimedDeadlineAt: deadlineAt, now: deadlineAt - TIME_UP_GRACE_MS })).toBe(
+      false,
+    );
+    expect(timeUpTooEarly({ deadlineAt, claimedDeadlineAt: deadlineAt, now: deadlineAt + 1 })).toBe(false);
+  });
+  it('EX-16 a time-up naming no deadline is taken at any time', () => {
+    expect(timeUpTooEarly({ deadlineAt, now: 0 })).toBe(false);
   });
 });
