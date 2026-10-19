@@ -17,7 +17,7 @@ export function SettingsScreen() {
   const key = qk.org(orgId);
   const lock = useMutation({
     mutationFn: (profileLocked: boolean) =>
-      api<OrgWorkspace>('/v1/org/settings', { method: 'PATCH', body: { profileLocked } }),
+      api<OrgWorkspace>('/v1/org/settings', { method: 'PATCH', body: { profileLocked }, keepalive: true }),
     onMutate: async (profileLocked) => {
       await qc.cancelQueries({ queryKey: key });
       const previous = qc.getQueryData<OrgWorkspace>(key);
