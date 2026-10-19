@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initFirebase } from './firebase';
 import { testApp } from './test-support/app';
-import { attemptClient, MIN, NOW } from './test-support/attempts';
+import { attemptClient, MIN, NOW, studentOf } from './test-support/attempts';
 import { clearEmulators } from './test-support/emulators';
 import { SEED, seedBase } from './test-support/seed';
 import { asClaims } from './test-support/tokens';
@@ -91,6 +91,34 @@ describe('Release results and Withdraw results', () => {
     expect(await audit('test.results.release')).toEqual([]);
     ctx.clock.set(t.window.end);
     expect(await post(t.testId, 'release')).toEqual({ status: 200, body: { resultsReleasedAt: t.window.end } });
+  });
+
+  it('DATA-05 OPS-06 a full review is refused while an attempt with extra time is still being answered', async () => {
+    const t = await api.examTest({ overrides: { resultRelease: 'manual', resultDetail: 'full' } });
+    const s1 = await studentOf(auth, 1);
+    const { body } = await api.start(t.testId, s1);
+    const grant = await ctx.app.inject({
+      method: 'POST',
+      url: `/v1/attempts/${body.attempt.id}/extra-time`,
+      headers: await admin(),
+      payload: { minutes: 30, reason: 'Power cut' },
+    });
+    expect(grant.statusCode, grant.body).toBe(200);
+    ctx.clock.set(t.window.end + MIN);
+
+    const refused = await post(t.testId, 'release');
+    expect([refused.status, code(refused)]).toEqual([409, 'FULL_REVIEW_WHILE_ANSWERING']);
+    expect(await fields(t.testId)).toEqual({ resultsReleasedAt: null, resultsWithdrawn: false });
+    expect(await audit('test.results.release')).toEqual([]);
+
+    const submitted = await ctx.app.inject({
+      method: 'POST',
+      url: `/v1/attempts/${body.attempt.id}/submit`,
+      headers: { ...s1, 'idempotency-key': crypto.randomUUID() },
+      payload: {},
+    });
+    expect(submitted.statusCode, submitted.body).toBe(200);
+    expect((await post(t.testId, 'release')).status, 'released once nobody is answering').toBe(200);
   });
 
   it('RES-01 an after_close test can be released early by an admin', async () => {
