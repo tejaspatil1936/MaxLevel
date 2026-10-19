@@ -190,6 +190,20 @@ async function storeDrafts() {
 const stored = async (id: string) => (await jobRef('j1').collection('drafts').doc(id).get()).data()!;
 
 describe('import draft edits', () => {
+  it('IMP-11 A11Y-10 the job view carries a data URL for each stored draft image, and leaves missing ones out', async () => {
+    await storeDrafts();
+    const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5]);
+    await ctx.firebase.bucket.file(FIG).save(PNG, { contentType: 'image/png' });
+    const missing = `${org}/imports/j1/figures/d0001-1.png`;
+    await jobRef('j1')
+      .collection('drafts')
+      .doc('d0001')
+      .update({ images: [{ path: missing, alt: 'Gone' }] });
+    const res = await call('GET', '/v1/imports/j1');
+    expect(res.status).toBe(200);
+    expect(res.body.imageUrls).toEqual({ [FIG]: `data:image/png;base64,${PNG.toString('base64')}` });
+  });
+
   it('IMP-11 IMP-09 an edit returns the draft checked again, and every other pending draft is rechecked', async () => {
     await storeDrafts();
     const res = await call('PATCH', '/v1/imports/j1/drafts/d0001', { prompt: 'What is 9 x 8?', difficulty: 'hard' });

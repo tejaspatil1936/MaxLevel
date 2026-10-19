@@ -61,7 +61,7 @@ const refuse = (r: Refusal) => new AppError(r.status, r.error.code, r.error.mess
  * The API never parses a file and never waits on the worker (REL-06).
  */
 export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
-  const { data, audit, clock, queue, entitlements } = ctx;
+  const { data, audit, clock, queue, entitlements, questionImages } = ctx;
   const db = ctx.firebase.db;
   const sources = importSources(ctx.firebase);
   const secret = ctx.config.exportLinkSecret;
@@ -249,6 +249,10 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           progress: job.progress,
           createdAt: job.createdAt,
           drafts,
+          // Once ready, the admin sees each draft's figures as data URLs, as the question editor shows images.
+          ...(job.status === 'ready'
+            ? { imageUrls: await questionImages.dataUrls(drafts.flatMap((d) => d.images.map((i) => i.path))) }
+            : {}),
           ...(job.error ? { error: job.error } : {}),
           ...(job.retryAt !== undefined ? { retryAt: job.retryAt } : {}),
           ...(job.provider ? { provider: job.provider } : {}),
