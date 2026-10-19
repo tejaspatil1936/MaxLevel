@@ -138,3 +138,4 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Pre-warm holds until window.end, lowering the floor while students with extra time or accommodations are still writing; use the latest deadline.
 - DATA-05: `immediate` release with `resultDetail: full` in a fixed window shows a submitted student the answer key while others (or extended students) still answer; the spec defines immediate as on submit, so it was left as it is.
 - A11Y-18: the accessibility statement half is left to F-8.01 (A11Y-22); it must carry the real-time exception text.
+- The worker image needs a Chromium and CHROMIUM_PATH for report PDFs (F-7.02); there is no Dockerfile yet (OWNER_SETUP deploy step).
