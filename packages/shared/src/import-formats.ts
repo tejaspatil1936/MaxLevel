@@ -117,4 +117,8 @@ export const IMPORT_MESSAGES = {
   orgMissing: 'This organization no longer exists, so the import stopped.',
   llmUnavailable: "The AI service didn't answer.",
   llmGaveUp: "The AI service didn't answer after 4 tries.",
+  /** A run stopped by an error that went on through several deliveries of its task (retryable by an admin). */
+  internal: 'Something went wrong while reading this file.',
+  /** A write Firestore refused as invalid, such as a document past its 1 MiB limit (not retryable). */
+  unstorable: 'This file holds something too large to store. Check the file and try again.',
 } as const;
