@@ -3,7 +3,7 @@
 import type { ImportDraft, ImportJobView } from '@mitaoe/shared';
 import { notify } from '@mitaoe/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { formatCount } from '@/lib/format';
@@ -89,6 +89,18 @@ export function useDraftReview(job: ImportJobView) {
   });
 
   const busy = approve.isPending || discard.isPending;
+  /**
+   * Sends one review action at a time. `busy` only changes after a render, so the second click of a double click
+   * would still see it false and send the action again (refused, with an error shown).
+   */
+  const inFlight = useRef(false);
+  const once = (send: () => Promise<unknown>) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    void send()
+      .catch(() => undefined)
+      .finally(() => (inFlight.current = false));
+  };
   return {
     current,
     /** An archived organization: drafts can be read, never approved, edited or discarded (ORG-07). */
@@ -119,15 +131,15 @@ export function useDraftReview(job: ImportJobView) {
     approveOne(d: ImportDraft) {
       if (readOnly || busy || d.status !== 'pending') return;
       if (d.flags.length) return void notify.info(t('imports.fixBeforeApproving'));
-      approve.mutate({ ids: [d.id], from: d.id });
+      once(() => approve.mutateAsync({ ids: [d.id], from: d.id }));
     },
     /** Every pending draft without a flag, in order. */
     approveAll() {
       const ids = drafts.filter((d) => draftGroup(d) === 'ready').map((d) => d.id);
-      if (!readOnly && !busy && ids.length) approve.mutate({ ids });
+      if (!readOnly && !busy && ids.length) once(() => approve.mutateAsync({ ids }));
     },
     discardOne(d: ImportDraft) {
-      if (!readOnly && !busy && d.status === 'pending') discard.mutate(d);
+      if (!readOnly && !busy && d.status === 'pending') once(() => discard.mutateAsync(d));
     },
   };
 }
