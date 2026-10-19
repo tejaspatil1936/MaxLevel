@@ -1,6 +1,11 @@
 import {
   FINISHED_ATTEMPT_STATUSES,
+  isEligible,
   leaderboardPages,
+  NO_RESTRICTION,
+  type EligibilityRules,
+  type EligibilityStudent,
+  type PrewarmTarget,
   type AnswerRecord,
   type AttemptRecord,
   type GradingQuestion,
@@ -215,6 +220,47 @@ export function workerData(db: Firestore) {
         tx.update(ref, fields);
         return { attempt: { ...attempt, ...fields }, finalized: true };
       });
+    },
+
+    /** PERF-06: what a pre-warm run reads of a test (status, settings snapshot window, last pre-warm), or null. */
+    async getPrewarmTarget(orgId: string, testId: string): Promise<PrewarmTarget | null> {
+      const d = await org(orgId).collection('tests').doc(testId).get();
+      if (!d.exists) return null;
+      const resolved = d.get('resolved') as Settings | undefined;
+      const prewarmedFor = d.get('prewarmedFor') as unknown;
+      return {
+        status: d.get('status') as string,
+        window: resolved?.window ?? null,
+        prewarmedFor: typeof prewarmedFor === 'number' ? prewarmedFor : null,
+      };
+    },
+
+    /** PERF-06, SER-04 to SER-06: the registered students the test's series and test rules admit. */
+    async countEligibleStudents(orgId: string, testId: string): Promise<number> {
+      const test = await org(orgId).collection('tests').doc(testId).get();
+      const rules = (r: unknown): EligibilityRules => ({ ...NO_RESTRICTION, ...(r as Partial<EligibilityRules>) });
+      const series = await org(orgId)
+        .collection('series')
+        .doc(String(test.get('seriesId')))
+        .get();
+      const students = await org(orgId).collection('students').where('status', '==', 'registered').get();
+      return students.docs.filter((s) =>
+        isEligible(
+          {
+            id: s.id,
+            status: 'registered',
+            departmentId: (s.get('departmentId') as EligibilityStudent['departmentId']) ?? null,
+            graduationYear: (s.get('graduationYear') as EligibilityStudent['graduationYear']) ?? null,
+          },
+          rules(series.get('eligibility')),
+          rules(test.get('eligibility')),
+        ),
+      ).length;
+    },
+
+    /** REL-04: records the slot a pre-warm ran for, so a retry of the same task calls the scaler no more. */
+    async markPrewarmed(orgId: string, testId: string, windowStart: number, now: number): Promise<void> {
+      await org(orgId).collection('tests').doc(testId).update({ prewarmedFor: windowStart, prewarmedAt: now });
     },
   };
 }

@@ -167,4 +167,33 @@ describe('worker data access', () => {
     expect((await board.get()).data()).toEqual({ computedAt: 6, total: 1, pageCount: 1, rows: [row(1)] });
     expect((await board.collection('pages').doc('1').get()).exists).toBe(false);
   });
+
+  it('PERF-06 ORG-03 reads the pre-warm target, counts the eligible registered students and records the slot', async () => {
+    const org = db.doc('organizations/org-a');
+    const window = { start: 1_000, end: 2_000 };
+    await org
+      .collection('series')
+      .doc('s1')
+      .set({ eligibility: { departmentIds: ['cs', 'it'] } });
+    await org
+      .collection('tests')
+      .doc('t1')
+      .set({ seriesId: 's1', status: 'scheduled', resolved: { window }, eligibility: { exclude: ['st-3'] } });
+    await org.collection('tests').doc('t2').set({ seriesId: 's1', status: 'draft' });
+    const student = (id: string, status: string, departmentId: string) =>
+      org.collection('students').doc(id).set({ status, departmentId, graduationYear: 2027 });
+    await student('st-1', 'registered', 'cs');
+    await student('st-2', 'registered', 'it');
+    await student('st-3', 'registered', 'cs');
+    await student('st-4', 'invited', 'cs');
+    await student('st-5', 'registered', 'mech');
+    await db.doc('organizations/org-b/students/st-6').set({ status: 'registered', departmentId: 'cs' });
+
+    expect(await data.getPrewarmTarget('org-a', 't1')).toEqual({ status: 'scheduled', window, prewarmedFor: null });
+    expect(await data.getPrewarmTarget('org-a', 't2')).toEqual({ status: 'draft', window: null, prewarmedFor: null });
+    expect(await data.getPrewarmTarget('org-b', 't1')).toBeNull();
+    expect(await data.countEligibleStudents('org-a', 't1')).toBe(2);
+    await data.markPrewarmed('org-a', 't1', 1_000, 400);
+    expect(await data.getPrewarmTarget('org-a', 't1')).toMatchObject({ prewarmedFor: 1_000 });
+  });
 });
