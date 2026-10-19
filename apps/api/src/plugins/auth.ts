@@ -126,14 +126,15 @@ export function registerAuth(
     }
   });
 
-  // Feature gate after the org is known; applies to super admins in the org's workspace as well (ORG-13).
-  // Account and org status (AUTH-06, ORG-07), after the org is known.
-  app.addHook('preHandler', async (req) => {
+  // Account and org status (AUTH-06, ORG-07), then the feature gate (FF-02; super admins in the org's workspace as
+  // well, ORG-13), once the org is known and before the request is validated: a refused caller learns nothing about
+  // the body, and refusals come in the documented order (role, status, feature, then the body).
+  app.addHook('preValidation', async (req) => {
     if (!deps.status || !req.user || !req.orgId) return;
     await deps.status.assert(req.user, req.orgId, !['GET', 'HEAD', 'OPTIONS'].includes(req.method));
   });
 
-  app.addHook('preHandler', async (req) => {
+  app.addHook('preValidation', async (req) => {
     const feature = req.routeOptions.config.feature;
     if (!feature) return;
     if (!req.orgId || !deps.entitlements) throw forbidden();

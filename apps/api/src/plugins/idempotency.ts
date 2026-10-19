@@ -1,6 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { Clock } from '@mitaoe/shared';
-import type { FastifyInstance, preHandlerAsyncHookHandler } from 'fastify';
+import type {
+  FastifyInstance,
+  FastifyRequest,
+  preHandlerAsyncHookHandler,
+  preValidationAsyncHookHandler,
+} from 'fastify';
 import type { IdempotencyData } from '../data/idempotency';
 import { AppError } from '../errors';
 
@@ -27,18 +32,29 @@ declare module 'fastify' {
  * are not stored, so a refused request can be retried with its key. The key is claimed in a transaction before the
  * handler runs, so requests sent together with one key run it once: while the first runs, the others get 409
  * IDEMPOTENCY_IN_PROGRESS and can be sent again. Register before compression, so the body stored
- * is the JSON sent, and before the routes. The check is a route-level preHandler, so it runs after every app-level one
- * (sign-in, account and org status, feature gate: AUTH-06, ORG-13): a refused caller never gets a stored response back.
+ * is the JSON sent, and before the routes. The key's presence is a route-level preValidation hook, after the app-level
+ * gates (sign-in, account and org status, feature gate: AUTH-06, ORG-13) and before the body is validated; the claim
+ * is a route-level preHandler, after validation, so a refused caller never gets a stored response back.
  */
 export function registerIdempotency(app: FastifyInstance, deps: { store: IdempotencyData; clock: Clock }): void {
   const { store, clock } = deps;
 
-  const check: preHandlerAsyncHookHandler = async (req, reply) => {
+  const keyOf = (req: FastifyRequest): string => {
     const key = req.headers['idempotency-key'];
     if (typeof key !== 'string' || !KEY.test(key))
       throw new AppError(400, 'IDEMPOTENCY_KEY_REQUIRED', 'Send an Idempotency-Key header with this request.', {
         header: 'Idempotency-Key',
       });
+    return key;
+  };
+
+  /** A missing or malformed key is refused before the body is validated (API-02, after the app-level gates). */
+  const requireKey: preValidationAsyncHookHandler = async (req) => {
+    keyOf(req);
+  };
+
+  const check: preHandlerAsyncHookHandler = async (req, reply) => {
+    const key = keyOf(req);
     const orgId = req.orgId;
     if (!orgId || !req.user) throw new AppError(403, 'FORBIDDEN', 'Your account cannot use this.');
     const id = createHash('sha256').update(`${req.user.uid}\n${req.method} ${req.url}\n${key}`).digest('hex');
@@ -61,6 +77,7 @@ export function registerIdempotency(app: FastifyInstance, deps: { store: Idempot
 
   app.addHook('onRoute', (route) => {
     if (!route.config?.idempotent) return;
+    route.preValidation = [...(route.preValidation ? [route.preValidation].flat() : []), requireKey];
     route.preHandler = [...(route.preHandler ? [route.preHandler].flat() : []), check];
   });
 
