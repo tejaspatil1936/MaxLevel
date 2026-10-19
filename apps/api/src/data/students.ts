@@ -1,4 +1,4 @@
-import type { Accommodation, WhitelistStatus } from '@mitaoe/shared';
+import type { AccommodationInput, Accommodations, WhitelistStatus } from '@mitaoe/shared';
 import { FieldPath, FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { normalizeEmail } from './keys';
 import { writer, type Tx } from './tx';
@@ -17,7 +17,7 @@ export interface StudentRecord {
   createdAt: number;
   updatedAt: number;
   /** Standing accommodations by series ID (OPS-07); `{}` when the student has none. */
-  accommodations: Record<string, Accommodation>;
+  accommodations: Accommodations;
 }
 
 export function studentsData(db: Firestore) {
@@ -98,7 +98,7 @@ export function studentsData(db: Firestore) {
      * OPS-07: stores the student's accommodation for a series, replacing any earlier one, or removes it (`null`). The
      * series ID is one field path segment, so no character in it can reach another field.
      */
-    setAccommodation(orgId: string, tx: Tx, studentId: string, seriesId: string, a: Accommodation | null): void {
+    setAccommodation(orgId: string, tx: Tx, studentId: string, seriesId: string, a: AccommodationInput | null): void {
       writer(tx).update(col(orgId).doc(studentId), new FieldPath('accommodations', seriesId), a ?? FieldValue.delete());
     },
 
