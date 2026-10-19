@@ -260,6 +260,13 @@ function RefusedAnswers({ rejections, ids }: { rejections: Rejection[]; ids: rea
  * focus or opens a dialog.
  */
 function ExtensionNotice({ notice, onDismiss }: { notice: string | null; onDismiss: () => void }) {
+  // Dismiss removes its own button, so focus goes back to where it came from, or to the exam's main region (A11Y-03).
+  const before = useRef<HTMLElement | null>(null);
+  const dismiss = () => {
+    const back = before.current?.isConnected ? before.current : document.getElementById('main');
+    back?.focus();
+    onDismiss();
+  };
   return (
     <div
       className={
@@ -272,7 +279,13 @@ function ExtensionNotice({ notice, onDismiss }: { notice: string | null; onDismi
         {notice ?? ''}
       </p>
       {notice ? (
-        <Button variant="secondary" onClick={onDismiss}>
+        <Button
+          variant="secondary"
+          onFocus={(e) => {
+            before.current = e.relatedTarget instanceof HTMLElement ? e.relatedTarget : null;
+          }}
+          onClick={dismiss}
+        >
           {t('attempt.dismissNotice')}
         </Button>
       ) : null}
