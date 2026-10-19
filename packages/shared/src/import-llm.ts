@@ -125,7 +125,7 @@ export interface DraftInput {
   images: Array<{ path: string; alt: string }>;
 }
 
-/** Option ID of a 0-based index: a, b, … (an index past the options names a missing option, which is flagged). */
+/** Option ID of a 0-based index: a, b, … */
 export const optionIdOf = (index: number): string => String.fromCharCode(97 + index);
 
 const present = (s: string | undefined) => (s !== undefined && s.trim() !== '' ? s : undefined);
@@ -141,7 +141,11 @@ export function draftsFromModel(page: number, questions: ReadonlyArray<LlmQuesti
       sourcePage: page,
       prompt: q.prompt,
       options: q.options.map((text, k) => ({ id: optionIdOf(k), text })),
-      correctOptionIds: [...new Set(q.correct)].sort((a, b) => a - b).map(optionIdOf),
+      // Only indexes of options the question has: one past them would name no option (or no letter at all).
+      correctOptionIds: [...new Set(q.correct)]
+        .filter((k) => k < q.options.length)
+        .sort((a, b) => a - b)
+        .map(optionIdOf),
       difficultySuggested: true,
       images: [],
     };
