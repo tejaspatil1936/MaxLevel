@@ -26,6 +26,7 @@ export function useDraftReview(job: ImportJobView) {
   const questionsChanged = useQuestionsChanged(job.testId);
   const [chosen, setChosen] = useState<string | null>(null);
   const [focusOn, setFocusOn] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const drafts = job.drafts;
   const current = chosen && drafts.some((d) => d.id === chosen) ? chosen : firstCurrent(drafts);
   const jobKey = qk.orgItem(orgId, 'imports', job.id);
@@ -94,6 +95,24 @@ export function useDraftReview(job: ImportJobView) {
     goTo,
     refresh,
     busy,
+    /** The draft whose inline edit is open (IMP-12); focus returns to its article when it closes. */
+    editing,
+    startEdit(d: ImportDraft) {
+      if (d.status !== 'pending') return;
+      setChosen(d.id);
+      setEditing(d.id);
+    },
+    async saved(d: ImportDraft) {
+      setEditing(null);
+      await refresh();
+      notify.success(t('imports.saved', { n: formatCount(d.order) }));
+      goTo(d.id);
+    },
+    cancelEdit() {
+      const id = editing;
+      setEditing(null);
+      goTo(id);
+    },
     /** Approves one draft; a flagged one is never sent (IMP-10). */
     approveOne(d: ImportDraft) {
       if (busy || d.status !== 'pending') return;

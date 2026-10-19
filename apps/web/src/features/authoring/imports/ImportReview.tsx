@@ -17,6 +17,7 @@ import { SeriesNotFound } from '../series/SeriesNotFound';
 import { testHeading, testUrl } from '../tests/test-view';
 import { DraftActions } from './DraftActions';
 import { DraftArticle, DraftBody } from './DraftArticle';
+import { DraftEditForm } from './DraftEditForm';
 import { isRunning, JobFailed, JobProgress } from './JobProgress';
 import { DRAFT_GROUPS, displayOrder, draftGroup, statusWordKey, summaryCounts } from './review-order';
 import { importJobPath, useDraftReview } from './useDraftReview';
@@ -140,16 +141,29 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
                     current={d.id === review.current}
                     onSelect={() => review.select(d.id)}
                   >
-                    <DraftBody job={job} draft={d} imageUrls={job.imageUrls ?? {}} />
-                    {d.status === 'approved' && d.questionId && positions.has(d.questionId) ? (
-                      <p>{t('imports.addedAs', { m: formatCount(positions.get(d.questionId)!) })}</p>
-                    ) : null}
-                    <DraftActions
-                      draft={d}
-                      readOnly={readOnly}
-                      onApprove={() => review.approveOne(d)}
-                      onDiscard={() => review.discardOne(d)}
-                    />
+                    {review.editing === d.id ? (
+                      <DraftEditForm
+                        jobId={job.id}
+                        draft={d}
+                        imageUrls={job.imageUrls ?? {}}
+                        onSaved={review.saved}
+                        onCancel={review.cancelEdit}
+                      />
+                    ) : (
+                      <>
+                        <DraftBody job={job} draft={d} imageUrls={job.imageUrls ?? {}} />
+                        {d.status === 'approved' && d.questionId && positions.has(d.questionId) ? (
+                          <p>{t('imports.addedAs', { m: formatCount(positions.get(d.questionId)!) })}</p>
+                        ) : null}
+                        <DraftActions
+                          draft={d}
+                          readOnly={readOnly}
+                          onApprove={() => review.approveOne(d)}
+                          onEdit={() => review.startEdit(d)}
+                          onDiscard={() => review.discardOne(d)}
+                        />
+                      </>
+                    )}
                   </DraftArticle>
                 ))}
               </section>
