@@ -4,10 +4,11 @@ import {
   startAttempt,
   storedEvents,
   STRIKE_REASONS,
+  storedAnswers,
   storedAttempt,
   strikeNumbersOf,
 } from '../acceptance/fixtures/exam';
-import { postExtraTime } from '../acceptance/fixtures/live';
+import { postAttemptAction, postExtraTime } from '../acceptance/fixtures/live';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
 import type { TestApi } from '../acceptance/fixtures/test-api';
@@ -146,5 +147,45 @@ test.describe('phase 5 review @live', () => {
     await expect(exam.timer, 'the screen counts down to the new deadline').toHaveText(/^(09:5\d|10:00)$/);
     expect((await storedAttempt(emulators, ORG_A.id, attempt.id)).status).toBe('in_progress');
     await expect(page).toHaveURL(/\/exam\/\?attempt=/);
+  });
+
+  test('OPS-04 answers given offline before a termination are kept on the device and saved after a reinstate', async ({
+    apiAs,
+    testApi,
+    newSession,
+    emulators,
+  }) => {
+    test.setTimeout(120_000);
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id });
+    const page = await newSession(accounts.studentA);
+    await page.setViewportSize({ width: 1024, height: 768 });
+    const { attempt, questions } = await startAttempt(await apiAs(accounts.studentA), t.testId);
+    const exam = new ExamScreen(page);
+    await exam.gotoAttempt(attempt.id);
+    await exam.options.getByRole('radio').first().check();
+    await exam.expectSaved();
+
+    await page.context().setOffline(true);
+    await exam.saveAndNext.click();
+    await exam.options.getByRole('radio').nth(1).check();
+    await exam.saveAndNext.click();
+    await exam.options.getByRole('radio').nth(2).check();
+    await expect(exam.syncStatus).toHaveText('Offline, 2 answers waiting');
+    const admin = await apiAs(accounts.adminA);
+    expect((await postAttemptAction(admin, attempt.id, 'terminate', { reason: 'Went offline' })).status).toBe(200);
+    await page.context().setOffline(false);
+    await expect(page).toHaveURL(/\/exam\/submitted\//);
+
+    expect((await postAttemptAction(admin, attempt.id, 'reinstate', { reason: 'A network issue' })).status).toBe(200);
+    await page.goto(ExamScreen.attemptUrl(attempt.id));
+    await exam.expectAttemptOpen();
+    await expect(exam.syncStatus).toHaveText('Saved');
+    const saved = await storedAnswers(emulators, ORG_A.id, attempt.id);
+    expect(Object.keys(saved).sort(), 'all three answers on the server').toEqual(
+      questions
+        .slice(0, 3)
+        .map((q) => q.id)
+        .sort(),
+    );
   });
 });
