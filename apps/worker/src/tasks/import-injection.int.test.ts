@@ -51,6 +51,7 @@ describe('import prompt injection', () => {
       model: mock.model,
       prices: mock.prices,
       generate: (r) => (requests.push(r), mock.generate(r)),
+      summarize: (r) => mock.summarize(r),
     };
     const run = importHandler({ imports: importData(db), files, clock, queue: localTaskQueue(db, clock), llm });
     const id = await jobs.create('notes.txt', 'txt', injection);

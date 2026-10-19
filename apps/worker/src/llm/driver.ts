@@ -1,7 +1,8 @@
 // The worker's only way to a language model (IMP-07): one call per page or part of an import, with the shared system
 // instructions and a user message of text and file parts (extractionPrompt). Drivers: the scripted mock for tests
 // (LLM_PROVIDER=mock, scripted.ts) and, from F-6.03, the AI SDK adapter set by configuration. The worker validates
-// every answer with LlmAnswerSchema itself, so a driver returns the model's structured output unchecked.
+// every answer with LlmAnswerSchema itself, so a driver returns the model's structured output unchecked. Reports
+// (EXP-05) make summary calls: a system message and a user message of text, validated with ReportSummarySchema.
 
 import type { LlmPrices } from '@mitaoe/shared';
 
@@ -12,6 +13,12 @@ export interface LlmRequest {
   page: number;
   system: string;
   parts: LlmPart[];
+}
+
+/** One report summary call (EXP-05): the fixed instructions and exactly the report's metrics as JSON. */
+export interface SummaryRequest {
+  system: string;
+  prompt: string;
 }
 
 export interface LlmResponse {
@@ -40,4 +47,6 @@ export interface LlmDriver {
   readonly prices: LlmPrices;
   /** One model call; throws LlmUnavailableError when the provider fails. */
   generate(request: LlmRequest): Promise<LlmResponse>;
+  /** One report summary call (EXP-05), its output unvalidated; throws LlmUnavailableError when the provider fails. */
+  summarize(request: SummaryRequest): Promise<LlmResponse>;
 }

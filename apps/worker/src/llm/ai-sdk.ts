@@ -1,6 +1,6 @@
-import { LlmAnswerSchema, type LlmPrices } from '@mitaoe/shared';
+import { LlmAnswerSchema, ReportSummarySchema, type LlmPrices } from '@mitaoe/shared';
 import { APICallError, generateObject, type LanguageModel } from 'ai';
-import { LlmUnavailableError, type LlmDriver, type LlmRequest, type LlmResponse } from './driver';
+import { LlmUnavailableError, type LlmDriver, type LlmRequest, type LlmResponse, type SummaryRequest } from './driver';
 
 /** How long one model call may take before it counts as a failure (REL-06): a page of a dense paper takes well under. */
 const LLM_CALL_TIMEOUT_MS = 120_000;
@@ -22,7 +22,7 @@ export class AiSdkLlm implements LlmDriver {
   ) {}
 
   async generate(request: LlmRequest): Promise<LlmResponse> {
-    try {
+    return this.call(async (abortSignal) => {
       const result = await generateObject({
         model: this.languageModel,
         schema: LlmAnswerSchema,
@@ -39,12 +39,37 @@ export class AiSdkLlm implements LlmDriver {
           },
         ],
         maxRetries: 0,
-        abortSignal: AbortSignal.timeout(this.timeoutMs),
+        abortSignal,
       });
-      return {
-        output: result.object,
-        usage: { inputTokens: result.usage.inputTokens ?? 0, outputTokens: result.usage.outputTokens ?? 0 },
-      };
+      return { output: result.object, usage: result.usage };
+    });
+  }
+
+  /** A report summary (EXP-05): the instructions as the system message and the metrics JSON as the only user text. */
+  async summarize(request: SummaryRequest): Promise<LlmResponse> {
+    return this.call(async (abortSignal) => {
+      const result = await generateObject({
+        model: this.languageModel,
+        schema: ReportSummarySchema,
+        schemaName: 'report_summary',
+        system: request.system,
+        messages: [{ role: 'user', content: [{ type: 'text', text: request.prompt }] }],
+        maxRetries: 0,
+        abortSignal,
+      });
+      return { output: result.object, usage: result.usage };
+    });
+  }
+
+  /** Runs one call with the timeout; any error of it is a model failure (LlmUnavailableError). */
+  private async call(
+    run: (
+      abortSignal: AbortSignal,
+    ) => Promise<{ output: unknown; usage: { inputTokens?: number | undefined; outputTokens?: number | undefined } }>,
+  ): Promise<LlmResponse> {
+    try {
+      const { output, usage } = await run(AbortSignal.timeout(this.timeoutMs));
+      return { output, usage: { inputTokens: usage.inputTokens ?? 0, outputTokens: usage.outputTokens ?? 0 } };
     } catch (err) {
       const status = APICallError.isInstance(err) ? err.statusCode : undefined;
       throw new LlmUnavailableError(

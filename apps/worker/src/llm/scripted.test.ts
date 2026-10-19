@@ -55,4 +55,26 @@ describe('scripted mock model', () => {
     llm.reset();
     await expect(later).resolves.toMatchObject({ output: { questions: [] } });
   });
+
+  it('EXP-05 REL-06 answers report calls in order, the last repeating, after the scripted failures, and logs each', async () => {
+    const llm = new ScriptedLlm();
+    const ask = (n: number) => llm.summarize({ system: `system ${n}`, prompt: '{"version":1}' });
+    expect((await ask(0)).output, 'without a report script').toEqual({
+      summary: 'Summary.',
+      recommendations: ['Recommendation.'],
+    });
+    const a = { summary: 'A.', recommendations: ['One.'] };
+    const b = { summary: 'B.', recommendations: ['Two.'] };
+    llm.setScript({ report: { answers: [a, b], failures: 1 } });
+    expect(llm.reportCalls(), 'a new script clears the report log').toEqual([]);
+    await expect(ask(1)).rejects.toMatchObject({ status: 503 });
+    expect((await ask(2)).output).toEqual(a);
+    expect((await ask(3)).output).toEqual(b);
+    expect((await ask(4)).output).toEqual(b);
+    expect(llm.reportCalls().map((c) => c.system)).toEqual(['system 1', 'system 2', 'system 3', 'system 4']);
+    expect(llm.reportCalls()[0]).toEqual({ system: 'system 1', prompt: '{"version":1}' });
+    expect(llm.calls(), 'report calls are not import calls').toEqual([]);
+    llm.reset();
+    expect(llm.reportCalls()).toEqual([]);
+  });
 });

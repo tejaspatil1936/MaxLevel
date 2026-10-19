@@ -83,4 +83,21 @@ describe('AiSdkLlm', () => {
     const err = await new AiSdkLlm('vertex', 'm', model, PRICES, 20).generate(REQUEST).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(LlmUnavailableError);
   });
+
+  it('EXP-05 a summary call sends the instructions as the system message and only the metrics JSON as user text', async () => {
+    const answer = { summary: 'Five finished.', recommendations: ['Practise question 4.'] };
+    const model = answering(JSON.stringify(answer));
+    const res = await new AiSdkLlm('vertex', 'm', model, PRICES).summarize({ system: 'Rules', prompt: '{"a":1}' });
+    expect(res).toEqual({ output: answer, usage: { inputTokens: 1200, outputTokens: 80 } });
+    const [call] = model.doGenerateCalls;
+    expect(call!.responseFormat).toMatchObject({ type: 'json', name: 'report_summary' });
+    expect(call!.prompt).toEqual([
+      { role: 'system', content: 'Rules' },
+      { role: 'user', content: [{ type: 'text', text: '{"a":1}' }] },
+    ]);
+    const bad = await new AiSdkLlm('vertex', 'm', answering('{"summary":""}'), PRICES)
+      .summarize({ system: 'Rules', prompt: '{}' })
+      .catch((e: unknown) => e);
+    expect(bad, 'an answer outside ReportSummarySchema is a model failure').toBeInstanceOf(LlmUnavailableError);
+  });
 });
