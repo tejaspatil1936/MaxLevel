@@ -5,6 +5,7 @@ import {
   importDraftPatchSchema,
   importFiguresFolder,
   importFilePath,
+  importJobViewSchema,
   importPagePath,
   importRetryTask,
   importTask,
@@ -27,6 +28,22 @@ describe('import jobs', () => {
     expect(importPagePath('org-a', 'job1', 2, 'png')).toBe('organizations/org-a/imports/job1/pages/2.png');
     expect(importPagePath('org-a', 'job1', 3, 'pdf')).toBe('organizations/org-a/imports/job1/pages/3.pdf');
     expect(importFiguresFolder('org-a', 'job1')).toBe('organizations/org-a/imports/job1/figures/');
+  });
+
+  it('IMP-11 A11Y-10 the job view may carry data URLs of its draft images by path', () => {
+    const view = {
+      id: 'job1',
+      testId: 't1',
+      filename: 'paper.pdf',
+      format: 'pdf',
+      status: 'ready',
+      progress: { pagesDone: 1, pagesTotal: 1, questionsFound: 0 },
+      createdAt: 1,
+      drafts: [],
+    };
+    expect(importJobViewSchema.parse(view)).not.toHaveProperty('imageUrls');
+    const urls = { 'organizations/o/imports/job1/figures/d0001-1.png': 'data:image/png;base64,AA==' };
+    expect(importJobViewSchema.parse({ ...view, imageUrls: urls }).imageUrls).toEqual(urls);
   });
 
   it('REL-06 a retry run is the same task at its schedule time, named apart from the first run', () => {

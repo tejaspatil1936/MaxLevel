@@ -70,7 +70,7 @@ export const importDraftSchema = z.object({
 });
 export type ImportDraft = z.infer<typeof importDraftSchema>;
 
-/** `GET /v1/imports/{id}`: `drafts` in `order`, empty until the job is `ready`. */
+/** `GET /v1/imports/{id}`: `drafts` in `order`, empty until the job is `ready`, with their images' data URLs. */
 export const importJobViewSchema = z.object({
   id: z.string(),
   testId: z.string(),
@@ -86,6 +86,8 @@ export const importJobViewSchema = z.object({
   costEstimate: z.number().optional(),
   createdAt: z.number().int(),
   drafts: z.array(importDraftSchema),
+  /** Each draft image path as a data URL for the admin's review (A11Y-10); missing files are left out. */
+  imageUrls: z.record(z.string(), z.string()).optional(),
 });
 export type ImportJobView = z.infer<typeof importJobViewSchema>;
 
