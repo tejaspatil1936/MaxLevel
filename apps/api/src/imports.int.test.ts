@@ -105,7 +105,10 @@ describe('import upload and job API', () => {
     const pdf = Buffer.from('%PDF-1.4\n%%EOF\n');
     expect(await upload(created.body.uploadUrl as string, pdf, 'application/pdf')).toBe(200);
     expect((await stored(`${org}/imports/${id}/source.pdf`))?.equals(pdf)).toBe(true);
-    const tampered = (created.body.uploadUrl as string).replace(/sig=[0-9a-f]/, 'sig=0');
+    // Flip the first signature digit, so the link never stays the same (a signature starting with 0 did before).
+    const tampered = (created.body.uploadUrl as string).replace(/sig=([0-9a-f])/, (_, c: string) =>
+      c === '0' ? 'sig=1' : 'sig=0',
+    );
     expect(await upload(tampered, pdf)).toBe(403);
   });
 
