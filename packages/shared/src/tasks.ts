@@ -25,6 +25,12 @@ export interface TaskRequest<P = unknown> {
   scheduleTime?: number;
 }
 
+/**
+ * REL-04: a record still `queued` this long after it was queued has lost its task (the enqueue after its commit
+ * failed), so reading it queues the task again under the same name, which stores nothing when the task exists.
+ */
+export const QUEUED_STALE_MS = 60_000;
+
 export interface TaskQueue {
   /** Stores the task once; a task with the same name already queued is left as it is. */
   enqueue(task: TaskRequest): Promise<void>;

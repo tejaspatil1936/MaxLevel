@@ -4,6 +4,7 @@ import {
   monthKey,
   pageOf,
   pageQuerySchema,
+  QUEUED_STALE_MS,
   REPORT_CONTENT_TYPES,
   REPORT_MESSAGES,
   reportCreatedSchema,
@@ -107,6 +108,22 @@ export function reportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
     };
   }
 
+  /**
+   * REL-04: queues the task of each report the request reads that is still `queued` a minute after it was made (its
+   * enqueue after the commit failed); the task keeps its name, so an existing task is not queued twice.
+   */
+  async function requeueStale(req: FastifyRequest, recs: ReportRecord[]): Promise<void> {
+    const before = clock.now() - QUEUED_STALE_MS;
+    const stale = recs.filter((r) => r.status === 'queued' && r.createdAt < before);
+    await Promise.all(
+      stale.map((r) =>
+        queue
+          .enqueue(reportTask(req.orgId!, r.id))
+          .catch((err: unknown) => req.log.warn({ err, reportId: r.id }, 'report.requeue_failed')),
+      ),
+    );
+  }
+
   function view(req: FastifyRequest, rec: ReportRecord): ReportView {
     const item = listItem(req, rec);
     if (rec.status !== 'ready') return item;
@@ -162,7 +179,10 @@ export function reportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
             limit: 'ai_reports_per_month',
             max,
           });
-        await queue.enqueue(reportTask(orgId, id));
+        // The report is stored and counted: a failed enqueue is logged, and reading it a minute later queues it.
+        await queue
+          .enqueue(reportTask(orgId, id))
+          .catch((err: unknown) => req.log.error({ err, reportId: id }, 'report.enqueue_failed'));
         return reply.status(202).send({ id, status: 'queued' as const });
       },
     );
@@ -173,6 +193,7 @@ export function reportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       async (req) => {
         const { cursor, limit } = req.query;
         const page = pageItems(await data.reports.listReports(req.orgId!), cursor, limit);
+        await requeueStale(req, page.items);
         return { items: page.items.map((r) => listItem(req, r)), nextCursor: page.nextCursor };
       },
     );
@@ -197,6 +218,7 @@ export function reportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       async (req) => {
         const rec = await data.reports.getReport(req.orgId!, req.params.id);
         if (!rec) throw notFound('Report');
+        await requeueStale(req, [rec]);
         return view(req, rec);
       },
     );
