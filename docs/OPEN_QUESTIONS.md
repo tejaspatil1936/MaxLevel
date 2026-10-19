@@ -259,6 +259,18 @@ Answer: AUTO-DECIDED, full name with the department name in its own column; SER-
 - Needed by: phase 5
 
 Answer: AUTO-DECIDED, the button is not built until OPS-05 is approved.
+
+### 35. Reinstating an attempt after its full review was released
+- Question: A terminated attempt in a test that releases a full review at once lets the student read the answer key.
+  If an admin then reinstates the attempt, the student continues with the key known. Should reinstate be refused
+  once a full review of that attempt was released?
+- REQ: OPS-04, DATA-05
+- Proposed default: allowed (the spec does not forbid it); while the attempt is in progress again no answer key is
+  sent and the result route answers 409 ATTEMPT_IN_PROGRESS. BACKLOG lists a warning in the reinstate dialog.
+- Impact if wrong: a 409 on reinstate when the attempt's full review was released.
+- Needed by: phase 5
+
+Answer: AUTO-DECIDED, allowed as proposed (DECISIONS 2026-10-19).
 ## Phase 6
 
 ### 30. Which LLM provider?
