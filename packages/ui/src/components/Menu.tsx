@@ -1,6 +1,6 @@
 import { DropdownMenu } from 'radix-ui';
 import { Check } from 'lucide-react';
-import { useId, type ReactNode } from 'react';
+import { useId, useRef, type ReactNode } from 'react';
 import { cx } from '../cx';
 import { rememberOpener } from './Dialog';
 
@@ -62,6 +62,8 @@ function Item({ item }: { item: MenuItem }) {
   );
 }
 
+const openDialogs = () => [...document.querySelectorAll('[role=dialog], [role=alertdialog]')];
+
 /** Overflow menu: destructive actions live here, away from the primary action (UX-02). */
 export function Menu({
   trigger,
@@ -74,14 +76,20 @@ export function Menu({
   label?: string;
   align?: 'start' | 'end';
 }) {
+  // The dialogs already open when the menu opened; one that appears after an item is chosen keeps focus.
+  const before = useRef<Element[]>([]);
+  const remember = (el: HTMLElement) => {
+    before.current = openDialogs();
+    rememberOpener(el);
+  };
   return (
     // A menu of checkboxes stays non-modal, so the table it changes stays visible to assistive technology.
     <DropdownMenu.Root modal={!items.some((i) => i.checked !== undefined)}>
       <DropdownMenu.Trigger
         asChild
         aria-label={label}
-        onPointerDown={(e) => rememberOpener(e.currentTarget)}
-        onKeyDown={(e) => rememberOpener(e.currentTarget)}
+        onPointerDown={(e) => remember(e.currentTarget)}
+        onKeyDown={(e) => remember(e.currentTarget)}
       >
         {trigger}
       </DropdownMenu.Trigger>
@@ -89,6 +97,11 @@ export function Menu({
         <DropdownMenu.Content
           align={align}
           sideOffset={4}
+          // An item that opened a dialog or drawer keeps focus there: moving it back to the trigger would close a
+          // non-modal drawer at once. The dialog returns focus to the trigger when it closes (A11Y-05).
+          onCloseAutoFocus={(e) => {
+            if (openDialogs().some((d) => !before.current.includes(d))) e.preventDefault();
+          }}
           className="z-50 min-w-48 max-w-80 rounded-panel border border-rule bg-surface p-1.5 shadow-overlay"
         >
           {items.map((item, i) => (
