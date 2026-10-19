@@ -141,3 +141,4 @@ PHASE 6 DONE 4/4 features
 ## Phase 7
 
 PHASE 7 START e2a359d71ba37b0d7da14e7e08f0e5dd4ccec2a0
+Tests: 13 phase 7 acceptance tests by test-author for F-7.02 and F-7.03 (F-7.01 is unit-only), reviewed twice (1 blocking: same-time report order), locked.
