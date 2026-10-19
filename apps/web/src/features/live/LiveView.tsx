@@ -212,6 +212,8 @@ export function LiveView({ testId }: { testId: string }) {
       {granting ? (
         <ExtraTimeDialog
           {...granting}
+          // The live record's deadline, so another admin's grant shows while the dialog is open.
+          deadlineAt={rows.find((r) => r.attemptId === granting.attemptId)?.deadlineAt ?? granting.deadlineAt}
           durationMin={durationMin}
           timezone={org?.timezone ?? 'Asia/Kolkata'}
           onClose={() => setGranting(null)}
