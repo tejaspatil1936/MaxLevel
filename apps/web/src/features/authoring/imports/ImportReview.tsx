@@ -18,7 +18,9 @@ import { testHeading, testUrl } from '../tests/test-view';
 import { DraftActions } from './DraftActions';
 import { DraftArticle, DraftBody } from './DraftArticle';
 import { DraftEditForm } from './DraftEditForm';
+import { useShortcutList } from '../../shell/Shortcuts';
 import { isRunning, JobFailed, JobProgress } from './JobProgress';
+import { REVIEW_KEYS, reviewKeyHandler } from './review-keys';
 import { SourcePage } from './SourcePage';
 import { DRAFT_GROUPS, displayOrder, draftGroup, statusWordKey, summaryCounts } from './review-order';
 import { importJobPath, useDraftReview } from './useDraftReview';
@@ -66,6 +68,7 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
   const qc = useQueryClient();
   const questions = useQuestions(test.id);
   const review = useDraftReview(job);
+  useShortcutList('imports.shortcuts', REVIEW_KEYS);
   const [importing, setImporting] = useState(false);
   const zone = org?.timezone ?? 'Asia/Kolkata';
   const drafts = job.drafts;
@@ -127,7 +130,8 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
       ) : null}
       {drafts.length ? (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="flex min-w-0 flex-col gap-8">
+          {/* The review keys act only from inside the groups (IMP-13). */}
+          <div className="flex min-w-0 flex-col gap-8" onKeyDown={reviewKeyHandler(displayOrder(drafts), review)}>
             {DRAFT_GROUPS.map((g) => {
               const inGroup = displayOrder(drafts).filter((d) => draftGroup(d) === g);
               if (!inGroup.length) return null;
