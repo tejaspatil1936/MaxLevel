@@ -135,6 +135,45 @@ describe('submitting an attempt', () => {
     expect((await stored(body.attempt.id)).result.durationSec).toBe((body.attempt.deadlineAt - NOW) / 1000);
   });
 
+  it('EX-16 OPS-06 a time_up naming a deadline before the stored one is 409 with the current deadline; a manual submit is not', async () => {
+    const t = await api.examTest();
+    const s1 = await student(1);
+    const { body } = await api.start(t.testId, s1);
+    const opened = body.attempt.deadlineAt;
+    const admin = await asClaims(auth, 'admin1@a.test', { role: 'admin', orgId: SEED.orgA });
+    const grant = await ctx.app.inject({
+      method: 'POST',
+      url: `/v1/attempts/${body.attempt.id}/extra-time`,
+      headers: admin,
+      payload: { minutes: 10, reason: 'Power cut' },
+    });
+    expect(grant.statusCode, grant.body).toBe(200);
+    // The device was offline during the grant: its timer reached the old deadline.
+    ctx.clock.set(opened + 5_000);
+
+    const early = await submit(body.attempt.id, s1, { reason: 'time_up', deadlineAt: opened }, fresh());
+    expect(early.status, early.raw).toBe(409);
+    expect(JSON.parse(early.raw)).toMatchObject({
+      error: { code: 'DEADLINE_NOT_REACHED', details: { deadlineAt: opened + 10 * MIN } },
+    });
+    expect((await stored(body.attempt.id)).status).toBe('in_progress');
+
+    // Within the clock grace of the stored deadline the time_up is taken.
+    ctx.clock.set(opened + 10 * MIN - 1_000);
+    const due = await submit(body.attempt.id, s1, { reason: 'time_up', deadlineAt: opened + 10 * MIN }, fresh());
+    expect(due.body).toMatchObject({ status: 'auto_submitted' });
+  });
+
+  it('EX-15 a manual submit is taken at any time, before the deadline', async () => {
+    const t = await api.examTest();
+    const s1 = await student(1);
+    const { body } = await api.start(t.testId, s1);
+    ctx.clock.set(NOW + MIN);
+    const res = await submit(body.attempt.id, s1, {}, fresh());
+    expect(res.status, res.raw).toBe(200);
+    expect(res.body).toMatchObject({ status: 'submitted' });
+  });
+
   it('EX-15 API-02 a repeat returns the same submission, a replayed key the stored body, and later answers are 409', async () => {
     const t = await api.examTest();
     const s1 = await student(1);
