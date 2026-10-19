@@ -148,3 +148,7 @@ F-7.03 done — Reports page with monthly usage against the limit, generate dial
 Checkpoints: code review of F-7.01 and F-7.02 found no blocking issue; its follow-ups were fixed after regression tests (a report stuck retrying after an early retry, a print with no timeout, an untagged PDF, the lease not renewed before printing, a lost task after a failed enqueue, the feature gate checked after body validation, numbers in non-ASCII digits slipping past the summary check). QA found no blocking bug; four minor ones fixed (a malformed ID giving 500 across many routes, draft series offered, unwrapped long titles clipping in the PDF, radio groups ignoring Up and Down); knip config accepts the worker's path-loaded font.
 VERIFY full FAIL 3e078f164edb76a9fbf2b821da34e945814821fd (docs/verification/phase-7.md): acceptance-lock fails on the F-5.05 screenshot baselines and the only failing test is the locked F-4.03.spec.ts:171 assertion; every phase 7 feature's tests pass.
 PHASE 7 DONE 3/3 features
+
+## Phase 8
+
+PHASE 8 START e0f86fd83360d1ad2bb686c56b951a0a5fc18713
