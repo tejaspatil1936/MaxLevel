@@ -71,7 +71,9 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 ### 0.8 Vercel Pro project
 - What: a Vercel Pro project for `apps/web` (framework Next.js, output static). Environment variables per environment:
   `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_API_KEY`,
-  `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_DATABASE_URL`, `NEXT_PUBLIC_SENTRY_DSN`.
+  `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_DATABASE_URL`, `NEXT_PUBLIC_SENTRY_DSN`,
+  `NEXT_PUBLIC_ACCESSIBILITY_EMAIL` (a mailbox you monitor, shown as the contact on the public accessibility
+  statement `/accessibility/`; until it is set the page shows the placeholder `accessibility@mitaoe.example`).
   Never set `NEXT_PUBLIC_AUTH_EMULATOR_HOST` outside local builds. Map `app.<domain>` to production.
 - Where: vercel.com.
 - Confirm: a preview deployment for a pull request loads the sign-in page; response headers include the CSP from `vercel.json`.
@@ -176,3 +178,10 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 - Where: Windows and macOS machines.
 - Confirm: the checklist is complete with no blocking issue.
 - Unblocks: A11Y-12.
+
+### 8.4 Accessibility statement contact
+- What: set `NEXT_PUBLIC_ACCESSIBILITY_EMAIL` in Vercel (0.8) for staging and production to a mailbox you monitor, then
+  redeploy the web app. Read `/accessibility/` against docs/BACKLOG.md and the Proposed accessibility items.
+- Where: vercel.com, then the deployed `/accessibility/` page.
+- Confirm: the Contact section shows your address, and a test mail to it arrives (docs/MANUAL_CHECKS.md).
+- Unblocks: A11Y-22.

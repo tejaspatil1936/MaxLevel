@@ -102,4 +102,5 @@ Adjustable time is still provided in two ways:
   A11Y-17). Check before the day that every student with an approved accommodation has it recorded in their student
   drawer under `Accommodations`.
 
-The public accessibility statement (A11Y-22) repeats this note.
+The public accessibility statement at `/accessibility/` (A11Y-22) repeats this note. Point students and staff who ask
+about timing, extra time or an accommodation to it, and to their placement cell.

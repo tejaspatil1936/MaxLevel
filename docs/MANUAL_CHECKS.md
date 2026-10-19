@@ -37,7 +37,7 @@ run by a person.
 | UI-14 | static | 0 | storybook build succeeds in verify full; every component in packages/ui has a story covering states in light, dark and high contrast. | verify.sh full; reviewer | every run |
 | UX-13 | static | 0 | Copy review: plain, active voice, sentence case, no exclamation marks in the exam. | spec-reviewer | every phase PR touching UI |
 | UX-14 | static | 0 | Copy review: labels use the users words ("Students who can take this test"). | spec-reviewer | every phase PR touching UI |
-| A11Y-12 | manual | 8 | NVDA with Chrome and Firefox, VoiceOver with Safari: sign-in, profile, dashboard, preflight, exam, submit, result, admin whitelist and test editor. | owner (OWNER_SETUP 8.3) | before each release touching a screen |
+| A11Y-12 | manual | 8 | NVDA with Chrome and Firefox, VoiceOver with Safari: sign-in, profile, dashboard, preflight, exam, submit, result, admin whitelist, test editor and the public accessibility statement (`/accessibility/`). | owner (OWNER_SETUP 8.3) | before each release touching a screen |
 | A11Y-18 | static | 5 | The accessibility statement and runbook name the WCAG real-time exception and the extra-time and accommodation alternatives. | spec-reviewer | phase 5 PR |
 | A11Y-21 | static | 0 | tests/acceptance/fixtures/axe.ts fails on serious or critical violations; CI runs it on every PR. | reviewer | every PR |
 | A11Y-23 | static | 0 | ESLint rule rejects raw string literals in JSX in apps/web; all copy comes from the message catalogue. | lint | every run |
