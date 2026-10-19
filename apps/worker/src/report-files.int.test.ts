@@ -49,11 +49,13 @@ const metrics = computeTestMetrics({
 async function readPdf(bytes: Buffer) {
   const doc = await getDocument({ data: new Uint8Array(bytes), isEvalSupported: false, useSystemFonts: false }).promise;
   const info = (await doc.getMetadata()).info as Record<string, unknown>;
+  const markInfo = await doc.getMarkInfo();
+  const outline = ((await doc.getOutline()) ?? []).map((o) => o.title);
   let text = '';
   for (let n = 1; n <= doc.numPages; n++)
     for (const item of (await (await doc.getPage(n)).getTextContent()).items) text += 'str' in item ? item.str : '';
   await doc.destroy();
-  return { info, text: text.replace(/\s+/g, '') };
+  return { info, markInfo, outline, text: text.replace(/\s+/g, '') };
 }
 const compact = (s: string) => s.replace(/\s+/g, '');
 
@@ -88,7 +90,15 @@ describe('report files', () => {
     );
     expect(read.text).not.toContain('about:blank');
     expect(await reportFontUrl()).toMatch(/^data:font\/woff2;base64,/);
+    expect(read.markInfo, 'a tagged PDF that screen readers can read').toMatchObject({ Marked: true });
+    expect(read.outline, 'an outline from the headings').toContain('Analytics report');
   });
+
+  it('EXP-06 a page script never runs while printing, so a page that never finishes loading cannot hold it', async () => {
+    const html = '<!doctype html><title>Loop</title><p>Printed without its script.</p><script>for (;;) {}</script>';
+    const read = await readPdf(await printer.print(html));
+    expect(read.text).toContain('Printedwithoutitsscript.');
+  }, 15_000);
 
   it('EXP-06 the XLSX holds the raw statistics sheet by sheet, numbers as numbers and text formula-safe', async () => {
     const wb = new ExcelJS.Workbook();
