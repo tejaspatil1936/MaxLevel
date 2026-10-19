@@ -84,6 +84,36 @@ test.describe('phase 5 review @lockdown', () => {
     expect(strikeNumbersOf(events, 'tab_hidden')).toEqual([1]);
   });
 
+  test('PR-05 closing the exam tab and opening the exam in a new tab more than 5 seconds later is a strike', async ({
+    page,
+    signInAs,
+    apiAs,
+    testApi,
+    emulators,
+  }) => {
+    test.setTimeout(90_000);
+    const { attemptId } = await openInFullscreen({ page, signInAs, apiAs, testApi });
+    const context = page.context();
+    const closed = page.waitForEvent('close');
+    await page.close({ runBeforeUnload: true });
+    await closed;
+    await testApi.clock.advance(120_000);
+
+    const reopened = await context.newPage();
+    await reopened.goto(ExamScreen.attemptUrl(attemptId));
+    const warning = new ExamScreen(reopened).strikeWarning(1, 3);
+    await expect(warning).toBeVisible();
+    await expect(warning.getByText(STRIKE_REASONS.tab_hidden, { exact: true })).toBeVisible();
+    const events = await expectEventsSoon(
+      emulators,
+      ORG_A.id,
+      attemptId,
+      (evs) => strikeNumbersOf(evs, 'tab_hidden').includes(1),
+      'the absence stored as strike 1',
+    );
+    expect(strikeNumbersOf(events, 'tab_hidden')).toEqual([1]);
+  });
+
   test('PR-04 PR-05 a quick reload is no strike but brings back the fullscreen overlay', async ({
     page,
     signInAs,
