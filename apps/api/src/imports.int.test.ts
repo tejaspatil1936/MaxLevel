@@ -245,6 +245,29 @@ describe('import upload and job API', () => {
     expect((await start(first.body.id as string, b)).status).toBe(404);
   });
 
+  it('REL-04 IMP-01 a started job whose task could not be queued is queued again once it has waited a minute', async () => {
+    const created = await create('questions.json');
+    const id = created.body.id as string;
+    expect(await upload(created.body.uploadUrl as string, JSON_FILE)).toBe(200);
+    const enqueue = ctx.queue.enqueue;
+    ctx.queue.enqueue = () => Promise.reject(new Error('the queue is down'));
+    const started = await start(id);
+    ctx.queue.enqueue = enqueue;
+    expect(started, 'the job has left awaiting_upload, so accepted').toEqual({
+      status: 202,
+      body: { id, status: 'queued' },
+    });
+    expect(await tasks()).toEqual([]);
+    const view = async () =>
+      (await ctx.app.inject({ method: 'GET', url: `/v1/imports/${id}`, headers: await admin() })).json();
+    ctx.clock.advance(60_000);
+    await view();
+    expect(await tasks(), 'not before a minute has passed').toEqual([]);
+    ctx.clock.advance(1);
+    expect((await view()).status).toBe('queued');
+    expect((await tasks()).map((t) => t.name.startsWith(`import-${id}`))).toEqual([true]);
+  });
+
   it('SEC-06 the API depends on no file parser: parsing happens only in the worker', () => {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
       dependencies: Record<string, string>;

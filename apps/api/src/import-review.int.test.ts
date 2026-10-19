@@ -88,6 +88,28 @@ describe('import retry', () => {
     expect(await tasks()).toHaveLength(1);
   });
 
+  it('REL-04 REL-06 a retried job whose task could not be queued is queued again once it has waited a minute', async () => {
+    await storeJob('j1', {
+      status: 'failed',
+      error: { code: 'LLM_UNAVAILABLE', message: "The AI service didn't answer after 4 tries.", retryable: true },
+      startedAt: NOW - 3_600_000,
+    });
+    const enqueue = ctx.queue.enqueue;
+    ctx.queue.enqueue = () => Promise.reject(new Error('the queue is down'));
+    const res = await call('POST', '/v1/imports/j1/retry', {});
+    ctx.queue.enqueue = enqueue;
+    expect(res, 'the job is queued again with its audit entry, so accepted').toEqual({
+      status: 202,
+      body: { id: 'j1', status: 'queued' },
+    });
+    expect(await tasks()).toEqual([]);
+    await call('GET', '/v1/imports/j1');
+    expect(await tasks(), 'not before a minute has passed since the retry').toEqual([]);
+    ctx.clock.advance(60_001);
+    expect((await call('GET', '/v1/imports/j1')).body.status).toBe('queued');
+    expect((await tasks()).map((t) => t.name.startsWith('import-j1'))).toEqual([true]);
+  });
+
   it('REL-06 ORG-05 a job that is not a retryable failure is refused, and another organization gets 404', async () => {
     await storeJob('ready');
     await storeJob('limit', {
