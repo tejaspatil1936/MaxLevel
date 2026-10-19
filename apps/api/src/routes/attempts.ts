@@ -102,7 +102,8 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         config: { ...student, idempotent: true },
         schema: { params: idParams, body: attemptSubmitSchema, response: { 200: attemptSubmitResultSchema } },
       },
-      async (req) => attempts.submit(req.orgId!, studentOf(req).studentId, req.params.id, req.body.reason),
+      async (req) =>
+        attempts.submit(req.orgId!, studentOf(req).studentId, req.params.id, req.body.reason, req.body.deadlineAt),
     );
   };
 }

@@ -13,6 +13,7 @@ import {
   liveRecordPath,
   questionTimeLimit,
   strikeVerdict,
+  timeUpTooEarly,
   type AnswerBatch,
   type AnswerBatchResult,
   type AnswerRecord,
@@ -392,9 +393,19 @@ export function attemptService(deps: AttemptDeps) {
       studentId: string,
       attemptId: string,
       reason?: 'time_up',
+      claimedDeadlineAt?: number,
     ): Promise<{ status: AttemptRecord['status']; submittedAt: number }> {
       const attempt = await ownAttempt(orgId, studentId, attemptId);
       if (attempt.status === 'reset') throw new AppError(409, 'ATTEMPT_FINISHED', 'This attempt was reset.');
+      // OPS-06: the device missed extra time and its timer ran out early; it takes the stored deadline and goes on.
+      if (
+        reason === 'time_up' &&
+        attempt.status === 'in_progress' &&
+        timeUpTooEarly({ deadlineAt: attempt.deadlineAt, claimedDeadlineAt, now: clock.now() })
+      )
+        throw new AppError(409, 'DEADLINE_NOT_REACHED', 'Your time has not run out yet.', {
+          deadlineAt: attempt.deadlineAt,
+        });
       const done = isFinishedAttempt(attempt.status)
         ? attempt
         : await grader.finish(orgId, attempt, reason === 'time_up' ? 'auto_submitted' : 'submitted');
