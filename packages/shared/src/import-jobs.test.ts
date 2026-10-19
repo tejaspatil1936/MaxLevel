@@ -65,6 +65,15 @@ describe('import jobs', () => {
     });
   });
 
+  it('SEC-04 test and draft IDs in import requests are letters, digits, _ and - only', () => {
+    const ok = { testId: 'Ab_9-x', filename: 'paper.pdf', contentType: 'application/pdf', sizeBytes: 10 };
+    expect(importCreateSchema.safeParse(ok).success).toBe(true);
+    for (const testId of ['a/b', '..', 'a.b', '', 'x'.repeat(129)])
+      expect(importCreateSchema.safeParse({ ...ok, testId }).success, testId).toBe(false);
+    expect(importDraftIdsSchema.safeParse({ draftIds: ['d0001', 'd0002'] }).success).toBe(true);
+    expect(importDraftIdsSchema.safeParse({ draftIds: ['d0001/x'] }).success).toBe(false);
+  });
+
   it('IMP-02 the create request needs every field and a whole, non-negative size', () => {
     const ok = { testId: 't1', filename: 'paper.pdf', contentType: 'application/pdf', sizeBytes: 10 };
     expect(importCreateSchema.safeParse(ok).success).toBe(true);

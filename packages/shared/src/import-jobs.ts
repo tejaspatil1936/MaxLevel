@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { IMPORT_FORMATS, type ImportFormat } from './import-formats';
+import { docIdSchema } from './ids';
 import { boxSchema } from './import-llm';
 import type { TaskRequest } from './tasks';
 
 // Import jobs (spec 6.2; docs/testids/phase-6.md "Requests the tests send directly"): the requests and answers of
 // `/v1/imports`, the stored job's statuses and the worker task. The API never parses a file; the worker does.
 
-const id = z.string().min(1).max(128);
+const id = docIdSchema;
 
 /** `awaiting_upload` → `queued` (started) → `running` → `ready`; `retrying` and `failed` from the running states. */
 export const IMPORT_STATUSES = ['awaiting_upload', 'queued', 'running', 'retrying', 'ready', 'failed'] as const;

@@ -47,6 +47,7 @@ export * from './prewarm';
 export * from './import-checks';
 export * from './import-llm';
 export * from './import-formats';
+export * from './ids';
 export * from './import-jobs';
 export * from './import-drafts';
 // Two contracts name a `retryDelayMs` (phase 3 answer sync, phase 6 imports): the root keeps the sync one and gives
