@@ -1,4 +1,4 @@
-import { pendingTaskSchema, TestClock } from '@mitaoe/shared';
+import { llmCallSchema, llmScriptSchema, pendingTaskSchema, TestClock } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { Deps } from '../deps';
@@ -33,6 +33,18 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
     if (!res?.ok) throw new AppError(502, 'INTERNAL', 'The worker did not accept the clock change.');
   };
 
+  /** The worker runs the mock model, so its script, release and call log go there (docs/testids/phase-6.md). */
+  const toWorker = async (method: 'GET' | 'POST', path: string, body?: unknown) => {
+    const res = await fetch(`${config.workerUrl}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', 'x-test-secret': config.testApiSecret ?? '' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    }).catch(() => null);
+    if (!res?.ok) throw new AppError(502, 'INTERNAL', `The worker did not accept ${method} ${path}.`);
+    return res.json() as Promise<unknown>;
+  };
+  const ok = { 200: z.object({ ok: z.literal(true) }) };
+
   return async (app) => {
     app.addHook('onRequest', async (req) => {
       if (req.headers['x-test-secret'] !== config.testApiSecret)
@@ -62,6 +74,22 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
       async () => ({ ran: await dispatcher.runDue() }),
     );
 
+    app.post('/__test/llm', { schema: { body: llmScriptSchema, response: ok } }, async (req) => {
+      await toWorker('POST', '/__test/llm', req.body);
+      return { ok: true as const };
+    });
+
+    app.post('/__test/llm/release', { schema: { body: z.object({}), response: ok } }, async () => {
+      await toWorker('POST', '/__test/llm/release', {});
+      return { ok: true as const };
+    });
+
+    app.get(
+      '/__test/llm/calls',
+      { schema: { response: { 200: z.object({ calls: z.array(llmCallSchema) }) } } },
+      async () => z.object({ calls: z.array(llmCallSchema) }).parse(await toWorker('GET', '/__test/llm/calls')),
+    );
+
     app.post('/__test/clock/real', { schema: { response: clockReply } }, async () => {
       clock.followReal();
       return { nowMs: clock.now() };
@@ -78,6 +106,8 @@ export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCac
       async (req) => {
         clock.reset();
         deps.clearCaches();
+        // The mock model's script and calls go too; integration tests run no worker, so a missing one is fine.
+        await toWorker('POST', '/__test/llm/reset', {}).catch(() => undefined);
         await clearEmulators();
         if (req.body.seed === 'base') await seedBase(deps.firebase.db, clock.now());
         return { ok: true as const };
