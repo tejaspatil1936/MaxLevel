@@ -35,6 +35,15 @@ describe('api skeleton', () => {
     expect(res.json()).toMatchObject({ error: { code: 'NOT_FOUND', message: expect.any(String), details: {} } });
     expect(res.headers['x-server-time']).toBe('1700000000000');
   });
+
+  it('API-01 SEC-05 a path parameter of 300 characters gets the error shape with CORS headers', async () => {
+    const { app: a } = await app();
+    const origin = loadConfig({}).appOrigins[0]!;
+    const res = await a.inject({ method: 'GET', url: `/v1/imports/${'a'.repeat(300)}`, headers: { origin } });
+    expect(res.statusCode).toBeLessThan(500);
+    expect(res.json()).toMatchObject({ error: { code: expect.any(String), details: {} } });
+    expect(res.headers['access-control-allow-origin'], 'the browser can read the refusal').toBe(origin);
+  });
 });
 
 describe('test-only API', () => {
