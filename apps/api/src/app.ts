@@ -18,6 +18,7 @@ import { registerServerTime } from './plugins/server-time';
 import { createData } from './data';
 import { registerAuth } from './plugins/auth';
 import { healthRoutes } from './routes/health';
+import { attemptActionRoutes } from './routes/attempt-actions';
 import { attemptRoutes } from './routes/attempts';
 import { auditRoutes } from './routes/audit';
 import type { ApiContext } from './routes/context';
@@ -132,6 +133,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     studentResultRoutes,
     leaderboardRoutes,
     attemptRoutes,
+    attemptActionRoutes,
     pairingRoutes,
     liveRoutes,
     auditRoutes,

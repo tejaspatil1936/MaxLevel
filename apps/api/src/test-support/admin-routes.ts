@@ -138,6 +138,17 @@ const withAttempt = async (db: Firestore) => {
   await attemptIn(db, 'org-b', 'att-org-b');
   return { params: { id: await attemptIn(db, 'org-a', 'att-org-a') } };
 };
+/** The sample attempt in progress in each org's published sample test, with a deadline and no extra time yet. */
+const withTimedAttempt = async (db: Firestore) => {
+  await withPublishedTest(db);
+  const { params } = await withAttempt(db);
+  for (const [orgId, id] of [
+    ['org-a', params.id],
+    ['org-b', 'att-org-b'],
+  ] as const)
+    await db.doc(`organizations/${orgId}/attempts/${id}`).update({ deadlineAt: 3_600_000, extraTimeSec: 0 });
+  return { params, body: { minutes: 5, reason: 'Network outage' } };
+};
 
 export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'GET /v1/org': {},
@@ -332,6 +343,7 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   },
 
   'GET /v1/attempts/:id/events': { foreignParams: { id: 'att-org-b' }, fresh: withAttempt },
+  'POST /v1/attempts/:id/extra-time': { foreignParams: { id: 'att-org-b' }, fresh: withTimedAttempt },
 
   'GET /v1/live-tests': { fresh: (db) => withPublishedTest(db) },
   'GET /v1/tests/:id/live': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },

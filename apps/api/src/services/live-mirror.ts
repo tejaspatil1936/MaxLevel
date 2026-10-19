@@ -1,6 +1,6 @@
-import { liveRecordPath, type AttemptRecord, type LiveRecord } from '@mitaoe/shared';
+import { liveRecordPath, signalPath, type AttemptRecord, type LiveRecord, type SignalRecord } from '@mitaoe/shared';
 import type { Database } from 'firebase-admin/database';
-import { fireAndForget, type WarnLogger } from './rtdb-writes';
+import { fireAndForget, withinLimit, type WarnLogger } from './rtdb-writes';
 
 /** The student fields a live record names. */
 export interface LiveStudent {
@@ -27,7 +27,7 @@ export function startedRecord(attempt: AttemptRecord, student: LiveStudent, now:
 
 /**
  * The live mirror (spec 10.2, OPS-02, DATA-07): the API keeps `live/{orgId}/{testId}/{attemptId}` up to date on a
- * reservation, a start, every answer batch, every counted strike and every finish, so the admin's live view follows
+ * reservation, a start, every answer batch, every counted strike, every finish and every extra-time grant, so the admin's live view follows
  * the test from Realtime Database alone (PERF-04). Writes are fire and forget (REL-05): a failure is logged and the
  * route replies anyway.
  */
@@ -73,6 +73,22 @@ export function liveMirror(rtdb: Database, log: WarnLogger) {
         ...(attempt.result ? { answered: attempt.draw.questionIds.length - attempt.result.unanswered } : {}),
         updatedAt: now,
       });
+    },
+
+    /**
+     * Extra time (OPS-06, spec 11.3): the live record's new `deadlineAt` and the student's signal, in one write. The
+     * route waits a bounded time for it (REL-05), so the student's timer usually follows before the admin sees the
+     * reply; resolves false when the write failed or was still pending at the limit (it was logged).
+     */
+    extended(orgId: string, attempt: AttemptRecord, notice: string, now: number): Promise<boolean> {
+      const live = liveRecordPath(orgId, attempt.testId, attempt.id);
+      const signal: SignalRecord = { deadlineAt: attempt.deadlineAt, notice };
+      const write = rtdb.ref().update({
+        [`${live}/deadlineAt`]: attempt.deadlineAt,
+        [`${live}/updatedAt`]: now,
+        [signalPath(orgId, attempt.id)]: signal,
+      });
+      return withinLimit(write, log, signalPath(orgId, attempt.id));
     },
   };
 }
