@@ -56,6 +56,11 @@
       "tests/acceptance/phase-5/F-5.03.spec.ts": "5325b5dd7fd541def5343c7337980ee21c79df81b37e72c535c3e2c19a94b655",
       "tests/acceptance/phase-5/F-5.04.spec.ts": "88c0ba976ec54af3e65b388bb4cde31bbdb40eaf7e088d7574a2575e30eefd15",
       "tests/acceptance/phase-5/F-5.05.spec.ts": "b861a24f42b84bb6cf7df84907e7b04575d7e33251c4bf075c3938e5da33c7e5"
+    },
+    "6": {
+      "tests/acceptance/phase-6/F-6.02.spec.ts": "58e0efbc11b5c2380bbc202a61c5dd53f3eda56365ca20ae5fe4edc77b94b096",
+      "tests/acceptance/phase-6/F-6.03.spec.ts": "ed766dbcb7f281a687ffbef47a7f8a9d679c3335db7a4f8cf9aff1f68518528b",
+      "tests/acceptance/phase-6/F-6.04.spec.ts": "1b25fb14b755f082b77c1ce0456b65af0ed40615291bc2741ded011416da87c0"
     }
   }
 }
