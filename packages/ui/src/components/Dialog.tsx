@@ -1,5 +1,5 @@
 import { AlertDialog as RAlert, Dialog as RDialog } from 'radix-ui';
-import { useRef, type ReactNode } from 'react';
+import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { cx } from '../cx';
 import { Button } from './Button';
 
@@ -63,18 +63,57 @@ export interface DialogProps {
    * shortcuts, which the screen behind keeps reading); focus still moves in and returns, and Escape closes it.
    */
   modal?: boolean;
+  /**
+   * `readable` keeps a modal dialog's page in the accessibility tree, for a page whose list and live regions keep
+   * updating while the dialog is open (the Reports page): the dialog is `aria-modal`, an overlay blocks the pointer
+   * and Tab stays inside it (A11Y-05), but the page behind is not set `aria-hidden`.
+   */
+  pageBehind?: 'hidden' | 'readable';
+}
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Keeps Tab and Shift+Tab inside the element, wrapping at both ends (A11Y-05). */
+function keepTabInside(e: KeyboardEvent<HTMLElement>) {
+  if (e.key !== 'Tab') return;
+  const items = [...e.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (el) => el.getClientRects().length,
+  );
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (!first || !last) return;
+  const active = document.activeElement;
+  if (e.shiftKey ? active === first || active === e.currentTarget : active === last) {
+    e.preventDefault();
+    (e.shiftKey ? last : first).focus();
+  }
 }
 
 /** Modal dialog: traps focus while open and returns it to the opener (A11Y-05). */
-export function Dialog({ open, onOpenChange, title, description, children, footer, size, modal = true }: DialogProps) {
+export function Dialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  footer,
+  size,
+  modal = true,
+  pageBehind = 'hidden',
+}: DialogProps) {
   const focus = useReturnFocus();
+  const readable = modal && pageBehind === 'readable';
   return (
-    <RDialog.Root open={open} onOpenChange={onOpenChange} modal={modal}>
+    <RDialog.Root open={open} onOpenChange={onOpenChange} modal={modal && !readable}>
       <RDialog.Portal>
-        {modal ? <RDialog.Overlay className={overlay} /> : null}
+        {readable ? <div aria-hidden className={overlay} /> : modal ? <RDialog.Overlay className={overlay} /> : null}
         <RDialog.Content
           className={size === 'wide' ? widePanel : panel}
           {...focus}
+          {...(readable
+            ? { 'aria-modal': true, onKeyDown: keepTabInside, onFocusOutside: (e: Event) => e.preventDefault() }
+            : {})}
           {...(description ? {} : { 'aria-describedby': undefined })}
         >
           <RDialog.Title className="text-heading-2 font-bold">{title}</RDialog.Title>
