@@ -7,6 +7,7 @@ import { entitlementsData } from './entitlements';
 import { eventsData } from './events';
 import { exportsData } from './exports';
 import { idempotencyData } from './idempotency';
+import { importsData } from './imports';
 import { identityData } from './identity';
 import { leaderboardsData } from './leaderboards';
 import { orgsData } from './orgs';
@@ -31,6 +32,7 @@ export function createData(db: Firestore) {
     audit: auditData(db),
     events: eventsData(db),
     exports: exportsData(db),
+    imports: importsData(db),
     leaderboards: leaderboardsData(db),
     pairing: pairingData(db),
     students: studentsData(db),
