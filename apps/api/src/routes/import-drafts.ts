@@ -84,7 +84,7 @@ export function importDraftRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const orgId = req.orgId!;
         const { job, testQuestions } = await readyJob(orgId, req.params.id);
         return db.runTransaction(async (tx) => {
-          const drafts = await data.imports.readDrafts(tx, orgId, job.id);
+          const drafts = await data.imports.readDrafts(orgId, tx, job.id);
           const draft = drafts.find((d) => d.id === req.params.draftId);
           if (!draft) throw notFound('Draft');
           if (draft.status !== 'pending') throw notPending([draft.id]);
@@ -110,7 +110,7 @@ export function importDraftRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const { job, testQuestions } = await readyJob(orgId, req.params.id);
         const ids = [...new Set(req.body.draftIds)];
         return db.runTransaction(async (tx) => {
-          const drafts = await data.imports.readDrafts(tx, orgId, job.id);
+          const drafts = await data.imports.readDrafts(orgId, tx, job.id);
           pendingListed(drafts, ids);
           const all = drafts.map((d) => (ids.includes(d.id) ? { ...d, status: 'discarded' as const } : d));
           for (const id of ids) data.imports.writeDraft(orgId, tx, job.id, id, { status: 'discarded' });
@@ -158,7 +158,7 @@ export function importDraftRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const sectionOf = (name?: string) =>
           name ? test.sections.find((s) => s.name.trim().toLowerCase() === name.trim().toLowerCase())?.id : undefined;
         return db.runTransaction(async (tx) => {
-          const drafts = await data.imports.readDrafts(tx, orgId, job.id);
+          const drafts = await data.imports.readDrafts(orgId, tx, job.id);
           const listed = pendingListed(drafts, ids);
           refuseFlagged(listed);
           const now = clock.now();

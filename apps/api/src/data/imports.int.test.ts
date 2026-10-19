@@ -78,8 +78,8 @@ describe('import jobs data access', () => {
       progress: { pagesDone: 2, pagesTotal: 3, questionsFound: 5 },
     });
     const seen = await db.runTransaction(async (tx) => {
-      const j = await data.imports.readImport(tx, 'org-a', 'j1');
-      expect(await data.imports.readImport(tx, 'org-b', 'j1')).toBeNull();
+      const j = await data.imports.readImport('org-a', tx, 'j1');
+      expect(await data.imports.readImport('org-b', tx, 'j1')).toBeNull();
       data.imports.requeue('org-a', tx, 'j1');
       return j;
     });
@@ -106,12 +106,12 @@ describe('import jobs data access', () => {
     await drafts.doc('d0002').set(draft(2));
     await drafts.doc('d0001').set(draft(1));
     await db.runTransaction(async (tx) => {
-      const list = await data.imports.readDrafts(tx, 'org-a', 'j1');
+      const list = await data.imports.readDrafts('org-a', tx, 'j1');
       expect(list.map((d) => [d.id, d.order])).toEqual([
         ['d0001', 1],
         ['d0002', 2],
       ]);
-      expect(await data.imports.readDrafts(tx, 'org-b', 'j1')).toEqual([]);
+      expect(await data.imports.readDrafts('org-b', tx, 'j1')).toEqual([]);
       data.imports.writeDraft('org-a', tx, 'j1', 'd0002', { prompt: 'Edited', explanation: null });
     });
     const d2 = (await drafts.doc('d0002').get()).data()!;

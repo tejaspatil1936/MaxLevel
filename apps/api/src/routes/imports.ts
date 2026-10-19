@@ -271,7 +271,7 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const orgId = req.orgId!;
         const now = clock.now();
         const outcome = await db.runTransaction(async (tx) => {
-          const job = await data.imports.readImport(tx, orgId, req.params.id);
+          const job = await data.imports.readImport(orgId, tx, req.params.id);
           if (!job) return null;
           if (job.status !== 'failed' || !job.error?.retryable) return 'refused' as const;
           data.imports.requeue(orgId, tx, job.id);

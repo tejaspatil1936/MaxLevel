@@ -82,13 +82,13 @@ export function importsData(db: Firestore) {
     },
 
     /** The job, read in a transaction so the writes it decides on commit only if it is unchanged. */
-    async readImport(tx: Transaction, orgId: string, jobId: string): Promise<ImportJobRecord | null> {
+    async readImport(orgId: string, tx: Transaction, jobId: string): Promise<ImportJobRecord | null> {
       const d = await tx.get(col(orgId).doc(jobId));
       return d.exists ? read(d) : null;
     },
 
     /** The job's drafts in `order`, read in a transaction (edits, approval and discard recheck every pending one). */
-    async readDrafts(tx: Transaction, orgId: string, jobId: string): Promise<StoredDraft[]> {
+    async readDrafts(orgId: string, tx: Transaction, jobId: string): Promise<StoredDraft[]> {
       const snap = await tx.get(col(orgId).doc(jobId).collection('drafts').orderBy('order'));
       return snap.docs.map((d) => ({ ...(d.data() as Omit<StoredDraft, 'id'>), id: d.id }));
     },
