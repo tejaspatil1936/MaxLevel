@@ -130,3 +130,164 @@ describe('computeTestMetrics: the reported test', () => {
     expect(JSON.stringify(metrics)).not.toMatch(/stu-a-/);
   });
 });
+
+// Three options per question, `<q>1` the correct one (letter A).
+const question = (id: string, sectionId: string | null) => ({
+  id,
+  sectionId,
+  options: [1, 2, 3].map((n) => ({ id: `${id}${n}`, text: `${id} option ${n}` })),
+  correctOptionIds: [`${id}1`],
+});
+const attempt = (a: Partial<MetricsAttempt> & Pick<MetricsAttempt, 'studentId' | 'score'>): MetricsAttempt => ({
+  departmentId: null,
+  status: 'submitted',
+  durationSec: 60,
+  strikesCount: 0,
+  sections: {},
+  answers: {},
+  drawQuestionIds: Object.keys(a.answers ?? {}),
+  ...a,
+});
+
+describe('computeTestMetrics: sections, pools and terminated attempts', () => {
+  const metrics = computeTestMetrics({
+    title: 'Sectioned',
+    maxScore: 4,
+    eligible: 4,
+    inProgress: 2,
+    // qc, qd and qe are a pool: each attempt is served one or none of them.
+    questions: [
+      question('qa', 's1'),
+      question('qb', 's1'),
+      question('qc', 's2'),
+      question('qd', 's2'),
+      question('qe', 's2'),
+    ],
+    sections: [
+      { id: 's1', name: 'Aptitude', max: 2 },
+      { id: 's2', name: 'Reasoning', max: 2 },
+    ],
+    departments: [
+      { id: 'd1', name: 'Civil' },
+      { id: 'd2', name: 'Mechanical' },
+      { id: 'd3', name: 'Electrical' },
+    ],
+    attempts: [
+      attempt({
+        studentId: 'u3',
+        departmentId: 'd2',
+        status: 'terminated',
+        score: 1,
+        durationSec: 1500,
+        strikesCount: 3,
+        sections: { s1: { score: 1 }, s2: { score: 0 } },
+        answers: { qa: 'qa1', qb: 'qb2', qc: null },
+      }),
+      attempt({
+        studentId: 'u1',
+        departmentId: 'd1',
+        status: 'auto_submitted',
+        score: 2,
+        durationSec: 60,
+        sections: { s1: { score: 1 }, s2: { score: 1 } },
+        answers: { qa: 'qa2', qb: 'qb1', qd: 'qd1' },
+      }),
+      attempt({
+        studentId: 'u2',
+        score: 3,
+        durationSec: 1200,
+        strikesCount: 2,
+        sections: { s1: { score: 2 }, s2: { score: 1 } },
+        answers: { qa: 'qa1', qb: 'qb1', qc: 'qc1' },
+      }),
+    ],
+  });
+
+  it('EXP-04 terminated attempts are counted, with participation, statuses and strikes', () => {
+    expect(metrics.participation).toEqual({ eligible: 4, finished: 3, inProgress: 2, notStarted: 0, ratePct: 75 });
+    expect(metrics.statuses).toEqual({ submitted: 1, autoSubmitted: 1, terminated: 1 });
+    expect(metrics.strikes).toEqual({ total: 5, attemptsWithStrikes: 2, terminated: 1 });
+    expect(metrics.scores).toMatchObject({ mean: 2, median: 2, top: 3, bottom: 1, stdDev: 0.82, meanPct: 50 });
+    expect(metrics.timeTaken).toMatchObject({ meanSec: 920, medianSec: 1200, minSec: 60, maxSec: 1500 });
+    expect(metrics.timeTaken.distribution.map((b) => [b.fromMin, b.count])).toEqual([
+      [0, 1],
+      [5, 0],
+      [10, 0],
+      [15, 0],
+      [20, 1],
+      [25, 1],
+    ]);
+  });
+
+  it('EXP-04 section averages in section order and departments in the organization order', () => {
+    expect(metrics.sections).toEqual([
+      { sectionId: 's1', name: 'Aptitude', max: 2, mean: 1.33, meanPct: 66.67 },
+      { sectionId: 's2', name: 'Reasoning', max: 2, mean: 0.67, meanPct: 33.33 },
+    ]);
+    // Electrical has no attempt and u2 no department: both are left out.
+    expect(metrics.departments).toEqual([
+      { departmentId: 'd1', name: 'Civil', finished: 1, mean: 2, meanPct: 50 },
+      { departmentId: 'd2', name: 'Mechanical', finished: 1, mean: 1, meanPct: 25 },
+    ]);
+  });
+
+  it('EXP-04 pooled questions count only the attempts they were served to', () => {
+    expect(
+      metrics.questions.map((q) => [
+        q.number,
+        q.sectionName,
+        q.served,
+        q.answered,
+        q.correct,
+        q.correctRatePct,
+        q.discriminationIndex,
+      ]),
+    ).toEqual([
+      [1, 'Aptitude', 3, 3, 2, 66.67, 0],
+      [2, 'Aptitude', 3, 3, 2, 66.67, 1],
+      [3, 'Reasoning', 2, 1, 1, 50, 1],
+      [4, 'Reasoning', 1, 1, 1, 100, null],
+      [5, 'Reasoning', 0, 0, 0, 0, null],
+    ]);
+    // A question served to nobody is not a most-missed question.
+    expect(metrics.mostMissed).toEqual([
+      { number: 3, correctRatePct: 50 },
+      { number: 1, correctRatePct: 66.67 },
+      { number: 2, correctRatePct: 66.67 },
+      { number: 4, correctRatePct: 100 },
+    ]);
+    expect(metrics.mostPickedWrong).toEqual([
+      { number: 1, letter: 'B', text: 'qa option 2', count: 1 },
+      { number: 2, letter: 'B', text: 'qb option 2', count: 1 },
+    ]);
+  });
+
+  it('EXP-04 most-missed and most-picked wrong options keep at most 5, ties by number then letter', () => {
+    const ids = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
+    const m = computeTestMetrics({
+      title: 'Six',
+      maxScore: 6,
+      eligible: 2,
+      inProgress: 0,
+      questions: ids.map((q) => question(q, null)),
+      sections: [],
+      departments: [],
+      attempts: [
+        attempt({ studentId: 'x', score: 0, answers: Object.fromEntries(ids.map((q) => [q, `${q}2`])) }),
+        attempt({
+          studentId: 'y',
+          score: 0,
+          answers: Object.fromEntries(ids.map((q, i) => [q, `${q}${i < 3 ? 3 : 2}`])),
+        }),
+      ],
+    });
+    expect(m.mostMissed.map((q) => q.number)).toEqual([1, 2, 3, 4, 5]);
+    expect(m.mostPickedWrong.map((w) => [w.number, w.letter, w.count])).toEqual([
+      [4, 'B', 2],
+      [5, 'B', 2],
+      [6, 'B', 2],
+      [1, 'B', 1],
+      [1, 'C', 1],
+    ]);
+  });
+});
