@@ -153,3 +153,110 @@ describe('import source pages', () => {
     expect((await call('GET', '/v1/imports/j1/pages/1', undefined, await adminB())).status).toBe(404);
   });
 });
+
+/** A pending draft as the worker stores it. */
+const draftDoc = (order: number, prompt: string, extra: Record<string, unknown> = {}) => ({
+  order,
+  sourcePage: 1,
+  prompt,
+  options: [
+    { id: 'a', text: '3' },
+    { id: 'b', text: '4' },
+  ],
+  correctOptionIds: ['b'],
+  difficulty: 'easy',
+  difficultySuggested: true,
+  images: [],
+  flags: [],
+  status: 'pending',
+  ...extra,
+});
+const DUP1 = [{ code: 'DUPLICATE_IN_IMPORT', text: 'This looks like a duplicate of imported question 1.' }];
+const FIG = `${org}/imports/j1/figures/d0003-1.png`;
+
+/** A ready job `j1` with three drafts: 2 duplicates 1, and 3 has an image without alt text. */
+async function storeDrafts() {
+  await storeJob('j1');
+  const drafts = jobRef('j1').collection('drafts');
+  await drafts.doc('d0001').set(draftDoc(1, 'What is 7 x 8?'));
+  await drafts.doc('d0002').set(draftDoc(2, 'What is 7 x 8?', { flags: DUP1 }));
+  await drafts.doc('d0003').set(
+    draftDoc(3, 'Which bar is tallest?', {
+      images: [{ path: FIG, alt: '' }],
+      flags: [{ code: 'IMAGE_WITHOUT_ALT', text: 'Image 1 has no alt text.' }],
+    }),
+  );
+}
+const stored = async (id: string) => (await jobRef('j1').collection('drafts').doc(id).get()).data()!;
+
+describe('import draft edits', () => {
+  it('IMP-11 IMP-09 an edit returns the draft checked again, and every other pending draft is rechecked', async () => {
+    await storeDrafts();
+    const res = await call('PATCH', '/v1/imports/j1/drafts/d0001', { prompt: 'What is 9 x 8?', difficulty: 'hard' });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: 'd0001',
+      prompt: 'What is 9 x 8?',
+      difficulty: 'hard',
+      difficultySuggested: false,
+      flags: [],
+    });
+    expect((await stored('d0001')).prompt).toBe('What is 9 x 8?');
+    expect((await stored('d0002')).flags, 'no longer a duplicate').toEqual([]);
+
+    const noAnswer = await call('PATCH', '/v1/imports/j1/drafts/d0002', { correctOptionIds: [], explanation: '' });
+    expect(noAnswer.body.flags).toEqual([
+      { code: 'NO_CORRECT_ANSWER', text: 'No correct answer found in the source.' },
+    ]);
+    expect(noAnswer.body).not.toHaveProperty('explanation');
+
+    const alt = await call('PATCH', '/v1/imports/j1/drafts/d0003', { images: [{ path: FIG, alt: 'Bar chart' }] });
+    expect(alt.body).toMatchObject({ images: [{ path: FIG, alt: 'Bar chart' }], flags: [] });
+  });
+
+  it('ORG-05 IMP-11 an image path the draft does not have is refused and nothing is stored', async () => {
+    await storeDrafts();
+    for (const path of [`organizations/${SEED.orgB}/tests/x/images/y.png`, `${org}/tests/${testId}/images/other.png`]) {
+      const res = await call('PATCH', '/v1/imports/j1/drafts/d0003', {
+        images: [{ path, alt: 'x' }],
+        prompt: 'Changed',
+      });
+      expect([res.status, code(res)], path).toEqual([400, 'VALIDATION']);
+    }
+    expect(await stored('d0003')).toMatchObject({ prompt: 'Which bar is tallest?', images: [{ path: FIG, alt: '' }] });
+    expect((await call('PATCH', '/v1/imports/j1/drafts/d0001', { prompt: 'x' }, await adminB())).status).toBe(404);
+    expect((await call('PATCH', '/v1/imports/j1/drafts/nope', { prompt: 'x' })).status).toBe(404);
+    expect((await call('PATCH', '/v1/imports/j1/drafts/d0001', {})).status).toBe(400);
+  });
+
+  it('IMP-11 only a pending draft of a ready job can change', async () => {
+    await storeDrafts();
+    await jobRef('j1').collection('drafts').doc('d0001').update({ status: 'discarded' });
+    const res = await call('PATCH', '/v1/imports/j1/drafts/d0001', { prompt: 'x' });
+    expect([res.status, code(res)]).toEqual([409, 'DRAFT_NOT_PENDING']);
+    await jobRef('j1').update({ status: 'running' });
+    const running = await call('PATCH', '/v1/imports/j1/drafts/d0002', { prompt: 'x' });
+    expect([running.status, code(running)]).toEqual([409, 'IMPORT_NOT_READY']);
+  });
+});
+
+describe('import discard', () => {
+  it('IMP-12 IMP-09 discards pending drafts with an audit entry and rechecks the rest', async () => {
+    await storeDrafts();
+    const res = await call('POST', '/v1/imports/j1/discard', { draftIds: ['d0001'] });
+    expect(res).toEqual({ status: 200, body: { discarded: 1 } });
+    expect((await stored('d0001')).status).toBe('discarded');
+    expect((await stored('d0002')).flags, 'its original is discarded').toEqual([]);
+    const audit = (await db.collection(`${org}/auditLogs`).where('action', '==', 'import.discard').get()).docs;
+    expect(audit.map((d) => d.data())).toEqual([
+      expect.objectContaining({ target: { type: 'importJob', id: 'j1' }, after: { count: 1 } }),
+    ]);
+
+    const again = await call('POST', '/v1/imports/j1/discard', { draftIds: ['d0002', 'd0001'] });
+    expect([again.status, code(again)]).toEqual([409, 'DRAFT_NOT_PENDING']);
+    expect((await stored('d0002')).status, 'a refusal changes nothing').toBe('pending');
+    expect((await call('POST', '/v1/imports/j1/discard', { draftIds: ['nope'] })).status).toBe(404);
+    expect((await call('POST', '/v1/imports/j1/discard', { draftIds: [] })).status).toBe(400);
+    expect((await call('POST', '/v1/imports/j1/discard', { draftIds: ['d0002'] }, await adminB())).status).toBe(404);
+  });
+});

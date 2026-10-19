@@ -90,6 +90,33 @@ const withImportJob = async (db: Firestore) => {
   return { params: { id: 'import-org-a' } };
 };
 
+/** A ready import job in each org's sample test with one pending draft, `d0001`. */
+const withImportDraft = async (db: Firestore) => {
+  await withImportJob(db);
+  for (const orgId of ['org-a', 'org-b']) {
+    const job = db.doc(`organizations/${orgId}/importJobs/import-${orgId}`);
+    await job.update({ status: 'ready', progress: { pagesDone: 1, pagesTotal: 1, questionsFound: 1 } });
+    await job
+      .collection('drafts')
+      .doc('d0001')
+      .set({
+        order: 1,
+        sourcePage: 1,
+        prompt: 'What is 2 + 2?',
+        options: [
+          { id: 'a', text: '3' },
+          { id: 'b', text: '4' },
+        ],
+        correctOptionIds: ['b'],
+        difficultySuggested: false,
+        images: [],
+        flags: [],
+        status: 'pending',
+      });
+  }
+  return { id: 'import-org-a', draftId: 'd0001' };
+};
+
 /** The sample test in each org, published with a manual release, its results released when `released`. */
 const withPublishedTest = async (db: Firestore, released = false) => {
   const resolved = {
@@ -377,6 +404,14 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     params: { id: 'import-org-a', page: '1' },
     foreignParams: { id: 'import-org-b', page: '1' },
     fresh: async (db) => ({ params: { ...(await withImportJob(db)).params, page: '1' } }),
+  },
+  'PATCH /v1/imports/:id/drafts/:draftId': {
+    foreignParams: { id: 'import-org-b', draftId: 'd0001' },
+    fresh: async (db, n) => ({ params: await withImportDraft(db), body: { prompt: `Edited ${n}` } }),
+  },
+  'POST /v1/imports/:id/discard': {
+    foreignParams: { id: 'import-org-b' },
+    fresh: async (db) => ({ params: { id: (await withImportDraft(db)).id }, body: { draftIds: ['d0001'] } }),
   },
   'GET /v1/tests/:id/questions': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'GET /v1/tests/:id/preview': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
