@@ -149,7 +149,12 @@ export function ReportsScreen() {
               rows={items}
               rowKey={(r) => r.id}
               columns={[
-                { key: 'report', header: t('reports.colReport'), cell: (r) => r.title },
+                {
+                  key: 'report',
+                  header: t('reports.colReport'),
+                  // A long unbroken word in a title wraps instead of pushing Status and Files off-screen.
+                  cell: (r) => <span className="wrap-anywhere">{r.title}</span>,
+                },
                 {
                   key: 'type',
                   header: t('reports.colType'),
