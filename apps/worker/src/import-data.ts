@@ -136,8 +136,10 @@ export function importData(db: Firestore) {
     /**
      * Moves a started job to `running`, held by `runId` until `leaseUntil` (REL-06), clearing a retry's wait. Claims
      * nothing unless the job is queued, retrying with its `retryAt` reached, or running with no lease held: a job
-     * another run holds gives the time it is held until, so a task delivered again starts no second run. A page
-     * task's `page` must be the first page not done, so a page task delivered twice reads its page once.
+     * another run holds gives the time it is held until, so a task delivered again starts no second run. A page task
+     * ahead of the job (`page` past the first page not done) is refused; one behind it, sent again after its run
+     * stopped (the next task not queued, the checks not run), takes the job back, and the run goes on from the first
+     * page not done, or runs the checks when every page is done.
      */
     async claim(
       orgId: string,
@@ -153,7 +155,7 @@ export function importData(db: Firestore) {
         if (status === 'retrying' && Number(current.retryAt ?? 0) > run.now) return null;
         if (status === 'running' && Number(current.leaseUntil ?? 0) > run.now)
           return { heldUntil: Number(current.leaseUntil) };
-        if (run.page !== undefined && current.progress.pagesDone + 1 !== run.page) return null;
+        if (run.page !== undefined && run.page > current.progress.pagesDone + 1) return null;
         tx.update(job(orgId, jobId), {
           status: 'running',
           runId: run.runId,
@@ -200,7 +202,8 @@ export function importData(db: Firestore) {
     /**
      * Saves the text of the page's parts for the review screen (`parts/{part}`, IMP-11), then its drafts, then the
      * job's progress with the last of them, in transactions within Firestore's limits (writeChunks), each only while
-     * the run holds the job.
+     * the run holds the job. Drafts past the job's saved progress that this save does not write again are deleted
+     * first: a run that lost the job between chunks may have left some of a page this run read again.
      */
     async saveDrafts(
       orgId: string,
@@ -215,6 +218,16 @@ export function importData(db: Firestore) {
           for (const p of chunk) tx.set(ref.collection('parts').doc(String(p.part)), { ...p, orgId });
         });
       const docs = drafts.map(({ figure: _figure, ...d }) => ({ ...d, flags: [], status: 'pending' as const }));
+      const ref = job(orgId, jobId);
+      const found = Number((await ref.get()).get('progress.questionsFound') ?? 0);
+      const kept = new Set(docs.map((d) => draftId(d.order)));
+      const stale = (await ref.collection('drafts').where('order', '>', found).get()).docs.filter(
+        (d) => !kept.has(d.id),
+      );
+      for (const chunk of stale.length ? writeChunks(stale, () => 0) : [])
+        await held(orgId, jobId, runId, (tx) => {
+          for (const d of chunk) tx.delete(d.ref);
+        });
       const chunks = writeChunks(docs);
       for (const [i, chunk] of chunks.entries())
         await held(orgId, jobId, runId, (tx, ref) => {
