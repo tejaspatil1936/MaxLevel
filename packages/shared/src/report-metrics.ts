@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isFinishedAttempt, type AttemptStatus } from './attempt';
 
 // Analytics report metrics (spec EXP-04, docs/testids/phase-7.md "Metrics"). Every number of a report is computed
 // here (spec 9.5); the model only writes the narrative. The metrics hold counts, scores, rates and labels: no
@@ -165,5 +166,147 @@ export function timeTaken(durations: ReadonlyArray<number>): ReportMetrics['time
     minSec: durations.length ? Math.min(...durations) : 0,
     maxSec: durations.length ? Math.max(...durations) : 0,
     distribution: timeDistribution(durations),
+  };
+}
+
+/** A finished attempt as the metrics read it (built from the stored attempt, its draw, answers and result). */
+export interface MetricsAttempt {
+  studentId: string;
+  departmentId: string | null;
+  status: 'submitted' | 'auto_submitted' | 'terminated';
+  score: number;
+  durationSec: number;
+  strikesCount: number;
+  sections: Record<string, { score: number }>;
+  /** questionId → chosen option ID; only questions of the draw. */
+  answers: Record<string, string | null>;
+  drawQuestionIds: string[];
+}
+
+type Department = { id: string; name: string };
+
+/** Finished attempts only: terminated ones are graded and counted (spec 15.3); reset and in-progress ones are not. */
+const finishedOnly = (attempts: ReadonlyArray<MetricsAttempt>) =>
+  attempts.filter((a) => isFinishedAttempt(a.status as AttemptStatus));
+
+/** Departments with at least one entry, in the organization's order, each with its count and mean score. */
+function departmentRows(
+  departments: ReadonlyArray<Department>,
+  entries: ReadonlyArray<{ departmentId: string | null; score: number }>,
+  max: number,
+): ReportMetrics['departments'] {
+  return departments.flatMap((d) => {
+    const scores = entries.filter((e) => e.departmentId === d.id).map((e) => e.score);
+    if (!scores.length) return [];
+    const m = mean(scores);
+    return [
+      { departmentId: d.id, name: d.name, finished: scores.length, mean: round2(m), meanPct: round2(pctOf(m, max)) },
+    ];
+  });
+}
+
+/** Statuses, strikes and time taken over finished attempts. */
+function attemptFigures(attempts: ReadonlyArray<MetricsAttempt>) {
+  const counted = (status: MetricsAttempt['status']) => attempts.filter((a) => a.status === status).length;
+  return {
+    statuses: {
+      submitted: counted('submitted'),
+      autoSubmitted: counted('auto_submitted'),
+      terminated: counted('terminated'),
+    },
+    strikes: {
+      total: sum(attempts.map((a) => a.strikesCount)),
+      attemptsWithStrikes: attempts.filter((a) => a.strikesCount > 0).length,
+      terminated: counted('terminated'),
+    },
+    timeTaken: timeTaken(attempts.map((a) => a.durationSec)),
+  };
+}
+
+function participation(eligible: number, finished: number, inProgress: number): ReportMetrics['participation'] {
+  return {
+    eligible,
+    finished,
+    inProgress,
+    notStarted: Math.max(0, eligible - finished - inProgress),
+    ratePct: round2(pctOf(finished, eligible)),
+  };
+}
+
+const letterOf = (index: number) => String.fromCharCode(65 + index);
+
+/** EXP-04: the statistics of one test from its finished attempts. */
+export function computeTestMetrics(input: {
+  title: string;
+  maxScore: number;
+  eligible: number;
+  inProgress: number;
+  questions: ReadonlyArray<{
+    id: string;
+    sectionId: string | null;
+    options: ReadonlyArray<{ id: string; text: string }>;
+    correctOptionIds: ReadonlyArray<string>;
+  }>;
+  sections: ReadonlyArray<{ id: string; name: string; max: number }>;
+  departments: ReadonlyArray<Department>;
+  attempts: ReadonlyArray<MetricsAttempt>;
+}): ReportMetrics {
+  const attempts = finishedOnly(input.attempts);
+  const scores = attempts.map((a) => a.score);
+  const draws = attempts.map((a) => ({ attempt: a, drawn: new Set(a.drawQuestionIds) }));
+  const sectionNames = new Map(input.sections.map((s) => [s.id, s.name]));
+
+  const questions = input.questions.map((q, i) => {
+    const isCorrect = (pick: string | null) => pick !== null && q.correctOptionIds.includes(pick);
+    const served = draws
+      .filter((d) => d.drawn.has(q.id))
+      .map(({ attempt }) => ({ attempt, pick: attempt.answers[q.id] ?? null }));
+    const correct = served.filter((s) => isCorrect(s.pick)).length;
+    return {
+      number: i + 1,
+      questionId: q.id,
+      sectionName: q.sectionId === null ? null : (sectionNames.get(q.sectionId) ?? null),
+      served: served.length,
+      answered: served.filter((s) => s.pick !== null).length,
+      correct,
+      correctRatePct: round2(pctOf(correct, served.length)),
+      discriminationIndex: discriminationIndex(
+        served.map((s) => ({ studentId: s.attempt.studentId, score: s.attempt.score, correct: isCorrect(s.pick) })),
+      ),
+      wrongPicks: q.options.flatMap((o, j) => {
+        const picked = served.filter((s) => s.pick === o.id).length;
+        return picked > 0 && !isCorrect(o.id) ? [{ letter: letterOf(j), text: o.text, count: picked }] : [];
+      }),
+    };
+  });
+
+  const mostMissed = questions
+    .filter((q) => q.served > 0)
+    .sort((a, b) => a.correctRatePct - b.correctRatePct || a.number - b.number)
+    .slice(0, 5)
+    .map((q) => ({ number: q.number, correctRatePct: q.correctRatePct }));
+  const mostPickedWrong = questions
+    .flatMap((q) => q.wrongPicks.map((w) => ({ number: q.number, ...w })))
+    .sort((a, b) => b.count - a.count || a.number - b.number || (a.letter < b.letter ? -1 : 1))
+    .slice(0, 5);
+
+  return {
+    version: 1,
+    scope: 'test',
+    title: input.title,
+    maxScore: input.maxScore,
+    participation: participation(input.eligible, attempts.length, input.inProgress),
+    scores: { ...scoreSummary(scores, input.maxScore), distribution: scoreDistribution(scores, input.maxScore) },
+    sections: input.sections.map((s) => {
+      const m = mean(attempts.map((a) => a.sections[s.id]?.score ?? 0));
+      return { sectionId: s.id, name: s.name, max: s.max, mean: round2(m), meanPct: round2(pctOf(m, s.max)) };
+    }),
+    departments: departmentRows(input.departments, attempts, input.maxScore),
+    questions,
+    mostMissed,
+    mostPickedWrong,
+    ...attemptFigures(attempts),
+    trends: [],
+    discriminationGroupPct: DISCRIMINATION_GROUP_PCT,
   };
 }
