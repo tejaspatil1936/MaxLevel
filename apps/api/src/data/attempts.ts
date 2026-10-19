@@ -244,6 +244,35 @@ export function attemptsData(db: Firestore) {
     },
 
     /**
+     * OPS-06, OPS-09: adds `extraSec` to an attempt in progress, its `extraTimeSec` and `deadlineAt` together, in one
+     * transaction. `write` runs first with the attempt before and after the grant and the transaction, to add the
+     * audit entry to it (AUD-02); it may throw to refuse, and then nothing is stored. `ATTEMPT_FINISHED` for an attempt
+     * that is not in progress, null when there is none in the organization.
+     */
+    async grantExtraTime(
+      orgId: string,
+      attemptId: string,
+      extraSec: number,
+      write: (before: AttemptRecord, after: AttemptRecord, tx: Transaction) => void,
+    ): Promise<AttemptRecord | 'ATTEMPT_FINISHED' | null> {
+      const ref = attempts(orgId).doc(attemptId);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return null;
+        const before = toAttempt(snap);
+        if (before.status !== 'in_progress') return 'ATTEMPT_FINISHED';
+        const after: AttemptRecord = {
+          ...before,
+          extraTimeSec: before.extraTimeSec + extraSec,
+          deadlineAt: before.deadlineAt + extraSec * 1000,
+        };
+        write(before, after, tx);
+        tx.update(ref, { extraTimeSec: after.extraTimeSec, deadlineAt: after.deadlineAt });
+        return after;
+      });
+    },
+
+    /**
      * Q-12: the first serve time of a question, stored in the attempt's `questionServedAt` in one transaction; a later
      * call returns the stored time and writes nothing. `ATTEMPT_FINISHED` once the attempt is no longer in progress,
      * null when there is no attempt.

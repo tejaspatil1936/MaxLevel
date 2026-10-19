@@ -295,6 +295,39 @@ describe('attempt data access', () => {
     expect(await data.attempts.finalizeAttempt('org-b', attempt.id, finish('submitted', 1))).toBeNull();
   });
 
+  it('OPS-06 OPS-09 ORG-03 extra time adds up with its audit entry in one transaction; refusals store nothing', async () => {
+    const ref = db.doc('organizations/org-a/attempts/a1');
+    await ref.set({ orgId: 'org-a', testId: 't1', studentId: 'stu-1', status: 'in_progress', deadlineAt: 10_000 });
+    const audit = db.collection('organizations/org-a/auditLogs');
+    const write = (before: AttemptRecord, after: AttemptRecord, tx: FirebaseFirestore.Transaction) =>
+      tx.create(audit.doc(), { before: before.deadlineAt, after: after.deadlineAt });
+
+    expect(await data.attempts.grantExtraTime('org-a', 'a1', 600, write)).toMatchObject({
+      deadlineAt: 610_000,
+      extraTimeSec: 600,
+    });
+    expect(await data.attempts.grantExtraTime('org-a', 'a1', 60, write)).toMatchObject({
+      deadlineAt: 670_000,
+      extraTimeSec: 660,
+    });
+    expect((await ref.get()).data()).toMatchObject({ deadlineAt: 670_000, extraTimeSec: 660 });
+    expect((await audit.get()).docs.map((d) => d.data()).sort((a, b) => a.after - b.after)).toEqual([
+      { before: 10_000, after: 610_000 },
+      { before: 610_000, after: 670_000 },
+    ]);
+
+    // A refusal thrown by the writer stores neither the grant nor its entry.
+    const refuse = () => {
+      throw new AppError(409, 'EXTRA_TIME_CONFIRMATION_REQUIRED', 'Confirm first.');
+    };
+    await expect(data.attempts.grantExtraTime('org-a', 'a1', 60, refuse)).rejects.toThrow('Confirm first.');
+    expect(await data.attempts.grantExtraTime('org-b', 'a1', 60, write)).toBeNull();
+    await ref.update({ status: 'submitted' });
+    expect(await data.attempts.grantExtraTime('org-a', 'a1', 60, write)).toBe('ATTEMPT_FINISHED');
+    expect((await ref.get()).data()).toMatchObject({ deadlineAt: 670_000, extraTimeSec: 660 });
+    expect((await audit.get()).size).toBe(2);
+  });
+
   it('Q-12 ORG-03 stores a question’s first serve time once, and not on a finished, missing or other-org attempt', async () => {
     await putAtt1();
     const runs = await Promise.all([
