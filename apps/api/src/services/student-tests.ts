@@ -1,4 +1,5 @@
 import {
+  accommodationExtraSec,
   dayLabels,
   drawSize,
   examEntrySchema,
@@ -72,7 +73,7 @@ export function studentTestsService(data: Data) {
       if (state && state !== 'finished')
         listed.push({ test, dayLabel, settings, state, ...(attempt ? { attempt } : {}) });
     }
-    return { timezone, listed, finished, tests };
+    return { timezone, listed, finished, tests, accommodations: student?.accommodations ?? {} };
   }
 
   const summary = (l: Listed): StudentTestSummary => ({
@@ -128,6 +129,8 @@ export function studentTestsService(data: Data) {
       }
       if (!page) return null;
       const pools = testDrawPools(page.test, await data.questions.listQuestions(orgId, testId));
+      // OPS-07: the rules screen shows the standing accommodation an attempt of this test would start with.
+      const extraMin = accommodationExtraSec(page.settings.durationMin, v.accommodations[page.test.seriesId]) / 60;
       return {
         ...summary(page),
         timezone: v.timezone,
@@ -140,6 +143,7 @@ export function studentTestsService(data: Data) {
         marking: page.settings.marking,
         maxStrikes: page.settings.maxStrikes,
         exam: examEntrySchema.parse(page.settings),
+        ...(extraMin > 0 ? { extraMin } : {}),
       };
     },
   };

@@ -209,6 +209,18 @@ describe('student test page', () => {
     });
   });
 
+  it("OPS-07 A11Y-17 carries the student's standing accommodation for the series in whole minutes, and none for others", async () => {
+    const t = await examTest({ timingMode: 'flexible', durationMin: 45, windowMin: 120 });
+    const other = await examTest({ title: 'Logical reasoning' });
+    expect((await page(t.testId)).body.extraMin).toBeUndefined();
+    await db
+      .doc(`organizations/${SEED.orgA}/students/stu-org-a-01`)
+      .update({ [`accommodations.${t.seriesId}`]: { extraPct: 30 } });
+    expect((await page(t.testId)).body.extraMin).toBe(14); // 45 × 30% = 13.5, rounded
+    expect((await page(other.testId)).body.extraMin).toBeUndefined();
+    expect((await page(t.testId, 2)).body.extraMin).toBeUndefined();
+  });
+
   it('US-ST-03 a test the dashboard would not list is 404, and a finished one says so', async () => {
     const mech = await examTest({ eligibility: { departmentIds: ['dept-org-a-mechanical'] } });
     const draft = await examTest({ publish: false });
