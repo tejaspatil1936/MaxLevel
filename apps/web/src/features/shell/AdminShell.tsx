@@ -79,22 +79,25 @@ export function AdminShell({
   return (
     <WorkspaceContext.Provider value={{ ...workspace, orgId }}>
       <div className="flex min-h-screen">
-        <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col gap-4 overflow-y-auto border-r border-rule bg-surface p-2 min-[1200px]:w-60 min-[1200px]:p-4">
-          <p className="flex min-h-11 items-center font-display text-heading-2 font-bold max-[1199px]:justify-center">
-            <span className="max-[1199px]:hidden">{t('app.name')}</span>
-            <span aria-hidden className="min-[1200px]:hidden">
-              {t('app.mark')}
-            </span>
-          </p>
-          {superAdmin ? <OrgSwitcher current={inOrg ? orgName || null : null} onChange={setOrgId} /> : null}
-          <nav aria-label={t('nav.main')}>
-            <ul className="flex flex-col gap-1">
-              {links.map((l) => (
-                <SideLink key={l.href} link={l} locked={!!l.feature && !!features && !features[l.feature]} />
-              ))}
-            </ul>
-          </nav>
-        </aside>
+        {/* The rail's colour and rule run the page's full height; the sticky sidebar inside stays in view. */}
+        <div className="w-20 shrink-0 border-r border-rule bg-surface min-[1200px]:w-60">
+          <aside className="sticky top-0 flex h-screen flex-col gap-4 overflow-y-auto p-2 min-[1200px]:p-4">
+            <p className="flex min-h-11 items-center font-display text-heading-2 font-bold max-[1199px]:justify-center">
+              <span className="max-[1199px]:hidden">{t('app.name')}</span>
+              <span aria-hidden className="min-[1200px]:hidden">
+                {t('app.mark')}
+              </span>
+            </p>
+            {superAdmin ? <OrgSwitcher current={inOrg ? orgName || null : null} onChange={setOrgId} /> : null}
+            <nav aria-label={t('nav.main')}>
+              <ul className="flex flex-col gap-1">
+                {links.map((l) => (
+                  <SideLink key={l.href} link={l} locked={!!l.feature && !!features && !features[l.feature]} />
+                ))}
+              </ul>
+            </nav>
+          </aside>
+        </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-rule bg-surface px-6 py-2">
             <p className="font-bold text-ink">
