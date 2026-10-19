@@ -71,3 +71,6 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
 /** The current time by the server's clock, for display and defaults (EX-06); the API decides anything that counts. */
 // eslint-disable-next-line no-restricted-properties
 export const serverNow = () => Date.now() + clockOffsetMs;
+/** This device's own time, for how long something has run here; a new clock offset never moves it. */
+// eslint-disable-next-line no-restricted-properties
+export const deviceNow = () => Date.now();
