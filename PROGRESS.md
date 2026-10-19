@@ -131,3 +131,4 @@ PHASE 5 DONE 5/5 features
 PHASE 6 START d4701a8485b5e795e838472481d52066571112af
 Tests: 22 phase 6 acceptance tests by test-author for F-6.02 to F-6.04 (F-6.01 is unit-only), reviewed twice (2 blocking: sequential worker decision, cross-org image path; robustness fixes), locked.
 F-6.01 done — import question checks reusing the phase 2 checks, LlmQuestionSchema and draft mapping, extraction instructions with untrusted-content fencing (shared, unit-tested)
+F-6.02 done — import jobs with API-signed upload links, limits and refusal order, start step, job list and view, test-only scripted LLM controls behind the worker LlmDriver interface, a basic one-call-per-page worker pipeline, Import from file dialog
