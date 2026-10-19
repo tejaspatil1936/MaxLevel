@@ -155,6 +155,8 @@ export const importFiguresFolder = (orgId: string, jobId: string) => `organizati
 export interface ImportPayload {
   orgId: string;
   jobId: string;
+  /** A page task's page: its run reads that page only, and only while it is the first page not done. */
+  page?: number;
 }
 
 /** The worker task of one import, due at once; its name contains the job ID. */
@@ -177,4 +179,13 @@ export function importRetryTask(
     name: `import-${jobId}-${run}`,
     ...(scheduleTime === undefined ? {} : { scheduleTime }),
   };
+}
+
+/**
+ * The task that reads page `page` of an import (REL-06): the worker reads one page per task, in page order, and
+ * queues the next page's task when a page is saved, so no request runs for long. Due at once; the name holds the job
+ * ID and the page, so each page is queued once.
+ */
+export function importPageTask(orgId: string, jobId: string, page: number): TaskRequest<ImportPayload> {
+  return { name: `import-${jobId}-page-${page}`, path: '/tasks/import', payload: { orgId, jobId, page } };
 }

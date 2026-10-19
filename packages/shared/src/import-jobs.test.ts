@@ -7,6 +7,7 @@ import {
   importFilePath,
   importJobViewSchema,
   importPagePath,
+  importPageTask,
   importRetryTask,
   importTask,
 } from './import-jobs';
@@ -54,6 +55,14 @@ describe('import jobs', () => {
       scheduleTime: 60_000,
     });
     expect(importRetryTask('org-a', 'job1', 'manual-5')).not.toHaveProperty('scheduleTime');
+  });
+
+  it('REL-06 the next page is a task of its own, due at once, named by the job and the page', () => {
+    expect(importPageTask('org-a', 'job1', 3)).toEqual({
+      name: 'import-job1-page-3',
+      path: '/tasks/import',
+      payload: { orgId: 'org-a', jobId: 'job1', page: 3 },
+    });
   });
 
   it('IMP-02 the create request needs every field and a whole, non-negative size', () => {
