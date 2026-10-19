@@ -15,6 +15,7 @@ import { pairingData } from './pairing';
 import { platformData } from './platform';
 import { preferencesData } from './preferences';
 import { questionsData } from './questions';
+import { reportsData } from './reports';
 import { seriesData } from './series';
 import { studentsData } from './students';
 import { testsData } from './tests';
@@ -44,6 +45,7 @@ export function createData(db: Firestore) {
     series: seriesData(db),
     tests: testsData(db),
     questions: questionsData(db),
+    reports: reportsData(db),
     usage: usageData(db),
   };
 }
