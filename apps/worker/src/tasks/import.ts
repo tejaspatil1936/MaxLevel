@@ -189,7 +189,15 @@ export function importHandler(deps: {
           sectionHints: hints.filter((h): h is string => !!h),
         });
         const parts: LlmPart[] = [{ type: 'text', text: prompt.userText }];
-        const pageFile = 'file' in part ? await part.file() : null;
+        let pageFile: Uint8Array | null = null;
+        if ('file' in part) {
+          // pdf-lib copies the page here; a page it cannot copy is a broken file, not a model failure.
+          try {
+            pageFile = await part.file();
+          } catch {
+            return fail(refused('INVALID_FILE', IMPORT_MESSAGES.pageUnreadable(page)));
+          }
+        }
         if (pageFile) parts.push({ type: 'file', mediaType: 'application/pdf', data: pageFile });
         let res: LlmResponse;
         try {
