@@ -32,16 +32,15 @@ export const releaseInputOf = (test: TestRecord & { resolved: NonNullable<TestRe
 });
 
 /**
- * Release results and Withdraw results (RES-01, RES-05, US-AD-10, SER-09, DATA-05). Each writes its audit entry in the
- * same batch as the change and then queues a leaderboard recompute due at once (LB-03). A refusal stores nothing.
+ * Release results and Withdraw results (RES-01, RES-05, US-AD-10, SER-09, DATA-05). Each checks the stored state and
+ * writes the change with its audit entry in one transaction, then queues a leaderboard recompute due at once (LB-03).
+ * A refusal stores nothing.
  */
 export function releaseRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   const { data, audit, clock, queue } = ctx;
-  const db = ctx.firebase.db;
 
   /** A published test of the organization; anything else, including another org's test, is 404 (ORG-05). */
-  const published = async (orgId: string, testId: string) => {
-    const test = await data.tests.getTest(orgId, testId);
+  const published = (test: TestRecord | null) => {
     if (!test?.resolved) throw notFound('Test');
     return { ...test, resolved: test.resolved };
   };
@@ -61,24 +60,26 @@ export function releaseRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       { config: admin, schema: { params: idParams, body: emptyBody, response: { 200: releaseResponseSchema } } },
       async (req) => {
         const orgId = req.orgId!;
-        const test = await published(orgId, req.params.id);
-        const input = releaseInputOf(test);
         const now = clock.now();
-        const refusal = manualReleaseRefusal(input, now);
-        if (refusal) throw new AppError(409, refusal, REFUSALS[refusal]);
-        // Already released and not withdrawn: nothing changes.
-        if (resultReleaseState(input) === 'released') return { resultsReleasedAt: input.resultsReleasedAt };
-        const batch = db.batch();
-        data.tests.setRelease(orgId, batch, test.id, { resultsReleasedAt: now, resultsWithdrawn: false });
-        audit(req, batch, {
-          action: 'test.results.release',
-          target: { type: 'test', id: test.id },
-          before: { resultsReleasedAt: input.resultsReleasedAt, resultsWithdrawn: input.resultsWithdrawn },
-          after: { resultsReleasedAt: now },
+        // The check and the write share a transaction: a second concurrent call sees the release and changes nothing.
+        const done = await data.tests.inTestTransaction(orgId, req.params.id, (found, tx) => {
+          const test = published(found);
+          const input = releaseInputOf(test);
+          const refusal = manualReleaseRefusal(input, now);
+          if (refusal) throw new AppError(409, refusal, REFUSALS[refusal]);
+          // Already released and not withdrawn: nothing changes.
+          if (resultReleaseState(input) === 'released') return { test, changed: false, at: input.resultsReleasedAt };
+          data.tests.setRelease(orgId, tx, test.id, { resultsReleasedAt: now, resultsWithdrawn: false });
+          audit(req, tx, {
+            action: 'test.results.release',
+            target: { type: 'test', id: test.id },
+            before: { resultsReleasedAt: input.resultsReleasedAt, resultsWithdrawn: input.resultsWithdrawn },
+            after: { resultsReleasedAt: now },
+          });
+          return { test, changed: true, at: now };
         });
-        await batch.commit();
-        await recompute(orgId, test, 'release', now);
-        return { resultsReleasedAt: now };
+        if (done.changed) await recompute(orgId, done.test, 'release', now);
+        return { resultsReleasedAt: done.at };
       },
     );
 
@@ -87,23 +88,25 @@ export function releaseRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       { config: admin, schema: { params: idParams, body: emptyBody, response: { 200: withdrawResponseSchema } } },
       async (req) => {
         const orgId = req.orgId!;
-        const test = await published(orgId, req.params.id);
-        if (resultReleaseState(releaseInputOf(test)) !== 'released')
-          throw new AppError(
-            409,
-            'RESULTS_NOT_RELEASED',
-            "These results aren't released, so there's nothing to withdraw.",
-          );
         const now = clock.now();
-        const batch = db.batch();
-        data.tests.setRelease(orgId, batch, test.id, { resultsWithdrawn: true });
-        audit(req, batch, {
-          action: 'test.results.withdraw',
-          target: { type: 'test', id: test.id },
-          before: { resultsWithdrawn: false },
-          after: { resultsWithdrawn: true },
+        // As for release: a second concurrent withdrawal sees the first and is refused, with no second audit entry.
+        const test = await data.tests.inTestTransaction(orgId, req.params.id, (found, tx) => {
+          const record = published(found);
+          if (resultReleaseState(releaseInputOf(record)) !== 'released')
+            throw new AppError(
+              409,
+              'RESULTS_NOT_RELEASED',
+              "These results aren't released, so there's nothing to withdraw.",
+            );
+          data.tests.setRelease(orgId, tx, record.id, { resultsWithdrawn: true });
+          audit(req, tx, {
+            action: 'test.results.withdraw',
+            target: { type: 'test', id: record.id },
+            before: { resultsWithdrawn: false },
+            after: { resultsWithdrawn: true },
+          });
+          return record;
         });
-        await batch.commit();
         await recompute(orgId, test, 'withdraw', now);
         return { resultsWithdrawn: true as const };
       },

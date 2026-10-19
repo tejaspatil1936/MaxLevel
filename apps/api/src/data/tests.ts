@@ -1,5 +1,5 @@
 import type { EligibilityRules, Section, Settings, SettingsOverrides, TestStatus } from '@mitaoe/shared';
-import { FieldValue, type Firestore } from 'firebase-admin/firestore';
+import { FieldValue, type Firestore, type Transaction } from 'firebase-admin/firestore';
 import { writer, type Tx } from './tx';
 
 /** A test as stored under organizations/{orgId}/tests (spec 5.2, PLAN `Test`). */
@@ -159,6 +159,21 @@ export function testsData(db: Firestore) {
     },
 
     /** RES-01, RES-05: stores a release or a withdrawal; nothing else of the test changes. */
+    /**
+     * Reads the test inside a transaction and runs `step` on it, so a check and the writes it decides on (with their
+     * audit entry) commit together; a concurrent call sees the first one's writes (RES-01, RES-05, AUD-02).
+     */
+    inTestTransaction<T>(
+      orgId: string,
+      testId: string,
+      step: (test: TestRecord | null, tx: Transaction) => T,
+    ): Promise<T> {
+      return db.runTransaction(async (tx) => {
+        const d = await tx.get(col(orgId).doc(testId));
+        return step(d.exists ? toTest(d) : null, tx);
+      });
+    },
+
     setRelease(orgId: string, tx: Tx, testId: string, fields: ReleaseFields): void {
       writer(tx).update(col(orgId).doc(testId), fields);
     },
