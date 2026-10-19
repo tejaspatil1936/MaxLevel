@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildWorker } from './app';
 import { loadConfig } from './config';
 import { workerData } from './data';
+import { ScriptedLlm } from './llm/scripted';
 import { initFirestore } from './firebase';
 
 // Unit tests never reach Firestore: they call task paths whose handlers read nothing. The queue is a no-op fake.
@@ -92,5 +93,31 @@ describe('worker test clock', () => {
       config: { ...loadConfig({ NODE_ENV: 'development' }), logLevel: 'silent' },
     });
     expect((await dev.inject({ method: 'POST', url: '/__test/clock', payload: { nowMs: 1 } })).statusCode).toBe(404);
+  });
+});
+
+describe('worker test-only model routes', () => {
+  it('IMP-07 the mock model takes a script, logs calls, releases holds and resets; only with the test secret', async () => {
+    const llm = new ScriptedLlm();
+    const app = await buildWorker({
+      ...stores,
+      clock: new TestClock(),
+      config: { ...loadConfig({ NODE_ENV: 'test', TEST_API_SECRET: 's' }), logLevel: 'silent' },
+      llm,
+    });
+    const send = (method: 'GET' | 'POST', url: string, payload?: object, secret = 's') =>
+      app.inject({ method, url, headers: { 'x-test-secret': secret }, ...(payload ? { payload } : {}) });
+    expect((await send('POST', '/__test/llm', { pages: { '1': [] } }, 'wrong')).statusCode).toBe(403);
+    expect((await send('POST', '/__test/llm', { pages: { '1': [{ prompt: 'Q' }] }, hold: [2] })).statusCode).toBe(200);
+    await llm.generate({ page: 1, system: 's', parts: [{ type: 'text', text: 't' }] });
+    expect((await send('GET', '/__test/llm/calls')).json()).toEqual({
+      calls: [{ page: 1, parts: [{ type: 'text' }] }],
+    });
+    const held = llm.generate({ page: 2, system: 's', parts: [] });
+    expect((await send('POST', '/__test/llm/release', {})).statusCode).toBe(200);
+    await held;
+    expect((await send('POST', '/__test/llm/reset', {})).statusCode).toBe(200);
+    expect((await send('GET', '/__test/llm/calls')).json()).toEqual({ calls: [] });
+    expect((await send('POST', '/__test/llm', { pages: { '1': 'not a list' } })).statusCode).toBe(400);
   });
 });

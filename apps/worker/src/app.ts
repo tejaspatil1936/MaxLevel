@@ -1,8 +1,8 @@
 import { TestClock, type Clock, type TaskQueue } from '@mitaoe/shared';
-import { z } from 'zod';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { WorkerConfig } from './config';
+import type { LlmDriver } from './llm/driver';
 import type { WorkerData } from './data';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 import type { ExportData } from './export-data';
@@ -14,6 +14,7 @@ import { exportHandler, exportPayloadSchema } from './tasks/export';
 import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
 import { prewarmHandler, prewarmPayloadSchema } from './tasks/prewarm';
 import { releaseResultsHandler, releaseResultsPayloadSchema } from './tasks/release-results';
+import { registerTestRoutes } from './test-routes';
 
 export interface WorkerDeps {
   clock: Clock;
@@ -28,6 +29,8 @@ export interface WorkerDeps {
   live?: LiveMirror;
   /** Raises the API's minimum instances before a slot (PERF-06); the logging driver when absent. */
   scaler?: InstanceScaler;
+  /** The model AI imports use (IMP-07): the scripted mock with LLM_PROVIDER=mock; none when unset. */
+  llm?: LlmDriver;
 }
 
 export const TASK_NAMES = [
@@ -58,19 +61,10 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
 
   app.get('/health', async () => ({ ok: true }));
 
-  // Test-only: the API forwards clock changes here (PLAN section 6). Absent unless NODE_ENV=test with a secret.
+  // Test-only: the API forwards clock changes and the mock model's script here (PLAN section 6).
   const { clock, config } = deps;
-  if (config.env === 'test' && config.testApiSecret && clock instanceof TestClock) {
-    app
-      .withTypeProvider<ZodTypeProvider>()
-      .post('/__test/clock', { schema: { body: z.object({ nowMs: z.number().int() }) } }, async (req, reply) => {
-        if (req.headers['x-test-secret'] !== config.testApiSecret) {
-          return reply.status(403).send({ error: { code: 'FORBIDDEN', message: 'Test secret missing.', details: {} } });
-        }
-        clock.set(req.body.nowMs);
-        return { nowMs: clock.now() };
-      });
-  }
+  if (config.env === 'test' && config.testApiSecret && clock instanceof TestClock)
+    await registerTestRoutes(app, { clock, config: { ...config, testApiSecret: config.testApiSecret }, llm: deps.llm });
 
   await app.register(
     async (tasks) => {
