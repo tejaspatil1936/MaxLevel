@@ -148,11 +148,13 @@ describe('organization scope', () => {
     const visit = async (ref: DocumentReference, orgId: string) => {
       const snap = await ref.get();
       if (snap.exists && snap.get('orgId') !== orgId) problems.push(ref.path);
-      for (const col of await ref.listCollections()) for (const d of await col.listDocuments()) await visit(d, orgId);
+      const cols = await ref.listCollections();
+      const docs = (await Promise.all(cols.map((c) => c.listDocuments()))).flat();
+      await Promise.all(docs.map((d) => visit(d, orgId)));
     };
     const orgs = await db.collection('organizations').listDocuments();
     expect(orgs.length).toBe(2);
-    for (const o of orgs) await visit(o, o.id);
+    await Promise.all(orgs.map((o) => visit(o, o.id)));
     expect(problems).toEqual([]);
   });
 });
