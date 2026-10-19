@@ -260,3 +260,88 @@ describe('import discard', () => {
     expect((await call('POST', '/v1/imports/j1/discard', { draftIds: ['d0002'] }, await adminB())).status).toBe(404);
   });
 });
+
+describe('import approval', () => {
+  const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 7, 7]);
+  const testRef = () => db.doc(`${org}/tests/${testId}`);
+  const questions = async () =>
+    (await testRef().collection('questions').orderBy('order').get()).docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  /** storeDrafts, with draft 3 fixed (alt text) under the Reasoning heading and its figure stored. */
+  async function readyToApprove() {
+    await storeDrafts();
+    await jobRef('j1').update({ provider: 'mock', model: 'mock-model' });
+    await jobRef('j1')
+      .collection('drafts')
+      .doc('d0003')
+      .update({ images: [{ path: FIG, alt: 'Bar chart' }], flags: [], sectionName: 'reasoning', sourcePage: 2 });
+    await ctx.firebase.bucket.file(FIG).save(PNG, { contentType: 'image/png' });
+    await testRef().update({ sections: [{ id: 's1', name: 'Reasoning', order: 1, forwardOnly: false }] });
+  }
+
+  it('IMP-12 US-AD-06 appends one question per draft in draft order, with its source, section and copied image', async () => {
+    await readyToApprove();
+    const before = await questions();
+    const res = await call('POST', '/v1/imports/j1/approve', { draftIds: ['d0003', 'd0001'] });
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    const questionIds = res.body.questionIds as string[];
+    const after = await questions();
+    expect(after.map((q) => q.id)).toEqual([...before.map((q) => q.id), ...questionIds]);
+    const [q1, q3] = after.slice(-2) as Array<Record<string, unknown>>;
+    expect(q1).toMatchObject({
+      order: before.length + 1,
+      prompt: 'What is 7 x 8?',
+      correctOptionIds: ['b'],
+      difficulty: 'easy',
+      status: 'approved',
+      source: { kind: 'ai', jobId: 'j1', page: 1 },
+    });
+    expect(q1!.sectionId).toBeUndefined();
+    expect(q3).toMatchObject({
+      order: before.length + 2,
+      sectionId: 's1',
+      source: { kind: 'ai', jobId: 'j1', page: 2 },
+    });
+    const [img] = q3!.images as Array<{ path: string; alt: string }>;
+    expect(img!.path.startsWith(`${org}/tests/${testId}/images/`)).toBe(true);
+    expect(img!.alt).toBe('Bar chart');
+    expect((await ctx.firebase.bucket.file(img!.path).download())[0].equals(PNG)).toBe(true);
+
+    // The IDs come in draft order, whatever the order of the list.
+    expect(await stored('d0001')).toMatchObject({ status: 'approved', questionId: questionIds[0] });
+    expect(await stored('d0003')).toMatchObject({ status: 'approved', questionId: questionIds[1] });
+    expect((await stored('d0002')).flags, 'now a duplicate of the test question').toEqual([
+      { code: 'DUPLICATE_IN_TEST', text: `This looks like a duplicate of question ${before.length + 1} in the test.` },
+    ]);
+    const audit = (await db.collection(`${org}/auditLogs`).where('action', '==', 'question.import').get()).docs;
+    expect(audit.map((d) => d.data().after)).toEqual([{ count: 2, ids: questionIds, jobId: 'j1' }]);
+    expect((await testRef().get()).get('status')).toBe('in_review');
+  });
+
+  it('IMP-10 IMP-12 one flagged or non-pending draft refuses the whole list, changing nothing', async () => {
+    await readyToApprove();
+    const before = (await questions()).length;
+    const flagged = await call('POST', '/v1/imports/j1/approve', { draftIds: ['d0001', 'd0002'] });
+    expect([flagged.status, code(flagged)]).toEqual([409, 'DRAFTS_FLAGGED']);
+    expect((flagged.body.error as { details: unknown }).details).toEqual({ draftIds: ['d0002'] });
+    await jobRef('j1').collection('drafts').doc('d0003').update({ status: 'discarded' });
+    const done = await call('POST', '/v1/imports/j1/approve', { draftIds: ['d0001', 'd0003'] });
+    expect([done.status, code(done)]).toEqual([409, 'DRAFT_NOT_PENDING']);
+    expect((await call('POST', '/v1/imports/j1/approve', { draftIds: [] })).status).toBe(400);
+    expect((await call('POST', '/v1/imports/j1/approve', { draftIds: ['d0001'] }, await adminB())).status).toBe(404);
+    expect((await stored('d0001')).status).toBe('pending');
+    expect(await questions()).toHaveLength(before);
+  });
+
+  it('IMP-12 TST-06 nothing is approved before the job is ready or once an attempt has started', async () => {
+    await readyToApprove();
+    await jobRef('j1').update({ status: 'running' });
+    const running = await call('POST', '/v1/imports/j1/approve', { draftIds: ['d0001'] });
+    expect([running.status, code(running)]).toEqual([409, 'IMPORT_NOT_READY']);
+    await jobRef('j1').update({ status: 'ready' });
+    await testRef().update({ attemptsStarted: true });
+    const locked = await call('POST', '/v1/imports/j1/approve', { draftIds: ['d0001'] });
+    expect([locked.status, code(locked)]).toEqual([409, 'TEST_LOCKED']);
+    expect((await stored('d0001')).status).toBe('pending');
+  });
+});
