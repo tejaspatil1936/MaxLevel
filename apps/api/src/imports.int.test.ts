@@ -248,4 +248,38 @@ describe('import upload and job API', () => {
     for (const parser of ['exceljs', 'papaparse', 'pdf-lib', 'pdfjs-dist', 'unpdf'])
       expect(Object.keys(pkg.dependencies), parser).not.toContain(parser);
   });
+
+  it('SEC-04 import, draft, test and export IDs are letters, digits, _ and - only: a %2F is a 400', async () => {
+    const created = await create('questions.json');
+    const id = created.body.id as string;
+    const headers = await admin();
+    const requests: Array<[string, string, object?]> = [
+      ['GET', '/v1/imports/a%2Fb'],
+      ['POST', '/v1/imports/a%2Fb/start', {}],
+      ['GET', `/v1/imports/a%2Fb/pages/1`],
+      ['PATCH', `/v1/imports/${id}/drafts/d%2F0001`, { prompt: 'x' }],
+      ['POST', `/v1/imports/${id}/approve`, { draftIds: ['d0001/x'] }],
+      ['POST', `/v1/imports/${id}/discard`, { draftIds: ['d0001/x'] }],
+      ['GET', '/v1/exports/a%2Fb'],
+    ];
+    for (const [method, url, payload] of requests) {
+      const res = await ctx.app.inject({
+        method: method as 'GET',
+        url,
+        headers,
+        ...(payload ? { payload } : {}),
+      });
+      expect([res.statusCode, (res.json() as { error?: { code?: string } }).error?.code], `${method} ${url}`).toEqual([
+        400,
+        'VALIDATION',
+      ]);
+    }
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/imports',
+      headers: { ...headers, 'idempotency-key': 'slash-test' },
+      payload: { testId: `${testId}/x`, filename: 'q.json', contentType: 'application/json', sizeBytes: 10 },
+    });
+    expect([res.statusCode, (res.json() as { error?: { code?: string } }).error?.code]).toEqual([400, 'VALIDATION']);
+  });
 });
