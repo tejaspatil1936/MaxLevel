@@ -98,12 +98,16 @@ export function reportHandler(deps: ReportDeps) {
     }
     if (!report.metrics) await save({ metrics, leaseUntil: lease() });
 
-    let summary: ReportSummary | null = null;
+    // An answer accepted by an earlier run (whose print failed) is used as it is.
+    let summary: ReportSummary | null =
+      report.summaryStatus === 'accepted' && report.summary
+        ? { summary: report.summary, recommendations: report.recommendations ?? [] }
+        : null;
     let calls = report.summaryCalls ?? 0;
     let rejections = report.rejections ?? 0;
     const rejected = [...(report.rejectedNumbers ?? [])];
     const tokens = { input: report.tokens?.input ?? 0, output: report.tokens?.output ?? 0 };
-    while (rejections < SUMMARY_MAX_CALLS) {
+    while (!summary && rejections < SUMMARY_MAX_CALLS) {
       const { answer, usage } = await ask(summaryMessages(metrics, rejected));
       calls++;
       tokens.input += usage.inputTokens;
@@ -143,6 +147,15 @@ export function reportHandler(deps: ReportDeps) {
       });
     }
 
+    // The summary is decided: store it with a fresh lease before the print, so a delivery after a failed or slow
+    // print neither asks the model again nor takes the report over while it prints.
+    const decided = {
+      summary: summary?.summary ?? null,
+      recommendations: summary?.recommendations ?? [],
+      summaryStatus: summary ? ('accepted' as const) : ('rejected' as const),
+    };
+    await save({ ...decided, summaryCalls: calls, rejections, failures: 0, tokens, leaseUntil: lease() });
+
     const { name, timezone } = await data.orgInfo(orgId);
     const html = renderReportHtml({
       metrics,
@@ -158,9 +171,7 @@ export function reportHandler(deps: ReportDeps) {
     if (xlsxPath) await deps.files.save(xlsxPath, await reportXlsx(metrics), REPORT_CONTENT_TYPES.xlsx);
     await save({
       status: 'ready',
-      summary: summary?.summary ?? null,
-      recommendations: summary?.recommendations ?? [],
-      summaryStatus: summary ? 'accepted' : 'rejected',
+      ...decided,
       summaryCalls: calls,
       rejections,
       failures: 0,

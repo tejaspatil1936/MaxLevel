@@ -35,6 +35,10 @@ export interface ReportRecord {
   /** Model failures in a row (REL-06). */
   failures?: number;
   tokens?: { input: number; output: number };
+  /** The summary as decided before the print: an accepted answer is kept, so a later run asks the model nothing. */
+  summaryStatus?: SummaryStatus;
+  summary?: string | null;
+  recommendations?: string[];
 }
 
 /** What a run may write on the report it holds; `null` removes a field, except `summary`, stored as null. */
