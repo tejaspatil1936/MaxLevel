@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NO_RESTRICTION } from './eligibility';
-import { isoDateSchema, seriesCreateSchema, seriesPatchSchema } from './series';
+import { isoDateSchema, seriesCreateSchema, seriesPatchSchema, seriesPublished } from './series';
 import { testCreateSchema, testPatchSchema } from './test-record';
 
 const series = {
@@ -11,6 +11,14 @@ const series = {
 };
 
 describe('series schemas', () => {
+  it('US-AD-15 EXP-06 a series is published once it is not a draft', () => {
+    expect((['draft', 'active', 'archived'] as const).map((status) => seriesPublished({ status }))).toEqual([
+      false,
+      true,
+      true,
+    ]);
+  });
+
   it('SER-01 a new series takes empty defaults and no eligibility restriction when they are left out', () => {
     expect(seriesCreateSchema.parse(series)).toMatchObject({ defaults: {}, eligibility: NO_RESTRICTION });
   });

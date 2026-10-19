@@ -19,6 +19,9 @@ export const SERIES_STATUSES = ['draft', 'active', 'archived'] as const;
 export const seriesStatusSchema = z.enum(SERIES_STATUSES);
 export type SeriesStatus = z.infer<typeof seriesStatusSchema>;
 
+/** A series is published once it is no longer a draft (active or archived): reports accept it (DECISIONS 2026-10-19). */
+export const seriesPublished = (s: { status: SeriesStatus }) => s.status !== 'draft';
+
 export const seriesTitleSchema = z.string().trim().min(1, 'Enter the series title.').max(200);
 const descriptionSchema = z.string().trim().max(2000);
 

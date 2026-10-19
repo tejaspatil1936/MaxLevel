@@ -14,6 +14,7 @@ import {
   reportTask,
   reportUsageSchema,
   reportViewSchema,
+  seriesPublished,
   testBoardTitle,
   type ReportListItem,
   type ReportScope,
@@ -68,7 +69,7 @@ export function reportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       return { title: testBoardTitle(test.title, labels[test.id] ?? null), testIds: [test.id] };
     }
     const series = await data.series.getSeries(orgId, refId);
-    if (!series || series.status === 'draft') throw notFound('Series');
+    if (!series || !seriesPublished(series)) throw notFound('Series');
     const tests = await data.tests.listTests(orgId, series.id);
     return { title: series.title, testIds: tests.filter((t) => t.resolved).map((t) => t.id) };
   }
