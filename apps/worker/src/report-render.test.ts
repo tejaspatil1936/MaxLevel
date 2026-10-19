@@ -63,6 +63,14 @@ const text = (html: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
+/** The selectors of the page's style rules that let long words break (`overflow-wrap: anywhere` or `break-word`). */
+const wrapping = (html: string) => {
+  const css = /<style>([\s\S]*?)<\/style>/.exec(html)?.[1] ?? '';
+  return [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)]
+    .filter((m) => /overflow-wrap:\s*(anywhere|break-word)/.test(m[2]!))
+    .flatMap((m) => m[1]!.split(',').map((x) => x.trim()));
+};
+
 describe('report page', () => {
   it('EXP-06 a test report holds its title, organization, time, summary and every statistics part', () => {
     const html = renderReportHtml(page());
@@ -165,5 +173,21 @@ describe('report page', () => {
       '10 minutes',
       '1 second',
     ]);
+  });
+
+  it('EXP-06 a long unbroken title, heading or table cell wraps inside the page instead of running past its edge', () => {
+    const long = 'W'.repeat(120);
+    const html = renderReportHtml(page({ metrics: { ...testMetrics, title: `Day 1: ${long}` } }));
+    expect(text(html)[1]).toBe(`Day 1: ${long}`);
+    const rules = wrapping(html);
+    expect(rules).toEqual(expect.arrayContaining(['h1', 'h2', 'p', 'li']));
+    expect(
+      rules.filter((x) => /^td\b/.test(x)),
+      'text cells of the tables',
+    ).not.toEqual([]);
+    expect(
+      rules.filter((x) => /^th\b/.test(x)),
+      'header cells of the tables',
+    ).not.toEqual([]);
   });
 });
