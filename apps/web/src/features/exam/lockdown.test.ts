@@ -80,6 +80,20 @@ describe('lockdown', () => {
     expect(h.types()).toEqual(['window_blur', 'tab_hidden']);
   });
 
+  it('PR-05 a page hidden while it unloads (reload, navigation) reports nothing, and one restored reports again', () => {
+    const h = harness();
+    h.fire(h.win, 'pagehide');
+    h.doc.visibilityState = 'hidden';
+    h.fire(h.doc, 'visibilitychange');
+    expect(h.types()).toEqual([]);
+    h.fire(h.win, 'pageshow');
+    h.doc.visibilityState = 'visible';
+    h.fire(h.doc, 'visibilitychange');
+    h.doc.visibilityState = 'hidden';
+    h.fire(h.doc, 'visibilitychange');
+    expect(h.types()).toEqual(['tab_hidden']);
+  });
+
   it('PR-06 under block_strike and block, developer tools keys are prevented and reported once per press', () => {
     for (const policy of ['block_strike', 'block'] as const) {
       const h = harness({ devtoolsPolicy: policy });

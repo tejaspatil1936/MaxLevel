@@ -55,9 +55,18 @@ export function installLockdown({ win, doc, report, fullscreenRequired, devtools
   on(doc, 'fullscreenchange', () => {
     if (fullscreenRequired && !doc.fullscreenElement) report('fullscreen_exit', { source: 'fullscreenchange' });
   });
-  // PR-05: the page hidden (another tab, minimized) and the window losing focus are separate reasons.
+  // PR-05: the page hidden (another tab, minimized) and the window losing focus are separate reasons. A page being
+  // unloaded (reload, navigation, closing) also turns hidden, right after `pagehide`; that is not another tab, and its
+  // report would race the unload, so it is not sent.
+  let unloading = false;
+  on(win, 'pagehide', () => {
+    unloading = true;
+  });
+  on(win, 'pageshow', () => {
+    unloading = false;
+  });
   on(doc, 'visibilitychange', () => {
-    if (doc.visibilityState === 'hidden') report('tab_hidden', { source: 'visibilitychange' });
+    if (doc.visibilityState === 'hidden' && !unloading) report('tab_hidden', { source: 'visibilitychange' });
   });
   on(win, 'blur', (e) => {
     // Blur of an element inside the page reaches window listeners only in the capture phase; this is the window's own.
