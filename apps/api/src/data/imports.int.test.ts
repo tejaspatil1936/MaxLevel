@@ -56,12 +56,16 @@ describe('import jobs data access', () => {
       changed: false,
       status: 'queued',
     });
+    const queued = await data.imports.getImport('org-a', 'j1');
+    expect(queued?.queuedAt, 'queued when it started').toBe(queued?.startedAt);
     const error = { code: 'FILE_SIGNATURE_MISMATCH', message: 'x', retryable: false };
     expect(await data.imports.leaveAwaitingUpload('org-a', 'j2', 5, { status: 'failed', error })).toEqual({
       changed: true,
       status: 'failed',
     });
-    expect(await data.imports.getImport('org-a', 'j2')).toMatchObject({ status: 'failed', error, startedAt: 5 });
+    const failed = await data.imports.getImport('org-a', 'j2');
+    expect(failed).toMatchObject({ status: 'failed', error, startedAt: 5 });
+    expect(failed?.queuedAt).toBeUndefined();
     expect(await data.imports.leaveAwaitingUpload('org-b', 'j2', 5, { status: 'queued' })).toBeNull();
   });
 
@@ -80,12 +84,18 @@ describe('import jobs data access', () => {
     const seen = await db.runTransaction(async (tx) => {
       const j = await data.imports.readImport('org-a', tx, 'j1');
       expect(await data.imports.readImport('org-b', tx, 'j1')).toBeNull();
-      data.imports.requeue('org-a', tx, 'j1');
+      data.imports.requeue('org-a', tx, 'j1', 7);
       return j;
     });
     expect(seen).toMatchObject({ status: 'failed', error });
     const after = (await ref.get()).data()!;
-    expect(after).toMatchObject({ status: 'queued', failures: 0, aiCounted: true, progress: { pagesDone: 2 } });
+    expect(after).toMatchObject({
+      status: 'queued',
+      queuedAt: 7,
+      failures: 0,
+      aiCounted: true,
+      progress: { pagesDone: 2 },
+    });
     expect(after.error).toBeUndefined();
   });
 

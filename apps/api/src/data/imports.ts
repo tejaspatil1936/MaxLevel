@@ -36,6 +36,8 @@ export interface ImportJobRecord {
   createdBy: string;
   createdAt: number;
   startedAt?: number;
+  /** When the job last became `queued` (a start or an admin's retry), so a lost task can be noticed (REL-04). */
+  queuedAt?: number;
 }
 
 /** A stored draft; `refersToFigure` is the model's word that the question needs a figure (IMP-09). */
@@ -116,11 +118,12 @@ export function importsData(db: Firestore) {
 
     /**
      * An admin's retry of a failed job (REL-06): back to `queued` with its error, wait and failure count cleared. The
-     * pages done, their drafts, the AI counter (`aiCounted`) and the usage so far are kept.
+     * pages done, their drafts, the AI counter (`aiCounted`) and the usage so far are kept; `queuedAt` is `now`.
      */
-    requeue(orgId: string, tx: Tx, jobId: string): void {
+    requeue(orgId: string, tx: Tx, jobId: string, now: number): void {
       writer(tx).update(col(orgId).doc(jobId), {
         status: 'queued',
+        queuedAt: now,
         error: FieldValue.delete(),
         retryAt: FieldValue.delete(),
         failures: 0,
@@ -129,7 +132,7 @@ export function importsData(db: Firestore) {
 
     /**
      * Moves a job awaiting its upload to `queued`, or to `failed` with `error` when a start check refused it, in a
-     * transaction. Returns the status the job has afterwards and whether this call changed it, so a repeated or
+     * transaction (a queued job's `queuedAt` is `now`). Returns the status the job has afterwards and whether this call changed it, so a repeated or
      * concurrent start queues nothing new.
      */
     async leaveAwaitingUpload(
@@ -144,7 +147,7 @@ export function importsData(db: Firestore) {
         if (!snap.exists) return null;
         const status = snap.get('status') as ImportStatus;
         if (status !== 'awaiting_upload') return { changed: false, status };
-        tx.update(ref, { ...outcome, startedAt: now });
+        tx.update(ref, { ...outcome, startedAt: now, ...(outcome.status === 'queued' ? { queuedAt: now } : {}) });
         return { changed: true, status: outcome.status };
       });
     },
