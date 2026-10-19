@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import {
   expectEventsSoon,
+  istTime,
   startAttempt,
   storedEvents,
   STRIKE_REASONS,
@@ -9,13 +10,14 @@ import {
   strikeNumbersOf,
 } from '../acceptance/fixtures/exam';
 import { extensionNotice, postAttemptAction, postExtraTime } from '../acceptance/fixtures/live';
-import { accounts, ORG_A } from '../acceptance/fixtures/seed';
+import { accounts, ORG_A, studentOfA } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
 import type { TestApi } from '../acceptance/fixtures/test-api';
 import type { SeedAccount } from '../acceptance/fixtures/seed';
 import type { RoleHome } from '../acceptance/pages/role-home';
 import type { ApiClient } from '../acceptance/fixtures/api';
 import { ExamScreen } from '../acceptance/pages/exam-screen';
+import { LiveDashboard } from '../acceptance/pages/live-pages';
 
 // Bugs found by the phase 5 review. Each test failed before its fix.
 
@@ -242,5 +244,29 @@ test.describe('phase 5 review @live', () => {
     await page.keyboard.press('Enter');
     await expect(notice).toBeHidden();
     await expect(option).toBeFocused();
+  });
+
+  test("OPS-06 the Grant extra time dialog follows another admin's grant to the live deadline", async ({
+    page,
+    signInAs,
+    apiAs,
+    testApi,
+  }) => {
+    const t = await testApi.seedExamTest({ orgId: ORG_A.id });
+    const student = studentOfA(1);
+    const { attempt } = await startAttempt(await apiAs(student), t.testId);
+    await signInAs(accounts.adminA);
+    const live = new LiveDashboard(page);
+    await page.goto(LiveDashboard.url(t.testId));
+    await expect(live.roster).toBeVisible();
+    await live.choose(student.name, 'Grant extra time');
+    const dialog = live.extraTime(student.name);
+    await dialog.fill(5, 'Power cut');
+    await expect(dialog.dialog).toContainText(`Current deadline: ${istTime(attempt.deadlineAt)}`);
+
+    const other = await postExtraTime(await apiAs(accounts.adminA2), attempt.id, { minutes: 20, reason: 'Outage' });
+    expect(other.status).toBe(200);
+    await expect(dialog.dialog).toContainText(`Current deadline: ${istTime(attempt.deadlineAt + 20 * 60_000)}`);
+    await expect(dialog.dialog).toContainText(`New deadline: ${istTime(attempt.deadlineAt + 25 * 60_000)}`);
   });
 });
