@@ -190,6 +190,22 @@ async function storeDrafts() {
 const stored = async (id: string) => (await jobRef('j1').collection('drafts').doc(id).get()).data()!;
 
 describe('import draft edits', () => {
+  it('IMP-11 ORG-05 the kept text of a TXT, MD or sheet part is read by its number; other formats get 404', async () => {
+    await storeJob('t1', { filename: 'notes.md', format: 'md', filePath: `${org}/imports/t1/source.md` });
+    const text = '# Reasoning\n\n1. Find the next number: 3, 6, 12\n';
+    await jobRef('t1').collection('parts').doc('1').set({ orgId: SEED.orgA, part: 1, text, truncated: false });
+    expect(await call('GET', '/v1/imports/t1/parts/1')).toEqual({
+      status: 200,
+      body: { part: 1, text, truncated: false },
+    });
+    expect((await call('GET', '/v1/imports/t1/parts/2')).status).toBe(404);
+    expect((await call('GET', '/v1/imports/t1/parts/1', undefined, await adminB())).status).toBe(404);
+    await storeJob('p1');
+    await jobRef('p1').collection('parts').doc('1').set({ orgId: SEED.orgA, part: 1, text, truncated: false });
+    expect((await call('GET', '/v1/imports/p1/parts/1')).status, 'a PDF shows its page instead').toBe(404);
+    expect((await call('GET', '/v1/imports/t1/parts/0')).status).toBe(400);
+  });
+
   it('IMP-11 A11Y-10 the job view carries a data URL for each stored draft image, and leaves missing ones out', async () => {
     await storeDrafts();
     const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5]);

@@ -12,6 +12,7 @@ import {
   importListSchema,
   importPageLinkSchema,
   importPagePath,
+  importPartTextSchema,
   importRetryTask,
   importStartedSchema,
   importTask,
@@ -40,6 +41,8 @@ const linkQuery = z.object({
 });
 const ok = z.object({ ok: z.literal(true) });
 const pageParams = idParams.extend({ page: z.coerce.number().int().min(1).max(1000) });
+/** A part number, or a template sheet's row number (up to Excel's last row). */
+const partParams = idParams.extend({ part: z.coerce.number().int().min(1).max(1_048_576) });
 /** How a kept source page is stored, in the order the route looks for it. */
 const PAGE_FILES = [
   { ext: 'png', contentType: 'image/png' },
@@ -311,6 +314,21 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           if ((await sources.size(importPagePath(orgId, job.id, page, f.ext))) !== null)
             return { ...pageLinks().issue(originOf(req), orgId, job.id, page), contentType: f.contentType };
         throw notFound('Page');
+      },
+    );
+
+    // IMP-11: the text of a TXT, MD or sheet job's source part (a template sheet's row), as the worker kept it.
+    app.get(
+      '/v1/imports/:id/parts/:part',
+      { config: admin, schema: { params: partParams, response: { 200: importPartTextSchema } } },
+      async (req) => {
+        const orgId = req.orgId!;
+        const job = await data.imports.getImport(orgId, req.params.id);
+        if (!job) throw notFound('Import');
+        if (job.format === 'pdf' || job.format === 'json') throw notFound('Part');
+        const part = await data.imports.getPartText(orgId, job.id, req.params.part);
+        if (!part) throw notFound('Part');
+        return part;
       },
     );
 

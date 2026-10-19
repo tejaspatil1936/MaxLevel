@@ -405,6 +405,11 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     foreignParams: { id: 'import-org-b', page: '1' },
     fresh: async (db) => ({ params: { ...(await withImportJob(db)).params, page: '1' } }),
   },
+  'GET /v1/imports/:id/parts/:part': {
+    params: { id: 'import-org-a', part: '1' },
+    foreignParams: { id: 'import-org-b', part: '1' },
+    fresh: async (db) => ({ params: { ...(await withImportJob(db)).params, part: '1' } }),
+  },
   'PATCH /v1/imports/:id/drafts/:draftId': {
     foreignParams: { id: 'import-org-b', draftId: 'd0001' },
     fresh: async (db, n) => ({ params: await withImportDraft(db), body: { prompt: `Edited ${n}` } }),
