@@ -293,6 +293,17 @@ Answer: AUTO-DECIDED, Gemini on Vertex AI through the AI SDK, set by configurati
 - Needed by: phase 6
 
 Answer: AUTO-DECIDED, as proposed (DECISIONS 2026-10-19).
+### 37. Past reports while the report feature is off
+- Question: FF-02 says a disabled feature is locked; EXP-06 says past reports stay listed. Should past reports stay
+  downloadable when an organization loses the report feature?
+- REQ: FF-02, EXP-06
+- Proposed default: no; the Reports page shows the locked state and every report route answers 403 FEATURE_DISABLED
+  until the feature is back, when past reports are listed again.
+- Impact if wrong: a read-only list and downloads while the feature is off.
+- Needed by: phase 7
+
+Answer: AUTO-DECIDED, as proposed (DECISIONS 2026-10-19).
+
 ## Phase 8
 
 ### 31. Retention periods

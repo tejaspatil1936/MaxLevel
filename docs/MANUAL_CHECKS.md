@@ -55,3 +55,5 @@ run by a person.
 | Screenshot baselines for the exam, result and editor screens look right | A person reviews the committed baseline images (tests/acceptance/phase-5/*-snapshots) | UI-15 | Owner reviews once after phase 5 |
 | Import token counts and cost match the provider console | Provider key and a real import (OWNER_SETUP 6.1) | IMP-07 | Owner runs in staging after the first real import |
 | Browser upload to a real signed Storage URL | Staging bucket with its CORS setting (OWNER_SETUP 6.x) | IMP-01 | Owner runs in staging |
+| AI report summary from the real model avoids unsupported numbers and reads correctly | Provider key on staging (OWNER_SETUP 6.1) | EXP-05 | Owner runs once per model or prompt change |
+| Report PDF layout, fonts and page breaks look right as rendered in the Cloud Run worker image | Staging worker | EXP-06 | Owner reviews once after phase 7 |
