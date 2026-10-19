@@ -1,10 +1,11 @@
 import { AUTHORING_NOW } from '../acceptance/fixtures/authoring';
 import { llmFixture, questionsJson, quantPaperPdf } from '../acceptance/fixtures/import-files';
 import { IMPORT_TEXTS, importFile, importReady, waitForJob, waitForJobState } from '../acceptance/fixtures/imports';
-import { recordApiCalls } from '../acceptance/fixtures/network';
+import { apiRequest, holdApiRequests, recordApiCalls } from '../acceptance/fixtures/network';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
-import { ImportNotFound, ImportReviewPage } from '../acceptance/pages/import-pages';
+import { ImportNotFound, ImportReviewPage, QuestionsTabImports } from '../acceptance/pages/import-pages';
+import { TestEditorPage } from '../acceptance/pages/test-editor';
 import { exactly } from '../acceptance/pages/ui';
 
 // Bugs found by the phase 6 review. Each test failed before its fix.
@@ -89,5 +90,36 @@ test.describe('phase 6 review', () => {
       await page.clock.runFor(10_000);
       expect(asked(), 'no polling after the refusal').toBe(before);
     }
+  });
+
+  test('IMP-01 closing the dialog during the upload stops it, and the page stays where it is', async ({
+    page,
+    signInAs,
+    testApi,
+  }) => {
+    const { testId } = await testApi.seedAuthoringTest({ orgId: ORG_A.id });
+    await signInAs(accounts.adminA);
+    await page.goto(TestEditorPage.url(testId));
+    const editor = new TestEditorPage(page);
+    const imports = new QuestionsTabImports(page, await editor.openTab('Questions'));
+    const dlg = await imports.openImport();
+    const held = await holdApiRequests(page, apiRequest('PUT', /\/upload$/));
+    const calls = recordApiCalls(page);
+    await dlg.choose(questionsJson());
+    await dlg.submit.click();
+    await held.waitUntilHeld();
+    const stopped = page.waitForEvent('requestfailed', {
+      predicate: (r) => r.method() === 'PUT' && /\/upload$/.test(new URL(r.url()).pathname),
+      timeout: 10_000,
+    });
+    await page.keyboard.press('Escape');
+    await expect(dlg.dialog).toBeHidden();
+    await stopped;
+    held.release();
+    expect(new URL(page.url()).pathname).toBe(new URL(TestEditorPage.url(testId), page.url()).pathname);
+    expect(
+      calls().filter((c) => c.endsWith('/start')),
+      'the import was not started',
+    ).toEqual([]);
   });
 });
