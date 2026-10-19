@@ -4,7 +4,7 @@ import { IMPORT_TEXTS, importFile, importReady, waitForJob, waitForJobState } fr
 import { recordApiCalls } from '../acceptance/fixtures/network';
 import { accounts, ORG_A } from '../acceptance/fixtures/seed';
 import { expect, test } from '../acceptance/fixtures/test';
-import { ImportReviewPage } from '../acceptance/pages/import-pages';
+import { ImportNotFound, ImportReviewPage } from '../acceptance/pages/import-pages';
 import { exactly } from '../acceptance/pages/ui';
 
 // Bugs found by the phase 6 review. Each test failed before its fix.
@@ -72,5 +72,22 @@ test.describe('phase 6 review', () => {
     await expect(review.status, 'focus moves to the status').toBeFocused();
     await expect(review.summaryItem('Questions found: 9')).toBeVisible({ timeout: 15_000 });
     await expect(review.status, 'and stays there once the import is ready').toBeFocused();
+  });
+
+  test('IMP-04 an ID the API refuses shows Import not found and stops asking for it', async ({ page, signInAs }) => {
+    await signInAs(accounts.adminA);
+    const notFound = new ImportNotFound(page);
+    await page.clock.install();
+    for (const id of ['../../x', 'a'.repeat(300)]) {
+      const calls = recordApiCalls(page);
+      const asked = () => calls().filter((c) => c.startsWith('GET /v1/imports/')).length;
+      await page.goto(ImportReviewPage.url(id));
+      await expect(notFound.heading).toBeVisible();
+      await expect(notFound.message(ORG_A.name)).toBeVisible();
+      const before = asked();
+      expect(before, 'the job was asked for').toBeGreaterThan(0);
+      await page.clock.runFor(10_000);
+      expect(asked(), 'no polling after the refusal').toBe(before);
+    }
   });
 });
