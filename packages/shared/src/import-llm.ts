@@ -198,6 +198,8 @@ export const llmScriptSchema = z.object({
     .optional(),
   failures: z.record(z.string(), z.number().int().nonnegative()).optional(),
   hold: z.array(z.number().int().positive()).optional(),
+  /** Phase 7: the answers to report summary calls, in call order (the last repeats), and how many fail first. */
+  report: z.object({ answers: z.array(z.unknown()), failures: z.number().int().nonnegative().optional() }).optional(),
 });
 export type LlmScript = z.infer<typeof llmScriptSchema>;
 
@@ -209,3 +211,7 @@ export const llmCallSchema = z.object({
   ),
 });
 export type LlmCall = z.infer<typeof llmCallSchema>;
+
+/** One report summary call the mock model received (`GET /__test/llm/report-calls`): its two messages. */
+export const reportLlmCallSchema = z.object({ system: z.string(), prompt: z.string() });
+export type ReportLlmCall = z.infer<typeof reportLlmCallSchema>;

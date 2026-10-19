@@ -40,6 +40,7 @@ export * from './exports';
 export * from './export-tables';
 export * from './report-metrics';
 export * from './report-summary';
+export * from './reports';
 export * from './live';
 export * from './live-rows';
 export * from './live-filters';
