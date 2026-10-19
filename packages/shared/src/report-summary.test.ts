@@ -124,6 +124,28 @@ describe('unsupportedNumbers', () => {
     expect(unsupportedNumbers('Question 90210 and department 7731', metrics)).toEqual(['90210', '7731']);
   });
 
+  it('EXP-05 reads fullwidth, Devanagari and other Unicode digits as the digits they are', () => {
+    expect(numbersIn('１２ eligible, ९३.७ and ١٢')).toEqual([12, 93.7, 12]);
+    expect(unsupportedNumbers('Scores rose ９３.７% and ९३.७%.', metrics)).toEqual(['９３.７', '९३.७']);
+    expect(unsupportedNumbers('１２ eligible, १२ eligible, 8 not started.', metrics)).toEqual([]);
+  });
+
+  it('EXP-05 reads a leading decimal point, so .5 is 0.5 and not 5', () => {
+    expect(numbersIn('a gap of .5 points and -.25')).toEqual([0.5, -0.25]);
+    expect(unsupportedNumbers('A gap of .5 points.', metrics)).toEqual(['.5']);
+  });
+
+  it('EXP-05 reads space-grouped digits as one number', () => {
+    expect(numbersIn('1 234 and 12 345 678')).toEqual([1234, 12345678]);
+    expect(unsupportedNumbers('Of 1 234 students, 3 of 12 finished.', metrics)).toEqual(['1 234']);
+  });
+
+  it('EXP-05 rejects vulgar fractions and numerals the check cannot read', () => {
+    expect(unsupportedNumbers('About ½ of them, or 1⁄3, and ⅔.', metrics)).toEqual(['½', '1⁄3', '⅔']);
+    expect(unsupportedNumbers('Score ௰ in Tamil numerals.', metrics)).toEqual(['௰']);
+    expect(unsupportedInAnswer({ summary: '3 of 12.', recommendations: ['Aim for ¾.'] }, metrics)).toEqual(['¾']);
+  });
+
   it('EXP-05 checks the summary and every recommendation of an answer', () => {
     const answer = { summary: '3 students finished.', recommendations: ['Aim for 93.7%.', 'Repeat Q1 and Q9.'] };
     expect(unsupportedInAnswer(answer, metrics)).toEqual(['93.7', '9']);
