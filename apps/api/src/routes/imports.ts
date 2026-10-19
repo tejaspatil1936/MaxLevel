@@ -1,4 +1,5 @@
 import {
+  docIdSchema,
   IMPORT_MAX_BYTES,
   IMPORT_MESSAGES,
   IMPORT_UPLOAD_TTL_MS,
@@ -31,7 +32,7 @@ import type { ApiContext } from './context';
 import { originOf } from './exports';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 const linkQuery = z.object({
   org: z.string().regex(ORG_ID),
   expires: z.coerce.number().int(),

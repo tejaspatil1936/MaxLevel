@@ -1,4 +1,5 @@
 import {
+  docIdSchema,
   EXPORT_CONTENT_TYPES,
   exportCreatedSchema,
   exportFilename,
@@ -17,7 +18,7 @@ import type { ApiContext } from './context';
 
 const exporting = { access: 'admin' as const, feature: 'results_export' as const, idempotent: true };
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 const linkQuery = z.object({
   org: z.string().regex(ORG_ID),
   expires: z.coerce.number().int(),

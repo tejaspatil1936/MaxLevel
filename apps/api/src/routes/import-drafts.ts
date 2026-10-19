@@ -1,4 +1,5 @@
 import {
+  docIdSchema,
   importApprovedSchema,
   importDiscardedSchema,
   importDraftIdsSchema,
@@ -17,8 +18,8 @@ import { attemptsStarted, returnsToReview, testLocked } from '../services/test-r
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
-const draftParams = idParams.extend({ draftId: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
+const draftParams = idParams.extend({ draftId: docIdSchema });
 
 const notPending = (draftIds: string[]) =>
   new AppError(409, 'DRAFT_NOT_PENDING', 'This question was already approved or discarded.', { draftIds });
