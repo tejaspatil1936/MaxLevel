@@ -53,3 +53,5 @@ run by a person.
 | Pilot exam with one college | Production (OWNER_SETUP 8.2) | phase 8 | Owner |
 | A real tab switch or window minimize during an attempt records a strike | A desktop browser on a laptop (Playwright keeps every tab visible; acceptance tests send blur and visibilitychange instead) | PR-05 | Owner runs once per release in staging |
 | Screenshot baselines for the exam, result and editor screens look right | A person reviews the committed baseline images (tests/acceptance/phase-5/*-snapshots) | UI-15 | Owner reviews once after phase 5 |
+| Import token counts and cost match the provider console | Provider key and a real import (OWNER_SETUP 6.1) | IMP-07 | Owner runs in staging after the first real import |
+| Browser upload to a real signed Storage URL | Staging bucket with its CORS setting (OWNER_SETUP 6.x) | IMP-01 | Owner runs in staging |
