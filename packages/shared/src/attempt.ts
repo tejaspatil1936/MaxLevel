@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { examPayloadSchema } from './exam';
+import { docIdSchema } from './ids';
 import { studentQuestionSchema } from './question';
 import { settingsSchema } from './settings';
 import { CLIENT_EVENT_TYPES, proctorEventTypeSchema } from './strikes';
@@ -82,7 +83,7 @@ export type AnswerRecord = z.infer<typeof answerRecordSchema>;
 // ---------- student-facing ----------
 
 /** POST /v1/attempts. */
-export const attemptStartSchema = z.object({ testId: id }).strict();
+export const attemptStartSchema = z.object({ testId: docIdSchema }).strict();
 
 /** The attempt as its student sees it. */
 export const studentAttemptSchema = z.object({

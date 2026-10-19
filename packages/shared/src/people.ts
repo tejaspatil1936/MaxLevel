@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { accommodationsSchema } from './accommodations';
 import { auditEntrySchema } from './audit';
+import { docIdSchema } from './ids';
 import { pageOf, pageQuerySchema } from './page';
 
 // Departments, whitelist and students (spec 4).
@@ -23,7 +24,7 @@ export const departmentPatchSchema = z
   .object({ name: departmentNameSchema, status: z.enum(['active', 'archived']) })
   .partial()
   .refine((p) => Object.keys(p).length > 0, { message: 'Change the name or the status.' });
-export const departmentMergeSchema = z.object({ intoId: z.string().min(1) });
+export const departmentMergeSchema = z.object({ intoId: docIdSchema });
 
 export const WHITELIST_STATUSES = ['invited', 'registered', 'disabled'] as const;
 export const whitelistStatusSchema = z.enum(WHITELIST_STATUSES);
@@ -173,7 +174,7 @@ export const studentCreateSchema = z.object({
   email: emailSchema,
   name: nameSchema,
   prn: prnSchema,
-  departmentId: z.string().min(1),
+  departmentId: docIdSchema,
   graduationYear: graduationYearSchema,
   note: z.string().trim().max(200).optional(),
 });
@@ -181,7 +182,7 @@ export const studentPatchSchema = z
   .object({
     name: nameSchema,
     prn: prnSchema,
-    departmentId: z.string().min(1),
+    departmentId: docIdSchema,
     graduationYear: graduationYearSchema,
     status: z.enum(['registered', 'disabled', 'invited']),
   })

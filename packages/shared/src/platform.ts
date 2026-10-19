@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { auditEntrySchema } from './audit';
 import { entitlementsSchema, featureMapSchema, limitMapSchema } from './entitlements';
+import { docIdSchema } from './ids';
 import { pageQuerySchema } from './page';
 
 // Super-admin console (spec 2.3, 2.4, US-SA-01 to US-SA-06).
@@ -104,7 +105,7 @@ export const entitlementsPutSchema = z.object({
 });
 
 export const auditQuerySchema = pageQuerySchema.extend({
-  orgId: z.string().optional(),
+  orgId: docIdSchema.optional(),
   actor: z.string().trim().max(320).optional(),
   action: z.string().trim().max(120).optional(),
   target: z.string().trim().max(200).optional(),

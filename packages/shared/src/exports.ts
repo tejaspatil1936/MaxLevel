@@ -1,11 +1,10 @@
 import { z } from 'zod';
 import type { AttemptStatus } from './attempt';
+import { docIdSchema } from './ids';
 import type { TaskRequest } from './tasks';
 
 // Results exports (spec 8.6 EXP-01 to EXP-03; docs/testids/phase-4.md "Export results region" and "Files"). The API
 // stores the request and queues `/tasks/export`; the worker builds the tables (export-tables.ts) and writes the file.
-
-const id = z.string().min(1).max(128);
 
 export const EXPORT_SCOPES = ['test', 'series'] as const;
 export const EXPORT_FORMATS = ['csv', 'xlsx'] as const;
@@ -17,7 +16,7 @@ export type ExportStatus = (typeof EXPORT_STATUSES)[number];
 /** `POST /v1/exports` (with an Idempotency-Key, API-02). */
 export const exportRequestSchema = z.object({
   scope: z.enum(EXPORT_SCOPES),
-  refId: id,
+  refId: docIdSchema,
   format: z.enum(EXPORT_FORMATS),
 });
 export type ExportRequest = z.infer<typeof exportRequestSchema>;

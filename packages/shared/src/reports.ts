@@ -1,12 +1,11 @@
 import { z } from 'zod';
+import { docIdSchema } from './ids';
 import { reportMetricsSchema } from './report-metrics';
 import type { TaskRequest } from './tasks';
 
 // Analytics reports (spec EXP-05 to EXP-07; docs/testids/phase-7.md "Requests the tests send directly" and "Report
 // files"). The API stores the request and queues `/tasks/report`; the worker computes the metrics, asks the model for
 // the summary, prints the PDF (and the optional XLSX) and marks the report `ready`.
-
-const id = z.string().min(1).max(128);
 
 export const REPORT_SCOPES = ['test', 'series'] as const;
 export const REPORT_STATUSES = ['queued', 'running', 'retrying', 'ready', 'failed'] as const;
@@ -18,7 +17,7 @@ export type SummaryStatus = (typeof SUMMARY_STATUSES)[number];
 /** `POST /v1/reports` (with an Idempotency-Key, API-02). */
 export const reportRequestSchema = z.object({
   scope: z.enum(REPORT_SCOPES),
-  refId: id,
+  refId: docIdSchema,
   includeXlsx: z.boolean().optional(),
 });
 export type ReportRequest = z.infer<typeof reportRequestSchema>;

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { eligibilityRulesSchema } from './eligibility';
+import { docIdSchema } from './ids';
 import { isoDateSchema } from './series';
 import { settingsOverridesSchema, settingsSchema, storedSettingsSchema } from './settings';
 
@@ -70,12 +71,12 @@ export const testListSchema = z.object({ items: z.array(testSchema) });
 export const testDetailSchema = testSchema.extend({ effective: settingsSchema });
 export type TestDetail = z.infer<typeof testDetailSchema>;
 
-export const testListQuerySchema = z.object({ seriesId: z.string().min(1).max(128) });
+export const testListQuerySchema = z.object({ seriesId: docIdSchema });
 
 /** POST /v1/tests: a new test is stored with `overrides: {}` and status `draft`. */
 export const testCreateSchema = z
   .object({
-    seriesId: z.string().min(1).max(128),
+    seriesId: docIdSchema,
     title: testTitleSchema,
     company: companySchema.optional(),
     dayNumber: dayNumberSchema.nullable().optional(),

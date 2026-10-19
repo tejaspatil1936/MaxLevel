@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AttemptStatus } from './attempt';
+import { docIdSchema } from './ids';
 
 // Leaderboard ranking (spec 8.2 LB-01, LB-02, LB-05; 10.1 DATA-04; docs/testids/phase-4.md "Leaderboards").
 // Boards are stored one record per board, `organizations/{orgId}/leaderboards/test_<testId>` and `…/series_<seriesId>`,
@@ -17,7 +18,7 @@ export const seriesBoardId = (seriesId: string) => `series_${seriesId}`;
 /** Splits `test_<id>` or `series_<id>`; anything else is null. */
 export function parseBoardId(boardId: string): { kind: BoardKind; refId: string } | null {
   const m = /^(test|series)_(.+)$/.exec(boardId);
-  if (!m || !id.safeParse(m[2]).success) return null;
+  if (!m || !docIdSchema.safeParse(m[2]).success) return null;
   return { kind: m[1] as BoardKind, refId: m[2]! };
 }
 
