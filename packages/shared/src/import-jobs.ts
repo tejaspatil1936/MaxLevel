@@ -89,6 +89,40 @@ export const importJobViewSchema = z.object({
 });
 export type ImportJobView = z.infer<typeof importJobViewSchema>;
 
+/** `PATCH /v1/imports/{id}/drafts/{draftId}`: any of these; `images` may only keep or drop paths the draft has. */
+export const importDraftPatchSchema = z
+  .object({
+    prompt: z.string().max(20000),
+    options: z
+      .array(z.object({ id: z.string().regex(/^[a-f]$/), text: z.string().max(5000) }))
+      .max(6)
+      .refine((o) => new Set(o.map((x) => x.id)).size === o.length, { message: 'Option IDs must differ.' }),
+    correctOptionIds: z.array(z.string().regex(/^[a-f]$/)).max(6),
+    /** An empty explanation or `null` removes it. */
+    explanation: z.string().max(20000).nullable(),
+    difficulty: z.enum(['easy', 'medium', 'hard']).nullable(),
+    images: z.array(z.object({ path: z.string().min(1).max(512), alt: z.string().max(500) })).max(10),
+  })
+  .partial()
+  .strict()
+  .refine((p) => Object.keys(p).length > 0, { message: 'Change at least one field.' });
+export type ImportDraftPatch = z.infer<typeof importDraftPatchSchema>;
+
+/** `POST /v1/imports/{id}/approve` and `…/discard`: the drafts, by ID. */
+export const importDraftIdsSchema = z.object({ draftIds: z.array(id).min(1).max(1000) }).strict();
+export const importApprovedSchema = z.object({ questionIds: z.array(z.string()) });
+export const importDiscardedSchema = z.object({ discarded: z.number().int() });
+
+/** A signed link to a PDF job's source page works for 15 minutes on the server clock. */
+export const IMPORT_PAGE_LINK_TTL_MS = 15 * 60_000;
+/** `GET /v1/imports/{id}/pages/{page}`: a signed link to that page, rendered as PNG or as a one-page PDF. */
+export const importPageLinkSchema = z.object({
+  url: z.string(),
+  contentType: z.enum(['image/png', 'application/pdf']),
+  expiresAt: z.number().int(),
+});
+export type ImportPageLink = z.infer<typeof importPageLinkSchema>;
+
 /** `GET /v1/imports?testId=`: the test's jobs, newest first. */
 export const importListQuerySchema = z.object({ testId: id });
 export const importListSchema = z.object({

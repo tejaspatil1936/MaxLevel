@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   importCreateSchema,
+  importDraftIdsSchema,
+  importDraftPatchSchema,
   importFiguresFolder,
   importFilePath,
   importPagePath,
@@ -46,5 +48,34 @@ describe('import jobs', () => {
     }
     expect(importCreateSchema.safeParse({ ...ok, sizeBytes: -1 }).success).toBe(false);
     expect(importCreateSchema.safeParse({ ...ok, sizeBytes: 1.5 }).success).toBe(false);
+  });
+
+  it('IMP-11 a draft edit takes any of its fields, nothing else, and at least one', () => {
+    const ok = importDraftPatchSchema.safeParse({
+      prompt: 'What is 2 + 2?',
+      options: [
+        { id: 'a', text: '3' },
+        { id: 'b', text: '4' },
+      ],
+      correctOptionIds: ['b'],
+      explanation: null,
+      difficulty: 'easy',
+      images: [{ path: 'organizations/o/imports/j/figures/d0001-1.png', alt: 'A chart' }],
+    });
+    expect(ok.success).toBe(true);
+    expect(importDraftPatchSchema.safeParse({}).success, 'no field').toBe(false);
+    expect(importDraftPatchSchema.safeParse({ status: 'approved' }).success, 'unknown field').toBe(false);
+    expect(importDraftPatchSchema.safeParse({ correctOptionIds: ['g'] }).success, 'option g').toBe(false);
+    const twice = [
+      { id: 'a', text: '1' },
+      { id: 'a', text: '2' },
+    ];
+    expect(importDraftPatchSchema.safeParse({ options: twice }).success, 'repeated option ID').toBe(false);
+  });
+
+  it('IMP-12 approve and discard take a non-empty list of draft IDs', () => {
+    expect(importDraftIdsSchema.safeParse({ draftIds: ['d0001'] }).success).toBe(true);
+    expect(importDraftIdsSchema.safeParse({ draftIds: [] }).success).toBe(false);
+    expect(importDraftIdsSchema.safeParse({}).success).toBe(false);
   });
 });
