@@ -3,6 +3,7 @@ import { audit } from './en/audit';
 import { exam } from './en/exam';
 import { history } from './en/history';
 import { leaderboards } from './en/leaderboards';
+import { live } from './en/live';
 import { examEntry } from './en/exam-entry';
 import { authoring } from './en/authoring';
 import { people } from './en/people';
@@ -135,6 +136,7 @@ export const en = {
   ...result,
   ...history,
   ...leaderboards,
+  ...live,
 } as const;
 
 export type MessageKey = keyof typeof en;
