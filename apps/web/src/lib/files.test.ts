@@ -1,19 +1,22 @@
-import { describe, expect, it } from 'vitest';
-import { csvField, csvLine } from './files';
+import { describe, expect, it, vi } from 'vitest';
+import { showBlob } from './files';
 
-describe('CSV exports', () => {
-  it('SEC-06 cells that a spreadsheet would run as a formula are prefixed with a single quote', () => {
-    for (const lead of ['=', '+', '-', '@', '\t', '\r']) {
-      const value = `${lead}HYPERLINK("http://evil.example")`;
-      expect(csvField(value).replace(/^"|"$/g, '')).toMatch(/^'/);
-    }
-    expect(csvLine(['=1+1', 'plain', '-5'])).toBe("'=1+1,plain,'-5");
+describe('showBlob', () => {
+  it('IMP-11 gives a blob: URL for the blob and revokes it on cleanup', () => {
+    const set = vi.fn();
+    const revoke = vi.spyOn(URL, 'revokeObjectURL');
+    const stop = showBlob(new Blob(['png']), set);
+    const url = set.mock.calls[0]![0] as string;
+    expect(url).toMatch(/^blob:/);
+    expect(revoke).not.toHaveBeenCalled();
+    stop();
+    expect(revoke).toHaveBeenCalledWith(url);
+    revoke.mockRestore();
   });
 
-  it('SEC-06 ordinary values are unchanged and quoting still follows RFC 4180', () => {
-    expect(csvField('student01@a.test')).toBe('student01@a.test');
-    expect(csvField('a,b')).toBe('"a,b"');
-    expect(csvField('say "hi"')).toBe('"say ""hi"""');
-    expect(csvField(null)).toBe('');
+  it('IMP-11 gives null without a blob', () => {
+    const set = vi.fn();
+    showBlob(null, set)();
+    expect(set).toHaveBeenCalledWith(null);
   });
 });

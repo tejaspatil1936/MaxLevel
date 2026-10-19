@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState, type Ref } from 'react';
 import { t } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
-import { signedBlobUrl } from '@/lib/files';
+import { showBlob, signedBlob } from '@/lib/files';
 import { formatCount } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
@@ -16,8 +16,9 @@ import { PartText } from './PartText';
 import { importJobPath } from './useDraftReview';
 
 /**
- * A kept source page as a `blob:` URL: the signed link is fetched without sign-in (DATA-09), so the image never
- * needs the API's origin in the page's `img-src`. A page kept only as a one-page PDF has no image to show.
+ * A kept source page's image: the signed link is fetched without sign-in (DATA-09) and shown through a `blob:` URL, so
+ * the image never needs the API's origin in the page's `img-src`. A page kept only as a one-page PDF has no image to
+ * show. The blob stays cached while the review page is open; its URL is made and revoked by the component showing it.
  */
 function usePageImage(jobId: string, page: number, enabled: boolean) {
   const { orgId } = useWorkspace();
@@ -26,11 +27,10 @@ function usePageImage(jobId: string, page: number, enabled: boolean) {
     queryFn: async () => {
       const link = await api<ImportPageLink>(`${importJobPath(jobId)}/pages/${page}`);
       if (link.contentType !== 'image/png') return null;
-      return signedBlobUrl(link.url);
+      return signedBlob(link.url);
     },
     enabled,
     staleTime: Infinity,
-    gcTime: Infinity,
   });
 }
 
@@ -64,9 +64,10 @@ export function SourcePage({ job, draft }: { job: ImportJobView; draft: ImportDr
   const image = usePageImage(job.id, page, pdf && !!draft);
   const part = usePartText(job.id, page, textual && !!draft);
   const [loaded, setLoaded] = useState<string | null>(null);
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => showBlob(image.data, setSrc), [image.data]);
   const region = useRef<HTMLElement>(null);
   const mark = useRef<HTMLElement>(null);
-  const src = image.data ?? null;
   const box = draft?.box;
   const shown = (!!src && loaded === src) || !!part.data;
 

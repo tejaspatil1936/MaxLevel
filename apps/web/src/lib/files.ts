@@ -20,11 +20,25 @@ export async function uploadToSignedUrl(url: string, file: File, contentType: st
   if (!res?.ok) throw new Error('The upload failed.');
 }
 
-/** Fetches a file from a signed link the API gave (no sign-in; DATA-09) as a `blob:` URL for an image; throws when it fails. */
-export async function signedBlobUrl(url: string): Promise<string> {
+/** Fetches a file from a signed link the API gave (no sign-in; DATA-09); throws when it fails. */
+export async function signedBlob(url: string): Promise<Blob> {
   const res = await fetch(url).catch(() => null);
   if (!res?.ok) throw new Error('The download failed.');
-  return URL.createObjectURL(await res.blob());
+  return res.blob();
+}
+
+/**
+ * For an effect: gives `set` a `blob:` URL for `blob` (null without one) and returns the cleanup that revokes it, so
+ * the URL lives only while the component shows that blob.
+ */
+export function showBlob(blob: Blob | null | undefined, set: (url: string | null) => void): () => void {
+  if (!blob) {
+    set(null);
+    return () => undefined;
+  }
+  const url = URL.createObjectURL(blob);
+  set(url);
+  return () => URL.revokeObjectURL(url);
 }
 
 /** Starts a download of a text file made in the browser (CSV exports). */
