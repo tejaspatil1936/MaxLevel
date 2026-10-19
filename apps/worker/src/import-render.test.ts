@@ -2,6 +2,7 @@ import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { RENDER_SCALE, renderPdfPage } from './import-render';
+import { hugePagePdf } from './test-support/hostile-files';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const isPng = (b: Buffer) => b.subarray(0, 8).equals(PNG);
@@ -55,5 +56,13 @@ describe('renderPdfPage', () => {
     const img = await loadImage(page.crop({ x: 0.9, y: 0.95, w: 0.5, h: 0.5 }));
     expect(img.width).toBe(595 * RENDER_SCALE - Math.floor(0.9 * 595 * RENDER_SCALE));
     expect(img.height).toBe(842 * RENDER_SCALE - Math.floor(0.95 * 842 * RENDER_SCALE));
+  });
+
+  it('SEC-06 IMP-03 a 14,400-point page renders within a 16-megapixel budget, keeping its shape', async () => {
+    const page = await renderPdfPage(await hugePagePdf());
+    const img = await loadImage(page.png);
+    expect(img.width * img.height).toBeLessThanOrEqual(16 * 1024 * 1024);
+    expect(img.width).toBe(img.height);
+    expect(img.width).toBeGreaterThan(4000);
   });
 });
