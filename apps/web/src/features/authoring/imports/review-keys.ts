@@ -21,7 +21,8 @@ const inField = (target: EventTarget) => {
 
 /**
  * IMP-13: J, K, A, E and D act on the current draft, only while focus is inside the draft groups (on an article or
- * one of its buttons). Elsewhere on the page they do nothing, so they cannot fire by accident.
+ * one of its buttons). Elsewhere on the page they do nothing, so they cannot fire by accident. In an archived
+ * organization (read-only, ORG-07) only J and K act.
  */
 export function reviewKeyHandler(drafts: readonly ImportDraft[], review: DraftReview) {
   return (e: KeyboardEvent) => {
@@ -29,7 +30,7 @@ export function reviewKeyHandler(drafts: readonly ImportDraft[], review: DraftRe
     const d = drafts.find((x) => x.id === review.current);
     const key = e.key.toLowerCase();
     if (key === 'j' || key === 'k') review.goTo(stepFrom(drafts, review.current, key === 'j' ? 1 : -1));
-    else if (!d) return;
+    else if (!d || review.readOnly) return;
     else if (key === 'a') review.approveOne(d);
     else if (key === 'e') review.startEdit(d);
     else if (key === 'd') review.discardOne(d);

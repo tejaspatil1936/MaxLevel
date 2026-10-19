@@ -21,7 +21,7 @@ export const importJobPath = (id: string) => `/v1/imports/${encodeURIComponent(i
  * one) becomes current and takes focus, once the job view shows the change.
  */
 export function useDraftReview(job: ImportJobView) {
-  const { orgId } = useWorkspace();
+  const { orgId, readOnly } = useWorkspace();
   const qc = useQueryClient();
   const questionsChanged = useQuestionsChanged(job.testId);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -91,6 +91,8 @@ export function useDraftReview(job: ImportJobView) {
   const busy = approve.isPending || discard.isPending;
   return {
     current,
+    /** An archived organization: drafts can be read, never approved, edited or discarded (ORG-07). */
+    readOnly,
     select: setChosen,
     goTo,
     refresh,
@@ -98,7 +100,7 @@ export function useDraftReview(job: ImportJobView) {
     /** The draft whose inline edit is open (IMP-12); focus returns to its article when it closes. */
     editing,
     startEdit(d: ImportDraft) {
-      if (d.status !== 'pending') return;
+      if (readOnly || d.status !== 'pending') return;
       setChosen(d.id);
       setEditing(d.id);
     },
@@ -115,17 +117,17 @@ export function useDraftReview(job: ImportJobView) {
     },
     /** Approves one draft; a flagged one is never sent (IMP-10). */
     approveOne(d: ImportDraft) {
-      if (busy || d.status !== 'pending') return;
+      if (readOnly || busy || d.status !== 'pending') return;
       if (d.flags.length) return void notify.info(t('imports.fixBeforeApproving'));
       approve.mutate({ ids: [d.id], from: d.id });
     },
     /** Every pending draft without a flag, in order. */
     approveAll() {
       const ids = drafts.filter((d) => draftGroup(d) === 'ready').map((d) => d.id);
-      if (!busy && ids.length) approve.mutate({ ids });
+      if (!readOnly && !busy && ids.length) approve.mutate({ ids });
     },
     discardOne(d: ImportDraft) {
-      if (!busy && d.status === 'pending') discard.mutate(d);
+      if (!readOnly && !busy && d.status === 'pending') discard.mutate(d);
     },
   };
 }
