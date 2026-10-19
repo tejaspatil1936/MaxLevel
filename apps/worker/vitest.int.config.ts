@@ -20,6 +20,7 @@ export default defineConfig({
       GCLOUD_PROJECT: project,
       FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080',
       FIREBASE_STORAGE_EMULATOR_HOST: '127.0.0.1:9199',
+      FIREBASE_DATABASE_EMULATOR_HOST: '127.0.0.1:9000',
       METADATA_SERVER_DETECTION: 'none',
     },
   },

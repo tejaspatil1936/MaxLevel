@@ -5,12 +5,14 @@ import { buildWorker } from '../app';
 import { loadConfig } from '../config';
 import { workerData } from '../data';
 import { initFirestore } from '../firebase';
+import { initRtdb, liveMirror } from '../live';
 import { clearFirestore } from '../test-support/emulators';
 import { localTaskQueue } from './local-queue';
 
 // /tasks/auto-submit on the Firestore emulator (EX-16, EX-17, REL-04): the attempt is finalized with no browser.
 
 const db = initFirestore();
+const rtdb = initRtdb();
 const clock = new TestClock();
 let app: FastifyInstance;
 const org = db.doc('organizations/org-a');
@@ -24,6 +26,7 @@ beforeAll(async () => {
     config: { ...loadConfig({ NODE_ENV: 'test' }), logLevel: 'silent' },
     data: workerData(db),
     queue: localTaskQueue(db, clock),
+    live: liveMirror(rtdb),
   });
 });
 
@@ -123,6 +126,24 @@ describe('the auto-submit task', () => {
     }
     expect(await attempt(), 'the same stored effect as one run').toEqual(done);
     expect(await tasks()).toHaveLength(1);
+  });
+
+  it('OPS-02 a finalized attempt shows as submitted automatically in its live record', async () => {
+    const path = 'live/org-a/t1/att-1';
+    await rtdb.ref(path).set({ studentId: 'stu-1', name: 'A', prn: 'P', status: 'in_progress', updatedAt: START });
+    clock.set(DUE + 5_000);
+    expect((await run({ orgId: 'org-a', attemptId: 'att-1', deadlineAt: DEADLINE })).json().outcome).toBe('finalized');
+    await expect
+      .poll(async () => (await rtdb.ref(path).get()).val())
+      .toEqual({
+        studentId: 'stu-1',
+        name: 'A',
+        prn: 'P',
+        status: 'auto_submitted',
+        strikes: 0,
+        answered: 3,
+        updatedAt: DUE + 5_000,
+      });
   });
 
   it('EX-16 queues a task for a deadline moved later and finalizes nothing; a run before its deadline is retried', async () => {

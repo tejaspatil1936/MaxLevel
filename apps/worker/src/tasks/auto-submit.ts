@@ -8,6 +8,7 @@ import {
 } from '@mitaoe/shared';
 import { z } from 'zod';
 import type { WorkerData } from '../data';
+import type { LiveMirror } from '../live';
 
 /** The task's payload; `deadlineAt` is the deadline it was queued for (left out by hand-made runs). */
 export const autoSubmitPayloadSchema = z.object({
@@ -23,12 +24,18 @@ export type AutoSubmitOutcome = 'finalized' | 'skipped' | 'rescheduled' | 'retry
 /**
  * /tasks/auto-submit (EX-16, REL-04, DECISIONS Q18): at deadline + 2 minutes, finalizes an attempt nobody submitted as
  * `auto_submitted`, graded by shared `gradeAttempt` from its stored draw, answers and the answer key (EX-17), and
- * queues the test's leaderboard recompute. A finished or missing attempt is left alone, so a second run changes
+ * queues the test's leaderboard recompute; the finish is mirrored to `live/…` (OPS-02). A finished or missing attempt is left alone, so a second run changes
  * nothing; when the deadline was moved later (extra time) a task for the new deadline is queued instead. The deadline
  * is checked again inside the finishing transaction.
  */
-export function autoSubmitHandler(deps: { data: WorkerData; clock: Clock; queue: TaskQueue }) {
-  const { data, clock, queue } = deps;
+export function autoSubmitHandler(deps: {
+  data: WorkerData;
+  clock: Clock;
+  queue: TaskQueue;
+  live?: LiveMirror;
+  log?: { warn(obj: object, msg: string): void };
+}) {
+  const { data, clock, queue, live, log } = deps;
   return async (run: AutoSubmitRun): Promise<AutoSubmitOutcome> => {
     const attempt = await data.getAttempt(run.orgId, run.attemptId);
     const action = autoSubmitAction(attempt, run.deadlineAt, clock.now());
@@ -62,6 +69,10 @@ export function autoSubmitHandler(deps: { data: WorkerData; clock: Clock; queue:
       // The deadline moved while this run read the attempt: run again, and the next run reschedules.
       return done && done.attempt.status === 'in_progress' ? 'retry' : 'skipped';
     }
+    // OPS-02: the live view shows the finish; a failed mirror write is logged, never retried (REL-05).
+    live
+      ?.finished(run.orgId, done.attempt, now)
+      .catch((err: unknown) => log?.warn({ err, attemptId: attempt.id }, 'live mirror write failed'));
     await queue.enqueue(leaderboardTask(run.orgId, test.id, test.seriesId, now));
     return 'finalized';
   };

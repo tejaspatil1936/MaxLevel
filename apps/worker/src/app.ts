@@ -7,6 +7,7 @@ import type { WorkerData } from './data';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 import type { ExportData } from './export-data';
 import type { FileStore } from './firebase';
+import type { LiveMirror } from './live';
 import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit';
 import { exportHandler, exportPayloadSchema } from './tasks/export';
 import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
@@ -21,6 +22,8 @@ export interface WorkerDeps {
   queue: TaskQueue;
   /** Results exports (EXP-03): their records and the Storage bucket the files go to. */
   exports?: { data: ExportData; files: FileStore };
+  /** The live mirror in Realtime Database (OPS-02), written when a task finishes an attempt. */
+  live?: LiveMirror;
 }
 
 export const TASK_NAMES = [
@@ -74,7 +77,7 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           });
         }
       });
-      const autoSubmit = autoSubmitHandler(deps);
+      const autoSubmit = autoSubmitHandler({ ...deps, log: tasks.log });
       tasks
         .withTypeProvider<ZodTypeProvider>()
         .post('/auto-submit', { schema: { body: autoSubmitPayloadSchema } }, async (req, reply) => {
