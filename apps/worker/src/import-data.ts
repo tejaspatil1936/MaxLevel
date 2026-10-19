@@ -81,6 +81,33 @@ export type StoredDraftFields = Omit<DraftInput, 'figure'> & {
   status: 'pending';
 };
 
+/** Firestore takes at most 500 writes and 10 MiB in one commit; drafts are written in chunks well inside both. */
+export const WRITE_CHUNK_DOCS = 400;
+export const WRITE_CHUNK_BYTES = 6 * 1024 * 1024;
+
+/**
+ * `items` in order, in chunks of at most WRITE_CHUNK_DOCS items and WRITE_CHUNK_BYTES of `size` each (an item larger
+ * than that goes alone). Always at least one chunk, so the job's own update has a commit to go in.
+ */
+export function writeChunks<T>(items: readonly T[], size: (item: T) => number = jsonBytes): T[][] {
+  const chunks: T[][] = [[]];
+  let bytes = 0;
+  for (const item of items) {
+    const n = size(item);
+    const last = chunks[chunks.length - 1]!;
+    if (last.length > 0 && (last.length >= WRITE_CHUNK_DOCS || bytes + n > WRITE_CHUNK_BYTES)) {
+      chunks.push([item]);
+      bytes = n;
+    } else {
+      last.push(item);
+      bytes += n;
+    }
+  }
+  return chunks;
+}
+/** About what a document costs in a commit: its JSON in UTF-8, plus its path. */
+const jsonBytes = (item: unknown) => Buffer.byteLength(JSON.stringify(item)) + 200;
+
 /** Draft IDs follow `order`, so a task delivered twice writes the same drafts again. */
 export const draftId = (order: number) => `d${String(order).padStart(4, '0')}`;
 
@@ -169,13 +196,18 @@ export function importData(db: Firestore) {
       });
     },
 
-    /** Saves one page's drafts with the job's progress in one transaction, while the run holds the job. */
+    /**
+     * Saves a page's drafts, then the job's progress with the last of them, in transactions within Firestore's
+     * limits (writeChunks), each only while the run holds the job.
+     */
     async saveDrafts(orgId: string, jobId: string, runId: string, drafts: DraftInput[], u: ImportUpdate) {
-      await held(orgId, jobId, runId, (tx, ref) => {
-        for (const { figure: _figure, ...d } of drafts)
-          tx.set(ref.collection('drafts').doc(draftId(d.order)), { ...d, flags: [], status: 'pending' });
-        tx.update(ref, updateFields(u));
-      });
+      const docs = drafts.map(({ figure: _figure, ...d }) => ({ ...d, flags: [], status: 'pending' as const }));
+      const chunks = writeChunks(docs);
+      for (const [i, chunk] of chunks.entries())
+        await held(orgId, jobId, runId, (tx, ref) => {
+          for (const d of chunk) tx.set(ref.collection('drafts').doc(draftId(d.order)), d);
+          if (i === chunks.length - 1) tx.update(ref, updateFields(u));
+        });
     },
 
     async listDrafts(orgId: string, jobId: string): Promise<Array<StoredDraftFields & { id: string }>> {
@@ -183,7 +215,7 @@ export function importData(db: Firestore) {
       return snap.docs.map((d) => ({ ...(d.data() as StoredDraftFields), id: d.id }));
     },
 
-    /** Stores each draft's flags and the job's final fields in one transaction, while the run holds the job. */
+    /** Stores each draft's flags, then the job's final fields with the last of them, as saveDrafts writes. */
     async finish(
       orgId: string,
       jobId: string,
@@ -191,10 +223,13 @@ export function importData(db: Firestore) {
       flags: Map<string, StoredDraftFields['flags']>,
       u: ImportUpdate,
     ) {
-      await held(orgId, jobId, runId, (tx, ref) => {
-        for (const [id, f] of flags) tx.update(ref.collection('drafts').doc(id), { flags: f });
-        tx.update(ref, { ...updateFields(u), error: FieldValue.delete(), retryAt: FieldValue.delete() });
-      });
+      const chunks = writeChunks([...flags]);
+      for (const [i, chunk] of chunks.entries())
+        await held(orgId, jobId, runId, (tx, ref) => {
+          for (const [id, f] of chunk) tx.update(ref.collection('drafts').doc(id), { flags: f });
+          if (i === chunks.length - 1)
+            tx.update(ref, { ...updateFields(u), error: FieldValue.delete(), retryAt: FieldValue.delete() });
+        });
     },
 
     /** The prompts of the test's questions in test order, for the duplicate check. */

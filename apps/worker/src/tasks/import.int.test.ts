@@ -276,4 +276,19 @@ describe('import task', () => {
     });
     expect(llm.calls()).toEqual([]);
   });
+
+  // 5,000 drafts of 2,500 characters each are about 13 MB, past Firestore's 10 MiB request limit.
+  it(
+    'IMP-01 a template sheet of 5,000 long questions is saved and checked in writes within Firestore limits',
+    {
+      timeout: 120_000,
+    },
+    async () => {
+      const rows = templateRows(5000).map((r, i) => (i === 0 ? r : [`${i} ${'x'.repeat(2500)}`, ...r.slice(1)]));
+      const { job, id } = await runImport('long.csv', 'csv', csv(rows));
+      expect(job).toMatchObject({ status: 'ready', progress: { questionsFound: 5000 } });
+      const stored = await org.collection(`importJobs/${id}/drafts`).count().get();
+      expect(stored.data().count).toBe(5000);
+    },
+  );
 });
