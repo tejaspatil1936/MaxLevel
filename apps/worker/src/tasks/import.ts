@@ -7,6 +7,8 @@ import {
   IMPORT_MESSAGES,
   IMPORT_SIGNATURE_BYTES,
   importFlags,
+  importRetryDelayMs,
+  importRetryTask,
   jsonQuestionsToDrafts,
   LlmAnswerSchema,
   monthKey,
@@ -19,6 +21,7 @@ import {
   type Clock,
   type DraftInput,
   type ImportError,
+  type TaskQueue,
 } from '@mitaoe/shared';
 import { z } from 'zod';
 import type { FileStore } from '../firebase';
@@ -40,7 +43,7 @@ type Read = { drafts: DraftInput[] } | { parts: ModelPart[]; sheet: boolean } | 
 const refused = (code: string, message: string, retryable = false): { error: ImportError } => ({
   error: { code, message, retryable },
 });
-const LLM_UNAVAILABLE = refused('LLM_UNAVAILABLE', "The AI service didn't answer.", true);
+const LLM_UNAVAILABLE = refused('LLM_UNAVAILABLE', IMPORT_MESSAGES.llmUnavailable, true);
 
 /** Reads the stored file by its format, after the size and signature checks (SEC-06), with the IMP-02 limits. */
 async function readSource(job: ImportJob, bytes: Buffer): Promise<Read> {
@@ -89,15 +92,24 @@ async function readSource(job: ImportJob, bytes: Buffer): Promise<Read> {
  * again (size, signature) and its page or row limit before any model call, reads JSON and template sheets directly,
  * and sends every other file to the model one page (or part) per call, in page order, one call at a time, saving each
  * page's drafts with the progress. An AI job is counted once against `ai_imports_per_month` before its first call
- * (IMP-08). When every page is done the checks run on every draft and the job is `ready`. A job that is not started,
- * or already finished, is left as it is, so a task delivered twice changes nothing.
+ * (IMP-08). A model failure (a provider error or an answer outside LlmAnswerSchema) stops at that page: the job waits
+ * `retrying` for 1, 2, then 4 minutes, with the next run queued at `retryAt`, which resumes at the first page not done;
+ * the fourth failure in a row fails it, retryable by an admin (REL-06). When every page is done the checks run on
+ * every draft and the job is `ready`. A job that is not started, already finished, or still waiting for its retry is
+ * left as it is, so a task delivered twice or early changes nothing.
  */
-export function importHandler(deps: { imports: ImportData; files: FileStore; clock: Clock; llm?: LlmDriver }) {
-  const { imports: data, files, clock, llm } = deps;
+export function importHandler(deps: {
+  imports: ImportData;
+  files: FileStore;
+  clock: Clock;
+  queue: TaskQueue;
+  llm?: LlmDriver;
+}) {
+  const { imports: data, files, clock, queue, llm } = deps;
 
   return async ({ orgId, jobId }: ImportRun): Promise<string> => {
     const job = await data.getJob(orgId, jobId);
-    if (!job || !(await data.claim(orgId, jobId))) return 'skipped';
+    if (!job || !(await data.claim(orgId, jobId, clock.now()))) return 'skipped';
     const fail = async ({ error }: { error: ImportError }) => {
       await data.update(orgId, jobId, { status: 'failed', error });
       return `failed: ${error.code}`;
@@ -125,6 +137,26 @@ export function importHandler(deps: { imports: ImportData; files: FileStore; clo
       progress.pagesTotal = read.parts.length;
       let tokens = job.tokens ?? { input: 0, output: 0 };
       const usedModel = { provider: llm.provider, model: llm.model };
+      /** Keeps the pages done and waits to retry, or fails on the fourth failure in a row (REL-06). */
+      const modelFailed = async (): Promise<string> => {
+        const failures = (job.failures ?? 0) + 1;
+        const delay = importRetryDelayMs(failures);
+        if (delay === null) {
+          await data.update(orgId, jobId, { ...usedModel, tokens, failures });
+          return fail(refused('LLM_UNAVAILABLE', IMPORT_MESSAGES.llmGaveUp, true));
+        }
+        const retryAt = clock.now() + delay;
+        await queue.enqueue(importRetryTask(orgId, jobId, `retry-${failures}-${retryAt}`, retryAt));
+        await data.update(orgId, jobId, {
+          ...usedModel,
+          tokens,
+          failures,
+          status: 'retrying',
+          error: LLM_UNAVAILABLE.error,
+          retryAt,
+        });
+        return `retrying at ${retryAt}`;
+      };
       await data.update(orgId, jobId, { progress });
       const hints =
         progress.pagesDone > 0 ? [...new Set((await data.listDrafts(orgId, jobId)).map((d) => d.sectionName))] : [];
@@ -145,18 +177,15 @@ export function importHandler(deps: { imports: ImportData; files: FileStore; clo
           tokens = { input: tokens.input + res.usage.inputTokens, output: tokens.output + res.usage.outputTokens };
         } catch (err) {
           if (!(err instanceof LlmUnavailableError)) throw err;
-          await data.update(orgId, jobId, { ...usedModel, tokens });
-          return fail(LLM_UNAVAILABLE);
+          return modelFailed();
         }
         const answer = LlmAnswerSchema.safeParse(output);
-        if (!answer.success) {
-          await data.update(orgId, jobId, { ...usedModel, tokens });
-          return fail(LLM_UNAVAILABLE);
-        }
+        if (!answer.success) return modelFailed();
         const drafts = draftsFromModel(page, answer.data.questions, progress.questionsFound + 1);
         for (const d of drafts) if (d.sectionName && !hints.includes(d.sectionName)) hints.push(d.sectionName);
         progress = { ...progress, pagesDone: page, questionsFound: progress.questionsFound + drafts.length };
-        await data.saveDrafts(orgId, jobId, drafts, { progress, tokens, ...usedModel });
+        job.failures = 0;
+        await data.saveDrafts(orgId, jobId, drafts, { progress, tokens, failures: 0, ...usedModel });
       }
     }
 

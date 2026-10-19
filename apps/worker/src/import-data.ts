@@ -24,6 +24,8 @@ export interface ImportJob {
   progress: ImportProgress;
   aiCounted?: boolean;
   tokens?: { input: number; output: number };
+  /** Model failures in a row (REL-06); a page read by the model sets it back to 0. */
+  failures?: number;
 }
 
 /** What the task records as it goes; `error` and `retryAt` are removed when not given. */
@@ -31,6 +33,9 @@ export interface ImportUpdate {
   status?: ImportStatus;
   progress?: ImportProgress;
   error?: ImportError | null;
+  /** When a job `retrying` runs again; removed by any other status. */
+  retryAt?: number;
+  failures?: number;
   provider?: string;
   model?: string;
   tokens?: { input: number; output: number };
@@ -54,12 +59,17 @@ export function importData(db: Firestore) {
       return d.exists ? ({ ...d.data(), id: d.id } as ImportJob) : null;
     },
 
-    /** Moves a started job to `running`; false (changing nothing) unless it is queued, running or retrying. */
-    async claim(orgId: string, jobId: string): Promise<boolean> {
+    /**
+     * Moves a started job to `running`, clearing a retry's wait; false (changing nothing) unless it is queued, running
+     * or retrying with its `retryAt` reached, so an early or repeated delivery of a task leaves the wait as it is.
+     */
+    async claim(orgId: string, jobId: string, now: number): Promise<boolean> {
       return db.runTransaction(async (tx) => {
         const snap = await tx.get(job(orgId, jobId));
-        if (!['queued', 'running', 'retrying'].includes(snap.get('status') as string)) return false;
-        tx.update(job(orgId, jobId), { status: 'running' });
+        const status = snap.get('status') as string;
+        if (!['queued', 'running', 'retrying'].includes(status)) return false;
+        if (status === 'retrying' && Number(snap.get('retryAt') ?? 0) > now) return false;
+        tx.update(job(orgId, jobId), { status: 'running', error: FieldValue.delete(), retryAt: FieldValue.delete() });
         return true;
       });
     },
