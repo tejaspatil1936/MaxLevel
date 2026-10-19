@@ -72,7 +72,7 @@ export function pairingService(deps: PairingDeps) {
       const { attemptId, status } = await data.attempts.reserveAttempt(
         orgId,
         { testId, studentId: who.studentId },
-        () => assertStartWindow(settings, now),
+        (start) => assertStartWindow(settings, now, start.afterReset),
       );
       if (status && isFinishedAttempt(status)) throw finished();
       // OPS-02: a reservation without an attempt shows as `pairing` in the live view.

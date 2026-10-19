@@ -1,4 +1,5 @@
-import { autoSubmitAction, liveRecordPath, type AuditEntry } from '@mitaoe/shared';
+import { autoSubmitAction, drawAttempt, liveRecordPath, testDrawPools, type AuditEntry } from '@mitaoe/shared';
+import { createData } from './data';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { initFirebase } from './firebase';
 import { testApp } from './test-support/app';
@@ -42,8 +43,8 @@ const live = async (testId: string, id: string) =>
 const autoSubmits = async (id: string) =>
   (await ctx.queue.pending()).filter((k) => k.path === '/tasks/auto-submit' && k.name.includes(id)).map((k) => k.name);
 
-async function started() {
-  const t = await api.examTest();
+async function started(exam: object = {}) {
+  const t = await api.examTest(exam);
   const s1 = await studentOf(auth, 1);
   const { body } = await api.start(t.testId, s1);
   const id = body.attempt.id;
@@ -225,5 +226,47 @@ describe('reset', () => {
     expect((await act(id, 'reset', await adminA(), { reason: 'Submitted by mistake' })).status).toBe(200);
     expect((await stored(id)).result).toBeDefined();
     expect((await ctx.queue.pending()).filter((k) => k.path === '/tasks/leaderboard')).toHaveLength(1);
+  });
+
+  it('OPS-10 US-AD-13 TST-07 after a reset past the late-entry cutoff the test is live again and the next start draws anew with the slot end as deadline', async () => {
+    const { t, s1, id } = await started({ overrides: { shuffleQuestions: true, shuffleOptions: true } });
+    const get = async (url: string, headers: Record<string, string>) => {
+      const res = await ctx.app.inject({ method: 'GET', url, headers });
+      return { status: res.statusCode, body: res.json() as Record<string, unknown> };
+    };
+    // Past the 15-minute late-entry cutoff: a student who never started is refused (Q25 applies to resets only).
+    ctx.clock.set(NOW + 20 * MIN);
+    expect(errorCode(await api.start(t.testId, await studentOf(auth, 2)))).toBe('WINDOW_CLOSED');
+    expect((await act(id, 'reset', await adminA(), { reason: 'Laptop crashed' })).status).toBe(200);
+
+    const dashboard = await get('/v1/student/dashboard', s1);
+    expect(dashboard.body.live).toMatchObject([{ testId: t.testId, lastStartAt: t.window.end }]);
+    expect((dashboard.body.live as object[])[0]).not.toHaveProperty('attemptId');
+    expect((await get(`/v1/student/tests/${t.testId}`, s1)).body).toMatchObject({ state: 'live' });
+
+    const again = await api.start(t.testId, s1);
+    expect(again.status, again.raw).toBe(201);
+    const newId = again.body.attempt.id;
+    expect(newId).not.toBe(id);
+    expect(again.body.attempt.deadlineAt, 'a fixed slot ends at the slot end').toBe(t.window.end);
+    expect(again.body.answers).toEqual({});
+    const data = createData(db);
+    const test = (await data.tests.getTest(SEED.orgA, t.testId))!;
+    const questions = await data.questions.listQuestions(SEED.orgA, t.testId);
+    const options = Object.fromEntries(questions.map((q) => [q.id, q.options.map((o) => o.id)]));
+    expect((await stored(newId)).draw, 'drawn again, seeded by the new attempt ID (Q-06)').toEqual(
+      drawAttempt(testDrawPools(test, questions), options, test.resolved!, newId),
+    );
+    expect((await db.doc(`${org}/attemptIndex/${t.testId}_stu-org-a-01`).get()).data()).toMatchObject({
+      activeAttemptId: newId,
+      attemptCount: 2,
+    });
+    expect((await api.start(t.testId, s1)).body.attempt.id, 'the new attempt is the active one').toBe(newId);
+    expect((await get(`/v1/student/tests/${t.testId}`, s1)).body).toMatchObject({ state: 'in_progress' });
+
+    // At the window end the reset student cannot start either.
+    expect((await act(newId, 'reset', await adminA(), { reason: 'Crashed again' })).status).toBe(200);
+    ctx.clock.set(t.window.end);
+    expect(errorCode(await api.start(t.testId, s1))).toBe('WINDOW_CLOSED');
   });
 });

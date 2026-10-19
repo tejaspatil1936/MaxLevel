@@ -28,6 +28,8 @@ interface Listed {
   settings: Settings & { window: NonNullable<Settings['window']> };
   state: Exclude<StudentTestState, 'finished'>;
   attempt?: StudentAttemptRef;
+  /** The student's newest attempt of the test was reset: a start stays open until the window end (Q25). */
+  afterReset: boolean;
 }
 
 /**
@@ -45,9 +47,11 @@ export function studentTestsService(data: Data) {
     const timezone = org?.timezone ?? 'Asia/Kolkata';
     const who = student ? asEligibility(student) : null;
     const visible = who ? active.filter((s) => isEligible(who, s.eligibility)) : [];
-    // The newest attempt of each test decides; a reset attempt is as good as none.
-    const latest = new Map<string, StudentAttemptRef>();
-    for (const a of attempts) if (a.status !== 'reset' && !latest.has(a.testId)) latest.set(a.testId, a);
+    // The newest attempt of each test decides; a reset attempt is as good as none, except that a start stays open
+    // until the window end (OPS-10, DECISIONS Q25).
+    const newest = new Map<string, StudentAttemptRef>();
+    for (const a of attempts) if (!newest.has(a.testId)) newest.set(a.testId, a);
+    const latest = new Map([...newest].filter(([, a]) => a.status !== 'reset'));
     const finished = [...latest.values()].filter((a) => isFinishedAttempt(a.status));
 
     const seriesIds = new Set([
@@ -68,10 +72,11 @@ export function studentTestsService(data: Data) {
       if (!series || !who || test.status !== 'scheduled' || !test.resolved?.window) continue;
       if (!isEligible(who, series.eligibility, test.eligibility)) continue;
       const attempt = latest.get(test.id);
+      const afterReset = newest.get(test.id)?.status === 'reset';
       const settings = test.resolved as Listed['settings'];
-      const state = studentTestState(settings, now, attempt?.status);
+      const state = studentTestState(settings, now, afterReset ? 'reset' : attempt?.status);
       if (state && state !== 'finished')
-        listed.push({ test, dayLabel, settings, state, ...(attempt ? { attempt } : {}) });
+        listed.push({ test, dayLabel, settings, state, afterReset, ...(attempt ? { attempt } : {}) });
     }
     return { timezone, listed, finished, tests, accommodations: student?.accommodations ?? {} };
   }
@@ -83,7 +88,7 @@ export function studentTestsService(data: Data) {
     ...(l.test.company ? { company: l.test.company } : {}),
     window: l.settings.window,
     durationMin: l.settings.durationMin,
-    lastStartAt: lastStartAt(l.settings),
+    lastStartAt: lastStartAt(l.settings, { afterReset: l.afterReset }),
     ...(l.state === 'in_progress' && l.attempt ? { attemptId: l.attempt.id } : {}),
   });
 
@@ -125,7 +130,7 @@ export function studentTestsService(data: Data) {
         const t = v.tests.get(testId) ?? (await testOf(orgId, testId));
         const settings = t && (await settingsOf(orgId, t.test, v.timezone));
         if (!t || !settings?.window) return null;
-        page = { ...t, settings: settings as Listed['settings'], state: 'live' };
+        page = { ...t, settings: settings as Listed['settings'], state: 'live', afterReset: false };
       }
       if (!page) return null;
       const pools = testDrawPools(page.test, await data.questions.listQuestions(orgId, testId));

@@ -59,9 +59,12 @@ export function admitStudent(
   return { settings: test.resolved, student };
 }
 
-/** The start window of the test's timing mode at `now` (spec 5.5): 409 WINDOW_NOT_OPEN or WINDOW_CLOSED outside it. */
-export function assertStartWindow(settings: Settings, now: number): void {
-  const open = canStart(settings, now);
+/**
+ * The start window of the test's timing mode at `now` (spec 5.5): 409 WINDOW_NOT_OPEN or WINDOW_CLOSED outside it.
+ * After a reset it runs to the window end, past the late-entry cutoff (OPS-10, DECISIONS Q25).
+ */
+export function assertStartWindow(settings: Settings, now: number, afterReset = false): void {
+  const open = canStart(settings, now, { afterReset });
   if (!open.ok) throw new AppError(409, open.code, REFUSALS[open.code]);
 }
 
@@ -194,8 +197,8 @@ export function attemptService(deps: AttemptDeps) {
       const { attempt, created } = await data.attempts.startAttempt(
         orgId,
         { testId, studentId: who.studentId, firstStart: !test.attemptsStarted },
-        (id) => {
-          assertStartWindow(settings, now);
+        (id, { afterReset }) => {
+          assertStartWindow(settings, now, afterReset);
           return {
             id,
             orgId,
