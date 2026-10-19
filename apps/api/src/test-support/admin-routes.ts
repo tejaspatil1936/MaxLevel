@@ -383,6 +383,7 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'POST /v1/attempts/:id/extra-time': { foreignParams: { id: 'att-org-b' }, fresh: withTimedAttempt },
   'POST /v1/attempts/:id/terminate': { foreignParams: { id: 'att-org-b' }, fresh: withActionAttempt('in_progress') },
   'POST /v1/attempts/:id/reinstate': { foreignParams: { id: 'att-org-b' }, fresh: withActionAttempt('terminated') },
+  'POST /v1/attempts/:id/reset': { foreignParams: { id: 'att-org-b' }, fresh: withActionAttempt('submitted') },
 
   'GET /v1/live-tests': { fresh: (db) => withPublishedTest(db) },
   'GET /v1/tests/:id/live': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },

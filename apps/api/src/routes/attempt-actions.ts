@@ -3,6 +3,7 @@ import {
   attemptActionSchema,
   autoSubmitTask,
   extensionNotice,
+  leaderboardTask,
   extraTimeGrantSchema,
   extraTimeNeedsConfirmation,
   extraTimeResultSchema,
@@ -131,6 +132,33 @@ export function attemptActionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         throw new AppError(409, 'ATTEMPT_NOT_TERMINATED', 'Only a terminated attempt can be reinstated.');
       await queue.enqueue(autoSubmitTask(orgId, done.id, done.deadlineAt));
       live.reinstated(orgId, done, clock.now());
+      return { status: done.status } satisfies AttemptActionResult;
+    });
+
+    /**
+     * POST /v1/attempts/{id}/reset (OPS-10, US-AD-13, spec 8.5): an attempt of any status but `reset` is kept for the
+     * record as `reset` with the reason, time and admin, the audit entry in the same transaction, and the student may
+     * start again with a new draw (until the window end, DECISIONS Q25). Its pending auto-submit task finds it reset
+     * and finalizes nothing; the live view stops showing it, and a graded attempt leaves the leaderboard.
+     */
+    app.post('/v1/attempts/:id/reset', { ...reasonRoute, schema: reasonSchema }, async (req) => {
+      const orgId = req.orgId!;
+      const { reason } = req.body;
+      const now = clock.now();
+      const fields = { resetReason: reason, resetAt: now, resetBy: req.user!.uid };
+      const done = await data.attempts.resetAttempt(orgId, req.params.id, fields, (before, after, tx) =>
+        audit(req, tx, {
+          action: 'attempt.reset',
+          target: { type: 'attempt', id: before.id },
+          before: { status: before.status },
+          after: { reason, status: after.status },
+        }),
+      );
+      if (!done) throw notFound('Attempt');
+      if (done === 'ATTEMPT_ALREADY_RESET')
+        throw new AppError(409, 'ATTEMPT_ALREADY_RESET', 'This attempt was already reset.');
+      live.reset(orgId, done, now);
+      if (done.result) await queue.enqueue(leaderboardTask(orgId, done.testId, done.seriesId, now));
       return { status: done.status } satisfies AttemptActionResult;
     });
   };

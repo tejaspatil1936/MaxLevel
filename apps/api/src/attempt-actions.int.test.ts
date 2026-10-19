@@ -1,4 +1,4 @@
-import { liveRecordPath, type AuditEntry } from '@mitaoe/shared';
+import { autoSubmitAction, liveRecordPath, type AuditEntry } from '@mitaoe/shared';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { initFirebase } from './firebase';
 import { testApp } from './test-support/app';
@@ -164,5 +164,66 @@ describe('terminate and reinstate', () => {
       clockOffsetMs: 0,
     });
     expect(saved.body.saved).toEqual([q[1]]);
+  });
+});
+
+describe('reset', () => {
+  it('OPS-10 US-AD-13 REL-04 a reset needs a reason and keeps the attempt with its records; its auto-submit finalizes nothing', async () => {
+    const { t, s1, id, deadlineAt, q } = await started();
+    const admin = await adminA();
+    const ref = db.doc(`${org}/attempts/${id}`);
+    await ref
+      .collection('events')
+      .add({ orgId: SEED.orgA, type: 'window_blur', details: {}, clientTs: NOW, serverTs: NOW });
+    for (const payload of [{}, { reason: '  ' }]) expect((await act(id, 'reset', admin, payload)).status).toBe(400);
+    const before = await stored(id);
+
+    ctx.clock.set(NOW + 5 * MIN);
+    const res = await act(id, 'reset', admin, { reason: 'Laptop crashed during the test' });
+    expect([res.status, res.body], res.raw).toEqual([200, { status: 'reset' }]);
+    const after = await stored(id);
+    expect(after).toEqual({
+      ...before,
+      status: 'reset',
+      resetReason: 'Laptop crashed during the test',
+      resetAt: NOW + 5 * MIN,
+      resetBy: expect.any(String),
+    });
+    expect((await ref.collection('answers').get()).docs.map((d) => d.id)).toEqual([q[0]]);
+    expect((await ref.collection('events').get()).size).toBe(1);
+    expect(await entries('attempt.reset', id)).toMatchObject([
+      { actor: { email: 'admin1@a.test', role: 'admin' }, before: { status: 'in_progress' } },
+    ]);
+    expect(await live(t.testId, id)).toMatchObject({ status: 'reset' });
+    const index = (await db.doc(`${org}/attemptIndex/${t.testId}_stu-org-a-01`).get()).data()!;
+    expect(index.activeAttemptId).toBeUndefined();
+    // The task queued for the old deadline skips the reset attempt (REL-04); the student can no longer use it.
+    expect(autoSubmitAction({ status: 'reset', deadlineAt }, deadlineAt, deadlineAt + 2 * MIN)).toBe('skip');
+    const late = await api.answers(id, s1, {
+      answers: [{ questionId: q[1]!, optionId: 'a', seq: 1, clientTs: ctx.clock.now() }],
+      backlog: 0,
+      clockOffsetMs: 0,
+    });
+    expect(errorCode(late)).toBe('ATTEMPT_FINISHED');
+    expect(errorCode(await act(id, 'reset', admin, { reason: 'Twice' }))).toBe('ATTEMPT_ALREADY_RESET');
+    expect(errorCode(await act(id, 'terminate', admin, { reason: 'Reset' }))).toBe('ATTEMPT_FINISHED');
+    expect(errorCode(await act(id, 'reinstate', admin, { reason: 'Reset' }))).toBe('ATTEMPT_NOT_TERMINATED');
+    expect(await entries('attempt.reset', id)).toHaveLength(1);
+  });
+
+  it('OPS-10 LB-03 a submitted attempt can be reset, and the leaderboard is recomputed without it', async () => {
+    const { s1, id } = await started();
+    const submit = await ctx.app.inject({
+      method: 'POST',
+      url: `/v1/attempts/${id}/submit`,
+      headers: { ...s1, 'idempotency-key': crypto.randomUUID() },
+      payload: {},
+    });
+    expect(submit.statusCode).toBe(200);
+    for (const k of await ctx.queue.pending())
+      if (k.path === '/tasks/leaderboard') await db.doc(`_localTasks/${k.name}`).delete();
+    expect((await act(id, 'reset', await adminA(), { reason: 'Submitted by mistake' })).status).toBe(200);
+    expect((await stored(id)).result).toBeDefined();
+    expect((await ctx.queue.pending()).filter((k) => k.path === '/tasks/leaderboard')).toHaveLength(1);
   });
 });
