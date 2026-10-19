@@ -152,3 +152,4 @@ PHASE 7 DONE 3/3 features
 ## Phase 8
 
 PHASE 8 START e0f86fd83360d1ad2bb686c56b951a0a5fc18713
+Tests: 9 phase 8 acceptance tests by test-author (A11Y-22 e2e; CI-04 and REL-04 exercised end to end; the rest owner checks in docs/MANUAL_CHECKS.md), reviewed (no blocking gaps), locked.
