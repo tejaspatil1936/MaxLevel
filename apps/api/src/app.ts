@@ -31,6 +31,7 @@ import { studentRoutes } from './routes/students';
 import { studentTestRoutes } from './routes/student-tests';
 import { studentResultRoutes } from './routes/student-results';
 import { leaderboardRoutes } from './routes/leaderboards';
+import { liveRoutes } from './routes/live';
 import { questionRoutes } from './routes/questions';
 import { testsRoutes } from './routes/tests';
 import { releaseRoutes } from './routes/release';
@@ -132,6 +133,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     leaderboardRoutes,
     attemptRoutes,
     pairingRoutes,
+    liveRoutes,
     auditRoutes,
     meRoutes,
   ])

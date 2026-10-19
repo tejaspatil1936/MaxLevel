@@ -333,6 +333,10 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
 
   'GET /v1/attempts/:id/events': { foreignParams: { id: 'att-org-b' }, fresh: withAttempt },
 
+  'GET /v1/live-tests': { fresh: (db) => withPublishedTest(db) },
+  'GET /v1/tests/:id/live': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
+  'GET /v1/tests/:id/attempts': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
+
   'GET /v1/audit': {},
 };
 
