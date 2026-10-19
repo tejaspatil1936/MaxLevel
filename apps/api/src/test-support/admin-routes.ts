@@ -486,6 +486,37 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'GET /v1/tests/:id/attempts': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
 
   'GET /v1/audit': {},
+
+  // Reports (phase 7): the route-table tests turn `analytics_reports` on for both orgs first (it is off by default).
+  'POST /v1/reports': {
+    fresh: async (db) => {
+      const { params } = await withPublishedTest(db);
+      await db
+        .doc('organizations/org-a/attempts/att-report-org-a')
+        .set({ orgId: 'org-a', testId: params.id, status: 'submitted' });
+      return { body: { scope: 'test', refId: params.id } };
+    },
+  },
+  'GET /v1/reports': {},
+  'GET /v1/reports/:id': {
+    params: { id: 'report-org-a' },
+    foreignParams: { id: 'report-org-b' },
+    fresh: async (db) => {
+      for (const orgId of ['org-a', 'org-b'])
+        await db.doc(`organizations/${orgId}/reports/report-${orgId}`).set({
+          orgId,
+          scope: 'test',
+          refId: `test-${orgId}`,
+          title: `Test test-${orgId}`,
+          status: 'queued',
+          includeXlsx: false,
+          createdBy: 'seed',
+          createdByName: 'Seed',
+          createdAt: 0,
+        });
+      return { params: { id: 'report-org-a' } };
+    },
+  },
 };
 
 export const fillPath = (url: string, params: Record<string, string> = {}) =>

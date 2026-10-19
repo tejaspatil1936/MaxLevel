@@ -12,6 +12,9 @@ const { db, auth } = initFirebase();
 beforeEach(async () => {
   await clearEmulators();
   await seedBase(db, 1_700_000_000_000);
+  // Analytics reports are off by default (spec 2.4); the route tables exercise their routes with the feature on.
+  for (const orgId of [SEED.orgA, SEED.orgB])
+    await db.doc(`organizations/${orgId}`).update({ 'featureOverrides.analytics_reports': true });
 });
 
 const tokens = async () => ({

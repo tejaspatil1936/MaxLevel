@@ -41,6 +41,7 @@ import { resultsRoutes } from './routes/results';
 import { exportRoutes } from './routes/exports';
 import { importDraftRoutes } from './routes/import-drafts';
 import { importRoutes } from './routes/imports';
+import { reportRoutes } from './routes/reports';
 import { testApprovalRoutes } from './routes/test-approval';
 import { examPreviewRoutes } from './routes/exam-preview';
 import { whitelistRoutes } from './routes/whitelist';
@@ -136,6 +137,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     exportRoutes,
     importRoutes,
     importDraftRoutes,
+    reportRoutes,
     questionRoutes,
     examPreviewRoutes,
     studentTestRoutes,
