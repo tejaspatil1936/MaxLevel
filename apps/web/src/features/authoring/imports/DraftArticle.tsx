@@ -11,7 +11,7 @@ export const draftArticleId = (draftId: string) => `import-draft-${draftId}`;
 export const draftHeadingId = (draftId: string) => `import-draft-${draftId}-heading`;
 
 /** Where the draft came from: `Page 2` of a PDF, `Row 3` of a template sheet, `Part 1` of text the model read. */
-function sourceText(job: Pick<ImportJobView, 'format' | 'provider'>, page: number): string | null {
+export function draftSourceLabel(job: Pick<ImportJobView, 'format' | 'provider'>, page: number): string | null {
   if (job.format === 'pdf') return t('imports.source.page', { n: formatCount(page) });
   if (job.format === 'json') return null;
   if ((job.format === 'csv' || job.format === 'xlsx') && !job.provider)
@@ -43,7 +43,7 @@ export function DraftBody({
   draft: ImportDraft;
   imageUrls: Record<string, string>;
 }) {
-  const source = sourceText(job, draft.sourcePage);
+  const source = draftSourceLabel(job, draft.sourcePage);
   const level = draft.difficulty ? t(LEVEL[draft.difficulty]) : null;
   return (
     <>

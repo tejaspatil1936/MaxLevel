@@ -84,6 +84,10 @@ export const imports = {
   'imports.key.discard': 'Discard question',
   'imports.sourcePage': 'Source page',
   'imports.pageOf': 'Page {page} of {filename}',
-  'imports.sourceNotShown': 'A page image is kept for PDF files only. The question shows as it was read.',
+  'imports.sourceNotShown': "This page couldn't be drawn, so only its PDF is kept. The question shows as it was read.",
+  'imports.sourceJson': 'A JSON file has no source page. The question shows as it was read.',
+  'imports.sourceTextMissing': "This part's text wasn't kept. The question shows as it was read.",
+  'imports.sourceTruncated': 'Only the start of this part is shown.',
+  'imports.partOf': '{part} of {filename}',
   'imports.sourceFailed': "Couldn't load this page. Check your connection, then try again.",
 } as const;
