@@ -7,13 +7,14 @@ import { useWorkspace } from '@/lib/workspace';
 const COPY = {
   series: { title: 'series.notFound', body: 'series.notFoundBody' },
   test: { title: 'tests.notFound', body: 'tests.notFoundBody' },
+  import: { title: 'imports.notFound', body: 'imports.notFoundBody' },
 } as const;
 
 /**
- * A series or test ID outside the organization being worked in: nothing of the other organization's record is
+ * A series, test or import ID outside the organization being worked in: nothing of the other organization's record is
  * shown (ORG-05).
  */
-export function SeriesNotFound({ kind = 'series' }: { kind?: 'series' | 'test' }) {
+export function SeriesNotFound({ kind = 'series' }: { kind?: keyof typeof COPY }) {
   const { org } = useWorkspace();
   return (
     <>
