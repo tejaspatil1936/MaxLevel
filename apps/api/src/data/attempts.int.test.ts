@@ -4,6 +4,7 @@ import { AppError } from '../errors';
 import { initFirebase } from '../firebase';
 import { clearEmulators } from '../test-support/emulators';
 import { createData } from '.';
+import type { AttemptBuilder } from './attempts';
 
 const { db } = initFirebase();
 const data = createData(db);
@@ -100,7 +101,7 @@ describe('attempt data access', () => {
     strikesCount: 0,
     ...over,
   });
-  const start = (build = (id: string) => record(id), firstStart = true) =>
+  const start = (build: AttemptBuilder = (id: string) => record(id), firstStart = true) =>
     data.attempts.startAttempt('org-a', { testId: 't1', studentId: 'stu-1', firstStart }, build);
 
   it('DATA-02 EX-04 ten concurrent starts by one student for one test create exactly one attempt and one index entry', async () => {
@@ -326,6 +327,84 @@ describe('attempt data access', () => {
     expect(await data.attempts.grantExtraTime('org-a', 'a1', 60, write)).toBe('ATTEMPT_FINISHED');
     expect((await ref.get()).data()).toMatchObject({ deadlineAt: 670_000, extraTimeSec: 660 });
     expect((await audit.get()).size).toBe(2);
+  });
+
+  it('OPS-04 AUD-02 ORG-03 terminating writes its audit entry in the finishing transaction; a reinstate undoes the finish', async () => {
+    const { attempt } = await start(undefined, false);
+    const audit = db.collection('organizations/org-a/auditLogs');
+    const write = (before: AttemptRecord, after: AttemptRecord, tx: FirebaseFirestore.Transaction) =>
+      tx.create(audit.doc(), { before: before.status, after: after.status });
+    const result = { score: 0, max: 1, pct: 0, correct: 0, incorrect: 0, unanswered: 1, sections: {}, durationSec: 4 };
+    const finish = () => ({ status: 'terminated' as const, submittedAt: 6000, result, terminationReason: 'Phone' });
+
+    const ended = await data.attempts.finalizeAttempt('org-a', attempt.id, finish, write);
+    expect(ended).toMatchObject({ finalized: true, attempt: { status: 'terminated', terminationReason: 'Phone' } });
+    // A finished attempt is not finished again, and its writer does not run.
+    expect(await data.attempts.finalizeAttempt('org-a', attempt.id, finish, write)).toMatchObject({ finalized: false });
+    expect((await audit.get()).docs.map((d) => d.data())).toEqual([{ before: 'in_progress', after: 'terminated' }]);
+
+    expect(await data.attempts.reinstateAttempt('org-b', attempt.id, write)).toBeNull();
+    const back = await data.attempts.reinstateAttempt('org-a', attempt.id, write);
+    expect(back).toEqual(record(attempt.id));
+    expect(await data.attempts.getAttempt('org-a', attempt.id)).toEqual(record(attempt.id));
+    expect(await data.attempts.reinstateAttempt('org-a', attempt.id, write)).toBe('ATTEMPT_NOT_TERMINATED');
+    expect((await audit.get()).size).toBe(2);
+  });
+
+  it('OPS-10 US-AD-13 ORG-03 a reset keeps the attempt, frees the index and lets the next start know it follows a reset', async () => {
+    const { attempt } = await start(undefined, false);
+    const ref = db.doc(`organizations/org-a/attempts/${attempt.id}`);
+    await ref.collection('answers').doc('q1').set({ optionId: 'a', seq: 1, clientTs: 1, serverTs: 2 });
+    const audit = db.collection('organizations/org-a/auditLogs');
+    const write = (_b: AttemptRecord, after: AttemptRecord, tx: FirebaseFirestore.Transaction) =>
+      tx.create(audit.doc(), { after: after.status });
+    const fields = { resetReason: 'Laptop crashed', resetAt: 7000, resetBy: 'admin-uid' };
+
+    expect(await data.attempts.resetAttempt('org-b', attempt.id, fields, write)).toBeNull();
+    const refuse = () => {
+      throw new Error('refused');
+    };
+    await expect(data.attempts.resetAttempt('org-a', attempt.id, fields, refuse)).rejects.toThrow('refused');
+    expect((await ref.get()).get('status')).toBe('in_progress');
+
+    expect(await data.attempts.resetAttempt('org-a', attempt.id, fields, write)).toEqual({
+      ...record(attempt.id),
+      ...fields,
+      status: 'reset',
+    });
+    expect(await data.attempts.getAttempt('org-a', attempt.id)).toEqual({
+      ...record(attempt.id),
+      ...fields,
+      status: 'reset',
+    });
+    expect(await data.attempts.getAnswers('org-a', attempt.id)).toEqual({
+      q1: { optionId: 'a', seq: 1, clientTs: 1, serverTs: 2 },
+    });
+    const index = db.doc('organizations/org-a/attemptIndex/t1_stu-1');
+    expect((await index.get()).data()).toEqual({
+      testId: 't1',
+      studentId: 'stu-1',
+      attemptCount: 1,
+      resetAttemptId: attempt.id,
+    });
+    expect(await data.attempts.resetAttempt('org-a', attempt.id, fields, write)).toBe('ATTEMPT_ALREADY_RESET');
+    expect((await audit.get()).size).toBe(1);
+
+    // Pairing and the next start are told the newest attempt was reset; the start clears the mark.
+    const seen: boolean[] = [];
+    await data.attempts.reserveAttempt('org-a', { testId: 't1', studentId: 'stu-1' }, (s) => seen.push(s.afterReset));
+    const again = await start((id, s) => {
+      seen.push(s.afterReset);
+      return record(id);
+    }, false);
+    expect(seen).toEqual([true, true]);
+    expect(again.created).toBe(true);
+    expect((await index.get()).data()).toEqual({
+      testId: 't1',
+      studentId: 'stu-1',
+      activeAttemptId: again.attempt.id,
+      attemptCount: 2,
+    });
   });
 
   it('Q-12 ORG-03 stores a question’s first serve time once, and not on a finished, missing or other-org attempt', async () => {

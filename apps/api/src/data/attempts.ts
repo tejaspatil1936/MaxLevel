@@ -54,8 +54,19 @@ export type FinishedFields = Required<Pick<AttemptRecord, 'status' | 'submittedA
 /** What saving one answer did: the shared verdict, or `ATTEMPT_FINISHED` when the attempt is no longer in progress. */
 export type SaveVerdict = AnswerVerdict | 'ATTEMPT_FINISHED';
 
+/** How a start stands: `afterReset` when the student's newest attempt of the test was reset (OPS-10, Q25). */
+export interface StartContext {
+  afterReset: boolean;
+}
+
 /** The new attempt for an ID, built inside the start transaction; it may throw to refuse the start. */
-export type AttemptBuilder = (attemptId: string) => AttemptRecord;
+export type AttemptBuilder = (attemptId: string, start: StartContext) => AttemptRecord;
+
+/** Writes the audit entry of an admin's change into its transaction (AUD-02); it may throw to refuse it. */
+export type AttemptChangeWriter = (before: AttemptRecord, after: AttemptRecord, tx: Transaction) => void;
+
+/** What a reset stores on the attempt (OPS-10): the reason, when, and the admin's uid. */
+export type ResetFields = Required<Pick<AttemptRecord, 'resetReason' | 'resetAt' | 'resetBy'>>;
 
 /** An attempt record as stored, with the defaults of fields older records may lack. */
 export const toAttempt = (d: DocumentSnapshot): AttemptRecord => {
@@ -92,7 +103,8 @@ export function attemptsData(db: Firestore) {
      * DATA-02, EX-04: one active attempt per student per test. In one transaction on the attempt index: an active
      * attempt that was not reset is returned as it is; otherwise `build` makes the attempt (with a reserved attempt
      * ID when phone pairing reserved one, PR-13), which is created with the index entry and, on the test's first
-     * start, the test's `attemptsStarted` flag (TST-06).
+     * start, the test's `attemptsStarted` flag (TST-06). `build` learns whether the newest attempt was reset (the
+     * index's `resetAttemptId`, or an active attempt that is `reset`), which widens the start window (Q25).
      */
     async startAttempt(
       orgId: string,
@@ -103,12 +115,14 @@ export function attemptsData(db: Firestore) {
       return db.runTransaction(async (tx) => {
         const index = await tx.get(ref);
         const activeId = index.get('activeAttemptId') as string | null | undefined;
+        let afterReset = !!index.get('resetAttemptId');
         if (activeId) {
           const active = await tx.get(attempts(orgId).doc(activeId));
           if (active.exists && active.get('status') !== 'reset') return { attempt: toAttempt(active), created: false };
+          if (active.exists) afterReset = true;
         }
         const reserved = index.get('reservedAttemptId') as string | undefined;
-        const attempt = build(reserved ?? attempts(orgId).doc().id);
+        const attempt = build(reserved ?? attempts(orgId).doc().id, { afterReset });
         const { id, ...fields } = attempt;
         tx.create(attempts(orgId).doc(id), fields);
         tx.set(
@@ -119,6 +133,7 @@ export function attemptsData(db: Firestore) {
             activeAttemptId: id,
             attemptCount: ((index.get('attemptCount') as number | undefined) ?? 0) + 1,
             reservedAttemptId: FieldValue.delete(),
+            resetAttemptId: FieldValue.delete(),
           },
           { merge: true },
         );
@@ -130,25 +145,27 @@ export function attemptsData(db: Firestore) {
 
     /**
      * PR-13: the attempt ID that phone pairing before Start uses, in one transaction on the attempt index. An active
-     * attempt that was not reset is returned with its status; otherwise `check` runs (it may throw to refuse, and then
-     * nothing is stored) and the reserved ID is returned, reserving a new one when there is none. A reservation is
+     * attempt that was not reset is returned with its status; otherwise `check` runs with whether the newest attempt
+     * was reset (it may throw to refuse, and then nothing is stored) and the reserved ID is returned, reserving a new one when there is none. A reservation is
      * only `reservedAttemptId` on the index entry: no attempt record and no `attemptsStarted` (TST-06).
      */
     async reserveAttempt(
       orgId: string,
       input: { testId: string; studentId: string },
-      check: () => void,
+      check: (start: StartContext) => void,
     ): Promise<{ attemptId: string; status?: AttemptStatus }> {
       const ref = indexRef(orgId, input.testId, input.studentId);
       return db.runTransaction(async (tx) => {
         const index = await tx.get(ref);
         const activeId = index.get('activeAttemptId') as string | null | undefined;
+        let afterReset = !!index.get('resetAttemptId');
         if (activeId) {
           const active = await tx.get(attempts(orgId).doc(activeId));
           const status = active.get('status') as AttemptStatus | undefined;
           if (active.exists && status !== 'reset') return { attemptId: activeId, status: status! };
+          if (active.exists) afterReset = true;
         }
-        check();
+        check({ afterReset });
         const reserved = index.get('reservedAttemptId') as string | undefined;
         if (reserved) return { attemptId: reserved };
         const attemptId = attempts(orgId).doc().id;
@@ -225,11 +242,13 @@ export function attemptsData(db: Firestore) {
      * (each drawn question's record by reference, so a concurrent answer save conflicts with it and is retried);
      * an attempt still in progress gets the fields `finish` builds from them (status, submittedAt, graded result),
      * while a finished one is returned as stored, so repeats and retries change nothing. Null when there is no attempt.
+     * `write` adds an admin's audit entry to the finishing transaction (OPS-04, AUD-02).
      */
     async finalizeAttempt(
       orgId: string,
       attemptId: string,
       finish: (attempt: AttemptRecord, answers: Record<string, AnswerRecord>) => FinishedFields,
+      write?: AttemptChangeWriter,
     ): Promise<{ attempt: AttemptRecord; finalized: boolean } | null> {
       const ref = attempts(orgId).doc(attemptId);
       return db.runTransaction(async (tx) => {
@@ -238,8 +257,67 @@ export function attemptsData(db: Firestore) {
         const attempt = toAttempt(snap);
         if (attempt.status !== 'in_progress') return { attempt, finalized: false };
         const fields = finish(attempt, await answersOf(tx, ref, attempt));
+        const after = { ...attempt, ...fields };
+        write?.(attempt, after, tx);
         tx.update(ref, fields);
-        return { attempt: { ...attempt, ...fields }, finalized: true };
+        return { attempt: after, finalized: true };
+      });
+    },
+
+    /**
+     * OPS-04: a `terminated` attempt goes back to `in_progress` with its answers, strikes and deadline, and without
+     * its `terminationReason`, `submittedAt` and `result`, in one transaction with the audit entry `write` adds.
+     * `ATTEMPT_NOT_TERMINATED` for any other status, null when there is none in the organization.
+     */
+    async reinstateAttempt(
+      orgId: string,
+      attemptId: string,
+      write: AttemptChangeWriter,
+    ): Promise<AttemptRecord | 'ATTEMPT_NOT_TERMINATED' | null> {
+      const ref = attempts(orgId).doc(attemptId);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return null;
+        const before = toAttempt(snap);
+        if (before.status !== 'terminated') return 'ATTEMPT_NOT_TERMINATED';
+        const { terminationReason: _r, submittedAt: _s, result: _g, ...kept } = before;
+        const after: AttemptRecord = { ...kept, status: 'in_progress' };
+        write(before, after, tx);
+        tx.update(ref, {
+          status: 'in_progress',
+          terminationReason: FieldValue.delete(),
+          submittedAt: FieldValue.delete(),
+          result: FieldValue.delete(),
+        });
+        return after;
+      });
+    },
+
+    /**
+     * OPS-10, US-AD-13: an attempt of any other status becomes `reset` and keeps every record it had (answers, events,
+     * draw, result), in one transaction with the audit entry `write` adds. The attempt index stops holding it as
+     * `activeAttemptId` and names it `resetAttemptId`, so the student can start again (Q25).
+     * `ATTEMPT_ALREADY_RESET` for a reset attempt, null when there is none in the organization.
+     */
+    async resetAttempt(
+      orgId: string,
+      attemptId: string,
+      fields: ResetFields,
+      write: AttemptChangeWriter,
+    ): Promise<AttemptRecord | 'ATTEMPT_ALREADY_RESET' | null> {
+      const ref = attempts(orgId).doc(attemptId);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return null;
+        const before = toAttempt(snap);
+        if (before.status === 'reset') return 'ATTEMPT_ALREADY_RESET';
+        const index = indexRef(orgId, before.testId, before.studentId);
+        const held = (await tx.get(index)).get('activeAttemptId') === attemptId;
+        const after: AttemptRecord = { ...before, ...fields, status: 'reset' };
+        write(before, after, tx);
+        tx.update(ref, { ...fields, status: 'reset' });
+        if (held) tx.update(index, { activeAttemptId: FieldValue.delete(), resetAttemptId: attemptId });
+        return after;
       });
     },
 
