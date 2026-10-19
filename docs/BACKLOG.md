@@ -136,4 +136,5 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 
 - Pre-warm sets min instances per test, not per slot; two tests in one slot each set their own floor, and the later one can lower the other's. The Cloud Run driver should take the max or the sum per slot.
 - Pre-warm holds until window.end, lowering the floor while students with extra time or accommodations are still writing; use the latest deadline.
+- DATA-05: `immediate` release with `resultDetail: full` in a fixed window shows a submitted student the answer key while others (or extended students) still answer; the spec defines immediate as on submit, so it was left as it is.
 - A11Y-18: the accessibility statement half is left to F-8.01 (A11Y-22); it must carry the real-time exception text.

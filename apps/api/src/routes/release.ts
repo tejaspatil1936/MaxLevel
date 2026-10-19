@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  answeringUntil,
   leaderboardRecomputeTask,
   manualReleaseRefusal,
   releaseResponseSchema,
@@ -22,6 +23,8 @@ const REFUSALS: Record<ReleaseRefusal, string> = {
   RESULTS_NOT_RELEASABLE: "This test's results are set to never be shared with students.",
   FULL_REVIEW_BEFORE_CLOSE:
     "A full review can't be released before the window closes, because students who haven't started would see the answers.",
+  FULL_REVIEW_WHILE_ANSWERING:
+    "A full review can't be released while a student is still answering, because they would see the answers. Try again after their deadline.",
 };
 
 /** The release input of a published test (RES-01): its settings snapshot and stored release fields. */
@@ -61,12 +64,20 @@ export function releaseRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       async (req) => {
         const orgId = req.orgId!;
         const now = clock.now();
+        // DATA-05, OPS-06: an attempt with extra time may still be answered after the window end.
+        const answering = answeringUntil(await data.attempts.listTestAttempts(orgId, req.params.id), now);
         // The check and the write share a transaction: a second concurrent call sees the release and changes nothing.
         const done = await data.tests.inTestTransaction(orgId, req.params.id, (found, tx) => {
           const test = published(found);
           const input = releaseInputOf(test);
-          const refusal = manualReleaseRefusal(input, now);
-          if (refusal) throw new AppError(409, refusal, REFUSALS[refusal]);
+          const refusal = manualReleaseRefusal(input, now, answering);
+          if (refusal)
+            throw new AppError(
+              409,
+              refusal,
+              REFUSALS[refusal],
+              answering === null ? {} : { answeringUntil: answering },
+            );
           // Already released and not withdrawn: nothing changes.
           if (resultReleaseState(input) === 'released') return { test, changed: false, at: input.resultsReleasedAt };
           data.tests.setRelease(orgId, tx, test.id, { resultsReleasedAt: now, resultsWithdrawn: false });
