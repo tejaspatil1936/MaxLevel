@@ -80,6 +80,7 @@ describe('security headers', () => {
         .slice(1);
     for (const host of ['https://*.firebaseio.com', 'https://*.firebasedatabase.app']) {
       expect(directive('script-src'), 'long-polling loads scripts').toContain(host);
+      expect(directive('frame-src'), 'long-polling sends through an iframe').toContain(host);
       expect(directive('connect-src')).toContain(host);
       expect(directive('connect-src')).toContain(host.replace('https:', 'wss:'));
     }
