@@ -39,7 +39,7 @@ export interface LockdownDeps {
   devtoolsPolicy: Settings['devtoolsPolicy'];
   /** The time (the server's clock), for how long the page was away. */
   now: () => number;
-  /** This tab's storage (sessionStorage), which keeps the time the page unloaded across a reload or a return. */
+  /** The browser's storage (localStorage), which keeps the time the page unloaded across a reload, a return or a new tab. */
   storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | null;
   /** The storage key of this attempt's unload time. */
   awayKey: string;

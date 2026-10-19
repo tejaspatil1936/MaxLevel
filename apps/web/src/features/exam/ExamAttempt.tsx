@@ -44,10 +44,10 @@ import { CLOCK_REFRESH_MS, timeLeftText, warningText } from './time-left';
 import { useProctorReporter } from './useProctorReporter';
 
 const backLink = 'inline-flex min-h-11 items-center font-bold text-ballpoint underline';
-/** This tab's sessionStorage, or null where the browser blocks it. */
-const tabStorage = () => {
+/** This browser's localStorage, shared by its tabs, or null where the browser blocks it. */
+const deviceStorage = () => {
   try {
-    return window.sessionStorage;
+    return window.localStorage;
   } catch {
     return null;
   }
@@ -325,7 +325,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   const { report } = proctor;
   const { fullscreenRequired, devtoolsPolicy } = payload.settings;
   // Outside fullscreen when it is required (opened, reloaded or come back to), the screen is blocked until the student
-  // goes back in (PR-04); the time the page unloaded is kept in this tab so a long absence counts (PR-05).
+  // goes back in (PR-04); the time the page unloaded is kept in this browser, so a long absence counts even when the
+  // exam is opened again in a new tab (PR-05).
   const [fullscreenNeeded, setFullscreenNeeded] = useState(false);
   useEffect(
     () =>
@@ -336,7 +337,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         fullscreenRequired,
         devtoolsPolicy,
         now: serverNow,
-        storage: tabStorage(),
+        storage: deviceStorage(),
         awayKey: `mitaoe.exam.away.${attemptId}`,
         onFullscreenNeeded: setFullscreenNeeded,
       }),
