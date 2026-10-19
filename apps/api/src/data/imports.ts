@@ -1,4 +1,11 @@
-import type { ImportDraft, ImportError, ImportFormat, ImportProgress, ImportStatus } from '@mitaoe/shared';
+import type {
+  ImportDraft,
+  ImportError,
+  ImportFormat,
+  ImportPartText,
+  ImportProgress,
+  ImportStatus,
+} from '@mitaoe/shared';
 import { FieldValue, type DocumentSnapshot, type Firestore, type Transaction } from 'firebase-admin/firestore';
 import { writer, type Tx } from './tx';
 
@@ -79,6 +86,13 @@ export function importsData(db: Firestore) {
     async listDrafts(orgId: string, jobId: string): Promise<StoredDraft[]> {
       const snap = await col(orgId).doc(jobId).collection('drafts').orderBy('order').get();
       return snap.docs.map((d) => ({ ...(d.data() as Omit<StoredDraft, 'id'>), id: d.id }));
+    },
+
+    /** The text the worker kept of a TXT, MD or sheet job's part (or template row), or null (IMP-11). */
+    async getPartText(orgId: string, jobId: string, part: number): Promise<ImportPartText | null> {
+      const d = await col(orgId).doc(jobId).collection('parts').doc(String(part)).get();
+      if (!d.exists) return null;
+      return { part, text: String(d.get('text') ?? ''), truncated: d.get('truncated') === true };
     },
 
     /** The job, read in a transaction so the writes it decides on commit only if it is unchanged. */

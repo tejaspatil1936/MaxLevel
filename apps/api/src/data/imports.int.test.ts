@@ -118,4 +118,16 @@ describe('import jobs data access', () => {
     expect(d2).toMatchObject({ prompt: 'Edited', order: 2 });
     expect(d2.explanation).toBeUndefined();
   });
+
+  it('IMP-11 ORG-03 reads the kept text of a part in its own organization only', async () => {
+    const parts = 'organizations/org-a/importJobs/j1/parts';
+    await db.doc(`${parts}/2`).set({ orgId: 'org-a', part: 2, text: 'Q: Largest planet?', truncated: false });
+    expect(await data.imports.getPartText('org-a', 'j1', 2)).toEqual({
+      part: 2,
+      text: 'Q: Largest planet?',
+      truncated: false,
+    });
+    expect(await data.imports.getPartText('org-a', 'j1', 3)).toBeNull();
+    expect(await data.imports.getPartText('org-b', 'j1', 2)).toBeNull();
+  });
 });
