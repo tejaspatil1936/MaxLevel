@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   answerBatchSchema,
+  attemptActionSchema,
   attemptEventReportSchema,
   attemptPayloadSchema,
   attemptResultSchema,
@@ -109,5 +110,11 @@ describe('attempt schemas', () => {
     expect(
       ['in_progress', 'submitted', 'auto_submitted', 'terminated', 'reset'].map((s) => isFinishedAttempt(s as never)),
     ).toEqual([false, true, true, true, false]);
+  });
+
+  it('OPS-04 OPS-10 terminate, reinstate and reset need a reason that is not blank, stored trimmed', () => {
+    expect(attemptActionSchema.parse({ reason: '  Laptop crashed ' })).toEqual({ reason: 'Laptop crashed' });
+    for (const body of [{}, { reason: '' }, { reason: '   ' }, { reason: 'x'.repeat(501) }, { reason: 5 }])
+      expect(attemptActionSchema.safeParse(body).success, JSON.stringify(body)).toBe(false);
   });
 });

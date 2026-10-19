@@ -60,6 +60,10 @@ export const attemptRecordSchema = z.object({
   submittedAt: ms.optional(),
   terminationReason: z.string().optional(),
   result: attemptResultSchema.optional(),
+  /** OPS-10: a `reset` attempt keeps every record it had and says why, when and by whom (the admin's uid). */
+  resetReason: z.string().optional(),
+  resetAt: ms.optional(),
+  resetBy: z.string().optional(),
   sync: z.object({ backlog: z.number().int().min(0), clockOffsetMs: z.number(), at: ms }).optional(),
 });
 export type AttemptRecord = z.infer<typeof attemptRecordSchema>;
@@ -90,6 +94,8 @@ export const studentAttemptSchema = z.object({
   strikesCount: z.number().int(),
   maxStrikes: z.number().int(),
   submittedAt: ms.optional(),
+  /** Why a `terminated` attempt ended: `max_strikes`, or the admin's reason (RES-06, OPS-04). */
+  terminationReason: z.string().optional(),
 });
 export type StudentAttempt = z.infer<typeof studentAttemptSchema>;
 
@@ -214,3 +220,10 @@ export const attemptEventSchema = z.object({
 export type AttemptEvent = z.infer<typeof attemptEventSchema>;
 export const attemptEventListSchema = z.object({ items: z.array(attemptEventSchema) });
 export type AttemptEventList = z.infer<typeof attemptEventListSchema>;
+
+/** POST /v1/attempts/{id}/terminate, …/reinstate and …/reset (OPS-04, OPS-10): a reason that is not blank. */
+export const attemptActionSchema = z.object({ reason: z.string().trim().min(1).max(500) });
+export type AttemptActionBody = z.infer<typeof attemptActionSchema>;
+/** The attempt's status after the action: `terminated`, `in_progress` or `reset`. */
+export const attemptActionResultSchema = z.object({ status: attemptStatusSchema });
+export type AttemptActionResult = z.infer<typeof attemptActionResultSchema>;
