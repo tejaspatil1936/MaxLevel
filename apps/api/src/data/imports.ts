@@ -1,5 +1,5 @@
 import type { ImportDraft, ImportError, ImportFormat, ImportProgress, ImportStatus } from '@mitaoe/shared';
-import type { DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
+import { FieldValue, type DocumentSnapshot, type Firestore, type Transaction } from 'firebase-admin/firestore';
 import { writer, type Tx } from './tx';
 
 /**
@@ -31,7 +31,10 @@ export interface ImportJobRecord {
   startedAt?: number;
 }
 
-export type StoredDraft = Omit<ImportDraft, 'id'> & { id: string };
+/** A stored draft; `refersToFigure` is the model's word that the question needs a figure (IMP-09). */
+export type StoredDraft = Omit<ImportDraft, 'id'> & { id: string; refersToFigure?: boolean };
+/** Draft fields to write; `null` removes a field. */
+export type DraftWrite = { [K in keyof Omit<StoredDraft, 'id'>]?: StoredDraft[K] | null };
 
 export function importsData(db: Firestore) {
   const col = (orgId: string) => db.collection(`organizations/${orgId}/importJobs`);
@@ -76,6 +79,38 @@ export function importsData(db: Firestore) {
     async listDrafts(orgId: string, jobId: string): Promise<StoredDraft[]> {
       const snap = await col(orgId).doc(jobId).collection('drafts').orderBy('order').get();
       return snap.docs.map((d) => ({ ...(d.data() as Omit<StoredDraft, 'id'>), id: d.id }));
+    },
+
+    /** The job, read in a transaction so the writes it decides on commit only if it is unchanged. */
+    async readImport(tx: Transaction, orgId: string, jobId: string): Promise<ImportJobRecord | null> {
+      const d = await tx.get(col(orgId).doc(jobId));
+      return d.exists ? read(d) : null;
+    },
+
+    /** The job's drafts in `order`, read in a transaction (edits, approval and discard recheck every pending one). */
+    async readDrafts(tx: Transaction, orgId: string, jobId: string): Promise<StoredDraft[]> {
+      const snap = await tx.get(col(orgId).doc(jobId).collection('drafts').orderBy('order'));
+      return snap.docs.map((d) => ({ ...(d.data() as Omit<StoredDraft, 'id'>), id: d.id }));
+    },
+
+    writeDraft(orgId: string, tx: Tx, jobId: string, draftId: string, fields: DraftWrite): void {
+      writer(tx).update(
+        col(orgId).doc(jobId).collection('drafts').doc(draftId),
+        Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v === null ? FieldValue.delete() : v])),
+      );
+    },
+
+    /**
+     * An admin's retry of a failed job (REL-06): back to `queued` with its error, wait and failure count cleared. The
+     * pages done, their drafts, the AI counter (`aiCounted`) and the usage so far are kept.
+     */
+    requeue(orgId: string, tx: Tx, jobId: string): void {
+      writer(tx).update(col(orgId).doc(jobId), {
+        status: 'queued',
+        error: FieldValue.delete(),
+        retryAt: FieldValue.delete(),
+        failures: 0,
+      });
     },
 
     /**

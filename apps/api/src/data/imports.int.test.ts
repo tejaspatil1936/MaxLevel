@@ -64,4 +64,58 @@ describe('import jobs data access', () => {
     expect(await data.imports.getImport('org-a', 'j2')).toMatchObject({ status: 'failed', error, startedAt: 5 });
     expect(await data.imports.leaveAwaitingUpload('org-b', 'j2', 5, { status: 'queued' })).toBeNull();
   });
+
+  it('REL-06 ORG-03 a retry requeues the job with its error, wait and failures cleared, keeping its progress', async () => {
+    const error = { code: 'LLM_UNAVAILABLE', message: 'x', retryable: true };
+    const ref = db.doc('organizations/org-a/importJobs/j1');
+    await ref.set({
+      ...job('j1', 1),
+      orgId: 'org-a',
+      status: 'failed',
+      error,
+      failures: 4,
+      aiCounted: true,
+      progress: { pagesDone: 2, pagesTotal: 3, questionsFound: 5 },
+    });
+    const seen = await db.runTransaction(async (tx) => {
+      const j = await data.imports.readImport(tx, 'org-a', 'j1');
+      expect(await data.imports.readImport(tx, 'org-b', 'j1')).toBeNull();
+      data.imports.requeue('org-a', tx, 'j1');
+      return j;
+    });
+    expect(seen).toMatchObject({ status: 'failed', error });
+    const after = (await ref.get()).data()!;
+    expect(after).toMatchObject({ status: 'queued', failures: 0, aiCounted: true, progress: { pagesDone: 2 } });
+    expect(after.error).toBeUndefined();
+  });
+
+  it('IMP-11 ORG-03 drafts are read in order in a transaction and written field by field, null removing one', async () => {
+    const drafts = db.collection('organizations/org-a/importJobs/j1/drafts');
+    const draft = (order: number) => ({
+      order,
+      sourcePage: 1,
+      prompt: `Q${order}`,
+      options: [],
+      correctOptionIds: [],
+      explanation: 'Because',
+      difficultySuggested: true,
+      images: [],
+      flags: [],
+      status: 'pending',
+    });
+    await drafts.doc('d0002').set(draft(2));
+    await drafts.doc('d0001').set(draft(1));
+    await db.runTransaction(async (tx) => {
+      const list = await data.imports.readDrafts(tx, 'org-a', 'j1');
+      expect(list.map((d) => [d.id, d.order])).toEqual([
+        ['d0001', 1],
+        ['d0002', 2],
+      ]);
+      expect(await data.imports.readDrafts(tx, 'org-b', 'j1')).toEqual([]);
+      data.imports.writeDraft('org-a', tx, 'j1', 'd0002', { prompt: 'Edited', explanation: null });
+    });
+    const d2 = (await drafts.doc('d0002').get()).data()!;
+    expect(d2).toMatchObject({ prompt: 'Edited', order: 2 });
+    expect(d2.explanation).toBeUndefined();
+  });
 });
