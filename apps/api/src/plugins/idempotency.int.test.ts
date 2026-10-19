@@ -96,4 +96,20 @@ describe('Idempotency-Key', () => {
     expect((await s.post('k9', { fail: true })).statusCode).toBe(409);
     expect((await s.post('k9')).json(), 'a refused request can be retried with its key').toMatchObject({ run: 4 });
   });
+
+  it('API-02 requests sent together with one key run the handler once; the others replay it or get 409', async () => {
+    const s = await server();
+    const all = await Promise.all([s.post('k1'), s.post('k1'), s.post('k1')]);
+    expect(s.runs(), 'the handler ran once').toBe(1);
+    const first = all.find((r) => r.statusCode === 201)!;
+    expect(first.json()).toMatchObject({ run: 1 });
+    for (const r of all) {
+      if (r.statusCode === 201) expect(r.body).toBe(first.body);
+      else {
+        expect(r.statusCode).toBe(409);
+        expect(r.json().error.code).toBe('IDEMPOTENCY_IN_PROGRESS');
+      }
+    }
+    expect((await s.post('k1')).body, 'once it finished, the key replays it').toBe(first.body);
+  });
 });
