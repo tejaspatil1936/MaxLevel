@@ -11,9 +11,10 @@ import { formatCount } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
 import { STATUS } from '../whitelist/WhitelistParts';
+import { AccommodationsSection } from './AccommodationsSection';
 import { EditForm, HistoryItem } from './StudentParts';
 
-/** STU-10: profile, attempts and change history in a drawer, so the list stays in view (UX-05). */
+/** STU-10: profile, accommodations (OPS-07), attempts and change history in a drawer, so the list stays in view (UX-05). */
 export function StudentDrawer({ studentId, onClose }: { studentId: string; onClose: () => void }) {
   const { orgId } = useWorkspace();
   const detail = useQuery({
@@ -127,6 +128,8 @@ function DrawerBody({ detail, onDeleted }: { detail: StudentDetail; onDeleted: (
         )}
         {patch.isError && !confirm ? <InlineMessage>{patch.error.message}</InlineMessage> : null}
       </section>
+
+      <AccommodationsSection detail={detail} />
 
       <section aria-labelledby="drawer-attempts">
         <h3 id="drawer-attempts" className="mb-3 text-heading-2 font-bold">
