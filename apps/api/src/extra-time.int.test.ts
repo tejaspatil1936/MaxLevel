@@ -41,11 +41,13 @@ const timing = async (id: string) => {
   const a = await stored(id);
   return { status: a.status as string, deadlineAt: a.deadlineAt as number };
 };
+const extraOf = (e: AuditEntry) => (e.after as { extraTimeSec: number }).extraTimeSec;
 const grants = async (id: string) =>
   (await db.collection(`${org}/auditLogs`).where('action', '==', 'attempt.extra_time.grant').get()).docs
     .map((d) => d.data() as AuditEntry)
     .filter((e) => e.target.id === id)
-    .sort((a, b) => a.createdAt - b.createdAt);
+    // The test clock is frozen, so grants are ordered by the extra time they reached.
+    .sort((a, b) => extraOf(a) - extraOf(b));
 const autoSubmits = async (id: string) =>
   (await ctx.queue.pending()).filter((k) => k.path === '/tasks/auto-submit' && k.name.includes(id));
 
