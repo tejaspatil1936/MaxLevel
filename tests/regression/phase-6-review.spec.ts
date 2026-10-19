@@ -41,7 +41,8 @@ test.describe('phase 6 review', () => {
       calls().filter((c) => c.endsWith('/approve')),
       'one approve was sent',
     ).toHaveLength(1);
-    await expect(page.getByRole('alert'), 'no error was shown').toHaveCount(0);
+    // Next.js keeps an empty route announcer with role alert; an error would say something.
+    await expect(page.getByRole('alert').filter({ hasText: /\S/ }), 'no error was shown').toHaveCount(0);
   });
 
   test('REL-06 Try again moves focus to the import status, so it is not lost with the button', async ({
