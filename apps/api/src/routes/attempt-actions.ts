@@ -112,7 +112,7 @@ export function attemptActionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
     /**
      * POST /v1/attempts/{id}/reinstate (OPS-04, spec 8.5): a terminated attempt continues with its answers, strikes and
      * deadline; the grade and termination are removed with the audit entry in one transaction. The auto-submit task
-     * for the deadline is queued again (idempotent by name, EX-16) and the live record shows it in progress. While it
+     * for the deadline is queued again (idempotent by name, EX-16; under a name of its own once that task's time passed) and the live record shows it in progress. While it
      * is in progress the student gets no answer key: the attempt payload never carries one and the result is
      * 409 ATTEMPT_IN_PROGRESS, even when a full review was released before (DATA-05).
      */
@@ -130,8 +130,14 @@ export function attemptActionRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
       if (!done) throw notFound('Attempt');
       if (done === 'ATTEMPT_NOT_TERMINATED')
         throw new AppError(409, 'ATTEMPT_NOT_TERMINATED', 'Only a terminated attempt can be reinstated.');
-      await queue.enqueue(autoSubmitTask(orgId, done.id, done.deadlineAt));
-      live.reinstated(orgId, done, clock.now());
+      // The task for the deadline has already run once its time passed, so a reinstate after that queues one of its
+      // own, which finalizes the attempt (EX-16, REL-04).
+      const now = clock.now();
+      const task = autoSubmitTask(orgId, done.id, done.deadlineAt);
+      await queue.enqueue(
+        now >= (task.scheduleTime ?? now) ? { ...task, name: `${task.name}-reinstated-${now}` } : task,
+      );
+      live.reinstated(orgId, done, now);
       return { status: done.status } satisfies AttemptActionResult;
     });
 

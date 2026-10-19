@@ -105,6 +105,17 @@ describe('terminate and reinstate', () => {
     expect((await act(id, 'terminate', admin, { reason: 'Phone again' })).status).toBe(200);
     expect((await act(id, 'reinstate', admin, { reason: 'False alarm again' })).status).toBe(200);
     expect(await autoSubmits(id)).toEqual([`auto-submit-${id}-${deadlineAt}`]);
+
+    // Reinstated after the task's time: a task of its own finalizes the attempt when it runs.
+    expect((await act(id, 'terminate', admin, { reason: 'Phone once more' })).status).toBe(200);
+    await db.doc(`_localTasks/auto-submit-${id}-${deadlineAt}`).update({ status: 'done' });
+    ctx.clock.set(deadlineAt + 3 * MIN);
+    expect((await act(id, 'reinstate', admin, { reason: 'Reviewed late' })).status).toBe(200);
+    expect(await autoSubmits(id)).toEqual([`auto-submit-${id}-${deadlineAt}-reinstated-${deadlineAt + 3 * MIN}`]);
+    const timing = await stored(id);
+    expect(
+      autoSubmitAction({ status: timing.status, deadlineAt: timing.deadlineAt }, deadlineAt, ctx.clock.now()),
+    ).toBe('finalize');
   });
 
   it('OPS-04 refused actions store nothing: no reason, the wrong status, a student, another org', async () => {
