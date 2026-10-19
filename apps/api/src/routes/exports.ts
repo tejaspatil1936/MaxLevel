@@ -6,6 +6,7 @@ import {
   exportInfoSchema,
   exportRequestSchema,
   exportTask,
+  QUEUED_STALE_MS,
   type ExportInfo,
 } from '@mitaoe/shared';
 import type { FastifyRequest } from 'fastify';
@@ -81,7 +82,10 @@ export function exportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           after: { format, exportId: id },
         });
         await batch.commit();
-        await queue.enqueue(exportTask(orgId, id));
+        // The export is stored: a failed enqueue is logged, and reading it a minute later queues it (REL-04).
+        await queue
+          .enqueue(exportTask(orgId, id))
+          .catch((err: unknown) => req.log.error({ err, exportId: id }, 'export.enqueue_failed'));
         return reply.status(202).send({ id, status: 'queued' as const });
       },
     );
@@ -93,6 +97,11 @@ export function exportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const orgId = req.orgId!;
         const rec = await data.exports.getExport(orgId, req.params.id);
         if (!rec) throw notFound('Export');
+        // REL-04: still queued a minute after it was made, its task was lost; the name dedupes an existing one.
+        if (rec.status === 'queued' && rec.createdAt < clock.now() - QUEUED_STALE_MS)
+          await queue
+            .enqueue(exportTask(orgId, rec.id))
+            .catch((err: unknown) => req.log.warn({ err, exportId: rec.id }, 'export.requeue_failed'));
         const info: ExportInfo = {
           id: rec.id,
           scope: rec.scope,
