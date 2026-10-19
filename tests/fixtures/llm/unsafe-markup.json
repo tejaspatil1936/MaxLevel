@@ -1,0 +1,14 @@
+{
+  "file": "reasoning-notes.txt",
+  "pages": {
+    "1": [
+      {
+        "prompt": "Which tag runs code? <script>window.__importXss = 'script'; alert('script')</script> <img src=x onerror=\"window.__importXss = 'img'; alert('img')\">",
+        "options": ["<b onmouseover=\"alert('option')\">bold</b>", "<em>none</em>", "script", "img"],
+        "correct": [2],
+        "explanation": "<iframe src=\"javascript:alert('explanation')\"></iframe> Only a script element runs code.",
+        "difficulty": "easy"
+      }
+    ]
+  }
+}

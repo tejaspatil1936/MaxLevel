@@ -1,7 +1,14 @@
 import { expect, type APIRequestContext } from '@playwright/test';
 import { API_URL, TEST_SECRET } from '../../env';
+import type { LlmScript } from './import-files';
 
 // The API's test-only routes (docs/TEST_ENV.md, "Test-only API"). Registered only when NODE_ENV=test.
+
+/** One model call the mock received: its page and the parts of its user message. */
+export interface LlmCall {
+  page: number;
+  parts: Array<{ type: 'text' } | { type: 'file'; mediaType: string }>;
+}
 
 export interface PendingTask {
   name: string;
@@ -45,6 +52,17 @@ export class TestApi {
     pending: async (): Promise<PendingTask[]> =>
       (await this.call<{ tasks: PendingTask[] }>('GET', '/__test/tasks')).tasks,
     runDue: async (): Promise<string[]> => (await this.call<{ ran: string[] }>('POST', '/__test/tasks/run-due')).ran,
+  };
+
+  /** Phase 6: the AI SDK mock model's script and call log (docs/testids/phase-6.md, "Test-only routes"). */
+  readonly llm = {
+    script: async (script: LlmScript): Promise<void> => {
+      await this.call('POST', '/__test/llm', script);
+    },
+    release: async (): Promise<void> => {
+      await this.call('POST', '/__test/llm/release', {});
+    },
+    calls: async (): Promise<LlmCall[]> => (await this.call<{ calls: LlmCall[] }>('GET', '/__test/llm/calls')).calls,
   };
 
   /** Phase 1 scenario: org C with one admin and nothing else (docs/testids/phase-1.md, "Test-only scenarios"). */
