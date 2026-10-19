@@ -38,6 +38,7 @@ export * from './history';
 export * from './csv';
 export * from './exports';
 export * from './export-tables';
+export * from './report-metrics';
 export * from './live';
 export * from './live-rows';
 export * from './live-filters';
