@@ -69,6 +69,27 @@ const withTest = async (db: Firestore) => {
   return { params: { id: await testIn(db, 'org-a', 'test-org-a') } };
 };
 
+/** An import job awaiting its upload, with a fixed ID in each org's sample test. */
+const withImportJob = async (db: Firestore) => {
+  for (const orgId of ['org-a', 'org-b']) {
+    const testId = await testIn(db, orgId, `test-${orgId}`);
+    await db.doc(`organizations/${orgId}/importJobs/import-${orgId}`).set({
+      orgId,
+      testId,
+      filename: 'questions.json',
+      format: 'json',
+      contentType: 'application/json',
+      sizeBytes: 10,
+      filePath: `organizations/${orgId}/imports/import-${orgId}/source.json`,
+      status: 'awaiting_upload',
+      progress: { pagesDone: 0, pagesTotal: 0, questionsFound: 0 },
+      createdBy: 'seed',
+      createdAt: 0,
+    });
+  }
+  return { params: { id: 'import-org-a' } };
+};
+
 /** The sample test in each org, published with a manual release, its results released when `released`. */
 const withPublishedTest = async (db: Firestore, released = false) => {
   const resolved = {
@@ -325,6 +346,26 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
         });
       return { params: { id: 'export-org-a' } };
     },
+  },
+  'POST /v1/imports': {
+    fresh: async (db) => {
+      const { params } = await withTest(db);
+      return {
+        body: { testId: params.id, filename: 'questions.json', contentType: 'application/json', sizeBytes: 10 },
+      };
+    },
+  },
+  'GET /v1/imports': { query: { testId: 'test-org-a' }, fresh: withTest },
+  'GET /v1/imports/:id': {
+    params: { id: 'import-org-a' },
+    foreignParams: { id: 'import-org-b' },
+    fresh: withImportJob,
+  },
+  'POST /v1/imports/:id/start': {
+    params: { id: 'import-org-a' },
+    foreignParams: { id: 'import-org-b' },
+    body: {},
+    fresh: withImportJob,
   },
   'GET /v1/tests/:id/questions': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
   'GET /v1/tests/:id/preview': { foreignParams: { id: 'test-org-b' }, fresh: withTest },
