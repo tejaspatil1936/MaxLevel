@@ -37,7 +37,7 @@ export interface ReportRecord {
   tokens?: { input: number; output: number };
 }
 
-/** What a run may write on the report it holds; `null` removes a field. */
+/** What a run may write on the report it holds; `null` removes a field, except `summary`, stored as null. */
 export type ReportUpdate = Partial<{
   status: ReportStatus;
   metrics: ReportMetrics;
@@ -115,7 +115,7 @@ export function reportData(db: Firestore) {
   const reportRef = (orgId: string, reportId: string) => org(orgId).collection('reports').doc(reportId);
 
   const fields = (u: ReportUpdate) =>
-    Object.fromEntries(Object.entries(u).map(([k, v]) => [k, v === null ? FieldValue.delete() : v]));
+    Object.fromEntries(Object.entries(u).map(([k, v]) => [k, v === null && k !== 'summary' ? FieldValue.delete() : v]));
 
   /** Registered students the rules admit (SER-04 to SER-06), with their departments. */
   async function students(orgId: string) {

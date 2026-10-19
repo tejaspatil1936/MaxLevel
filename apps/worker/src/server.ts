@@ -7,6 +7,8 @@ import { importData } from './import-data';
 import { initFileStore, initFirestore } from './firebase';
 import { initRtdb, liveMirror } from './live';
 import { selectLlm } from './llm/select';
+import { reportData } from './report-data';
+import { chromiumPrinter } from './report-pdf';
 import { localTaskQueue } from './tasks/local-queue';
 
 const config = loadConfig();
@@ -23,6 +25,11 @@ const app = await buildWorker({
   queue: localTaskQueue(db, clock),
   exports: { data: exportData(db), files },
   imports: { data: importData(db), files },
+  reports: {
+    data: reportData(db),
+    files,
+    printer: chromiumPrinter(config.chromiumPath ? { executablePath: config.chromiumPath } : {}),
+  },
   live: liveMirror(initRtdb()),
   ...(llm ? { llm } : {}),
 });

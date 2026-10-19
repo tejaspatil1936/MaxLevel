@@ -19,6 +19,8 @@ const envSchema = z.object({
   // LLM_PROVIDER=vertex: Gemini on Vertex AI with the worker's attached service account (DECISIONS Q30).
   GOOGLE_VERTEX_PROJECT: z.string().optional(),
   GOOGLE_VERTEX_LOCATION: z.string().default('asia-south1'),
+  // The Chromium that prints report PDFs (EXP-06); unset, playwright-core's own install (PLAYWRIGHT_BROWSERS_PATH).
+  CHROMIUM_PATH: z.string().optional(),
 });
 
 export type WorkerConfig = {
@@ -35,6 +37,7 @@ export type WorkerConfig = {
   llmPriceOutput?: number;
   vertexProject?: string;
   vertexLocation: string;
+  chromiumPath?: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
@@ -53,5 +56,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
     ...(e.LLM_PRICE_OUTPUT_USD_PER_MTOK === undefined ? {} : { llmPriceOutput: e.LLM_PRICE_OUTPUT_USD_PER_MTOK }),
     ...(e.GOOGLE_VERTEX_PROJECT ? { vertexProject: e.GOOGLE_VERTEX_PROJECT } : {}),
     vertexLocation: e.GOOGLE_VERTEX_LOCATION,
+    ...(e.CHROMIUM_PATH ? { chromiumPath: e.CHROMIUM_PATH } : {}),
   };
 }
