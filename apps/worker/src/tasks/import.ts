@@ -51,7 +51,17 @@ type ImportTokens = { input: number; output: number };
 /** A pino or Fastify logger. */
 export interface ImportLog {
   info(obj: object, msg: string): void;
+  error?(obj: object, msg: string): void;
 }
+
+/** A task that keeps failing on an unexpected error fails its job on this delivery, so the queue stops (REL-06). */
+export const IMPORT_MAX_DELIVERIES = 5;
+
+/** A gRPC INVALID_ARGUMENT from Firestore (a document past 1 MiB, say): the same write fails on every delivery. */
+const isInvalidArgument = (err: unknown) => {
+  const code = (err as { code?: unknown } | null)?.code;
+  return code === 3 || code === 'invalid-argument';
+};
 
 /** One page (PDF) or part (TXT, MD, a sheet outside the template) the model reads. */
 type ModelPart = { text: string; shown: string } | { file: () => Promise<Uint8Array> };
@@ -291,7 +301,26 @@ export function importHandler(deps: {
     return `ready: ${drafts.length} drafts`;
   }
 
-  return async ({ orgId, jobId, page }: ImportRun): Promise<string> => {
+  /**
+   * The safety net for an error no step expected (IMP-02, REL-06): a write Firestore refuses as invalid fails the job
+   * at once (INVALID_FILE, not retryable), and any other error fails it on the task's IMPORT_MAX_DELIVERIES-th
+   * delivery (INTERNAL, retryable by an admin); before that the error is thrown, so the queue delivers the task again.
+   * Null when the job is left to the queue's next delivery.
+   */
+  async function failOnError(orgId: string, jobId: string, runId: string, err: unknown, deliveries: number) {
+    const error = isInvalidArgument(err)
+      ? refused('INVALID_FILE', IMPORT_MESSAGES.unstorable).error
+      : deliveries >= IMPORT_MAX_DELIVERIES
+        ? refused('INTERNAL', IMPORT_MESSAGES.internal, true).error
+        : null;
+    if (!error) return null;
+    log?.error?.({ event: 'import.job.error', orgId, jobId, deliveries, code: error.code, err }, 'import.job.error');
+    await data.update(orgId, jobId, runId, { status: 'failed', error });
+    return `failed: ${error.code}`;
+  }
+
+  /** `retryCount` is the queue's count of earlier deliveries of this task (X-CloudTasks-TaskRetryCount). */
+  return async ({ orgId, jobId, page }: ImportRun, delivery: { retryCount?: number } = {}): Promise<string> => {
     const runId = randomUUID();
     const claim = await data.claim(orgId, jobId, {
       runId,
@@ -309,6 +338,11 @@ export function importHandler(deps: {
       return await run(orgId, claim.job, runId);
     } catch (err) {
       if (err instanceof ImportLeaseLost) return 'superseded';
+      const failed = await failOnError(orgId, jobId, runId, err, (delivery.retryCount ?? 0) + 1).catch((e: unknown) => {
+        if (e instanceof ImportLeaseLost) return 'superseded';
+        throw e;
+      });
+      if (failed) return failed;
       await data.release(orgId, jobId, runId);
       throw err;
     }

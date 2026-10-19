@@ -141,7 +141,8 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
         tasks
           .withTypeProvider<ZodTypeProvider>()
           .post('/import', { schema: { body: importPayloadSchema } }, async (req) => {
-            const outcome = await run(req.body);
+            const retryCount = Number(req.headers['x-cloudtasks-taskretrycount'] ?? 0);
+            const outcome = await run(req.body, { retryCount: Number.isFinite(retryCount) ? retryCount : 0 });
             req.log.info({ task: 'import', jobId: req.body.jobId, outcome }, 'task done');
             return { ok: true, outcome };
           });
