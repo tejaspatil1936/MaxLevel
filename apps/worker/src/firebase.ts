@@ -11,9 +11,11 @@ export function initFirestore(env: NodeJS.ProcessEnv = process.env): Firestore {
   return getFirestore(getApps()[0] ?? initializeApp({ projectId }));
 }
 
-/** Where export files go: Firebase Storage in every environment (the emulator in tests). */
+/** Where export files go and import sources are read from: Firebase Storage in every environment (the emulator in tests). */
 export interface FileStore {
   save(path: string, body: Buffer, contentType: string): Promise<void>;
+  /** The stored object's bytes, or null when there is none (import sources, IMP-01). */
+  read(path: string): Promise<Buffer | null>;
 }
 
 /**
@@ -27,6 +29,10 @@ export function initFileStore(env: NodeJS.ProcessEnv = process.env): FileStore {
   return {
     async save(path, body, contentType) {
       await bucket.file(path).save(body, { contentType, resumable: false });
+    },
+    async read(path) {
+      const [exists] = await bucket.file(path).exists();
+      return exists ? (await bucket.file(path).download())[0] : null;
     },
   };
 }
