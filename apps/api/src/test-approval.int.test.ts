@@ -88,7 +88,8 @@ describe('approval and publishing', () => {
 
     const published = await call(app, 'POST', `/v1/tests/${id}/publish`);
     expect([published.statusCode, published.json()]).toEqual([200, { status: 'scheduled' }]);
-    expect(await queue.pending(), 'the release task at the window end').toEqual([
+    expect(await queue.pending(), 'the pre-warm and the release task at the window end').toEqual([
+      { name: `prewarm-${orgA}-${id}-${START}`, path: '/tasks/prewarm', scheduleTime: START - 30 * 60_000 },
       { name: `release-results-${orgA}-${id}-${END}`, path: '/tasks/release-results', scheduleTime: END },
     ]);
     const status = async () => ((await call(app, 'GET', `/v1/tests/${id}`)).json() as { status: string }).status;
@@ -185,5 +186,37 @@ describe('approval and publishing', () => {
       createdAt: 1_800_000_060_000,
     });
     expect((await call(app, 'GET', `/v1/tests/${id}`)).json().effective).toEqual(expected);
+  });
+
+  it('PERF-06 EX-16 publishing queues the pre-warm 30 minutes before the slot, or now, and a moved date gets its own', async () => {
+    const { app, clock, queue } = await testApp();
+    const prewarms = async () => (await queue.pending()).filter((k) => k.path === '/tasks/prewarm');
+    clock.set(START - 40 * 60_000);
+    const id = await testWith(app, 2);
+    expect((await call(app, 'POST', `/v1/tests/${id}/approve`, {})).statusCode).toBe(200);
+    expect((await call(app, 'POST', `/v1/tests/${id}/publish`, {})).statusCode).toBe(200);
+    const first = { name: `prewarm-${orgA}-${id}-${START}`, path: '/tasks/prewarm', scheduleTime: START - 30 * 60_000 };
+    expect(await prewarms()).toEqual([first]);
+
+    // A new date sends the test back to review; publishing it again queues the new slot's pre-warm (the old task
+    // stays queued and skips when it runs, apps/worker/src/tasks/prewarm.ts).
+    clock.set(START - 10 * 60_000);
+    expect((await call(app, 'PATCH', `/v1/tests/${id}`, { scheduledDate: '2026-11-03' })).statusCode).toBe(200);
+    expect((await testDoc(id).get()).get('status')).toBe('in_review');
+    expect((await call(app, 'POST', `/v1/tests/${id}/approve`, {})).statusCode).toBe(200);
+    expect((await call(app, 'POST', `/v1/tests/${id}/publish`, {})).statusCode).toBe(200);
+    const next = START + 86_400_000;
+    expect(await prewarms()).toEqual([
+      first,
+      { name: `prewarm-${orgA}-${id}-${next}`, path: '/tasks/prewarm', scheduleTime: next - 30 * 60_000 },
+    ]);
+
+    // Published less than 30 minutes before its slot: the pre-warm runs now.
+    const late = await testWith(app, 2);
+    expect((await call(app, 'POST', `/v1/tests/${late}/approve`, {})).statusCode).toBe(200);
+    expect((await call(app, 'POST', `/v1/tests/${late}/publish`, {})).statusCode).toBe(200);
+    expect((await prewarms()).find((k) => k.name === `prewarm-${orgA}-${late}-${START}`)?.scheduleTime).toBe(
+      START - 10 * 60_000,
+    );
   });
 });
