@@ -19,6 +19,7 @@ import { DraftActions } from './DraftActions';
 import { DraftArticle, DraftBody } from './DraftArticle';
 import { DraftEditForm } from './DraftEditForm';
 import { isRunning, JobFailed, JobProgress } from './JobProgress';
+import { SourcePage } from './SourcePage';
 import { DRAFT_GROUPS, displayOrder, draftGroup, statusWordKey, summaryCounts } from './review-order';
 import { importJobPath, useDraftReview } from './useDraftReview';
 
@@ -125,50 +126,53 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
         />
       ) : null}
       {drafts.length ? (
-        <div className="flex min-w-0 flex-col gap-8">
-          {DRAFT_GROUPS.map((g) => {
-            const inGroup = displayOrder(drafts).filter((d) => draftGroup(d) === g);
-            if (!inGroup.length) return null;
-            return (
-              <section key={g} aria-labelledby={`import-group-${g}`} className="flex flex-col gap-4">
-                <h2 id={`import-group-${g}`} className="text-heading-2 font-bold">
-                  {t(`imports.group.${g}`)}
-                </h2>
-                {inGroup.map((d) => (
-                  <DraftArticle
-                    key={d.id}
-                    draft={d}
-                    current={d.id === review.current}
-                    onSelect={() => review.select(d.id)}
-                  >
-                    {review.editing === d.id ? (
-                      <DraftEditForm
-                        jobId={job.id}
-                        draft={d}
-                        imageUrls={job.imageUrls ?? {}}
-                        onSaved={review.saved}
-                        onCancel={review.cancelEdit}
-                      />
-                    ) : (
-                      <>
-                        <DraftBody job={job} draft={d} imageUrls={job.imageUrls ?? {}} />
-                        {d.status === 'approved' && d.questionId && positions.has(d.questionId) ? (
-                          <p>{t('imports.addedAs', { m: formatCount(positions.get(d.questionId)!) })}</p>
-                        ) : null}
-                        <DraftActions
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="flex min-w-0 flex-col gap-8">
+            {DRAFT_GROUPS.map((g) => {
+              const inGroup = displayOrder(drafts).filter((d) => draftGroup(d) === g);
+              if (!inGroup.length) return null;
+              return (
+                <section key={g} aria-labelledby={`import-group-${g}`} className="flex flex-col gap-4">
+                  <h2 id={`import-group-${g}`} className="text-heading-2 font-bold">
+                    {t(`imports.group.${g}`)}
+                  </h2>
+                  {inGroup.map((d) => (
+                    <DraftArticle
+                      key={d.id}
+                      draft={d}
+                      current={d.id === review.current}
+                      onSelect={() => review.select(d.id)}
+                    >
+                      {review.editing === d.id ? (
+                        <DraftEditForm
+                          jobId={job.id}
                           draft={d}
-                          readOnly={readOnly}
-                          onApprove={() => review.approveOne(d)}
-                          onEdit={() => review.startEdit(d)}
-                          onDiscard={() => review.discardOne(d)}
+                          imageUrls={job.imageUrls ?? {}}
+                          onSaved={review.saved}
+                          onCancel={review.cancelEdit}
                         />
-                      </>
-                    )}
-                  </DraftArticle>
-                ))}
-              </section>
-            );
-          })}
+                      ) : (
+                        <>
+                          <DraftBody job={job} draft={d} imageUrls={job.imageUrls ?? {}} />
+                          {d.status === 'approved' && d.questionId && positions.has(d.questionId) ? (
+                            <p>{t('imports.addedAs', { m: formatCount(positions.get(d.questionId)!) })}</p>
+                          ) : null}
+                          <DraftActions
+                            draft={d}
+                            readOnly={readOnly}
+                            onApprove={() => review.approveOne(d)}
+                            onEdit={() => review.startEdit(d)}
+                            onDiscard={() => review.discardOne(d)}
+                          />
+                        </>
+                      )}
+                    </DraftArticle>
+                  ))}
+                </section>
+              );
+            })}
+          </div>
+          <SourcePage job={job} draft={drafts.find((d) => d.id === review.current)} />
         </div>
       ) : null}
       {importing ? <FileImportDialog testId={test.id} onClose={() => setImporting(false)} /> : null}

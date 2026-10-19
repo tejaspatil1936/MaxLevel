@@ -76,4 +76,8 @@ export const imports = {
   'imports.fixBeforeApproving': 'Fix the reasons before approving this question.',
   'imports.discardedOne': 'Question {n} discarded',
   'imports.saved': 'Question {n} saved',
+  'imports.sourcePage': 'Source page',
+  'imports.pageOf': 'Page {page} of {filename}',
+  'imports.sourceNotShown': 'A page image is kept for PDF files only. The question shows as it was read.',
+  'imports.sourceFailed': "Couldn't load this page. Check your connection, then try again.",
 } as const;
