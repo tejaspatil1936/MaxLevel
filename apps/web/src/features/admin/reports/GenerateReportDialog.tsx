@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  seriesPublished,
   testBoardTitle,
   type Page,
   type ReportRequest,
@@ -21,9 +22,9 @@ type Errors = { field?: string; alert?: string };
 
 /**
  * The Generate report dialog (US-AD-15, EXP-07): a published test (`<heading>, <series>`, newest date first) or a
- * series (by title), the optional XLSX and what one report costs. Refusals keep it open: nothing chosen and
- * NO_FINISHED_ATTEMPTS on the select (which takes focus), LIMIT_REACHED as an alert. One request at a time, each with
- * its own Idempotency-Key (API-02).
+ * published (not draft) series (by title), the optional XLSX and what one report costs. Refusals keep it open:
+ * nothing chosen and NO_FINISHED_ATTEMPTS on the select (which takes focus), LIMIT_REACHED as an alert. One request at
+ * a time, each with its own Idempotency-Key (API-02).
  */
 export function GenerateReportDialog({
   limit,
@@ -54,7 +55,9 @@ export function GenerateReportDialog({
     value: x.testId,
     label: t('reports.testOption', { heading: testBoardTitle(x.title, x.dayLabel), series: x.seriesTitle }),
   }));
-  const seriesOptions = [...(series.data?.items ?? [])]
+  // Only the series the API accepts: a draft one would be refused with "Series not found.".
+  const seriesOptions = (series.data?.items ?? [])
+    .filter(seriesPublished)
     .sort((a, b) => a.title.localeCompare(b.title, 'en') || a.id.localeCompare(b.id))
     .map((s) => ({ value: s.id, label: s.title }));
 
