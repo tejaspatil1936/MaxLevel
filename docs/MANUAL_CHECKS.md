@@ -52,3 +52,4 @@ run by a person.
 | Real 30-page PDF import | Provider key and a real PDF (OWNER_SETUP 6.1, 6.2) | IMP-03 | Owner runs in staging |
 | Pilot exam with one college | Production (OWNER_SETUP 8.2) | phase 8 | Owner |
 | A real tab switch or window minimize during an attempt records a strike | A desktop browser on a laptop (Playwright keeps every tab visible; acceptance tests send blur and visibilitychange instead) | PR-05 | Owner runs once per release in staging |
+| Screenshot baselines for the exam, result and editor screens look right | A person reviews the committed baseline images (tests/acceptance/phase-5/*-snapshots) | UI-15 | Owner reviews once after phase 5 |
