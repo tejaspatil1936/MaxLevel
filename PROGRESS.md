@@ -125,3 +125,7 @@ F-5.05 built — pre-warm task queued at publish (one API instance per 100 eligi
 Checkpoints: mid-phase review found no blocking issue; release-gate review found a same-tab absence with no strike (pagehide) and a load script that could not pass; QA found extra time lost while offline, no strike when the exam is reopened in a new tab, the full answer key released at the window end while extended students were still answering, and offline answers lost on terminate; full runs exposed a question timer racing the clock offset (F-3.09). Each fixed after a regression test; four minor QA items fixed too; the rest in docs/BACKLOG.md.
 VERIFY full FAIL b39c216757d463cfe87163f23fa9932c7d83707a (docs/verification/phase-5.md): acceptance-lock fails on the F-5.05 screenshot baselines (docs/blocked/phase-5-F-5.05.md) and the only failing test is the locked F-4.03.spec.ts:171 assertion; every phase 5 feature's tests pass.
 PHASE 5 DONE 5/5 features
+
+## Phase 6
+
+PHASE 6 START d4701a8485b5e795e838472481d52066571112af
