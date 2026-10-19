@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { SHORTCUTS } from '../fixtures/exam';
-import { alertDialog, button, dialog } from './ui';
+import { alertDialog, button, dialog, exactly } from './ui';
 
 // The exam screen: preview mode, /exam/?preview=<testId> (docs/testids/phase-2.md, "Exam screen in preview"), and
 // attempt mode, /exam/?attempt=<attemptId> (docs/testids/phase-3.md, "Exam screen in attempt mode").
@@ -147,6 +147,16 @@ export class ExamScreen {
     if (title) await expect(this.banner.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible();
     await expect(this.questionHeading).toBeVisible();
     await expect(this.timer).toBeVisible();
+  }
+
+  /** A `status` on the exam screen whose whole text is this notice (phase 5: `Your time was extended by 10 minutes.`). */
+  notice(text: string): Locator {
+    return this.page.getByRole('status').filter({ hasText: exactly(text) });
+  }
+
+  /** The `Dismiss` button of the extra-time notice (docs/testids/phase-5.md, "Exam screen"). */
+  get dismissNotice(): Locator {
+    return button(this.page, 'Dismiss');
   }
 
   /** The strike tally text, for example `Strikes 1 of 3`. */
