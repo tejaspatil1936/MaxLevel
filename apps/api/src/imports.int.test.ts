@@ -313,7 +313,9 @@ describe('import upload and job API', () => {
   it('IMP-02 SEC-06 a forged upload link is refused before its body is read', async () => {
     const a = await create('questions.json');
     const u = new URL(a.body.uploadUrl as string);
-    const forged = `${u.pathname}${u.search.replace(/sig=[0-9a-f]/, 'sig=0')}`;
+    // Flip the first signature digit, so the link always changes (one starting with 0 stayed valid before).
+    const search = u.search.replace(/sig=([0-9a-f])/, (_, c: string) => (c === '0' ? 'sig=1' : 'sig=0'));
+    const forged = `${u.pathname}${search}`;
     const put = (payload: Buffer | Readable, headers: Record<string, string> = {}) =>
       ctx.app.inject({
         method: 'PUT',
