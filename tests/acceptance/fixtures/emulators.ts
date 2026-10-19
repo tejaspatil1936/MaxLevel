@@ -149,6 +149,28 @@ export class Emulators {
     }
   }
 
+  /**
+   * Firestore's last-write time (RFC 3339) of every record of the collection `parent/collectionId`, by record ID.
+   * A record nothing wrote keeps its time, so comparing two reads shows which records were written in between.
+   */
+  async updateTimes(parent: string, collectionId: string): Promise<Record<string, string>> {
+    const out: Record<string, string> = {};
+    let pageToken = '';
+    for (;;) {
+      const base = parent ? `${DOCS}/${parent}/${collectionId}` : `${DOCS}/${collectionId}`;
+      const url = `${base}?pageSize=500${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+      const res = await this.request.get(url, { headers: OWNER });
+      expect(res.status(), await res.text()).toBe(200);
+      const body = (await res.json()) as {
+        documents?: Array<{ name: string; updateTime: string }>;
+        nextPageToken?: string;
+      };
+      for (const d of body.documents ?? []) out[d.name.split('/').pop()!] = d.updateTime;
+      if (!body.nextPageToken) return out;
+      pageToken = body.nextPageToken;
+    }
+  }
+
   /** Number of records in the collection `parent/collectionId`. */
   async count(parent: string, collectionId: string): Promise<number> {
     return (await this.list(parent, collectionId)).length;

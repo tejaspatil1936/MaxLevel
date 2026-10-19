@@ -24,6 +24,8 @@ export class AccessibilityPanel {
   readonly increasedSpacing: Locator;
   readonly readingRuler: Locator;
   readonly close: Locator;
+  /** Phase 8 (A11Y-22): the link to the public accessibility statement, outside the exam screens. */
+  readonly statementLink: Locator;
 
   constructor(readonly page: Page) {
     this.dialog = dialog(page, 'Accessibility settings');
@@ -35,6 +37,7 @@ export class AccessibilityPanel {
     this.increasedSpacing = d.getByRole('switch', { name: 'Increased spacing', exact: true });
     this.readingRuler = d.getByRole('switch', { name: 'Reading ruler', exact: true });
     this.close = d.getByRole('button', { name: 'Close', exact: true });
+    this.statementLink = d.getByRole('link', { name: 'Accessibility statement', exact: true });
   }
 
   /** Opens the panel from the top bar's `Accessibility settings` button. */

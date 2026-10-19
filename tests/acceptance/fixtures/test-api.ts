@@ -108,6 +108,15 @@ export class TestApi {
     return this.seedScenario<{ studentIds: string[] }>('more-students', { orgId, count });
   }
 
+  /**
+   * Phase 8 scenario: removes the `accommodations` field from these student records, the shape before phase 5
+   * (docs/testids/phase-8.md, "Test-only scenario").
+   */
+  async seedPreMigrationStudents(orgId: string, studentIds: string[]): Promise<string[]> {
+    return (await this.seedScenario<{ studentIds: string[] }>('pre-migration-students', { orgId, studentIds }))
+      .studentIds;
+  }
+
   /** Phase 4 scenario: finished, graded attempts of a test written directly (no task queued, no board computed). */
   async seedGradedAttempts(orgId: string, testId: string, attempts: GradedAttemptSeed[]): Promise<string[]> {
     return (await this.seedScenario<{ attemptIds: string[] }>('graded-attempts', { orgId, testId, attempts }))

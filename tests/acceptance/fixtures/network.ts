@@ -88,3 +88,16 @@ export async function waitForStyledDocument(page: Page): Promise<void> {
       Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).every((l) => l.sheet !== null),
   );
 }
+
+/**
+ * Makes the API unreachable for this page: every request to it fails at the network level (as when the API is down).
+ * Nothing is answered in the API's place. Returns how many requests were cut off so far.
+ */
+export async function cutOffApi(page: Page): Promise<() => number> {
+  let cut = 0;
+  await page.route(`${API_URL}/**`, async (route) => {
+    cut++;
+    await route.abort('connectionrefused');
+  });
+  return () => cut;
+}

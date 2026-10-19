@@ -15,6 +15,8 @@ export class SignInPage {
   readonly heading: Locator;
   readonly googleButton: Locator;
   readonly unlistedAlert: Locator;
+  /** Phase 8 (A11Y-22): the link to the public accessibility statement. */
+  readonly statementLink: Locator;
   /** Everything the page shows, for checks that no technical error text leaks (US-ST-01). */
   readonly everything: Locator;
 
@@ -23,6 +25,7 @@ export class SignInPage {
     this.heading = this.main.getByRole('heading', { level: 1, name: 'Sign in', exact: true });
     this.googleButton = page.getByRole('button', { name: 'Sign in with Google', exact: true });
     this.unlistedAlert = page.getByRole('alert').filter({ hasText: UNLISTED_MESSAGE });
+    this.statementLink = page.getByRole('link', { name: 'Accessibility statement', exact: true });
     this.everything = page.locator('body');
   }
 
