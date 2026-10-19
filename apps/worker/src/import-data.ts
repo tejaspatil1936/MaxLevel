@@ -6,6 +6,7 @@ import {
   type Entitlements,
   type ImportError,
   type ImportFormat,
+  type ImportPartText,
   type ImportProgress,
   type ImportStatus,
 } from '@mitaoe/shared';
@@ -197,10 +198,22 @@ export function importData(db: Firestore) {
     },
 
     /**
-     * Saves a page's drafts, then the job's progress with the last of them, in transactions within Firestore's
-     * limits (writeChunks), each only while the run holds the job.
+     * Saves the text of the page's parts for the review screen (`parts/{part}`, IMP-11), then its drafts, then the
+     * job's progress with the last of them, in transactions within Firestore's limits (writeChunks), each only while
+     * the run holds the job.
      */
-    async saveDrafts(orgId: string, jobId: string, runId: string, drafts: DraftInput[], u: ImportUpdate) {
+    async saveDrafts(
+      orgId: string,
+      jobId: string,
+      runId: string,
+      drafts: DraftInput[],
+      u: ImportUpdate,
+      parts: ImportPartText[] = [],
+    ) {
+      for (const chunk of parts.length ? writeChunks(parts) : [])
+        await held(orgId, jobId, runId, (tx, ref) => {
+          for (const p of chunk) tx.set(ref.collection('parts').doc(String(p.part)), { ...p, orgId });
+        });
       const docs = drafts.map(({ figure: _figure, ...d }) => ({ ...d, flags: [], status: 'pending' as const }));
       const chunks = writeChunks(docs);
       for (const [i, chunk] of chunks.entries())

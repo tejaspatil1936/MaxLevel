@@ -15,7 +15,10 @@ import {
   LlmAnswerSchema,
   monthKey,
   parseQuestionJson,
+  importPartText,
   sheetParts,
+  sheetPartTexts,
+  sheetRowText,
   sheetRowCount,
   signatureMatches,
   templateRowsToDrafts,
@@ -23,6 +26,7 @@ import {
   type Clock,
   type DraftInput,
   type ImportError,
+  type ImportPartText,
   type TaskQueue,
 } from '@mitaoe/shared';
 import { randomUUID } from 'node:crypto';
@@ -49,9 +53,13 @@ export interface ImportLog {
 }
 
 /** One page (PDF) or part (TXT, MD, a sheet outside the template) the model reads. */
-type ModelPart = { text: string } | { file: () => Promise<Uint8Array> };
-/** What reading the file gave: drafts read directly, parts for the model, or a refusal. */
-type Read = { drafts: DraftInput[] } | { parts: ModelPart[]; sheet: boolean } | { error: ImportError };
+type ModelPart = { text: string; shown: string } | { file: () => Promise<Uint8Array> };
+/**
+ * What reading the file gave: drafts read directly (with the text of each template row), parts for the model (a text
+ * part also with the text the review screen shows, IMP-11), or a refusal.
+ */
+type Read =
+  { drafts: DraftInput[]; shown: ImportPartText[] } | { parts: ModelPart[]; sheet: boolean } | { error: ImportError };
 
 const refused = (code: string, message: string, retryable = false): { error: ImportError } => ({
   error: { code, message, retryable },
@@ -72,7 +80,7 @@ async function readSource(job: ImportJob, bytes: Buffer): Promise<Read> {
         parsed = null;
       }
       if (!parsed || 'error' in parsed) return refused('INVALID_FILE', IMPORT_MESSAGES.invalidJson);
-      return { drafts: jsonQuestionsToDrafts(parsed.questions) };
+      return { drafts: jsonQuestionsToDrafts(parsed.questions), shown: [] };
     }
     case 'pdf': {
       const pdf = await readPdf(bytes);
@@ -94,12 +102,17 @@ async function readSource(job: ImportJob, bytes: Buffer): Promise<Read> {
       const count = sheetRowCount(rows);
       if (count > IMPORT_MAX_SHEET_ROWS) return refused('TOO_MANY_ROWS', IMPORT_MESSAGES.tooManyRows(count));
       const template = templateRowsToDrafts(rows);
-      if (!('error' in template)) return { drafts: template };
-      return { parts: sheetParts(rows).map((text) => ({ text })), sheet: true };
+      if (!('error' in template)) {
+        const header = rows[0] ?? [];
+        const shown = template.map((d) => importPartText(d.sourcePage, sheetRowText(header, rows[d.sourcePage - 1]!)));
+        return { drafts: template, shown };
+      }
+      const shown = sheetPartTexts(rows);
+      return { parts: sheetParts(rows).map((text, i) => ({ text, shown: shown[i]! })), sheet: true };
     }
     case 'txt':
     case 'md':
-      return { parts: textParts(utf8Text(bytes), job.format).map((text) => ({ text })), sheet: false };
+      return { parts: textParts(utf8Text(bytes), job.format).map((text) => ({ text, shown: text })), sheet: false };
   }
 }
 
@@ -148,7 +161,7 @@ export function importHandler(deps: {
     let modelUsage: { provider: string; model: string; tokens: ImportTokens; costEstimate: number } | undefined;
     if ('drafts' in read) {
       progress = { pagesDone: 1, pagesTotal: 1, questionsFound: read.drafts.length };
-      await data.saveDrafts(orgId, jobId, runId, read.drafts, { progress, leaseUntil: lease() });
+      await data.saveDrafts(orgId, jobId, runId, read.drafts, { progress, leaseUntil: lease() }, read.shown);
     } else {
       const ent = await data.entitlements(orgId);
       if (!ent) return fail(refused('ORG_NOT_FOUND', IMPORT_MESSAGES.orgMissing));
@@ -233,12 +246,14 @@ export function importHandler(deps: {
         progress = { ...progress, pagesDone: page, questionsFound: progress.questionsFound + drafts.length };
         const last = page === total;
         // A page before the last lets the job go, so the next page's task can claim it at once.
-        await data.saveDrafts(orgId, jobId, runId, drafts, {
-          progress,
-          failures: 0,
-          ...usage(),
-          leaseUntil: last ? lease() : null,
-        });
+        await data.saveDrafts(
+          orgId,
+          jobId,
+          runId,
+          drafts,
+          { progress, failures: 0, ...usage(), leaseUntil: last ? lease() : null },
+          'shown' in part ? [importPartText(page, part.shown)] : [],
+        );
         if (!last) {
           await queue.enqueue(importPageTask(orgId, jobId, page + 1));
           return `page ${page} of ${total} done`;

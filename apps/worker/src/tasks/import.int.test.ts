@@ -291,4 +291,40 @@ describe('import task', () => {
       expect(stored.data().count).toBe(5000);
     },
   );
+
+  it('IMP-11 ORG-03 the text of each TXT, MD and sheet part is kept with the job for the review screen', async () => {
+    const parts = async (id: string) =>
+      (await org.collection(`importJobs/${id}/parts`).get()).docs.map((d) => [d.id, d.data()]);
+    llm.setScript({ pages: { '1': REASONING } });
+    const notes = await runImport('notes.md', 'md', Buffer.from('# Reasoning\n\n1. Find the next number\n'));
+    expect(await parts(notes.id)).toEqual([
+      ['1', { orgId: 'org-a', part: 1, text: '# Reasoning\n\n1. Find the next number\n', truncated: false }],
+    ]);
+    const free = await runImport(
+      'free.csv',
+      'csv',
+      csv([
+        ['Q', 'Answer'],
+        ['Largest planet?', 'Jupiter'],
+      ]),
+    );
+    expect(await parts(free.id)).toEqual([
+      ['1', { orgId: 'org-a', part: 1, text: 'Q: Largest planet?\nAnswer: Jupiter', truncated: false }],
+    ]);
+    const template = await runImport('t.csv', 'csv', csv([HEADER, [], ['What is 2 + 2?', '4', '5', 'A']]));
+    expect(template.drafts.map((d) => d.sourcePage)).toEqual([3]);
+    expect(await parts(template.id)).toEqual([
+      [
+        '3',
+        {
+          orgId: 'org-a',
+          part: 3,
+          text: 'Question: What is 2 + 2?\nOption A: 4\nOption B: 5\nCorrect: A',
+          truncated: false,
+        },
+      ],
+    ]);
+    for (const r of [await runImport('q.json', 'json', JSON_FILE), await runImport('p.pdf', 'pdf', await pdf(1))])
+      expect(await parts(r.id)).toEqual([]);
+  });
 });
