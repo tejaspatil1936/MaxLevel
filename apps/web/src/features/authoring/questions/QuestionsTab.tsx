@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { useWorkspace } from '@/lib/workspace';
+import { ImportsList } from '../imports/ImportsList';
 import { FileImportDialog } from './FileImportDialog';
 import { JsonImportDialog } from './JsonImportDialog';
 import { QuestionEditor } from './QuestionEditor';
@@ -70,6 +71,7 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
         </Button>
         {items.length ? add : null}
       </div>
+      <ImportsList testId={test.id} />
       {reorder.isError ? (
         <InlineMessage>{t('questions.reorderFailed', { reason: reorder.error.message })}</InlineMessage>
       ) : null}
