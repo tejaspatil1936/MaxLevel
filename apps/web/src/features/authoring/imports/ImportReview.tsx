@@ -26,15 +26,23 @@ import { SourcePage } from './SourcePage';
 import { DRAFT_GROUPS, displayOrder, draftGroup, statusWordKey, summaryCounts } from './review-order';
 import { importJobPath, useDraftReview } from './useDraftReview';
 
-/** The job view, polled every 2 seconds while the worker reads the file (IMP-04: no reload needed). */
+/** A refusal that asking again cannot change (4xx but 408 and 429), such as an ID not valid (400) or not found (404). */
+const refused = (e: unknown) =>
+  e instanceof ApiError && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429;
+
+/**
+ * The job view, polled every 2 seconds while the worker reads the file (IMP-04: no reload needed). A refusal stops the
+ * polling: it is neither retried nor asked again.
+ */
 export function useImportJob(id: string) {
   const { orgId } = useWorkspace();
   return useQuery({
     queryKey: qk.orgItem(orgId, 'imports', id),
     queryFn: () => api<ImportJobView>(importJobPath(id)),
     enabled: !!id,
-    retry: (n, e) => !(e instanceof ApiError && e.status === 404) && n < 2,
-    refetchInterval: (q) => (q.state.data && !isRunning(q.state.data.status) ? false : 2000),
+    retry: (n, e) => !refused(e) && n < 2,
+    refetchInterval: (q) =>
+      refused(q.state.error) || (q.state.data && !isRunning(q.state.data.status)) ? false : 2000,
   });
 }
 
@@ -49,7 +57,9 @@ export function ImportReview() {
     queryFn: () => api<TestDetail>(`/v1/tests/${encodeURIComponent(testId)}`),
     enabled: !!testId,
   });
-  if (!id || (job.error instanceof ApiError && job.error.status === 404)) return <SeriesNotFound kind="import" />;
+  // An ID the API refuses (400: not an ID at all) is not found either.
+  if (!id || (job.error instanceof ApiError && [400, 404].includes(job.error.status)))
+    return <SeriesNotFound kind="import" />;
   if (job.isError || test.isError) return <InlineMessage>{t('common.loadFailed')}</InlineMessage>;
   // The heading shows with the job, its test and the test's questions, never before them.
   if (!job.data || !test.data)
