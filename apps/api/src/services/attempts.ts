@@ -141,6 +141,7 @@ export function attemptService(deps: AttemptDeps) {
         strikesCount: attempt.strikesCount,
         maxStrikes: settings.maxStrikes,
         ...(attempt.submittedAt !== undefined ? { submittedAt: attempt.submittedAt } : {}),
+        ...(attempt.terminationReason ? { terminationReason: attempt.terminationReason } : {}),
       },
       settings,
       answers: Object.fromEntries(
