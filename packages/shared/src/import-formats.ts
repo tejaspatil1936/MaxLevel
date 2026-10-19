@@ -109,4 +109,5 @@ export const IMPORT_MESSAGES = {
     `This month's AI import limit (${count(max)}) is used up. JSON files and template sheets can still be imported.`,
   aiOff: "AI import isn't included in your organization's plan. Use the template columns or a JSON file.",
   uploadMissing: 'Upload the file before starting the import.',
+  invalidJson: "This JSON file isn't in a question format we can read. Check the file and try again.",
 } as const;
