@@ -130,6 +130,29 @@ describe('Release results and Withdraw results', () => {
     expect((await fields(t.testId)).resultsWithdrawn).toBe(false);
   });
 
+  it('RES-01 RES-05 AUD-02 two concurrent releases or withdrawals change the test once, with one audit entry', async () => {
+    const t = await api.examTest({ overrides: { resultRelease: 'manual' } });
+    const headers = await admin();
+    const released = await Promise.all([post(t.testId, 'release', headers), post(t.testId, 'release', headers)]);
+    expect(released, 'the second answers as already released').toEqual([
+      { status: 200, body: { resultsReleasedAt: NOW } },
+      { status: 200, body: { resultsReleasedAt: NOW } },
+    ]);
+    expect(await audit('test.results.release')).toHaveLength(1);
+    expect(await recomputes(t.testId)).toHaveLength(1);
+
+    const withdrawn = await Promise.all([
+      post(t.testId, 'withdraw-results', headers),
+      post(t.testId, 'withdraw-results', headers),
+    ]);
+    expect(withdrawn.map((r) => [r.status, code(r) ?? null]).sort()).toEqual([
+      [200, null],
+      [409, 'RESULTS_NOT_RELEASED'],
+    ]);
+    expect(await audit('test.results.withdraw')).toHaveLength(1);
+    expect(await recomputes(t.testId)).toHaveLength(2);
+  });
+
   it('ORG-05 ORG-14 an unpublished test and another org are 404; a super admin acts as the actor', async () => {
     const draft = await api.examTest({ publish: false });
     expect((await post(draft.testId, 'release')).status).toBe(404);
