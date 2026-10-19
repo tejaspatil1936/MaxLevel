@@ -12,6 +12,7 @@ import { phone } from './en/phone';
 import { platform } from './en/platform';
 import { questions } from './en/questions';
 import { result } from './en/result';
+import { reports } from './en/reports';
 import { results } from './en/results';
 import { sections } from './en/sections';
 import { student } from './en/student';
@@ -135,6 +136,7 @@ export const en = {
   ...examEntry,
   ...phone,
   ...results,
+  ...reports,
   ...result,
   ...history,
   ...leaderboards,
