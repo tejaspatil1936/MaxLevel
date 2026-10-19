@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { AiSdkLlm } from './ai-sdk';
 import { ScriptedLlm } from './scripted';
-import { selectLlm } from './select';
+import { selectLlm, VERTEX_DEFAULT_MODEL } from './select';
 
 describe('selectLlm', () => {
   it('IMP-07 LLM_PROVIDER=mock gives the scripted model with LLM_MODEL or its default, never in production', () => {
@@ -22,5 +23,30 @@ describe('selectLlm', () => {
       inputPerMTok: 1,
       outputPerMTok: 0,
     });
+  });
+
+  it('IMP-07 LLM_PROVIDER=vertex gives the AI SDK adapter for Gemini on Vertex AI, building it without any call', () => {
+    const vertex = selectLlm({
+      env: 'production',
+      llmProvider: 'vertex',
+      vertexProject: 'p1',
+      vertexLocation: 'asia-south1',
+    });
+    expect(vertex).toBeInstanceOf(AiSdkLlm);
+    expect([vertex?.provider, vertex?.model]).toEqual(['vertex', VERTEX_DEFAULT_MODEL]);
+    expect(vertex?.prices).toEqual({ inputPerMTok: 0.3, outputPerMTok: 2.5 });
+    const other = selectLlm({
+      env: 'production',
+      llmProvider: 'vertex',
+      vertexProject: 'p1',
+      llmModel: 'gemini-x',
+      llmPriceInput: 2,
+    });
+    expect([other?.model, other?.prices.inputPerMTok]).toEqual(['gemini-x', 2]);
+  });
+
+  it('IMP-07 a provider without its settings, or an unknown provider, is a start-up error', () => {
+    expect(() => selectLlm({ env: 'production', llmProvider: 'vertex' })).toThrow(/GOOGLE_VERTEX_PROJECT/);
+    expect(() => selectLlm({ env: 'production', llmProvider: 'openai' })).toThrow(/not a known provider/);
   });
 });

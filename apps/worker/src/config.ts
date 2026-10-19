@@ -16,6 +16,9 @@ const envSchema = z.object({
   // USD per million tokens for the job's cost estimate (IMP-07); each driver has defaults (the mock: 1 and 4).
   LLM_PRICE_INPUT_USD_PER_MTOK: z.coerce.number().nonnegative().optional(),
   LLM_PRICE_OUTPUT_USD_PER_MTOK: z.coerce.number().nonnegative().optional(),
+  // LLM_PROVIDER=vertex: Gemini on Vertex AI with the worker's attached service account (DECISIONS Q30).
+  GOOGLE_VERTEX_PROJECT: z.string().optional(),
+  GOOGLE_VERTEX_LOCATION: z.string().default('asia-south1'),
 });
 
 export type WorkerConfig = {
@@ -30,6 +33,8 @@ export type WorkerConfig = {
   llmModel?: string;
   llmPriceInput?: number;
   llmPriceOutput?: number;
+  vertexProject?: string;
+  vertexLocation: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
@@ -46,5 +51,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
     ...(e.LLM_MODEL ? { llmModel: e.LLM_MODEL } : {}),
     ...(e.LLM_PRICE_INPUT_USD_PER_MTOK === undefined ? {} : { llmPriceInput: e.LLM_PRICE_INPUT_USD_PER_MTOK }),
     ...(e.LLM_PRICE_OUTPUT_USD_PER_MTOK === undefined ? {} : { llmPriceOutput: e.LLM_PRICE_OUTPUT_USD_PER_MTOK }),
+    ...(e.GOOGLE_VERTEX_PROJECT ? { vertexProject: e.GOOGLE_VERTEX_PROJECT } : {}),
+    vertexLocation: e.GOOGLE_VERTEX_LOCATION,
   };
 }
