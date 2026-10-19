@@ -15,4 +15,14 @@ export const imports = {
   'imports.aiOff': "PDF, TXT and MD imports use AI, which is not included in your organization's plan.",
   'imports.uploadFailed': "Couldn't upload the file. Check your connection, then try again.",
   'imports.failed': "Couldn't start the import. {reason}",
+  // The Imports list on the Questions tab and the status words (docs/testids/phase-6.md, "Questions tab additions").
+  'imports.list': 'Imports',
+  'imports.startedAt': 'Started {when}',
+  'imports.status.awaiting_upload': 'Waiting for upload',
+  'imports.status.queued': 'Queued',
+  'imports.status.running': 'Processing',
+  'imports.status.retrying': 'Waiting to retry',
+  'imports.status.ready': 'Ready for review',
+  'imports.status.reviewed': 'Reviewed',
+  'imports.status.failed': 'Failed',
 } as const;
