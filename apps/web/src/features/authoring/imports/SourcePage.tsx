@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
+import { signedBlobUrl } from '@/lib/files';
 import { formatCount } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useWorkspace } from '@/lib/workspace';
@@ -23,9 +24,7 @@ function usePageImage(jobId: string, page: number, enabled: boolean) {
     queryFn: async () => {
       const link = await api<ImportPageLink>(`${importJobPath(jobId)}/pages/${page}`);
       if (link.contentType !== 'image/png') return null;
-      const res = await fetch(link.url);
-      if (!res.ok) throw new Error(t('imports.sourceFailed'));
-      return URL.createObjectURL(await res.blob());
+      return signedBlobUrl(link.url);
     },
     enabled,
     staleTime: Infinity,
