@@ -155,3 +155,6 @@ PHASE 8 START e0f86fd83360d1ad2bb686c56b951a0a5fc18713
 Tests: 9 phase 8 acceptance tests by test-author (A11Y-22 e2e; CI-04 and REL-04 exercised end to end; the rest owner checks in docs/MANUAL_CHECKS.md), reviewed (no blocking gaps), locked.
 F-8.01 done — public /accessibility/ statement (WCAG 2.2 AA, known gaps, real-time exam exception, configurable contact), linked from sign-in and the accessibility panel outside exams and from the runbook
 F-8.02 done — versioned migrations with a ledger and run lease, /tasks/migrate (in order across orgs, idempotent, UNKNOWN_MIGRATION, MIGRATION_RUNNING, retried on failure), 0001 accommodations backfill; deploy freeze, rollback and the post-deploy migrate step documented as owner operations
+Checkpoints: release-gate review and QA found no blocking issue; minor findings in docs/BACKLOG.md (the statement link on the exam preflight and rules pages, the placeholder contact, a 2 px overflow at 150% text, ledger counts, OWNER_SETUP audience and index notes).
+VERIFY full FAIL 016886c2c2d8c17f7aaa03b97d71c0b5998dcac5 (docs/verification/phase-8.md): acceptance-lock fails on the F-5.05 screenshot baselines and the only failing test is the locked F-4.03.spec.ts:171 assertion; every phase 8 feature's tests pass.
+PHASE 8 DONE 2/2 features

@@ -138,3 +138,12 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - Pre-warm holds until window.end, lowering the floor while students with extra time or accommodations are still writing; use the latest deadline.
 - DATA-05: `immediate` release with `resultDetail: full` in a fixed window shows a submitted student the answer key while others (or extended students) still answer; the spec defines immediate as on submit, so it was left as it is.
 - The worker image needs a Chromium and CHROMIUM_PATH for report PDFs (F-7.02); there is no Dockerfile yet (OWNER_SETUP deploy step).
+
+## Phase 8 (release-gate review, minor)
+
+- The statement link still shows in the settings dialog on /exam/preflight/, /exam/rules/ and /exam/submitted/; pass inExam there or clarify the contract.
+- The statement contact falls back to accessibility@mitaoe.example when NEXT_PUBLIC_ACCESSIBILITY_EMAIL is unset; consider failing production builds without it.
+- A migration re-run after a partial failure records only that run's writes in `changed`, so the ledger undercounts.
+- OWNER_SETUP 8.5 should say the Cloud Tasks OIDC audience must equal the worker's TASKS_AUDIENCE.
+- The REL-01 freeze check's collection-group query on tests probably needs a collection-group index on status.
+- At text size 150% and 320 px the statement's h1 word "Accessibility" overflows by 2 px (sideways scroll); let the heading wrap or hyphenate.
