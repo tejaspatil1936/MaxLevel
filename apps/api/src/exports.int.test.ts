@@ -170,4 +170,22 @@ describe('export downloads', () => {
       expect([res.statusCode, res.json().error.code]).toEqual([403, 'LINK_INVALID']);
     expect((await download(`/v1/exports/${id}/file`)).statusCode).toBe(400);
   });
+
+  it('REL-04 EXP-03 an export whose task could not be queued is queued again once it has waited a minute', async () => {
+    const t = await api.examTest();
+    const enqueue = ctx.queue.enqueue;
+    ctx.queue.enqueue = () => Promise.reject(new Error('the queue is down'));
+    const first = await post({ scope: 'test', refId: t.testId, format: 'xlsx' });
+    ctx.queue.enqueue = enqueue;
+    expect(first.status, 'stored with its audit entry, so accepted').toBe(202);
+    const id = first.body.id as string;
+    const queued = async () => (await ctx.queue.pending()).filter((x) => x.path === '/tasks/export').map((x) => x.name);
+    expect(await queued()).toEqual([]);
+    ctx.clock.advance(MIN);
+    await get(id);
+    expect(await queued(), 'not before a minute has passed').toEqual([]);
+    ctx.clock.advance(1);
+    expect((await get(id)).body.status).toBe('queued');
+    expect(await queued()).toEqual([`export-${SEED.orgA}-${id}`]);
+  });
 });
