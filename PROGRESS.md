@@ -112,3 +112,7 @@ F-4.06 done — test and series exports as CSV or XLSX built by the worker expor
 Checkpoints: mid-phase review found 1 blocking issue (series boards over Firestore's 1 MiB document limit) plus a production-only export link key; release-gate review found the XLSX sheet names Excel refuses; QA found admin results pages blank and looping requests with leaderboards off; full runs exposed the admin heading appearing before the leaderboard table, a reload aborting the profile-lock PATCH, a client-wide keepalive slowing exam requests and a slow ORG-01 walk. Each fixed after a regression test; double release and double export clicks fixed too; minor findings in docs/BACKLOG.md.
 VERIFY full FAIL acad3561604567d775d7fcef249c255d6226fa3b (docs/verification/phase-4.md): the only failing test is the locked F-4.03.spec.ts:171 assertion (TEST_CHANGE_REQUESTS.md); F-4.03 and F-3.03 (shared DATA-05) are listed in docs/blocked/.
 PHASE 4 DONE 5/6 features
+
+## Phase 5
+
+PHASE 5 START 0f6ce3ea0677262200e00e6e345b50fdf9335dbb
