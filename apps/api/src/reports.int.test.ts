@@ -219,6 +219,32 @@ describe('reports API', () => {
     expect((await get('/v1/reports/no-such-report')).status).toBe(404);
   });
 
+  it('EXP-07 FF-04 FF-02 the usage counts this month in the organization timezone against the effective limit', async () => {
+    const t = await api.examTest();
+    await finished(t.testId);
+    expect((await get('/v1/reports/usage')).body).toEqual({ month: MONTH, used: 0, limit: 20 });
+    await db.doc(org).update({ 'limitOverrides.ai_reports_per_month': 3 });
+    await fresh();
+    expect((await post({ scope: 'test', refId: t.testId })).status).toBe(202);
+    expect((await get('/v1/reports/usage')).body).toEqual({ month: MONTH, used: 1, limit: 3 });
+
+    // 30 Nov 23:59 IST is still November; 1 Dec 00:00 IST starts December from 0.
+    ctx.clock.set(Date.UTC(2026, 10, 30, 18, 29));
+    expect((await get('/v1/reports/usage')).body).toMatchObject({ month: MONTH, used: 1 });
+    ctx.clock.set(Date.UTC(2026, 10, 30, 18, 30));
+    expect((await get('/v1/reports/usage')).body).toEqual({ month: '2026-12', used: 0, limit: 3 });
+
+    const student = await asClaims(auth, 'student01@a.test', {
+      role: 'student',
+      orgId: SEED.orgA,
+      studentId: 'stu-org-a-01',
+    });
+    expect((await get('/v1/reports/usage', student)).status).toBe(403);
+    await fresh({ analytics_reports: false });
+    const off = await get('/v1/reports/usage');
+    expect([off.status, code(off)]).toEqual([403, 'FEATURE_DISABLED']);
+  });
+
   it('EXP-06 ORG-14 lists every report newest first in pages; a super admin with X-Org-Id makes and sees them', async () => {
     const t = await api.examTest();
     await finished(t.testId);

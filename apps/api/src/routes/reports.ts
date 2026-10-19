@@ -11,6 +11,7 @@ import {
   reportListItemSchema,
   reportRequestSchema,
   reportTask,
+  reportUsageSchema,
   reportViewSchema,
   testBoardTitle,
   type ReportListItem,
@@ -173,6 +174,20 @@ export function reportRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const { cursor, limit } = req.query;
         const page = pageItems(await data.reports.listReports(req.orgId!), cursor, limit);
         return { items: page.items.map((r) => listItem(req, r)), nextCursor: page.nextCursor };
+      },
+    );
+
+    // EXP-07, FF-04: the month's count against the effective limit, in the organization's timezone on the Clock.
+    app.get(
+      '/v1/reports/usage',
+      { config: reporting, schema: { response: { 200: reportUsageSchema } } },
+      async (req) => {
+        const orgId = req.orgId!;
+        const e = await entitlements.get(orgId);
+        if (!e) throw notFound('Organization');
+        const month = monthKey(clock.now(), e.timezone);
+        const { aiReports } = await data.usage.getUsage(orgId, month);
+        return { month, used: aiReports, limit: e.limits.ai_reports_per_month };
       },
     );
 

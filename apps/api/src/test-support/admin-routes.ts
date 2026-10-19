@@ -498,6 +498,7 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
     },
   },
   'GET /v1/reports': {},
+  'GET /v1/reports/usage': {},
   'GET /v1/reports/:id': {
     params: { id: 'report-org-a' },
     foreignParams: { id: 'report-org-b' },
