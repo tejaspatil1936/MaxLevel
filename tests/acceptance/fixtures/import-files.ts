@@ -37,6 +37,19 @@ export interface LlmScript {
   usage?: { inputTokens: number; outputTokens: number };
   failures?: Record<string, number>;
   hold?: number[];
+  /** Phase 7: what the model answers to report summaries (docs/testids/phase-7.md, "Test-only routes"). */
+  report?: {
+    /** In call order; the last repeats once the list is used up. */
+    answers: ReportSummaryAnswer[];
+    /** The next n report calls fail with a provider error (HTTP 503). */
+    failures?: number;
+  };
+}
+
+/** The model's answer to a report summary call (docs/testids/phase-7.md, "Summary and the number check"). */
+export interface ReportSummaryAnswer {
+  summary: string;
+  recommendations: string[];
 }
 
 export interface LlmFixture {

@@ -10,6 +10,13 @@ export interface LlmCall {
   parts: Array<{ type: 'text' } | { type: 'file'; mediaType: string }>;
 }
 
+/** One report summary call the mock received (docs/testids/phase-7.md, "Test-only routes"). */
+export interface ReportLlmCall {
+  system: string;
+  /** The user message text: exactly the report's metrics as JSON. */
+  prompt: string;
+}
+
 export interface PendingTask {
   name: string;
   path: string;
@@ -63,6 +70,9 @@ export class TestApi {
       await this.call('POST', '/__test/llm/release', {});
     },
     calls: async (): Promise<LlmCall[]> => (await this.call<{ calls: LlmCall[] }>('GET', '/__test/llm/calls')).calls,
+    /** Phase 7: every report summary call since the script was set, with its system and user messages. */
+    reportCalls: async (): Promise<ReportLlmCall[]> =>
+      (await this.call<{ calls: ReportLlmCall[] }>('GET', '/__test/llm/report-calls')).calls,
   };
 
   /** Phase 1 scenario: org C with one admin and nothing else (docs/testids/phase-1.md, "Test-only scenarios"). */
