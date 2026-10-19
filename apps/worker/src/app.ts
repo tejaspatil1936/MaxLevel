@@ -6,11 +6,13 @@ import type { LlmDriver } from './llm/driver';
 import type { WorkerData } from './data';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 import type { ExportData } from './export-data';
+import type { ImportData } from './import-data';
 import type { FileStore } from './firebase';
 import type { LiveMirror } from './live';
 import { loggingInstanceScaler, type InstanceScaler } from './scaler';
 import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit';
 import { exportHandler, exportPayloadSchema } from './tasks/export';
+import { importHandler, importPayloadSchema } from './tasks/import';
 import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
 import { prewarmHandler, prewarmPayloadSchema } from './tasks/prewarm';
 import { releaseResultsHandler, releaseResultsPayloadSchema } from './tasks/release-results';
@@ -25,6 +27,8 @@ export interface WorkerDeps {
   queue: TaskQueue;
   /** Results exports (EXP-03): their records and the Storage bucket the files go to. */
   exports?: { data: ExportData; files: FileStore };
+  /** Question imports (spec 6.2): their jobs and drafts, and the bucket their source files are kept in. */
+  imports?: { data: ImportData; files: FileStore };
   /** The live mirror in Realtime Database (OPS-02), written when a task finishes an attempt. */
   live?: LiveMirror;
   /** Raises the API's minimum instances before a slot (PERF-06); the logging driver when absent. */
@@ -121,6 +125,22 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           .post('/export', { schema: { body: exportPayloadSchema } }, async (req) => {
             const outcome = await run(req.body);
             req.log.info({ task: 'export', exportId: req.body.exportId, outcome }, 'task done');
+            return { ok: true, outcome };
+          });
+      }
+      if (deps.imports) {
+        const run = importHandler({
+          imports: deps.imports.data,
+          files: deps.imports.files,
+          clock,
+          ...(deps.llm ? { llm: deps.llm } : {}),
+        });
+        handled.push('import');
+        tasks
+          .withTypeProvider<ZodTypeProvider>()
+          .post('/import', { schema: { body: importPayloadSchema } }, async (req) => {
+            const outcome = await run(req.body);
+            req.log.info({ task: 'import', jobId: req.body.jobId, outcome }, 'task done');
             return { ok: true, outcome };
           });
       }
