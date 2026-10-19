@@ -162,8 +162,27 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 
 ### 8.1 Production deploy pipeline
 - What: approve the `production` GitHub environment protection rule (required reviewer), so CI-03 waits for manual approval.
-- Where: GitHub → Settings → Environments.
-- Confirm: a merge to `main` deploys staging and waits for approval before production.
+  The repository's `.github/workflows/ci.yml` deploys nothing; add a separate deploy workflow on merge to `main` with
+  these jobs (CI-03), authenticated through Workload Identity Federation (0.6):
+  1. Build the `api` and `worker` images and push them to Artifact Registry (0.5), tagged with the commit SHA.
+  2. Deploy both to staging Cloud Run, then queue the migrate task on staging (8.5) and wait for it to answer 2xx.
+  3. Smoke tests against staging: `GET /health` on both services answers 200 with `X-Server-Time`, and the sign-in
+     page of the staging web app loads.
+  4. Wait for approval in the `production` environment.
+  5. Freeze check (REL-01): fail the job when any test is live, that is a published test (`status` `scheduled` or
+     `live`) whose `resolved.window` contains the current time, in any organization (a collection group query on
+     `tests`; grant `deployer@` Firestore viewer, `roles/datastore.viewer`, for it), unless the workflow's `override_freeze` input is
+     `true`; the job log names the live tests and whether the override was used.
+  6. Deploy both to production with `--no-traffic`, shift all traffic to the new revisions, then queue the migrate
+     task on production (8.5).
+- Rollback (REL-02): `gcloud run services update-traffic api --to-revisions <previous revision>=100 --region
+  asia-south1` (the same for `worker`); it takes seconds. Migrations only ever add (a field, a default), never remove
+  or rename what an older revision reads, so the previous revision keeps working on migrated data and a rollback
+  never needs a reverse migration.
+- Where: GitHub → Settings → Environments; `.github/workflows/` (a new deploy workflow, not `ci.yml`).
+- Confirm: a merge to `main` deploys staging and waits for approval before production; with a staging test live the
+  freeze check stops the job, and the override input lets it through; a rehearsed rollback on staging serves the
+  previous revision within seconds (docs/MANUAL_CHECKS.md REL-01, REL-02, CI-03).
 - Unblocks: CI-03, REL-01, REL-02.
 
 ### 8.2 Pilot exam
@@ -185,3 +204,18 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 - Where: vercel.com, then the deployed `/accessibility/` page.
 - Confirm: the Contact section shows your address, and a test mail to it arrives (docs/MANUAL_CHECKS.md).
 - Unblocks: A11Y-22.
+
+### 8.5 Data migrations after a deploy
+- What: create a Cloud Tasks queue `migrations` in `asia-south1` in staging and prod (OIDC push to the worker with
+  `tasks@`, like 3.2), with retries on (for example max attempts 10, min backoff 60 s). After each deploy the
+  pipeline (8.1) queues one task: `gcloud tasks create-http-task --queue migrations --location asia-south1
+  --url https://<worker>/tasks/migrate --method POST --header Content-Type=application/json --body-content '{}'
+  --oidc-service-account-email tasks@<project>.iam.gserviceaccount.com --oidc-token-audience <worker url>`, which
+  needs `deployer@` to be a Cloud Tasks enqueuer and Service Account User on `tasks@`. Migrations are never run by
+  hand or from the API (CI-04). The worker answers `200 { applied: [...] }`; `409 MIGRATION_RUNNING` (another run is
+  working) and `500 MIGRATION_FAILED` (logged with the migration ID; nothing of it is recorded) are retried by the
+  queue. `{ "through": "<id>" }` applies only up to that migration.
+- Where: Cloud Tasks; the deploy workflow.
+- Confirm: on the first staging deploy after phase 8 the task answers 2xx and `_migrations/0001-student-accommodations`
+  exists in staging Firestore with `changed` and `appliedAt` (docs/MANUAL_CHECKS.md CI-04).
+- Unblocks: CI-04, CI-03.
