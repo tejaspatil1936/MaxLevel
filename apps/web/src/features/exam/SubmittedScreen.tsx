@@ -13,6 +13,7 @@ import { api, ApiError } from '@/lib/api';
 import { formatZonedTime } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
+import { clearDeviceExam } from './offline-store';
 
 const backLink = 'inline-flex min-h-11 items-center font-bold text-ballpoint underline';
 
@@ -60,6 +61,9 @@ export function SubmittedScreen() {
   }, []);
   useEffect(() => {
     if (status === 'in_progress') router.replace(`/exam/?attempt=${encodeURIComponent(attemptId)}`);
+    // A submitted attempt never takes answers again; a terminated one keeps the device's answers for a reinstate.
+    else if (status === 'submitted' || status === 'auto_submitted' || status === 'reset')
+      void clearDeviceExam(attemptId);
   }, [status, attemptId, router]);
 
   const back = (

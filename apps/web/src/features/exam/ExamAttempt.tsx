@@ -165,12 +165,14 @@ function AttemptLoader({ uid, orgId, attemptId }: { uid: string; orgId: string; 
   );
   const opening = useOpenedExam(attemptId, uid, source);
   const router = useRouter();
-  // A finished attempt opens the submitted screen; its answers are no longer kept on the device.
+  // A finished attempt opens the submitted screen. A terminated one keeps the answers waiting on the device, so they
+  // are sent if it is reinstated (OPS-04); the submitted screen forgets those of a submitted one.
+  const terminated = query.data?.attempt.status === 'terminated';
   useEffect(() => {
     if (!finished) return;
-    void clearDeviceExam(attemptId);
+    if (!terminated) void clearDeviceExam(attemptId);
     router.replace(submittedUrl(attemptId));
-  }, [finished, attemptId, router]);
+  }, [finished, terminated, attemptId, router]);
   useEffect(() => {
     if (reset) void clearDeviceExam(attemptId);
   }, [reset, attemptId]);
@@ -304,13 +306,11 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
     waiting.length ? { kind: 'offline', waiting: waiting.length } : { kind: 'saved' },
   );
   const [rejections, setRejections] = useState<Rejection[]>([]);
-  // A finished attempt (submitted here, by the auto-submit task, or ended) opens the submitted screen.
+  // A finished attempt (submitted here, by the auto-submit task, or ended) opens the submitted screen, which forgets
+  // the device's copy unless the attempt was terminated (its waiting answers stay for a reinstate, OPS-04).
   const finished = useRef(() => {});
   useEffect(() => {
-    finished.current = () => {
-      void clearDeviceExam(attemptId);
-      router.replace(submittedUrl(attemptId));
-    };
+    finished.current = () => router.replace(submittedUrl(attemptId));
   }, [attemptId, router]);
   // Proctoring reports (PR-08): lockdown (F-3.11), the camera (F-3.12) and the phone (F-3.13) call `proctor.report`.
   // A strike warns at once; the strike that reaches the maximum ends the attempt and opens the submitted screen.
@@ -413,7 +413,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
           return () => clearTimeout(timer);
         },
         onStatus: setStatus,
-        refusal,
+        // A finished attempt refuses the batch, but its answers keep waiting on the device (OPS-04).
+        refusal: (e) => (attemptFinished(e) ? null : refusal(e)),
         store: (answer, kept) => void putDeviceAnswer(attemptId, answer, kept),
         onRejected: setRejections,
         online: navigator.onLine,
