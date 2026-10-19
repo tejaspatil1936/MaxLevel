@@ -1,5 +1,6 @@
 import {
   dayLabels,
+  docIdSchema,
   manualReleaseRefusal,
   resultReleaseState,
   resultsOverviewSchema,
@@ -15,7 +16,7 @@ import type { ApiContext } from './context';
 import { releaseInputOf } from './release';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 
 /**
  * The admin results pages' reads (US-AD-10, RES-01, RES-05): published tests with their release setting and state,

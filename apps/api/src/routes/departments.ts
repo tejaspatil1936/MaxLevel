@@ -1,11 +1,17 @@
-import { departmentCreateSchema, departmentMergeSchema, departmentPatchSchema, departmentSchema } from '@mitaoe/shared';
+import {
+  departmentCreateSchema,
+  departmentMergeSchema,
+  departmentPatchSchema,
+  departmentSchema,
+  docIdSchema,
+} from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 
 /** Department list per organization (STU-05 to STU-07). Students store departmentId, so renames apply everywhere. */
 export function departmentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {

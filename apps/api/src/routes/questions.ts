@@ -1,4 +1,5 @@
 import {
+  docIdSchema,
   questionCreateSchema,
   questionImageSavedSchema,
   questionImageUploadSchema,
@@ -23,8 +24,8 @@ import { attemptsStarted, returnsToReview, testLocked } from '../services/test-r
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
-const questionParams = idParams.extend({ questionId: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
+const questionParams = idParams.extend({ questionId: docIdSchema });
 
 type Checked = Pick<QuestionRecord, 'prompt' | 'options' | 'correctOptionIds' | 'images'>;
 const statusOf = (problems: QuestionProblem[]) => (problems.length ? ('draft' as const) : ('approved' as const));

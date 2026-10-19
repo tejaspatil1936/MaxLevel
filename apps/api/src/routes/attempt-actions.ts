@@ -2,6 +2,7 @@ import {
   attemptActionResultSchema,
   attemptActionSchema,
   autoSubmitTask,
+  docIdSchema,
   extensionNotice,
   leaderboardTask,
   extraTimeGrantSchema,
@@ -17,7 +18,7 @@ import { attemptGrader } from '../services/grading';
 import { liveMirror } from '../services/live-mirror';
 import type { ApiContext } from './context';
 
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 const finishedError = () =>
   new AppError(409, 'ATTEMPT_FINISHED', 'This attempt is finished, so its time can no longer change.');
 const notInProgress = () => new AppError(409, 'ATTEMPT_FINISHED', 'This attempt is no longer in progress.');

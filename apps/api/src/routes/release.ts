@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   answeringUntil,
+  docIdSchema,
   leaderboardRecomputeTask,
   manualReleaseRefusal,
   releaseResponseSchema,
@@ -15,7 +16,7 @@ import { AppError, notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 /** The body is `{}`; an empty request body is accepted too. */
 const emptyBody = z.object({}).strict().nullish();
 

@@ -1,6 +1,7 @@
 import {
   approvalChecklist,
   approveResponseSchema,
+  docIdSchema,
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
   publishResponseSchema,
   resolveSettings,
@@ -14,7 +15,7 @@ import { queuePublishTasks } from '../services/publish-tasks';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 /** The body is `{}`; an empty request body is accepted too. */
 const emptyBody = z.object({}).strict().nullish();
 

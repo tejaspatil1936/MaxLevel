@@ -1,5 +1,6 @@
 import {
   createdIdSchema,
+  docIdSchema,
   eligibilityPreviewRequestSchema,
   eligibilityPreviewResponseSchema,
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
@@ -22,7 +23,7 @@ import { AppError, notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 
 /** SER-09: a flexible window with a full review released on submit would leak answers. */
 function refuseLeakyDefaults(defaults: Partial<SeriesDefaults>): void {

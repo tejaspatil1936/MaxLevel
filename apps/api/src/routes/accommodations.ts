@@ -1,11 +1,11 @@
-import { accommodationSchema, accommodationsSchema } from '@mitaoe/shared';
+import { accommodationSchema, accommodationsSchema, docIdSchema } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const params = z.object({ id: z.string().min(1).max(128), seriesId: z.string().min(1).max(128) });
+const params = z.object({ id: docIdSchema, seriesId: docIdSchema });
 const response = { 200: z.object({ accommodations: accommodationsSchema }) };
 const ACTION = 'student.accommodation.update';
 

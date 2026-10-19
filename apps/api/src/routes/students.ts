@@ -1,4 +1,5 @@
 import {
+  docIdSchema,
   pageOf,
   studentCreateSchema,
   studentListQuerySchema,
@@ -15,7 +16,7 @@ import { AppError, notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 
 /** Student directory, detail, edits and manual adds (STU-08 to STU-11, US-AD-02). */
 export function studentRoutes(ctx: ApiContext): FastifyPluginAsyncZod {

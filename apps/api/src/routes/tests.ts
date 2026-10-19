@@ -1,6 +1,7 @@
 import {
   createdIdSchema,
   dayLabels,
+  docIdSchema,
   eligibilityPreviewRequestSchema,
   eligibilityPreviewResponseSchema,
   FULL_REVIEW_BEFORE_CLOSE_MESSAGE,
@@ -32,7 +33,7 @@ import { attemptsStarted, returnsToReview, testLocked } from '../services/test-r
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const day = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number) as [number, number, number];

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   dayLabels,
+  docIdSchema,
   drawAttempt,
   examPreviewSchema,
   resolveSettings,
@@ -13,7 +14,7 @@ import { notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 
 /**
  * GET /v1/tests/{id}/preview (Q-13, US-AD-08): the exam payload a student would get, drawn with a fresh random seed

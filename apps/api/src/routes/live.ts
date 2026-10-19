@@ -1,5 +1,6 @@
 import {
   dayLabels,
+  docIdSchema,
   liveRosterSchema,
   liveTestListSchema,
   NO_RESTRICTION,
@@ -15,7 +16,7 @@ import { notFound } from '../errors';
 import type { ApiContext } from './context';
 
 const admin = { access: 'admin' as const };
-const idParams = z.object({ id: z.string().min(1).max(128) });
+const idParams = z.object({ id: docIdSchema });
 const collator = new Intl.Collator('en');
 
 /**
