@@ -60,7 +60,8 @@ export class LiveExamsPage {
   }
 
   row(testHeading: string): Locator {
-    return this.list.getByRole('row').filter({ has: this.testLink(testHeading) });
+    // `has` is matched inside each row, so the link locator starts at the page, not at the table.
+    return this.list.getByRole('row').filter({ has: this.page.getByRole('link', { name: testHeading, exact: true }) });
   }
 }
 
