@@ -82,6 +82,7 @@ export const exam = {
   'attempt.summaryAll': 'All questions',
   'attempt.summaryWaiting': 'Your last answers are still saving. They are saved before your test is submitted.',
   'attempt.submitting': 'Submitting your test.',
+  'attempt.dismissNotice': 'Dismiss',
   'attempt.submitOffline': "You're offline. Your test will be submitted as soon as the connection returns.",
   'attempt.submitFailed': "Couldn't submit your test. Check your connection, then press Submit test again.",
   'submitted.title': 'Test submitted',

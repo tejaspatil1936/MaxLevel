@@ -2,7 +2,7 @@
 
 import type { AnswerBatchResult, AttemptPayload } from '@mitaoe/shared';
 import { isFinishedAttempt, questionTimeUpAt } from '@mitaoe/shared';
-import { Button, InlineMessage, Skeleton } from '@mitaoe/ui';
+import { Button, cx, InlineMessage, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,6 +19,7 @@ import { api, ApiError, restoreClockOffset, serverClockOffset, serverNow } from 
 import { firebaseAuth } from '@/lib/firebase';
 import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
+import { useDeadlineSignal } from './deadline-signal';
 import { createAnswerSync, type AnswerSync, type PendingAnswer, type Rejection, type SyncStatus } from './answer-sync';
 import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
 import { installFocusWrap } from './focus-wrap';
@@ -229,6 +230,32 @@ function RefusedAnswers({ rejections, ids }: { rejections: Rejection[]; ids: rea
   return <InlineMessage>{[time, other].filter(Boolean).join(' ')}</InlineMessage>;
 }
 
+/**
+ * The extra-time notice (OPS-06): a status whose whole text is the notice, with Dismiss beside it, outside the status.
+ * The status stays in the page while empty, so screen readers announce the notice when it arrives; it never takes
+ * focus or opens a dialog.
+ */
+function ExtensionNotice({ notice, onDismiss }: { notice: string | null; onDismiss: () => void }) {
+  return (
+    <div
+      className={
+        notice
+          ? 'flex flex-wrap items-center justify-between gap-3 rounded-panel border border-ballpoint bg-ballpoint-wash px-4 py-2'
+          : 'contents'
+      }
+    >
+      <p role="status" className={cx(notice ? 'font-bold' : 'sr-only')}>
+        {notice ?? ''}
+      </p>
+      {notice ? (
+        <Button variant="secondary" onClick={onDismiss}>
+          {t('attempt.dismissNotice')}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 function AttemptExam({ payload, waiting }: OpenedExam) {
   const router = useRouter();
   const attemptId = payload.attempt.id;
@@ -387,7 +414,9 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
     const id = setInterval(() => void api('/health').catch(() => undefined), CLOCK_REFRESH_MS);
     return () => clearInterval(id);
   }, []);
-  const deadlineAt = payload.attempt.deadlineAt;
+  // OPS-06: extra time reaches the screen through the attempt's signal record, with its notice.
+  const extension = useDeadlineSignal(orgId, attemptId, payload.attempt.deadlineAt);
+  const deadlineAt = extension.deadlineAt;
   const [announcement, announce] = useTimeAnnouncer();
 
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -445,6 +474,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         }
         notice={
           <>
+            <ExtensionNotice notice={extension.notice} onDismiss={extension.dismiss} />
             <RefusedAnswers rejections={rejections} ids={ids} />
             {submitOffline && !summaryOpen ? (
               <p role="status" className="font-bold text-redpen">
