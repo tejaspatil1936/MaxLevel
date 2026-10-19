@@ -28,16 +28,28 @@ export function isPrintShortcut(e: Keys): boolean {
   return (e.ctrlKey || e.metaKey) && !e.altKey && letter(e) === 'p';
 }
 
+/** Away from the exam page (unloaded, then opened again) for longer than this is a strike; a quick reload is not. */
+export const AWAY_STRIKE_MS = 5000;
+
 export interface LockdownDeps {
   win: Pick<Window, 'addEventListener' | 'removeEventListener'>;
   doc: Pick<Document, 'addEventListener' | 'removeEventListener' | 'visibilityState' | 'fullscreenElement'>;
   report: (type: ClientEventType, details?: AttemptEventDetails) => void;
   fullscreenRequired: boolean;
   devtoolsPolicy: Settings['devtoolsPolicy'];
+  /** The time (the server's clock), for how long the page was away. */
+  now: () => number;
+  /** This tab's storage (sessionStorage), which keeps the time the page unloaded across a reload or a return. */
+  storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | null;
+  /** The storage key of this attempt's unload time. */
+  awayKey: string;
+  /** Fullscreen is required and the page is not in it (true), or it is again (false): the blocking overlay of PR-04. */
+  onFullscreenNeeded: (needed: boolean) => void;
 }
 
 /** Starts the lockdown; returns the function that stops it. */
-export function installLockdown({ win, doc, report, fullscreenRequired, devtoolsPolicy }: LockdownDeps): () => void {
+export function installLockdown(deps: LockdownDeps): () => void {
+  const { win, doc, report, fullscreenRequired, devtoolsPolicy, now, storage, awayKey, onFullscreenNeeded } = deps;
   const blocking = devtoolsPolicy !== 'allow';
   const stops: Array<() => void> = [];
   const on = (
@@ -51,20 +63,57 @@ export function installLockdown({ win, doc, report, fullscreenRequired, devtools
     stops.push(() => target.removeEventListener(type, fn, { capture }));
   };
 
-  // PR-04: leaving fullscreen.
+  const stored = {
+    read: () => {
+      try {
+        const at = Number(storage?.getItem(awayKey));
+        storage?.removeItem(awayKey);
+        return Number.isFinite(at) && at > 0 ? at : null;
+      } catch {
+        return null;
+      }
+    },
+    write: (at: number) => {
+      try {
+        storage?.setItem(awayKey, String(at));
+      } catch {
+        // Storage blocked: the return is not counted, as before.
+      }
+    },
+  };
+  // PR-04: the exam outside fullscreen when it opens or comes back (a reload or a return ends fullscreen without a
+  // `fullscreenchange` here) blocks the screen until the student goes back in; it is no strike by itself.
+  const checkFullscreen = () => {
+    if (fullscreenRequired && !doc.fullscreenElement) onFullscreenNeeded(true);
+  };
+  // PR-04: leaving fullscreen (its strike warning is the overlay).
   on(doc, 'fullscreenchange', () => {
-    if (fullscreenRequired && !doc.fullscreenElement) report('fullscreen_exit', { source: 'fullscreenchange' });
+    if (!fullscreenRequired) return;
+    if (doc.fullscreenElement) onFullscreenNeeded(false);
+    else report('fullscreen_exit', { source: 'fullscreenchange' });
   });
   // PR-05: the page hidden (another tab, minimized) and the window losing focus are separate reasons. A page being
   // unloaded (reload, navigation, closing) also turns hidden, right after `pagehide`; that is not another tab, and its
-  // report would race the unload, so it is not sent.
+  // report would race the unload, so it is not sent. The unload time is kept instead: coming back from the
+  // back-forward cache, or opening the exam again more than 5 seconds later, is the strike (a same-tab navigation
+  // such as Alt+Left blurs nothing). Only the browser's own `pagehide` counts, so a script can't hide a tab switch.
   let unloading = false;
-  on(win, 'pagehide', () => {
+  on(win, 'pagehide', (e) => {
+    if (!e.isTrusted) return;
     unloading = true;
+    stored.write(now());
   });
-  on(win, 'pageshow', () => {
+  on(win, 'pageshow', (e) => {
     unloading = false;
+    const away = stored.read();
+    if ((e as PageTransitionEvent).persisted)
+      report('tab_hidden', { source: 'pageshow', ...(away === null ? {} : { awayMs: Math.round(now() - away) }) });
+    checkFullscreen();
   });
+  const away = stored.read();
+  if (away !== null && now() - away > AWAY_STRIKE_MS)
+    report('tab_hidden', { source: 'reopened', awayMs: Math.round(now() - away) });
+  checkFullscreen();
   on(doc, 'visibilitychange', () => {
     if (doc.visibilityState === 'hidden' && !unloading) report('tab_hidden', { source: 'visibilitychange' });
   });

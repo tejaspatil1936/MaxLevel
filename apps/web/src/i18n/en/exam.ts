@@ -57,6 +57,8 @@ export const exam = {
   'strike.leftOne': '1 strike left before the test ends.',
   'strike.ok': 'I understand',
   'strike.returnFullscreen': 'Return to fullscreen',
+  'fullscreen.title': 'This test runs in fullscreen',
+  'fullscreen.body': 'Return to fullscreen to go on with your test.',
   'strike.reason.fullscreen_exit': 'You left fullscreen.',
   'strike.reason.tab_hidden': 'You switched to another tab or window.',
   'strike.reason.window_blur': 'The exam window lost focus.',

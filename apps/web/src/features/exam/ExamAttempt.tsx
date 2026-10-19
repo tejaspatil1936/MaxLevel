@@ -2,7 +2,7 @@
 
 import type { AnswerBatchResult, AttemptPayload } from '@mitaoe/shared';
 import { isFinishedAttempt, questionTimeUpAt } from '@mitaoe/shared';
-import { Button, cx, InlineMessage, Skeleton } from '@mitaoe/ui';
+import { AcknowledgeDialog, Button, cx, InlineMessage, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -43,6 +43,14 @@ import { CLOCK_REFRESH_MS, timeLeftText, warningText } from './time-left';
 import { useProctorReporter } from './useProctorReporter';
 
 const backLink = 'inline-flex min-h-11 items-center font-bold text-ballpoint underline';
+/** This tab's sessionStorage, or null where the browser blocks it. */
+const tabStorage = () => {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+};
 const submittedUrl = (attemptId: string) => `/exam/submitted/?attempt=${encodeURIComponent(attemptId)}`;
 
 /**
@@ -315,10 +323,26 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   // Browser lockdown (PR-04 to PR-06): fullscreen, focus, developer tools keys and the clipboard, reported as above.
   const { report } = proctor;
   const { fullscreenRequired, devtoolsPolicy } = payload.settings;
+  // Outside fullscreen when it is required (opened, reloaded or come back to), the screen is blocked until the student
+  // goes back in (PR-04); the time the page unloaded is kept in this tab so a long absence counts (PR-05).
+  const [fullscreenNeeded, setFullscreenNeeded] = useState(false);
   useEffect(
-    () => installLockdown({ win: window, doc: document, report, fullscreenRequired, devtoolsPolicy }),
-    [report, fullscreenRequired, devtoolsPolicy],
+    () =>
+      installLockdown({
+        win: window,
+        doc: document,
+        report,
+        fullscreenRequired,
+        devtoolsPolicy,
+        now: serverNow,
+        storage: tabStorage(),
+        awayKey: `mitaoe.exam.away.${attemptId}`,
+        onFullscreenNeeded: setFullscreenNeeded,
+      }),
+    [report, fullscreenRequired, devtoolsPolicy, attemptId],
   );
+  const enterFullscreen = () =>
+    void document.documentElement.requestFullscreen?.().catch(() => setFullscreenNeeded(true));
   // Tab past either end wraps round inside the page, so the keyboard never blurs the window (PR-05, A11Y-03).
   useEffect(() => installFocusWrap(document), []);
   // The laptop camera (PR-01, PR-02): on for the whole exam, faces counted on the device, incidents reported as above.
@@ -540,9 +564,17 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         onAcknowledge={(type) => {
           proctor.acknowledge();
           // The blocking overlay of PR-04: acknowledging a fullscreen exit enters fullscreen again.
-          if (type === 'fullscreen_exit') void document.documentElement.requestFullscreen?.().catch(() => undefined);
+          if (type === 'fullscreen_exit') enterFullscreen();
         }}
       />
+      <AcknowledgeDialog
+        open={fullscreenRequired && fullscreenNeeded && !proctor.warning}
+        title={t('fullscreen.title')}
+        actionLabel={t('strike.returnFullscreen')}
+        onAction={enterFullscreen}
+      >
+        <p>{t('fullscreen.body')}</p>
+      </AcknowledgeDialog>
     </>
   );
 }
