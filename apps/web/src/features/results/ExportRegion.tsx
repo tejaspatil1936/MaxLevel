@@ -3,7 +3,7 @@
 import type { ExportCreated, ExportFormat, ExportInfo, ExportScope } from '@mitaoe/shared';
 import { Button } from '@mitaoe/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { qk } from '@/lib/query-keys';
@@ -47,6 +47,17 @@ export function ExportRegion({ scope, refId }: { scope: ExportScope; refId: stri
   const preparing = start.isPending || (exportId !== null && !done(info?.status) && !progress.isError);
   const failed = start.isError || progress.isError || info?.status === 'failed';
   const ready = info?.status === 'ready' && info.url ? info : null;
+  // `preparing` only reaches the buttons after a render, so a double click would start two exports without this. It is
+  // set by the click and cleared once the export is no longer being prepared (ready, failed or refused).
+  const busy = useRef(false);
+  useEffect(() => {
+    if (!preparing) busy.current = false;
+  }, [preparing]);
+  const begin = (format: ExportFormat) => {
+    if (locked || preparing || busy.current) return;
+    busy.current = true;
+    start.mutate(format);
+  };
   const label = FORMATS.find((f) => f.format === (ready?.format ?? start.variables))?.label ?? 'CSV';
 
   return (
@@ -65,7 +76,7 @@ export function ExportRegion({ scope, refId }: { scope: ExportScope; refId: stri
             aria-disabled={locked || preparing || undefined}
             aria-describedby={locked ? lockedId : undefined}
             className="aria-disabled:cursor-not-allowed aria-disabled:opacity-60"
-            onClick={() => !locked && !preparing && start.mutate(format)}
+            onClick={() => begin(format)}
           >
             {t('results.exportAs', { format: name })}
           </Button>
