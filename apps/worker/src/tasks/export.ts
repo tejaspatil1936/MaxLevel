@@ -28,7 +28,7 @@ export type ExportRun = z.infer<typeof exportPayloadSchema>;
 const FINISHED: ReadonlySet<string> = new Set(FINISHED_ATTEMPT_STATUSES);
 
 /** An XLSX workbook of named sheets: numbers as number cells, everything else formula-safe text (SEC-06). */
-async function workbook(sheets: ReadonlyArray<{ name: string; table: ExportTable }>): Promise<Buffer> {
+export async function workbook(sheets: ReadonlyArray<{ name: string; table: ExportTable }>): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   for (const { name, table } of sheets) {
     const ws = wb.addWorksheet(name);

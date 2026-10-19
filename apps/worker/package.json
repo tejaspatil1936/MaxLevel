@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "3.0.180",
+    "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
     "@mitaoe/shared": "workspace:*",
     "@napi-rs/canvas": "0.1.88",
     "ai": "5.0.271",
@@ -24,6 +25,7 @@
     "papaparse": "5.7.0",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "5.4.624",
+    "playwright-core": "1.56.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "zod": "4.6.7"

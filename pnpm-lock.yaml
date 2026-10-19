@@ -370,6 +370,9 @@ importers:
       '@ai-sdk/google-vertex':
         specifier: 3.0.180
         version: 3.0.180(supports-color@7.2.0)(zod@4.6.7)
+      '@fontsource-variable/atkinson-hyperlegible-next':
+        specifier: 5.3.0
+        version: 5.3.0
       '@mitaoe/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -403,6 +406,9 @@ importers:
       pdfjs-dist:
         specifier: 5.4.624
         version: 5.4.624
+      playwright-core:
+        specifier: 1.56.1
+        version: 1.56.1
       react:
         specifier: 19.3.1
         version: 19.3.1
