@@ -4,7 +4,8 @@ import { optionIdOf, type DraftInput } from './import-llm';
 import type { ImportedQuestion } from './questions-json';
 
 // Drafts read without the model, and the parts the model reads (docs/testids/phase-6.md "Template sheet"). Pure
-// functions the worker calls on what it parsed; the API never calls them (SEC-06).
+// functions the worker calls on what it parsed; the API never calls them (SEC-06). Sheet rows are indexed from the
+// header (row 1 at index 0); a blank row may be a hole in the array, as the worker leaves blank rows out.
 
 /** TXT and MD go to the model in parts of at most this many characters, split at line breaks. */
 export const IMPORT_TEXT_PART_CHARS = 12_000;
@@ -131,8 +132,9 @@ const csvCell = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"
 
 /** A sheet outside the template as CSV text parts of IMPORT_SHEET_PART_ROWS non-empty rows, each with the header. */
 export function sheetParts(rows: ReadonlyArray<ReadonlyArray<string>>, perPart = IMPORT_SHEET_PART_ROWS): string[] {
-  const [header = [], ...rest] = rows;
-  const body = rest.filter((r) => !blank(r));
+  const header = rows[0] ?? [];
+  // `filter` skips holes, so a blank row the reader left out costs nothing.
+  const body = rows.slice(1).filter((r) => !blank(r));
   const line = (r: ReadonlyArray<string>) => r.map(csvCell).join(',');
   const parts: string[] = [];
   for (let i = 0; i < body.length; i += perPart)
