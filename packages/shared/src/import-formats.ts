@@ -111,6 +111,8 @@ export const IMPORT_MESSAGES = {
   uploadMissing: 'Upload the file before starting the import.',
   invalidJson: "This JSON file isn't in a question format we can read. Check the file and try again.",
   unzippedTooLarge: 'This XLSX file holds more than 50 MB once unzipped. Split it into smaller files.',
+  cellTooLong: (row: number, max: number) =>
+    `Row ${count(row)} has a cell longer than ${count(max)} characters. Shorten it and try again.`,
   pageUnreadable: (page: number) => `Page ${count(page)} of this PDF can't be read. Check the file and try again.`,
   orgMissing: 'This organization no longer exists, so the import stopped.',
   llmUnavailable: "The AI service didn't answer.",

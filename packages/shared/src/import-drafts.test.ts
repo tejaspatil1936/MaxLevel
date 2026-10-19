@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { importProblems } from './import-checks';
 import {
   jsonQuestionsToDrafts,
+  sheetCellTooLong,
   sheetPartTexts,
   sheetParts,
   sheetRowCount,
@@ -176,5 +177,26 @@ describe('jsonQuestionsToDrafts', () => {
         images: [],
       },
     ]);
+  });
+});
+
+describe('sheetCellTooLong', () => {
+  it('IMP-02 SEC-06 finds the first cell past its limit: 5,000 for template options, 20,000 for any other cell', () => {
+    const tpl = (cells: string[]) => [['Question', 'Option A', 'Option B', 'Correct', 'Explanation'], cells];
+    expect(sheetCellTooLong(tpl(['q'.repeat(20_000), 'o'.repeat(5_000), 'y', 'A', 'e'.repeat(20_000)]))).toBeNull();
+    expect(sheetCellTooLong(tpl(['q'.repeat(20_001), 'x', 'y', 'A']))).toEqual({ row: 2, max: 20_000 });
+    expect(sheetCellTooLong(tpl(['q', 'x', 'o'.repeat(5_001), 'A']))).toEqual({ row: 2, max: 5_000 });
+    expect(sheetCellTooLong(tpl(['q', 'x', 'y', 'A', 'e'.repeat(20_001)]))).toEqual({ row: 2, max: 20_000 });
+    // Outside the template every cell may hold 20,000 characters; a hole (a blank row left out) is skipped.
+    const free: string[][] = [['Q', 'Option A']];
+    free[2] = ['Notes', 'n'.repeat(20_001)];
+    expect(
+      sheetCellTooLong([
+        ['Q', 'Option A'],
+        ['q', 'o'.repeat(20_000)],
+      ]),
+    ).toBeNull();
+    expect(sheetCellTooLong(free)).toEqual({ row: 3, max: 20_000 });
+    expect(sheetCellTooLong([['h'.repeat(20_001)]]), 'the header row counts too').toEqual({ row: 1, max: 20_000 });
   });
 });

@@ -12,6 +12,11 @@ export const IMPORT_TEXT_PART_CHARS = 12_000;
 /** A sheet outside the template goes to the model in parts of this many rows (as CSV text). */
 export const IMPORT_SHEET_PART_ROWS = 200;
 
+/** The longest sheet cell an import reads: a question or an explanation (questionCreateSchema's limit). */
+export const IMPORT_MAX_CELL_CHARS = 20_000;
+/** The longest `Option A` to `Option F` cell of a template sheet (an option's limit). */
+export const IMPORT_MAX_OPTION_CHARS = 5_000;
+
 const blank = (cells: ReadonlyArray<string>) => cells.every((c) => c.trim() === '');
 const DIFFICULTIES: readonly string[] = ['easy', 'medium', 'hard'];
 const asDifficulty = (v: string | undefined): Difficulty | undefined => {
@@ -73,6 +78,28 @@ export function templateRowsToDrafts(
     drafts.push(draft);
   });
   return drafts;
+}
+
+/**
+ * The first sheet cell longer than an import can keep (IMP-02, SEC-06), in row then column order: a template sheet's
+ * option cells may hold IMPORT_MAX_OPTION_CHARS characters, every other cell IMPORT_MAX_CELL_CHARS. The worker refuses
+ * such a file before writing anything, so no draft or part can pass Firestore's 1 MiB document limit. `row` counts
+ * from the header (row 1); null when every cell fits.
+ */
+export function sheetCellTooLong(rows: ReadonlyArray<ReadonlyArray<string>>): { row: number; max: number } | null {
+  const header = rows[0] ?? [];
+  const template = isTemplateHeader(header);
+  const limits = header.map((h) =>
+    template && /^option [a-f]$/.test(h.trim().toLowerCase()) ? IMPORT_MAX_OPTION_CHARS : IMPORT_MAX_CELL_CHARS,
+  );
+  for (const [index, row] of rows.entries()) {
+    if (!row) continue;
+    for (const [i, cell] of row.entries()) {
+      const max = limits[i] ?? IMPORT_MAX_CELL_CHARS;
+      if ((cell ?? '').length > max) return { row: index + 1, max };
+    }
+  }
+  return null;
 }
 
 /** A JSON file's questions (parseQuestionJson) as drafts, all from page 1, difficulty as given. */
