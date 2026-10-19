@@ -84,6 +84,41 @@ describe('/tasks/release-results', () => {
     expect((await db.collection('organizations/org-a/audit').get()).size, 'no audit entry').toBe(0);
   });
 
+  it('DATA-05 OPS-06 waits for the latest deadline of an attempt still in progress, which extra time can move again', async () => {
+    await publish({ resultDetail: 'full' });
+    const attempt = db.doc('organizations/org-a/attempts/a1');
+    await attempt.set({ orgId: 'org-a', testId: 't1', status: 'in_progress', deadlineAt: END + 30 * 60_000 });
+    await db
+      .doc('organizations/org-a/attempts/a2')
+      .set({ orgId: 'org-a', testId: 't1', status: 'submitted', deadlineAt: END });
+    const releaseTasks = async () =>
+      (await db.collection('_localTasks').get()).docs
+        .map((d) => d.data())
+        .filter((t) => t.path === '/tasks/release-results')
+        .map((t) => ({ name: t.name, scheduleTime: t.scheduleTime }));
+
+    clock.set(END + 60_000);
+    expect(await run()).toBe('deferred');
+    expect(await released(), 'no answer key while a1 is answering').toBeUndefined();
+    expect(await boardTasks()).toEqual([]);
+    expect(await releaseTasks()).toEqual([
+      { name: `release-results-org-a-t1-${END + 30 * 60_000}`, scheduleTime: END + 30 * 60_000 },
+    ]);
+
+    // More extra time after the task was queued: the run at the old deadline waits again.
+    await attempt.update({ deadlineAt: END + 40 * 60_000 });
+    clock.set(END + 30 * 60_000);
+    expect(await run()).toBe('deferred');
+    expect(await releaseTasks()).toContainEqual({
+      name: `release-results-org-a-t1-${END + 40 * 60_000}`,
+      scheduleTime: END + 40 * 60_000,
+    });
+
+    clock.set(END + 40 * 60_000);
+    expect(await run(), 'released at the latest deadline').toBe('released');
+    expect(await released()).toBe(END + 40 * 60_000);
+  });
+
   it('RES-01 stores nothing before the window end, and queues the task again for a window end that moved', async () => {
     await publish({ window: { start: START, end: END + 600_000 } });
     clock.set(END);
