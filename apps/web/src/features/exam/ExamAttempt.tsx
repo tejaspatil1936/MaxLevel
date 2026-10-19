@@ -562,7 +562,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
                 onTimeUp={() => void submission.current?.submit('time_up')}
               />
               <TimeAnnouncements text={announcement} />
-              <AccessibilityButton />
+              <AccessibilityButton inExam />
               <Button variant="secondary" onClick={() => setSummaryOpen(true)}>
                 {t('attempt.submit')}
               </Button>

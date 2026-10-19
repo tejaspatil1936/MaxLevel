@@ -122,7 +122,7 @@ function PreviewExam({ exam, exit }: { exam: ExamPreviewPayload; exit: ReactNode
           </p>
           <div className="ml-auto flex flex-wrap items-center gap-3">
             <Switch label={t('preview.showAnswers')} checked={showAnswers} onCheckedChange={setShowAnswers} />
-            <AccessibilityButton />
+            <AccessibilityButton inExam />
             {exit}
           </div>
         </>

@@ -3,14 +3,18 @@
 import type { Preferences } from '@mitaoe/shared';
 import { Button, Dialog, RadioGroup, Switch } from '@mitaoe/ui';
 import { Accessibility } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { t } from '@/i18n';
 import { usePreferences } from '@/lib/preferences';
 
 const SIZES = [100, 115, 130, 150] as const;
 
-/** The accessibility panel in every top bar (A11Y-01, US-ST-10): each change applies at once and is saved. */
-export function AccessibilityButton() {
+/**
+ * The accessibility panel in every top bar (A11Y-01, US-ST-10): each change applies at once and is saved.
+ * It links to the public statement (A11Y-22) except on the exam screens (`inExam`), where leaving would interrupt.
+ */
+export function AccessibilityButton({ inExam = false }: { inExam?: boolean }) {
   const [open, setOpen] = useState(false);
   const { preferences: p, update } = usePreferences();
   return (
@@ -66,6 +70,14 @@ export function AccessibilityButton() {
             checked={p.readingRuler}
             onCheckedChange={(readingRuler) => update({ readingRuler })}
           />
+          {inExam ? null : (
+            <Link
+              href="/accessibility/"
+              className="inline-flex min-h-11 items-center self-start font-bold text-ballpoint underline"
+            >
+              {t('statement.link')}
+            </Link>
+          )}
         </div>
       </Dialog>
     </>

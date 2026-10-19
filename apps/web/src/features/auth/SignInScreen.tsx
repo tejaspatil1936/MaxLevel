@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, InlineMessage } from '@mitaoe/ui';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { t, type MessageKey } from '@/i18n';
@@ -84,6 +85,12 @@ export function SignInScreen() {
       <div className="mt-6 max-w-measure">
         <InlineMessage>{message}</InlineMessage>
       </div>
+      <Link
+        href="/accessibility/"
+        className="mt-6 inline-flex min-h-11 items-center self-start font-bold text-ballpoint underline"
+      >
+        {t('statement.link')}
+      </Link>
     </main>
   );
 }
