@@ -2,6 +2,7 @@
 import { audit } from './en/audit';
 import { exam } from './en/exam';
 import { history } from './en/history';
+import { imports } from './en/imports';
 import { leaderboards } from './en/leaderboards';
 import { live } from './en/live';
 import { examEntry } from './en/exam-entry';
@@ -128,6 +129,7 @@ export const en = {
   ...audit,
   ...authoring,
   ...questions,
+  ...imports,
   ...sections,
   ...exam,
   ...examEntry,

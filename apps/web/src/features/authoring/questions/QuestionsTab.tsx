@@ -7,12 +7,13 @@ import { useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { useWorkspace } from '@/lib/workspace';
+import { FileImportDialog } from './FileImportDialog';
 import { JsonImportDialog } from './JsonImportDialog';
 import { QuestionEditor } from './QuestionEditor';
 import { QuestionList } from './QuestionList';
 import { questionsPath, useQuestions, useQuestionsChanged } from './useQuestions';
 
-/** Q-01: the test's questions: add and edit with a live student view, import JSON, reorder and delete. */
+/** Q-01: the test's questions: add and edit with a live student view, import JSON or a file, reorder and delete. */
 export function QuestionsTab({ test }: { test: TestDetail }) {
   const { readOnly } = useWorkspace();
   const qc = useQueryClient();
@@ -22,6 +23,7 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
   // `null`: closed; `{}`: adding; `{ question, n }`: editing question n.
   const [editing, setEditing] = useState<{ question?: Question; n?: number } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [importingFile, setImportingFile] = useState(false);
 
   // The new order shows at once and is saved straight away (Q-01).
   const reorder = useMutation({
@@ -63,6 +65,9 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
         <Button variant="secondary" disabled={readOnly} onClick={() => setImporting(true)}>
           {t('questions.importJson')}
         </Button>
+        <Button variant="secondary" disabled={readOnly} onClick={() => setImportingFile(true)}>
+          {t('imports.fromFile')}
+        </Button>
         {items.length ? add : null}
       </div>
       {reorder.isError ? (
@@ -97,6 +102,7 @@ export function QuestionsTab({ test }: { test: TestDetail }) {
           onClose={() => setImporting(false)}
         />
       ) : null}
+      {importingFile ? <FileImportDialog testId={test.id} onClose={() => setImportingFile(false)} /> : null}
       {deleting ? (
         <ConfirmDialog
           open
