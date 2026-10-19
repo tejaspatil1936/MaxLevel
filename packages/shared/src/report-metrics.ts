@@ -79,6 +79,8 @@ export type ReportMetrics = z.infer<typeof reportMetricsSchema>;
 /** Rounds to 2 decimal places (after dropping floating-point noise, so 1.005 stays 1.01 and -0 is 0). */
 export const round2 = (n: number) => Math.round(Math.round(n * 1e6) / 1e4) / 100 + 0;
 
+/** Drops floating-point noise from sums of fractional marks (0.1 + 0.2), to 6 decimal places, as scoring does. */
+const tidy = (n: number) => Math.round(n * 1e6) / 1e6 + 0;
 const sum = (values: ReadonlyArray<number>) => values.reduce((a, b) => a + b, 0);
 const mean = (values: ReadonlyArray<number>) => (values.length ? sum(values) / values.length : 0);
 /** `part / whole × 100`, 0 when the whole is 0. */
@@ -307,6 +309,75 @@ export function computeTestMetrics(input: {
     mostPickedWrong,
     ...attemptFigures(attempts),
     trends: [],
+    discriminationGroupPct: DISCRIMINATION_GROUP_PCT,
+  };
+}
+
+/** Schedule order: scheduled date, then window start, then heading. */
+const bySchedule = (
+  a: { scheduledDate: string; windowStart: number; heading: string },
+  b: { scheduledDate: string; windowStart: number; heading: string },
+) =>
+  a.scheduledDate.localeCompare(b.scheduledDate) ||
+  a.windowStart - b.windowStart ||
+  (a.heading < b.heading ? -1 : a.heading > b.heading ? 1 : 0);
+
+/**
+ * EXP-04: the statistics of a series from its published tests. A student's total is the sum of their finished
+ * attempts' scores (a test not taken counts 0, as LB-02); students with no finished attempt are left out. A student's
+ * department is the one on their latest test in schedule order. Per-question parts and sections are empty.
+ */
+export function computeSeriesMetrics(input: {
+  title: string;
+  eligible: number;
+  departments: ReadonlyArray<Department>;
+  tests: ReadonlyArray<{
+    id: string;
+    heading: string;
+    scheduledDate: string;
+    windowStart: number;
+    maxScore: number;
+    attempts: ReadonlyArray<MetricsAttempt>;
+  }>;
+}): ReportMetrics {
+  const tests = [...input.tests].sort(bySchedule).map((t) => ({ ...t, attempts: finishedOnly(t.attempts) }));
+  const maxScore = tidy(sum(tests.map((t) => t.maxScore)));
+  const students = new Map<string, { departmentId: string | null; score: number }>();
+  for (const a of tests.flatMap((t) => t.attempts)) {
+    const acc = students.get(a.studentId) ?? { departmentId: null, score: 0 };
+    students.set(a.studentId, { departmentId: a.departmentId ?? acc.departmentId, score: tidy(acc.score + a.score) });
+  }
+  const totals = [...students.values()].map((s) => s.score);
+
+  return {
+    version: 1,
+    scope: 'series',
+    title: input.title,
+    maxScore,
+    participation: participation(input.eligible, students.size, 0),
+    scores: { ...scoreSummary(totals, maxScore), distribution: scoreDistribution(totals, maxScore) },
+    sections: [],
+    departments: departmentRows(input.departments, [...students.values()], maxScore),
+    questions: [],
+    mostMissed: [],
+    mostPickedWrong: [],
+    ...attemptFigures(tests.flatMap((t) => t.attempts)),
+    trends: tests
+      .filter((t) => t.attempts.length > 0)
+      .map((t) => {
+        const scores = t.attempts.map((a) => a.score);
+        const m = mean(scores);
+        return {
+          testId: t.id,
+          heading: t.heading,
+          date: t.scheduledDate,
+          finished: scores.length,
+          mean: round2(m),
+          median: round2(median(scores)),
+          max: t.maxScore,
+          meanPct: round2(pctOf(m, t.maxScore)),
+        };
+      }),
     discriminationGroupPct: DISCRIMINATION_GROUP_PCT,
   };
 }
