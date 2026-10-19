@@ -1,8 +1,9 @@
 /* global __ENV, __VU, open */
 // PERF-07 (spec 12.2, 12.4): 500 students sit one exam against staging. Each one bootstraps their session, starts
-// within the first 2 minutes, saves an answer every 20 to 40 seconds, reports an occasional event and submits at the
-// deadline. Every threshold below is a 12.2 target. Run it before the first real exam and after any change to the
-// exam path (docs/MANUAL_CHECKS.md); never against production.
+// within the first 2 minutes, saves an answer every 20 to 40 seconds, reports an occasional logged-only event and
+// submits at the deadline (or stops when the API says the attempt is finished). Every threshold below is a 12.2
+// target. Run it before the first real exam and after any change to the exam path (docs/MANUAL_CHECKS.md); never
+// against production.
 //
 //   k6 run -e API_URL=https://api.staging.example -e TEST_ID=<published test> -e TOKENS=tokens.json \
 //     tests/load/exam-500.js
@@ -46,6 +47,9 @@ const uuid = () =>
     return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
   });
 
+/** The attempt is finished (409 ATTEMPT_FINISHED): it takes nothing more. */
+const finished = (r) => r.status === 409 && r.json('error.code') === 'ATTEMPT_FINISHED';
+
 export default function exam() {
   const token = tokens[(__VU - 1) % tokens.length];
   // Starts spread over the first 2 minutes (the 12.2 burst: 500 starts in 2 minutes).
@@ -75,18 +79,24 @@ export default function exam() {
       backlog: 0,
       clockOffsetMs,
     };
+    // 409 ATTEMPT_FINISHED ends this student's run (the attempt was ended, say by an admin): an expected answer, not a
+    // failed request.
     const saved = http.put(`${API}/v1/attempts/${attemptId}/answers`, JSON.stringify(body), {
       ...json(token),
       tags: { route: 'answers' },
+      responseCallback: http.expectedStatuses(200, 409),
     });
+    if (finished(saved)) return;
     check(saved, { 'answer saved': (r) => r.status === 200 });
-    // An occasional proctoring event (a few per minute across all students).
+    // An occasional proctoring event (a few per minute across all students). It is a logged-only type (never a strike,
+    // isStrikeEvent in packages/shared): strike events at 2% per save would end about 40% of the attempts at 3 strikes.
     if (Math.random() < 0.02) {
-      http.post(
+      const event = http.post(
         `${API}/v1/attempts/${attemptId}/events`,
-        JSON.stringify({ type: 'window_blur', clientTs: Date.now() + clockOffsetMs, details: {} }),
-        { ...json(token), tags: { route: 'events' } },
+        JSON.stringify({ type: 'context_menu', clientTs: Date.now() + clockOffsetMs, details: {} }),
+        { ...json(token), tags: { route: 'events' }, responseCallback: http.expectedStatuses(200, 409) },
       );
+      if (finished(event)) return;
     }
   }
 
@@ -96,6 +106,7 @@ export default function exam() {
   const submit = http.post(`${API}/v1/attempts/${attemptId}/submit`, JSON.stringify({ reason: 'time_up' }), {
     ...json(token, { 'Idempotency-Key': uuid() }),
     tags: { route: 'submit' },
+    responseCallback: http.expectedStatuses(200, 409),
   });
-  check(submit, { submitted: (r) => r.status === 200 });
+  check(submit, { submitted: (r) => r.status === 200 || finished(r) });
 }
