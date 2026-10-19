@@ -63,9 +63,9 @@ export function ImportReview() {
 }
 
 /** The text of the page's polite status region (WCAG 4.1.3), updated as the polled job view changes. */
-function useJobAnnouncement(job: ImportJobView): string {
+function useJobAnnouncement(job: ImportJobView, timeZone: string): string {
   const [said, setSaid] = useState<{ last: Announced | null; text: string }>({ last: null, text: '' });
-  const next = nextAnnouncement(said.last, job);
+  const next = nextAnnouncement(said.last, job, timeZone);
   // nextAnnouncement keeps `last` as it is when nothing new is to be said, so this settles after one update.
   if (next.last !== said.last) setSaid({ last: next.last, text: next.text ?? said.text });
   return next.text ?? said.text;
@@ -80,8 +80,8 @@ function ReviewPage({ job, test }: { job: ImportJobView; test: TestDetail }) {
   const review = useDraftReview(job);
   useShortcutList('imports.shortcuts', REVIEW_KEYS);
   const [importing, setImporting] = useState(false);
-  const announcement = useJobAnnouncement(job);
   const zone = org?.timezone ?? 'Asia/Kolkata';
+  const announcement = useJobAnnouncement(job, zone);
   const drafts = job.drafts;
   const counts = summaryCounts(drafts);
   const pending = drafts.filter((d) => d.status === 'pending').length;
