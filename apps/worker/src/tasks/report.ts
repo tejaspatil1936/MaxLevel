@@ -181,7 +181,13 @@ export function reportHandler(deps: ReportDeps) {
     const runId = randomUUID();
     const claim = await data.claim(orgId, reportId, { runId, now: clock.now(), leaseUntil: lease() });
     if (claim.kind === 'done') return 'skipped';
-    if (claim.kind === 'waiting') return `skipped: waiting until ${claim.retryAt}`;
+    if (claim.kind === 'waiting') {
+      // Delivered early (this may be the retry task itself, whose name is then used up): queue the run for retryAt
+      // again under a name of this delivery's time, so an early delivery never leaves the report with no run queued.
+      const now = clock.now();
+      await queue.enqueue(reportTask(orgId, reportId, `wait-${claim.retryAt}-${now}`, claim.retryAt));
+      return `skipped: waiting until ${claim.retryAt}`;
+    }
     if (claim.kind === 'held') {
       // Another run holds the report. Should it have died, this check takes the report once its lease has run out.
       await queue.enqueue(reportTask(orgId, reportId, `lease-${claim.heldUntil}`, claim.heldUntil));
