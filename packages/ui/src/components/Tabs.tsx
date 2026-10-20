@@ -1,11 +1,35 @@
 import { Tabs as RTabs } from 'radix-ui';
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 
 export interface TabsProps {
   value: string;
   onValueChange: (v: string) => void;
   label: string;
   tabs: Array<{ value: string; label: ReactNode; content: ReactNode }>;
+}
+
+/** The tab a key moves to, from the tab at `at` of `count`; the arrows wrap at the ends. */
+const MOVE: Record<string, (at: number, count: number) => number> = {
+  ArrowRight: (at, n) => (at + 1) % n,
+  ArrowLeft: (at, n) => (at - 1 + n) % n,
+  Home: () => 0,
+  PageUp: () => 0,
+  End: (_, n) => n - 1,
+  PageDown: (_, n) => n - 1,
+};
+
+/**
+ * Arrow keys, Home and End move focus to a tab, which selects it, during the key press itself. Radix moves focus in
+ * a timer, so a press that comes before that timer runs (a busy machine, a held key) goes to the tab being left and
+ * is lost.
+ */
+function moveFocus(e: KeyboardEvent<HTMLButtonElement>) {
+  const move = MOVE[e.key];
+  if (!move || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  e.preventDefault();
+  const tabs = Array.from(e.currentTarget.parentElement?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []);
+  const at = tabs.indexOf(e.currentTarget);
+  tabs[move(at, tabs.length)]?.focus();
 }
 
 export function Tabs({ value, onValueChange, label, tabs }: TabsProps) {
@@ -18,6 +42,7 @@ export function Tabs({ value, onValueChange, label, tabs }: TabsProps) {
             <RTabs.Trigger
               key={t.value}
               value={t.value}
+              onKeyDown={moveFocus}
               className="-mb-px min-h-11 shrink-0 whitespace-nowrap border-b-2 border-transparent px-4 font-bold text-graphite data-[state=active]:border-ballpoint data-[state=active]:text-ink"
             >
               {t.label}
