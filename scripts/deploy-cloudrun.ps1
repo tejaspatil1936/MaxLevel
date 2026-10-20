@@ -67,7 +67,7 @@ Write-Host "==> Deploying API to Cloud Run..." -ForegroundColor Cyan
     --memory=512Mi `
     --cpu=1 `
     --port=4000 `
-    --set-env-vars="^#^NODE_ENV=production#HOST=0.0.0.0#GCLOUD_PROJECT=$PROJECT_ID#APP_ORIGINS=https://maxlevel.in,https://www.maxlevel.in#TASK_QUEUE=local#WORKER_URL=$workerUrl#FIREBASE_DATABASE_URL=https://$PROJECT_ID-default-rtdb.firebaseio.com#FIREBASE_STORAGE_BUCKET=$PROJECT_ID.firebasestorage.app" `
+    --env-vars-file=api-env.yaml `
     --set-secrets="EXPORT_LINK_SECRET=export-link-secret:latest" `
     --project=$PROJECT_ID
 
