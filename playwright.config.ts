@@ -4,7 +4,11 @@ import { stackEnv } from './tests/env';
 // Acceptance, regression and smoke tests against the static export, the built API and worker, and the emulators
 // (docs/TEST_ENV.md). No retries and one worker: the test clock and emulators are shared.
 const reuse = process.env.PW_REUSE_STACK === '1';
+// Text renders unhinted and in grayscale on every machine, so screenshot baselines (UI-15) match in CI and locally
+// whatever the host's fontconfig defaults are.
 const camera = (clip: string) => [
+  '--font-render-hinting=none',
+  '--disable-lcd-text',
   '--use-fake-ui-for-media-stream',
   '--use-fake-device-for-media-stream',
   `--use-file-for-fake-video-capture=tests/fixtures/camera/${clip}`,
