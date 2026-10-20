@@ -22,7 +22,9 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: true,
   timeout: 60_000,
-  expect: { timeout: 10_000 },
+  // UI-15 baselines: math italics (Unicode math letters) fall back to a system font, which differs by a few dozen
+  // pixels between hosts; any real layout or theme change differs by far more.
+  expect: { timeout: 10_000, toHaveScreenshot: { maxDiffPixels: 120 } },
   outputDir: 'test-results',
   reporter: [['list'], ['json', { outputFile: 'test-results/results.json' }], ['html', { open: 'never' }]],
   use: {
