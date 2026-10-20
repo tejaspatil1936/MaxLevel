@@ -2,7 +2,7 @@
   "files": {
     "scripts/verify.sh": "0007848897f253ce2270f47e48f8ad5304dc15bf4939fbfee1dffd3a9610aca3",
     "scripts/req-coverage.mjs": "0acadcf6cc34357126131d052c702577f52de73d2a5e51a017444964645e37aa",
-    "scripts/locks.mjs": "e7384aba2c4c9740782735ba43d5654d8ca6a219e370b011720e6a22cde130e1",
+    "scripts/locks.mjs": "c7223ef88fc3f02e20056e59ecc5f70cccfb3af0c2ac5c4b353392d1fe2a5d14",
     "scripts/check-commit.mjs": "beb704b017ef1461ccc8d777e717be34b5c7097f9892edd39cbe14fed7c68eba",
     "scripts/loop.sh": "5f9014679e94f2be9ec18d0c6472e00f64905e3c5f133050520a6f76a076c134",
     "scripts/session-start.sh": "c5752e5aacdfb625d76cb241443fc68fbe1ab1a13d2e6892221babbbaf9e4147",

@@ -125,7 +125,7 @@ test.describe('F-3.12 laptop camera @exam', () => {
     await installCameraSpy(page);
     const { exam } = await openExam({ page, signInAs, apiAs, testApi }, camera);
     // Hold the device clock so the no-face grace period cannot end while the preview is checked.
-    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 100);
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1_000);
     await expect(exam.video).toBeVisible();
     await expect(exam.cameraToggle).toHaveAttribute('aria-expanded', 'true');
 

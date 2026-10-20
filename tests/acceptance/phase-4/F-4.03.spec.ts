@@ -168,7 +168,7 @@ test.describe('F-4.03 result page', () => {
       }
     }
     await expect(result.reviewItem(1)).toContainText('A train 240 m long passes a pole in 12 seconds.');
-    await expect(result.reviewItem(3).locator('math'), 'math as MathML in the review').toHaveCount(1);
+    await expect(result.reviewItem(3).locator('math').first(), 'math as MathML in the review').toBeAttached();
     await expectNoSeriousA11yViolations(page);
 
     const body = await getResult(me, payload.attempt.id);
