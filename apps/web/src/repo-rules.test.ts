@@ -1,4 +1,5 @@
 // Static rules for the web app and the repository, checked on every run (docs/MANUAL_CHECKS.md lists them too).
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -119,9 +120,14 @@ describe('accessibility tooling', () => {
 
 describe('repository hygiene', () => {
   it('SEC-01 no service account keys or private keys are committed', () => {
-    const files = walk(ROOT).filter(
-      (f) => !/[\\/]docs[\\/]/.test(f) && !/\.(png|jpe?g|woff2?|y4m|wasm|tflite|ico)$/.test(f),
-    );
+    // Files git would commit (tracked, plus untracked ones not ignored); reading the whole tree took over 5 s on a busy
+    // machine.
+    const files = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { cwd: ROOT })
+      .toString('utf8')
+      .split('\0')
+      .filter((f) => f && !f.startsWith('legacy/') && existsSync(join(ROOT, f)))
+      .map((f) => join(ROOT, f))
+      .filter((f) => !/[\\/]docs[\\/]/.test(f) && !/\.(png|jpe?g|woff2?|y4m|wasm|tflite|ico)$/.test(f));
     const offenders = files.filter((f) => {
       if (/service-account.*\.json$|credentials.*\.json$/i.test(f)) return true;
       const text = readFileSync(f, 'utf8');
