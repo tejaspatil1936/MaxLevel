@@ -15,7 +15,7 @@ fails only on two items that the build is not allowed to change (CLAUDE.md decis
    F-3.03 through the shared DATA-05, as failing. Owner action: `locator('math').first()…toBeAttached()` (or
    `toHaveCount(2)`), then relock phase 4.
 
-Also requested (intermittent, not failing the last runs): `tests/acceptance/phase-3/F-3.12.spec.ts:126` pauses the page
+Also requested (intermittent; it failed in two of the last three local full runs and passed in CI): `tests/acceptance/phase-3/F-3.12.spec.ts:126` pauses the page
 clock at a Node-side time that can be in the page clock's past.
 
 Details and proposed patches: TEST_CHANGE_REQUESTS.md and docs/blocked/. Last verify full in CI on c187861: every other
