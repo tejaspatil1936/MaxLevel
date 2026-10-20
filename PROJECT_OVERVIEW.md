@@ -90,4 +90,4 @@ MaxLevel utilizes **Serverless Scale-to-Zero**:
 - **Source Code Repository**: [https://github.com/tejaspatil1936/MaxLevel](https://github.com/tejaspatil1936/MaxLevel)
 
 ---
-*Created by Atharva Baodhankar & the MaxLevel Team.*
+*Created by Atharva Baodhankar & Tejas Patil (MaxLevel Team).*
