@@ -223,6 +223,9 @@ describe('route access', () => {
     const { app } = await testApp();
     const { asClaims } = await import('./test-support/tokens');
     const fb = (await import('./firebase')).initFirebase();
+    const { seedBase } = await import('./test-support/seed');
+    // The org must exist and be active, or the status check answers before validation runs.
+    await seedBase(fb.db, 1_700_000_000_000);
     const headers = await asClaims(fb.auth, 'admin1@a.test', { role: 'admin', orgId: 'org-a' });
     const res = await app.inject({ method: 'PATCH', url: '/v1/org/settings', payload: {}, headers });
     expect(res.statusCode).toBe(400);
