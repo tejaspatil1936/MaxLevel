@@ -2,6 +2,9 @@
 
 Locked acceptance tests the build believes are wrong. The owner decides; the build does not edit locked tests.
 
+All entries below were approved by the owner on 2026-10-20 and applied in 15d6bc8 (phases 3 and 4 relocked,
+scripts/locks.mjs refrozen). None are open.
+
 ## 2026-10-18 — tests/acceptance/phase-3/F-3.12.spec.ts:126 "PR-03 the self-view can be collapsed…" is intermittent
 
 - What happens: about 1 run in 4 fails with `clock.pauseAt: Cannot fast-forward to the past`, with or without later

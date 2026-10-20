@@ -158,3 +158,4 @@ F-8.02 done — versioned migrations with a ledger and run lease, /tasks/migrate
 Checkpoints: release-gate review and QA found no blocking issue; minor findings in docs/BACKLOG.md (the statement link on the exam preflight and rules pages, the placeholder contact, a 2 px overflow at 150% text, ledger counts, OWNER_SETUP audience and index notes).
 VERIFY full FAIL 016886c2c2d8c17f7aaa03b97d71c0b5998dcac5 (docs/verification/phase-8.md): acceptance-lock fails on the F-5.05 screenshot baselines and the only failing test is the locked F-4.03.spec.ts:171 assertion; every phase 8 feature's tests pass.
 PHASE 8 DONE 2/2 features
+Owner approved the three test change requests on 2026-10-20; applied in 15d6bc8 (F-3.12 clock headroom, F-4.03 first math element, locks.mjs skips *-snapshots/), phases 3 and 4 relocked, locks.mjs refrozen; BLOCKED.md and docs/blocked/ cleared.

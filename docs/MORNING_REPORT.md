@@ -4,49 +4,49 @@ Branch `build/all`. Every phase ran the same loop: tests written and locked firs
 
 ## Result
 
-Last `scripts/verify.sh full` (all phases) on commit `7c5ceca99804f884b90234b086a492388185d055`:
-`VERIFY full FAIL`. 1,382 tests passed, 1 failed, 4 skipped; failed steps: `acceptance-lock` and `e2e`. Working tree clean.
+All 65 features are built. The owner approved the three test change requests on 2026-10-20, and they were applied in
+15d6bc8 with phases 3 and 4 relocked and `scripts/locks.mjs` refrozen:
 
-Both failures are in locked or harness files the build may not change. Each is in docs/blocked/ with the owner action that clears it.
+- F-3.12.spec.ts:126 now pauses the page clock 1 s ahead instead of 100 ms, so it can't land in the clock's past.
+- F-4.03.spec.ts:171 now checks the first `math` element; the prompt holds two formulas.
+- `scripts/locks.mjs` no longer counts `*-snapshots/` files in a locked phase folder as added tests.
 
-- **e2e:** one locked assertion, F-4.03.spec.ts:171. It fails F-4.03, and F-3.03 through the REQ (DATA-05) they share.
-- **acceptance-lock:** the F-5.05 screenshot baselines sit inside the locked phase 5 folder.
+That clears the failures recorded before: the `acceptance-lock` step and the F-4.03 assertion, which also marked
+F-3.03 failing through the shared DATA-05. The final `scripts/verify.sh full` result and its commit were printed when
+the build finished, and the PR's CI runs the same command.
 
-A rerun on the report commit (ca10b2f) also caught:
-- an integration test (API-01 empty settings change) that depended on emulator data left by earlier runs. It is fixed in 935efe8.
-- one more failure of the intermittent F-3.12 test (listed below).
+Late fixes found while getting CI green:
+- 935efe8: an integration test (API-01 empty settings change) depended on emulator data left by earlier runs.
+- 9a6a45a, f810ece: screenshot tests render text the same on every host, with a 120-pixel allowance for math italics.
+- c187861: arrow keys in tabs lost presses on a busy machine.
 
-The final run on the pull request head was printed when the build finished. The PR's CI runs the same command.
+The 4 skipped tests are the two camera-clip tests (waiting for OWNER_SETUP 3.1) and the two real-provider smoke tests
+(no credentials).
 
-The 4 skipped tests are the two camera-clip tests (waiting for OWNER_SETUP 3.1) and the two real-provider smoke tests (no credentials).
-
-| Phase | Passing / total features |
+| Phase | Features |
 | --- | --- |
-| 0 Foundations | 10 / 10 |
-| 1 Organizations, students, shell | 13 / 13 |
-| 2 Series, tests, questions | 9 / 9 |
-| 3 Exam taking and proctoring | 12 / 13 (F-3.03 reported failing through DATA-05) |
-| 4 Results, leaderboards, exports | 5 / 6 (F-4.03) |
-| 5 Live operations | 5 / 5 |
-| 6 AI question import | 4 / 4 |
-| 7 Analytics reports | 3 / 3 |
-| 8 Accessibility statement, migrations | 2 / 2 |
-| **Total** | **63 / 65** |
+| 0 Foundations | 10 |
+| 1 Organizations, students, shell | 13 |
+| 2 Series, tests, questions | 9 |
+| 3 Exam taking and proctoring | 13 |
+| 4 Results, leaderboards, exports | 6 |
+| 5 Live operations | 5 |
+| 6 AI question import | 4 |
+| 7 Analytics reports | 3 |
+| 8 Accessibility statement, migrations | 2 |
+| **Total** | **65** |
 
-Per-phase verification reports: docs/verification/phase-1.md to phase-8.md. Progress, decisions and review findings: PROGRESS.md.
+Per-phase verification reports: docs/verification/phase-1.md to phase-8.md. Progress, decisions and review findings:
+PROGRESS.md.
 
 ## Blocked (docs/blocked/)
 
-- **phase-3-F-3.03.md:** every F-3.03 test passes. verify marks it failing only because it shares DATA-05 with the F-4.03 locked assertion.
-- **phase-3-F-3.12.md:** a locked test (F-3.12.spec.ts:126) that sometimes fails. It calls `page.clock.pauseAt(Date.now()+100)`, which can land in the page clock's past. It passed in most full runs and failed again in one late run.
-- **phase-4-F-4.03.md:** the locked test expects one `math` element in a prompt that holds two formulas (`$x + 3 = 7$` and `$x$`). The app is built; every other check of that test passes.
-- **phase-5-F-5.05.md:** `scripts/locks.mjs` counts the 12 screenshot baselines in tests/acceptance/phase-5/ as added tests. The repo guard forbids moving them, so every verify run fails its `acceptance-lock` step.
+None. The four files recorded before (F-3.03, F-3.12, F-4.03 and F-5.05) were removed once the approved test changes
+were applied.
 
-## Test change requests (TEST_CHANGE_REQUESTS.md), for the owner to approve
+## Test change requests (TEST_CHANGE_REQUESTS.md)
 
-1. F-3.12.spec.ts:126: pause relative to the page clock, e.g. `pauseAt((await page.evaluate(() => Date.now())) + 1_000)`.
-2. F-4.03.spec.ts:171: `locator('math').first()…toBeAttached()` or `toHaveCount(2)`. Relock phase 4.
-3. scripts/locks.mjs: skip or lock `*-snapshots/` in locked phase folders, then relock phase 5. Alternatively, move the baselines under tests/snapshots/ with a `snapshotPathTemplate`.
+All three were approved by the owner and applied in 15d6bc8. None are open.
 
 ## Auto-decided answers (docs/OPEN_QUESTIONS.md)
 
