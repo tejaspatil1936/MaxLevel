@@ -174,4 +174,25 @@ test.describe('phase 3 QA: admin authoring pages reflow at 320 px', () => {
     await expect(series.addTest).toBeVisible();
     expect(await scrollsHorizontally(page), 'series page at 320 px').toBe(false);
   });
+
+  test('A11Y-03 every arrow key press moves one tab, even when the presses arrive faster than the page runs its timers', async ({
+    page,
+    signInAs,
+    testApi,
+  }) => {
+    // Found in CI: the tabs moved focus in a timer after each key press, so on a busy machine a press that came
+    // first went to the tab focus was leaving and was lost. Sending the presses without waiting for each other
+    // makes that happen on every machine.
+    const { testId } = await testApi.seedAuthoringTest({ orgId: ORG_A.id });
+    await signInAs(accounts.adminA);
+    const editor = new TestEditorPage(page);
+    await page.goto(TestEditorPage.url(testId));
+    await expect(editor.tablist).toBeVisible();
+    await editor.tab('Questions').focus();
+    await Promise.all([0, 1, 2, 3, 4].map(() => page.keyboard.press('ArrowRight')));
+    await expect(editor.tab('Preview')).toBeFocused();
+    await expect(editor.tab('Preview')).toHaveAttribute('aria-selected', 'true');
+    await Promise.all([0, 1].map(() => page.keyboard.press('ArrowLeft')));
+    await expect(editor.tab('Settings')).toBeFocused();
+  });
 });
