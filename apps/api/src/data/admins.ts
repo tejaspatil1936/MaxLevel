@@ -1,6 +1,6 @@
 import type { OrgAdmin } from '@mitaoe/shared';
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
-import { emailKey, normalizeEmail } from './keys';
+import { emailKey, normalizeEmail, toMillis } from './keys';
 import { writer, type Tx } from './tx';
 
 export interface AdminRecord extends OrgAdmin {
@@ -16,7 +16,7 @@ export function adminsData(db: Firestore) {
     status: d.get('status'),
     uid: d.get('uid') ?? null,
     signedIn: !!d.get('uid'),
-    addedAt: d.get('addedAt') ?? 0,
+    addedAt: toMillis(d.get('addedAt')),
   });
   return {
     async linkAdminUid(orgId: string, adminId: string, uid: string): Promise<void> {

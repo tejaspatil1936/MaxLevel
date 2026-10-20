@@ -1,5 +1,6 @@
 import type { FeatureMap, LimitMap, OrgDetail, OrgSettingsPatch, OrgSummary } from '@mitaoe/shared';
 import type { Firestore } from 'firebase-admin/firestore';
+import { toMillis } from './keys';
 import { writer, type Tx } from './tx';
 
 export interface OrgRecord extends OrgSummary {
@@ -22,7 +23,7 @@ export const toOrgRecord = (s: FirebaseFirestore.DocumentSnapshot): OrgRecord =>
   featureOverrides: s.get('featureOverrides') ?? {},
   limitOverrides: s.get('limitOverrides') ?? {},
   profileLocked: s.get('profileLocked') === true,
-  createdAt: s.get('createdAt') ?? 0,
+  createdAt: toMillis(s.get('createdAt')),
 });
 
 export function orgsData(db: Firestore) {

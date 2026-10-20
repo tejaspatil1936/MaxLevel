@@ -1,6 +1,6 @@
 import type { WhitelistEntry, WhitelistStatus } from '@mitaoe/shared';
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
-import { emailKey, normalizeEmail } from './keys';
+import { emailKey, normalizeEmail, toMillis } from './keys';
 import { writer, type Tx } from './tx';
 
 export function whitelistData(db: Firestore) {
@@ -12,7 +12,7 @@ export function whitelistData(db: Firestore) {
     status: d.get('status'),
     studentId: d.get('studentId') ?? null,
     source: d.get('source') ?? 'upload',
-    addedAt: d.get('addedAt') ?? 0,
+    addedAt: toMillis(d.get('addedAt')),
   });
   return {
     async listWhitelist(orgId: string): Promise<WhitelistEntry[]> {

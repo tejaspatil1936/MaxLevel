@@ -1,5 +1,6 @@
 import type { DailyWindow, EligibilityRules, SeriesDefaults, SeriesStatus } from '@mitaoe/shared';
 import type { Firestore } from 'firebase-admin/firestore';
+import { toMillis } from './keys';
 import { writer, type Tx } from './tx';
 
 /** A series as stored under organizations/{orgId}/series (spec 5.1, PLAN `Series`). */
@@ -43,8 +44,8 @@ export function seriesData(db: Firestore) {
     ...(d.get('dailyWindow') ? { dailyWindow: d.get('dailyWindow') as DailyWindow } : {}),
     defaults: d.get('defaults') ?? {},
     eligibility: rules(d.get('eligibility')),
-    createdAt: d.get('createdAt') ?? 0,
-    updatedAt: d.get('updatedAt') ?? 0,
+    createdAt: toMillis(d.get('createdAt')),
+    updatedAt: toMillis(d.get('updatedAt')),
   });
 
   return {

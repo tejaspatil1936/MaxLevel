@@ -1,6 +1,6 @@
 import type { AccommodationInput, Accommodations, WhitelistStatus } from '@mitaoe/shared';
 import { FieldPath, FieldValue, type Firestore } from 'firebase-admin/firestore';
-import { normalizeEmail } from './keys';
+import { normalizeEmail, toMillis } from './keys';
 import { writer, type Tx } from './tx';
 
 export interface StudentRecord {
@@ -31,9 +31,9 @@ export function studentsData(db: Firestore) {
     departmentId: d.get('departmentId'),
     graduationYear: d.get('graduationYear'),
     status: d.get('status'),
-    consentAt: d.get('consentAt') ?? null,
-    createdAt: d.get('createdAt') ?? 0,
-    updatedAt: d.get('updatedAt') ?? 0,
+    consentAt: d.get('consentAt') ? toMillis(d.get('consentAt')) : null,
+    createdAt: toMillis(d.get('createdAt')),
+    updatedAt: toMillis(d.get('updatedAt')),
     accommodations: d.get('accommodations') ?? {},
   });
   return {

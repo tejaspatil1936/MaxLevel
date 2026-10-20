@@ -1,5 +1,6 @@
 import type { EligibilityRules, Section, Settings, SettingsOverrides, TestStatus } from '@mitaoe/shared';
 import { FieldValue, type Firestore, type Transaction } from 'firebase-admin/firestore';
+import { toMillis } from './keys';
 import { writer, type Tx } from './tx';
 
 /** A test as stored under organizations/{orgId}/tests (spec 5.2, PLAN `Test`). */
@@ -80,10 +81,10 @@ export function testsData(db: Firestore) {
       questionSetVersion: d.get('questionSetVersion') ?? 1,
       totalMarks: d.get('totalMarks') ?? 0,
       attemptsStarted: d.get('attemptsStarted') === true,
-      resultsReleasedAt: typeof d.get('resultsReleasedAt') === 'number' ? (d.get('resultsReleasedAt') as number) : null,
+      resultsReleasedAt: d.get('resultsReleasedAt') ? toMillis(d.get('resultsReleasedAt')) : null,
       resultsWithdrawn: d.get('resultsWithdrawn') === true,
-      createdAt: d.get('createdAt') ?? 0,
-      updatedAt: d.get('updatedAt') ?? 0,
+      createdAt: toMillis(d.get('createdAt')),
+      updatedAt: toMillis(d.get('updatedAt')),
     };
   };
 
