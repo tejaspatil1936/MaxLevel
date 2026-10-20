@@ -41,7 +41,7 @@ gcloud run deploy testprep-worker `
     --max-instances=5 `
     --memory=1Gi `
     --cpu=1 `
-    --set-env-vars="NODE_ENV=production,PORT=4001,HOST=0.0.0.0,GCLOUD_PROJECT=$PROJECT_ID,LLM_PROVIDER=vertex,GOOGLE_VERTEX_PROJECT=$PROJECT_ID,GOOGLE_VERTEX_LOCATION=$REGION,LLM_MODEL=gemini-2.0-flash,FIREBASE_DATABASE_URL=https://$PROJECT_ID-default-rtdb.firebaseio.com,FIREBASE_STORAGE_BUCKET=$PROJECT_ID.firebasestorage.app" `
+    --set-env-vars="NODE_ENV=production,PORT=4001,HOST=0.0.0.0,GCLOUD_PROJECT=$PROJECT_ID,LLM_PROVIDER=vertex,GOOGLE_VERTEX_PROJECT=$PROJECT_ID,GOOGLE_VERTEX_LOCATION=$REGION,LLM_MODEL=gemini-2.5-flash,FIREBASE_DATABASE_URL=https://$PROJECT_ID-default-rtdb.firebaseio.com,FIREBASE_STORAGE_BUCKET=$PROJECT_ID.firebasestorage.app" `
     --project=$PROJECT_ID
 
 $workerUrl = (gcloud run services describe testprep-worker --region=$REGION --project=$PROJECT_ID --format="value(status.url)").Trim()
