@@ -1,0 +1,33 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "exclude": ["exports", "types", "nsExports", "nsTypes", "duplicates", "enumMembers"],
+  "workspaces": {
+    ".": {
+      "entry": ["tests/**/*.spec.ts", "scripts/*.mjs"],
+      "project": ["tests/**/*.ts", "scripts/*.mjs"]
+    },
+    "apps/api": {
+      "entry": ["src/server.ts", "src/seed-cli.ts", "src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/worker": {
+      "entry": ["src/server.ts", "src/**/*.test.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@fontsource-variable/.+"]
+    },
+    "apps/web": {
+      "entry": ["app/**/*.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
+      "project": ["app/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["@fontsource-variable/.+", "tailwindcss"]
+    },
+    "packages/shared": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/ui": {
+      "entry": ["src/**/*.test.ts", "src/**/*.stories.tsx"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["tailwindcss"]
+    }
+  }
+}

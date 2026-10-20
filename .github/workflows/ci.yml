@@ -1,0 +1,76 @@
+# CI-02: every pull request (and every push to main) runs the full verification gate.
+# Branch pushes do not run CI, to save GitHub Actions minutes. Nothing here deploys.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans the history
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install tools (firebase-tools, gitleaks, semgrep, ffmpeg, xvfb)
+        run: |
+          npm install -g firebase-tools@15
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          pipx install semgrep
+          sudo apt-get update -y && sudo apt-get install -y ffmpeg xvfb psmisc
+
+      - name: Cache Firebase emulators
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}-15
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Verify
+        run: scripts/verify.sh full
+
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify
+          path: .verify/
+          if-no-files-found: ignore
+
+      - name: Upload Playwright report and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore

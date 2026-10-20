@@ -1,0 +1,27 @@
+{
+  "file": "reasoning-notes.txt",
+  "pages": {
+    "1": [
+      {
+        "prompt": "Find the next number in the series: 3, 6, 12, 24, ...",
+        "options": ["30", "36", "48", "60"],
+        "correct": [2],
+        "explanation": "Each number is twice the one before it.",
+        "difficulty": "easy",
+        "section": "Reasoning"
+      },
+      {
+        "prompt": "If all roses are flowers and some flowers fade quickly, which statement must be true?",
+        "options": [
+          "All roses fade quickly",
+          "Some roses fade quickly",
+          "No rose fades quickly",
+          "None of these must be true"
+        ],
+        "correct": [3],
+        "difficulty": "hard",
+        "section": "Reasoning"
+      }
+    ]
+  }
+}

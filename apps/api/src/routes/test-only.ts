@@ -1,0 +1,150 @@
+import { llmCallSchema, llmScriptSchema, pendingTaskSchema, reportLlmCallSchema, TestClock } from '@mitaoe/shared';
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { z } from 'zod';
+import type { Deps } from '../deps';
+import { AppError } from '../errors';
+import { localTaskDispatcher } from '../tasks/dispatcher';
+import { localTaskQueue } from '../tasks/local-queue';
+import { clearEmulators } from '../test-support/emulators';
+import { SCENARIOS } from '../test-support/scenarios';
+import { seedBase } from '../test-support/seed';
+
+/** True only when NODE_ENV=test, TEST_API_SECRET is set and the clock is settable (PLAN section 6). */
+export const testApiEnabled = (deps: Deps): deps is Deps & { clock: TestClock } =>
+  deps.config.env === 'test' && !!deps.config.testApiSecret && deps.clock instanceof TestClock;
+
+/** In-memory caches the reset empties, so one test's entitlements or account status never leak into the next. */
+export interface ResettableCaches {
+  clearCaches: () => void;
+}
+
+export function testOnlyRoutes(deps: Deps & { clock: TestClock } & ResettableCaches): FastifyPluginAsyncZod {
+  const { clock, config } = deps;
+  const dispatcher = deps.dispatcher ?? localTaskDispatcher(deps.firebase.db, clock, { workerUrl: config.workerUrl });
+  const clockBody = z.union([z.object({ nowMs: z.number().int() }), z.object({ advanceMs: z.number().int() })]);
+  const clockReply = { 200: z.object({ nowMs: z.number() }) };
+
+  const forwardClockToWorker = async () => {
+    const res = await fetch(`${config.workerUrl}/__test/clock`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-test-secret': config.testApiSecret ?? '' },
+      body: JSON.stringify({ nowMs: clock.now() }),
+    }).catch(() => null);
+    if (!res?.ok) throw new AppError(502, 'INTERNAL', 'The worker did not accept the clock change.');
+  };
+
+  /** The worker runs the mock model, so its script, release and call log go there (docs/testids/phase-6.md). */
+  const toWorker = async (method: 'GET' | 'POST', path: string, body?: unknown) => {
+    const res = await fetch(`${config.workerUrl}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', 'x-test-secret': config.testApiSecret ?? '' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    }).catch(() => null);
+    if (!res?.ok) throw new AppError(502, 'INTERNAL', `The worker did not accept ${method} ${path}.`);
+    return res.json() as Promise<unknown>;
+  };
+  const ok = { 200: z.object({ ok: z.literal(true) }) };
+
+  return async (app) => {
+    app.addHook('onRequest', async (req) => {
+      if (req.headers['x-test-secret'] !== config.testApiSecret)
+        throw new AppError(403, 'FORBIDDEN', 'Test secret missing.');
+    });
+
+    app.get('/__test/clock', { schema: { response: clockReply } }, async () => ({ nowMs: clock.now() }));
+
+    app.post('/__test/clock', { schema: { body: clockBody, response: clockReply } }, async (req) => {
+      if ('nowMs' in req.body) clock.set(req.body.nowMs);
+      else clock.advance(req.body.advanceMs);
+      await forwardClockToWorker();
+      return { nowMs: clock.now() };
+    });
+
+    // The local queue's tasks not yet run (docs/TEST_ENV.md, "Test-only API").
+    app.get(
+      '/__test/tasks',
+      { schema: { response: { 200: z.object({ tasks: z.array(pendingTaskSchema) }) } } },
+      async () => ({ tasks: await localTaskQueue(deps.firebase.db, clock).pending() }),
+    );
+
+    // Runs every task due on the clock now and waits for them, so tests need not wait for the dispatcher's check.
+    app.post(
+      '/__test/tasks/run-due',
+      { schema: { response: { 200: z.object({ ran: z.array(z.string()) }) } } },
+      async () => ({ ran: await dispatcher.runDue() }),
+    );
+
+    app.post('/__test/llm', { schema: { body: llmScriptSchema, response: ok } }, async (req) => {
+      await toWorker('POST', '/__test/llm', req.body);
+      return { ok: true as const };
+    });
+
+    app.post('/__test/llm/release', { schema: { body: z.object({}), response: ok } }, async () => {
+      await toWorker('POST', '/__test/llm/release', {});
+      return { ok: true as const };
+    });
+
+    app.get(
+      '/__test/llm/calls',
+      { schema: { response: { 200: z.object({ calls: z.array(llmCallSchema) }) } } },
+      async () => z.object({ calls: z.array(llmCallSchema) }).parse(await toWorker('GET', '/__test/llm/calls')),
+    );
+
+    // Phase 7: every report summary call with its system and user messages (docs/testids/phase-7.md).
+    const reportCalls = z.object({ calls: z.array(reportLlmCallSchema) });
+    app.get('/__test/llm/report-calls', { schema: { response: { 200: reportCalls } } }, async () =>
+      reportCalls.parse(await toWorker('GET', '/__test/llm/report-calls')),
+    );
+
+    app.post('/__test/clock/real', { schema: { response: clockReply } }, async () => {
+      clock.followReal();
+      return { nowMs: clock.now() };
+    });
+
+    app.post(
+      '/__test/reset',
+      {
+        schema: {
+          body: z.object({ seed: z.enum(['base', 'none']).default('base') }).default({ seed: 'base' }),
+          response: { 200: z.object({ ok: z.literal(true) }) },
+        },
+      },
+      async (req) => {
+        clock.reset();
+        deps.clearCaches();
+        // The mock model's script and calls go too; integration tests run no worker, so a missing one is fine.
+        await toWorker('POST', '/__test/llm/reset', {}).catch(() => undefined);
+        await clearEmulators();
+        if (req.body.seed === 'base') await seedBase(deps.firebase.db, clock.now());
+        return { ok: true as const };
+      },
+    );
+
+    app.post(
+      '/__test/seed/:scenario',
+      {
+        schema: {
+          params: z.object({ scenario: z.string() }),
+          body: z.record(z.string(), z.unknown()).default({}),
+          // Scenario IDs: a string, a list in order (questionIds), a map by name (sectionIds) or times (window).
+          response: {
+            200: z.record(
+              z.string(),
+              z.union([
+                z.string(),
+                z.array(z.string()),
+                z.record(z.string(), z.string()),
+                z.record(z.string(), z.number()),
+              ]),
+            ),
+          },
+        },
+      },
+      async (req) => {
+        const run = SCENARIOS[req.params.scenario];
+        if (!run) throw new AppError(404, 'NOT_FOUND', `No scenario named ${req.params.scenario}.`);
+        return run(deps.firebase.db, clock.now(), req.body, deps.queue);
+      },
+    );
+  };
+}

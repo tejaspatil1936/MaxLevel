@@ -1,0 +1,39 @@
+/* Base element styles shared by every screen. Import after tokens.css and theme.css. */
+@layer base {
+  html {
+    background: var(--sheet);
+    color: var(--ink);
+    font-family: var(--font-text);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    font-size: var(--text-body);
+    line-height: 1.6;
+    background: var(--sheet);
+  }
+  /* A11Y-04: a 2 px ballpoint ring with a 2 px offset on every focused control. The colour is set on every element,
+     so a colour transition never shows the ring in another colour while it appears. */
+  * {
+    outline-color: var(--ballpoint);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ballpoint);
+    outline-offset: 2px;
+  }
+  /* Sticky bars never cover the focused element. */
+  html {
+    scroll-padding-block: 96px;
+  }
+  ::selection {
+    background: var(--ballpoint-wash);
+    color: var(--ink);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums; /* UI-06 */
+  }
+  [data-contrast='high'] .border,
+  [data-contrast='high'] [class*='border-'] {
+    border-width: var(--border-width);
+  }
+}

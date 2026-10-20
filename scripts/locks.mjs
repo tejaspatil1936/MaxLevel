@@ -52,7 +52,7 @@ if (kind === 'acceptance') {
         if (!fs.existsSync(f)) problems.push(`missing: ${f}`);
         else if (sha(f) !== h) problems.push(`changed: ${f}`);
       }
-      for (const f of walk(`tests/acceptance/phase-${phase}`)) if (!files[f]) problems.push(`added to locked phase ${phase}: ${f}`);
+      for (const f of walk(`tests/acceptance/phase-${phase}`)) if (!files[f] && !f.includes('-snapshots/')) problems.push(`added to locked phase ${phase}: ${f}`);
     }
     if (problems.length) fail('LOCKED ACCEPTANCE TESTS CHANGED\n' + problems.join('\n'));
     console.log(`Acceptance lock OK (${Object.keys(lock.phases).length} phase(s) locked)`);

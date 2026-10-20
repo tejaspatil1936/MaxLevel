@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@import '@mitaoe/ui/tokens.css';
+@import '@mitaoe/ui/theme.css';
+@import '@mitaoe/ui/base.css';
+
+/* packages/ui is linked into node_modules, which Tailwind skips by default. */
+@source '../../../packages/ui/src';

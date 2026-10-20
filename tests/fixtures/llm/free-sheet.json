@@ -1,0 +1,19 @@
+{
+  "file": "free-sheet.csv",
+  "pages": {
+    "1": [
+      {
+        "prompt": "Which is the largest planet in the solar system?",
+        "options": ["Mars", "Jupiter", "Venus", "Earth"],
+        "correct": [1],
+        "difficulty": "easy"
+      },
+      {
+        "prompt": "What is the chemical symbol for sodium?",
+        "options": ["So", "Sd", "Na", "S"],
+        "correct": [2],
+        "difficulty": "easy"
+      }
+    ]
+  }
+}

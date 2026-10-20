@@ -3,6 +3,8 @@ node_modules/
 .turbo/
 .next/
 out/
+# copied from @mediapipe/tasks-vision at build time (apps/web/scripts/copy-mediapipe.mjs)
+apps/web/public/mediapipe/wasm/
 dist/
 coverage/
 playwright-report/
@@ -26,3 +28,9 @@ firestore-debug.log*
 !.env.example
 !.env.test
 *service-account*.json
+*.tsbuildinfo
+apps/web/next-env.d.ts
+.emulators.log
+.emulators.pid
+.stack/
+storybook-static/

@@ -1,0 +1,74 @@
+{
+  "phases": {
+    "0": {
+      "tests/acceptance/phase-0/F-0.02.spec.ts": "f987d8ba963948286e2a7ff50db1f34cc2b874bb93fa2676f7ff58c1ca1e624d",
+      "tests/acceptance/phase-0/F-0.10.spec.ts": "3ad5830aee4b50469b8d9df53d7fd76078f7543c49a97efac6b01d9a341d324d"
+    },
+    "1": {
+      "tests/acceptance/phase-1/F-1.01.spec.ts": "bb3fe33a6f086a9f209a8b48349c6b3d7a05dad2e81b80f1e13fb55bc1bb2b73",
+      "tests/acceptance/phase-1/F-1.02.spec.ts": "d89a9e6ae1cdd61f516f3a5e1fe7f7ee8af0bb669e5f995441ab0f0966c0c5fc",
+      "tests/acceptance/phase-1/F-1.03.spec.ts": "4bb9c3a5ad08c63e567d87c0d139793bd16d2c292df4fb3de2d06a9743ddf368",
+      "tests/acceptance/phase-1/F-1.04.spec.ts": "8af4ed330f052a01aa7e201076b0be857bfe30090768bdcba8830ed8ed0b1a1c",
+      "tests/acceptance/phase-1/F-1.05.spec.ts": "da99e98c69ae5e653bc1fba771c82cc0a3f6476581f19e89ddf44d1231914682",
+      "tests/acceptance/phase-1/F-1.06.spec.ts": "53795d20cf4f9443489e4fe963750509254352067848d0b0c1262ec0cdd6e781",
+      "tests/acceptance/phase-1/F-1.07.spec.ts": "9f3892d54e1d3bec9cb7087936b33762b6f82e6ac02e080b4654ccfd310c1135",
+      "tests/acceptance/phase-1/F-1.08.spec.ts": "9c2a1bf771ec15f40d34676d46f813e5c3518a786fcbb3daf54df4c57d474ddf",
+      "tests/acceptance/phase-1/F-1.09.spec.ts": "dd7bd4baaeb222801545ab8a4353525186881c1110027742ebafa87894f8ad25",
+      "tests/acceptance/phase-1/F-1.10.spec.ts": "8e4aa6ad66e2877a92d76d783d5f0e3006ed7f657e793274a463832c4f41537e",
+      "tests/acceptance/phase-1/F-1.11.spec.ts": "6293908fb36ac10bc7139f779dcaf871620ea0fb16ebb41e5d93f7a916b34b54",
+      "tests/acceptance/phase-1/F-1.12.spec.ts": "bde3abc5afa5c4d0eaebae340bac7d38588ef74b74adbe977157684a68817356",
+      "tests/acceptance/phase-1/F-1.13.spec.ts": "3321ef156b24fb0f5c0277852d1a64ed6ecbe3b74ee5658507e2bcdc696e41e6"
+    },
+    "2": {
+      "tests/acceptance/phase-2/F-2.02.spec.ts": "a37445389e96ac8b68e62893c6db61e82c399076eb4a84aad61772ba81a6a184",
+      "tests/acceptance/phase-2/F-2.03.spec.ts": "ede3260806d3d401297a9d3183154052d8be3e52859f307ed333f8f1f693f3d0",
+      "tests/acceptance/phase-2/F-2.04.spec.ts": "9bfa4514d0ec27822f37a556fbfa9d8a0c3f7b5d84a10ae1360f8f813aa3e9d1",
+      "tests/acceptance/phase-2/F-2.05.spec.ts": "8696921d798667130030df2428d78e07f515fb3651e8cff027a6bf243efffa16",
+      "tests/acceptance/phase-2/F-2.06.spec.ts": "8e540b570d9eccf018d7ced0308dec541a59b20cecd576172f0efaafebff84b8",
+      "tests/acceptance/phase-2/F-2.07.spec.ts": "ba4bfee9a937c69de730735387a0ae26bd75b5645cf7feec5ccfcb714a57ac4f",
+      "tests/acceptance/phase-2/F-2.08.spec.ts": "91d94f6d78f3c50937802d11d09386b907fc6d19875fb67b0c2097d54a3bfc68",
+      "tests/acceptance/phase-2/F-2.09.spec.ts": "c6dcc712bad8465dd04f473ea617e62015076a0258a19eda98cb75ab522e7f75"
+    },
+    "3": {
+      "tests/acceptance/phase-3/F-3.02.spec.ts": "02dab3c73c3bd232161f5da5e1508ec901845fdd7a0197cf30094404b96a5012",
+      "tests/acceptance/phase-3/F-3.03.spec.ts": "9ade336670f0332e5912af556e9df1552109f054e1b86d871a63c95724b36cc7",
+      "tests/acceptance/phase-3/F-3.04.spec.ts": "f700c27c1f832b87cbc32a95218440e64a123fef84977cbbbb98f4540075a809",
+      "tests/acceptance/phase-3/F-3.05.spec.ts": "32562b4deff76dd5a51ee4f686e76daca583ddb94b41e7f89b4ac8f93e5d53fd",
+      "tests/acceptance/phase-3/F-3.06.spec.ts": "ad41dbdb623f555edf8731de414eafb29ed55643adecbce2f047b576e9969cb0",
+      "tests/acceptance/phase-3/F-3.07.spec.ts": "0cc5577472425317918983df0ad4fdc169343b49cbd22109539b6f07c406e109",
+      "tests/acceptance/phase-3/F-3.08.spec.ts": "a196a4f4c71b608b97c1fa6869cd4f65cbe9d9d0852dc23c74a1e95f510d7e04",
+      "tests/acceptance/phase-3/F-3.09.spec.ts": "e7ae888ededd4704bd0357f5224ef968ad285bccda9d8d7bf6312a08f533cb95",
+      "tests/acceptance/phase-3/F-3.10.spec.ts": "b22e9bfeab66c4dee3889ce45b852c94c006273c5669fa8ee5afb2f91c42764f",
+      "tests/acceptance/phase-3/F-3.11.spec.ts": "7731d414690f5bd24d84383c61ff8f03cc1ddf329391930e347991b453561ef7",
+      "tests/acceptance/phase-3/F-3.12.spec.ts": "f1aa38e9461cd0f17426a731f9deb76d0c663d9ca559171a6995971e50947adb",
+      "tests/acceptance/phase-3/F-3.13.spec.ts": "175abbae8a2ba95da75adf844e57e043112126972ae6f615fd60e35c514bfe7b"
+    },
+    "4": {
+      "tests/acceptance/phase-4/F-4.02.spec.ts": "6a99bda4d7cfd7085158e95f89688a9b2ac21fb7b8f531c9760606587997cd2f",
+      "tests/acceptance/phase-4/F-4.03.spec.ts": "5232ada8f04ce62b7c786389507518938cf04caa60291bbd0170e8701e7e00fb",
+      "tests/acceptance/phase-4/F-4.04.spec.ts": "422f939f4c61fa99ebb2dc94e380bde72d3297a8a89b14a02bc5f597be589305",
+      "tests/acceptance/phase-4/F-4.05.spec.ts": "90e37aa946935985e751d69701d179f572575c9cf58744e4aa8d6ede098e1d97",
+      "tests/acceptance/phase-4/F-4.06.spec.ts": "a4101b95e4538d18c8273001f3d3debda4d1dae27540200aaded3200acacb023"
+    },
+    "5": {
+      "tests/acceptance/phase-5/F-5.01.spec.ts": "82b58b64a6e66caca734d711db40a00005db80857dd0ad1ba605630b198564c5",
+      "tests/acceptance/phase-5/F-5.02.spec.ts": "45fe664f89299cb975d7c83bef6cb46f06a6dc3a98ad0d81e9ad4af85971cccd",
+      "tests/acceptance/phase-5/F-5.03.spec.ts": "5325b5dd7fd541def5343c7337980ee21c79df81b37e72c535c3e2c19a94b655",
+      "tests/acceptance/phase-5/F-5.04.spec.ts": "88c0ba976ec54af3e65b388bb4cde31bbdb40eaf7e088d7574a2575e30eefd15",
+      "tests/acceptance/phase-5/F-5.05.spec.ts": "b861a24f42b84bb6cf7df84907e7b04575d7e33251c4bf075c3938e5da33c7e5"
+    },
+    "6": {
+      "tests/acceptance/phase-6/F-6.02.spec.ts": "58e0efbc11b5c2380bbc202a61c5dd53f3eda56365ca20ae5fe4edc77b94b096",
+      "tests/acceptance/phase-6/F-6.03.spec.ts": "ed766dbcb7f281a687ffbef47a7f8a9d679c3335db7a4f8cf9aff1f68518528b",
+      "tests/acceptance/phase-6/F-6.04.spec.ts": "1b25fb14b755f082b77c1ce0456b65af0ed40615291bc2741ded011416da87c0"
+    },
+    "7": {
+      "tests/acceptance/phase-7/F-7.02.spec.ts": "673a712acffef5a28dcd3e8839fdacbd8c7a962344a50b089348fefbb452bd82",
+      "tests/acceptance/phase-7/F-7.03.spec.ts": "ae4d574aeff7b6b471a73b7dda9cc636a73ceefdb8de6130b26355bfded7ca8e"
+    },
+    "8": {
+      "tests/acceptance/phase-8/F-8.01.spec.ts": "105786ac5db0d0aa34cc8e54a01fe13b9950c234958d370d0cb6a994638ab708",
+      "tests/acceptance/phase-8/F-8.02.spec.ts": "4dac578bf66ffd164d0ee6d9ecf1e4232de1c78b3e70abecd001efee776e1d63"
+    }
+  }
+}

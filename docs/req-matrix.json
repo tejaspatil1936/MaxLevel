@@ -1,0 +1,1784 @@
+{
+  "ORG-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "data-access writes land under organizations/{orgId}/... and every stored record carries orgId"
+  },
+  "ORG-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "bootstrap sets role and orgId custom claims; the API reads them from the verified token"
+  },
+  "ORG-03": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "every exported data-access function in apps/api/src/data takes orgId as its first required argument (type review)"
+  },
+  "ORG-04": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "super admin acting with X-Org-Id writes the audit entry into that organization's auditLogs"
+  },
+  "ORG-05": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "admin of org A gets 404 (not 403) for org B resources on every admin route"
+  },
+  "ORG-06": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "super admin creates an organization with name, slug, timezone, logo and departments; it appears as active"
+  },
+  "ORG-07": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "suspended org's admin and student cannot sign in; archived org is read-only for super admin"
+  },
+  "ORG-08": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "super admin adds an admin by email; that Google account signs in and lands in the admin workspace"
+  },
+  "ORG-09": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "super admin uses the sidebar switcher to enter org A's admin workspace and sees the admin screens"
+  },
+  "ORG-10": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "super admin creates, edits and publishes a series and test inside org A's workspace"
+  },
+  "ORG-11": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "admin routes accept a super-admin token with X-Org-Id; guards allow admin-of-org or super admin only"
+  },
+  "ORG-12": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "banner names the organization the super admin is in; their action is logged with the super admin as actor"
+  },
+  "ORG-13": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "a disabled feature returns 403 FEATURE_DISABLED for a super admin in that org too; enabling it is audit-logged"
+  },
+  "ORG-14": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "a route-table test calls every admin route with an admin token and with a super-admin token plus X-Org-Id"
+  },
+  "FF-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "resolveEntitlements applies org override, then plan, then system default"
+  },
+  "FF-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "an endpoint behind a disabled flag returns 403 FEATURE_DISABLED"
+  },
+  "FF-03": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "a disabled feature shows locked with \"Not included in your organization's plan\", not missing"
+  },
+  "FF-04": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "monthly usage counters increment atomically under concurrency and a job at the limit is refused before it starts"
+  },
+  "FF-05": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "PUT entitlements writes an audit entry with before and after values"
+  },
+  "FF-06": {
+    "phase": 1,
+    "status": "proposed",
+    "verify": "integration",
+    "check": "plans act as named presets of flags and limits"
+  },
+  "AUTH-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "user signs in with Google through the Auth emulator popup and reaches their home screen"
+  },
+  "AUTH-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "bootstrap resolves super-admin list, then admin record, then whitelist entry, and sets claims"
+  },
+  "AUTH-03": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "an unlisted Google account sees \"This Google account isn't on any organization's list. Ask your placement cell to add it.\""
+  },
+  "AUTH-04": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "an email whitelisted in two orgs chooses one at sign-in; switching repeats bootstrap"
+  },
+  "AUTH-05": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "requests without or with an invalid ID token get 401; admin mutations with a revoked token are refused"
+  },
+  "AUTH-06": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "removing an admin or disabling a student revokes tokens and the 60 s status cache ends access"
+  },
+  "AUTH-07": {
+    "phase": 1,
+    "status": "proposed",
+    "verify": "integration",
+    "check": "optional allowed-domain rule per organization"
+  },
+  "STU-01": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "first sign-in forces profile completion (name, PRN, department, graduation year) before anything else"
+  },
+  "STU-02": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "PRN from the whitelist is prefilled and locked; a PRN already used in the org is rejected"
+  },
+  "STU-03": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "with profile locking on, the student sees the profile read-only with a note to contact the admin"
+  },
+  "STU-04": {
+    "phase": 1,
+    "status": "proposed",
+    "verify": "e2e",
+    "check": "optional phone number field"
+  },
+  "STU-05": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin adds and renames departments; students pick from that list"
+  },
+  "STU-06": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "students store departmentId; renaming a department shows the new name everywhere"
+  },
+  "STU-07": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "a department in use cannot be deleted, only merged or archived"
+  },
+  "WL-01": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "whitelist entries store email lowercase and trimmed, optional PRN and note, never department"
+  },
+  "WL-02": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin uploads CSV and XLSX, pastes a list or adds one entry, with a column-mapping step and preview"
+  },
+  "WL-03": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "validation report lists invalid emails, in-file duplicates, existing entries and max_students overflow before saving"
+  },
+  "WL-04": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "entry status shows invited, registered or disabled"
+  },
+  "WL-05": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "bulk disable, enable, remove and export; removing a registered entry disables the student and keeps attempts"
+  },
+  "STU-08": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "directory search, filters, sortable columns, column picker and density toggle work"
+  },
+  "STU-09": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin edits, disables, deletes and manually adds a student; manual add stays invited until first sign-in"
+  },
+  "STU-10": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "student detail shows profile, attempts and the audit trail for that student"
+  },
+  "STU-11": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "student create, edit, disable and delete write audit entries with before and after"
+  },
+  "SER-01": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin creates a series with title, description, dates, default settings and eligibility"
+  },
+  "SER-02": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "series status draft, active, archived; student-visible listing returns only active series the student is eligible for"
+  },
+  "SER-03": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "series page shows tests in scheduled order as a day-by-day timeline with status"
+  },
+  "TST-01": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin creates a test with title, company, optional day number and scheduled date"
+  },
+  "TST-02": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "day number is suggested from schedule position (\"Day 3\") when empty; it can be renamed or hidden"
+  },
+  "TST-03": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "each test setting shows Inherited or Overridden, with one-click reset to inherited"
+  },
+  "TST-04": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "lifecycle draft, in_review, approved, scheduled, live, closed; scheduling an unapproved test is refused"
+  },
+  "TST-05": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "publishing saves the resolved settings snapshot on the test record"
+  },
+  "TST-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "after an attempt starts, duration, timing mode, max strikes, question set and marking edits are refused; window end and release settings still change"
+  },
+  "SER-04": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "isEligible requires whitelist status registered and matching series rules"
+  },
+  "SER-05": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "rules combine departments, graduation years, include and exclude lists; an empty rule means no restriction"
+  },
+  "SER-06": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "test eligibility can narrow the series rules but never widen them"
+  },
+  "SER-07": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "editing rules shows a live count of matching students and opens the matching list"
+  },
+  "SER-08": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "POST /v1/attempts re-checks eligibility on the server and refuses an ineligible student"
+  },
+  "SER-09": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "settings form blocks full review release before window close in flexible mode and explains why"
+  },
+  "SER-10": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "full review includes explanations only for questions that have one"
+  },
+  "SER-11": {
+    "phase": 4,
+    "status": "proposed",
+    "verify": "integration",
+    "check": "leaderboard identity choice per series"
+  },
+  "TST-07": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "times are stored in UTC and shown in the org timezone with the timezone named"
+  },
+  "TST-08": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "section timers end no later than the attempt deadline"
+  },
+  "Q-01": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin creates and edits a question with live student-view preview and reorders by drag or keyboard"
+  },
+  "Q-02": {
+    "phase": 2,
+    "status": "proposed",
+    "verify": "integration",
+    "check": "organization-wide question bank"
+  },
+  "IMP-01": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "JSON, PDF, XLSX, CSV, TXT and MD imports are accepted; other formats are rejected"
+  },
+  "IMP-02": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "files over 25 MB, PDFs over 100 pages and sheets over 5,000 rows are rejected with the limit stated"
+  },
+  "IMP-03": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "PDF pages go to the multimodal model as pages; figures are cropped, stored and attached as question images"
+  },
+  "IMP-04": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "import job shows pages processed and questions found, and keeps running after the tab is closed"
+  },
+  "IMP-05": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "LLM instructions keep wording, never invent answers or explanations, detect sections, mark difficulty as a suggestion"
+  },
+  "IMP-06": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "file content is passed as delimited data, never as instructions; an injection fixture does not change behaviour"
+  },
+  "IMP-07": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "provider and model come from configuration; each job logs provider, model, tokens and estimated cost"
+  },
+  "IMP-08": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "AI imports count against ai_imports_per_month; JSON and template imports do not"
+  },
+  "IMP-09": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "checks flag missing answer, fewer than 2 options, multiple correct, empty prompt, likely duplicate and missing figure"
+  },
+  "IMP-10": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "flagged questions list plain-word reasons and cannot be approved until fixed"
+  },
+  "IMP-11": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "review shows the source page beside the parsed question with the question highlighted"
+  },
+  "IMP-12": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "approve, edit inline or discard per question; approve all valid in bulk; flagged grouped at the top"
+  },
+  "IMP-13": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "keyboard shortcuts for next, previous, approve, edit and discard in review"
+  },
+  "Q-03": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin adds sections with name, order, instructions, duration, draw count and forward-only"
+  },
+  "Q-04": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "a pool with a draw count gives each student that many questions"
+  },
+  "Q-05": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "difficulty mix per section is saved only when the pool can satisfy it"
+  },
+  "Q-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "the draw is made once at start, seeded by attempt ID, stored with option order, and reused on resume and grading"
+  },
+  "Q-07": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "marks resolve question, then section, then test; negative marks optional at each level"
+  },
+  "Q-08": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "marking presets (+1/0, +1/-0.25, +4/-1, custom) fill editable values"
+  },
+  "Q-09": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "passing marks, unanswered scores 0, optional floor at zero (off by default)"
+  },
+  "Q-10": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin sets a per-question time limit for the whole test or per question"
+  },
+  "Q-11": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "when a question's time ends its answer is saved, it locks, and the exam moves on; navigation is forward-only"
+  },
+  "Q-12": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "server records first serve time and rejects answers after limit plus 2 s grace"
+  },
+  "Q-13": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "preview runs the real exam screen with no attempt saved, no proctoring, and a toggle that reveals answers"
+  },
+  "Q-14": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "approval checklist (valid questions, satisfiable draws, total marks, resolved settings) gates scheduling"
+  },
+  "Q-15": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "editing an approved test before any attempt returns it to in_review"
+  },
+  "EX-01": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "preflight shows pass or fail with a fix line for screen width, fullscreen, camera and face model, API round trip and clock offset, browser"
+  },
+  "EX-02": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "rules screen shows duration, deadline, strikes, marking, sections and privacy note; Start is enabled only after checks and agreement"
+  },
+  "EX-03": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "POST /v1/attempts checks eligibility, window and existing attempt, draws, sets deadline, schedules auto-submit and returns the payload without answers"
+  },
+  "EX-04": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "calling start twice returns the same attempt"
+  },
+  "EX-05": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "reopening the exam after closing the tab resumes the same attempt with saved answers and the same deadline"
+  },
+  "EX-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "timer shows deadline minus corrected device time, with visual and announced warnings at 10, 5 and 1 minutes"
+  },
+  "EX-07": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "palette shows not visited, visited, answered, marked, answered and marked, and locked with colour and shape"
+  },
+  "EX-08": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "student marks for review, clears an answer and jumps between questions and sections"
+  },
+  "EX-09": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "keys 1-6 and A-F choose options, N next, P previous, M mark, ? lists shortcuts"
+  },
+  "EX-10": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "go offline, answer 3 questions, reload, answers still shown and synced when back online"
+  },
+  "EX-11": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "PUT answers keeps only higher sequence numbers, so retries and reordering are safe"
+  },
+  "EX-12": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "sync indicator shows Saved, Saving and \"Offline, 3 answers waiting\"; retries back off 1, 2, 4, 8 then 15 s"
+  },
+  "EX-13": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "answers timestamped before the deadline arriving within 2 minutes after it are kept and marked late_sync"
+  },
+  "EX-14": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "each answer is its own record under attempts/{id}/answers/{questionId}"
+  },
+  "EX-15": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "Submit test shows the per-section summary, flushes the queue, then submits; offline submit keeps retrying and says so"
+  },
+  "EX-16": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "auto-submit task finalizes at the deadline even with the browser closed, is idempotent, and reschedules after extension"
+  },
+  "EX-17": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "grading uses the stored draw and key, saves the result, and queues leaderboard recompute"
+  },
+  "PR-01": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "face detection loads self-hosted MediaPipe model and WASM files and runs on the device"
+  },
+  "PR-02": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "no face beyond the 5 s grace records one strike, with no image sent"
+  },
+  "PR-03": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "self-view preview can be collapsed but the camera stays on"
+  },
+  "PR-04": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "leaving fullscreen records a strike and shows the Return to fullscreen overlay"
+  },
+  "PR-05": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "switching tabs or losing window focus records a strike"
+  },
+  "PR-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "devtools shortcuts follow the policy; copy, paste and print are blocked; question text is not selectable"
+  },
+  "PR-07": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "events within 3 seconds count as one strike"
+  },
+  "PR-08": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "POST events de-duplicates, increments strikes in a transaction and returns the count"
+  },
+  "PR-09": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "strike warning shows reason and \"Strike 2 of 3\" and must be acknowledged"
+  },
+  "PR-10": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "reaching max strikes terminates and grades the attempt; terminated attempts are excluded from leaderboards"
+  },
+  "PR-11": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "every event is logged with server time, client time, type and details and returned by GET events"
+  },
+  "PR-12": {
+    "phase": 3,
+    "status": "proposed",
+    "verify": "integration",
+    "check": "first incident of each type warns without a strike"
+  },
+  "PR-13": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "rules screen shows a QR code with a single-use pairing link valid for 5 minutes"
+  },
+  "PR-14": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "pairing redeem returns a custom token with role device, orgId and attemptId; it can only write its own presence"
+  },
+  "PR-15": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "phone page turns the camera on, requests a wake lock, shows positioning help and writes a heartbeat every 5 s"
+  },
+  "PR-16": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "phone disconnected over 15 s shows the reconnect overlay with a fresh QR; over 60 s records a strike"
+  },
+  "PR-17": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "the phone page uploads no video or images (network log check)"
+  },
+  "RES-01": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "release immediately, after window close (scheduled task), manually, or never behaves as configured"
+  },
+  "RES-02": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "released result shows score, out of, percentage, rank, sections, time taken and strike summary"
+  },
+  "RES-03": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "full review shows the student's answer, correct answer, marks and explanation where present"
+  },
+  "RES-04": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "with Show past scores off, history shows the test as completed without a score"
+  },
+  "RES-05": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "withdrawing results shows \"Results are being reviewed\" to students"
+  },
+  "RES-06": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "a terminated attempt shows its status and reason to the student"
+  },
+  "LB-01": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "test ranking by score, then time, then submission; ties share rank 1, 2, 2, 4"
+  },
+  "LB-02": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "series ranking sums test scores, missed tests count 0, terminated excluded by default"
+  },
+  "LB-03": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "leaderboards are stored per test and series and recomputed at most every 30 s and on release"
+  },
+  "LB-04": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "students get a leaderboard only when enabled and released (flexible: after window close)"
+  },
+  "LB-05": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "students see top 50 plus their own highlighted row; admins see the full list"
+  },
+  "OPS-01": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "live view shows status counts and a row per student with status, answered, strikes, phone, last seen and time left"
+  },
+  "OPS-02": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "API mirrors compact status into RTDB live/{orgId}; only that org's admins can read it"
+  },
+  "OPS-03": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "filters for strikes, phone disconnected, offline over 60 s, not started, terminated; sorting on columns"
+  },
+  "OPS-04": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "row actions open the timeline, grant extra time, reset, terminate with reason and reinstate"
+  },
+  "OPS-05": {
+    "phase": 5,
+    "status": "proposed",
+    "verify": "e2e",
+    "check": "extra time for every student at once"
+  },
+  "OPS-06": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "granting extra time moves the deadline, reschedules auto-submit and updates the student's timer with a notice within 5 s"
+  },
+  "OPS-07": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "a standing accommodation adds extra percentage or minutes to every attempt in the series at start"
+  },
+  "OPS-08": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "extra time may pass the window end; a grant over 100% of duration needs a second confirmation"
+  },
+  "OPS-09": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "every extra-time grant is audit-logged"
+  },
+  "OPS-10": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "reset needs a reason, archives the old attempt as reset, and the student restarts with a fresh draw"
+  },
+  "EXP-01": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "test export CSV and XLSX contain every listed column"
+  },
+  "EXP-02": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "series export has one row per student with per-test scores, total and rank; XLSX adds a sheet per test"
+  },
+  "EXP-03": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "exports run in the worker, download through a 15-minute signed link, and are audit-logged"
+  },
+  "EXP-04": {
+    "phase": 7,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "metrics: participation, distribution, mean, median, extremes, sections, departments, correct rates, discrimination index, misses, wrong options, strikes, time, series trends"
+  },
+  "EXP-05": {
+    "phase": 7,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "LLM gets only metrics JSON; a summary containing a number not in the metrics is rejected"
+  },
+  "EXP-06": {
+    "phase": 7,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "worker renders the report PDF with headless Chromium and optional metrics XLSX; past reports stay listed"
+  },
+  "EXP-07": {
+    "phase": 7,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "each report counts against ai_reports_per_month"
+  },
+  "AUD-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "audit entries hold actor, org, action, target, before and after without sensitive fields, time, IP, user agent and request ID"
+  },
+  "AUD-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "the audit entry is written in the same batch as the change; a failed change leaves no entry and vice versa"
+  },
+  "AUD-03": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin sees own org's log, super admin sees all, with filters and CSV export"
+  },
+  "AUD-04": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "no route edits or deletes audit entries (route table check)"
+  },
+  "AUD-05": {
+    "phase": 8,
+    "status": "proposed",
+    "verify": "static",
+    "check": "keep audit entries for 2 years"
+  },
+  "WEB-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "next.config sets output export and images.unoptimized; no route handlers, server actions or middleware exist"
+  },
+  "WEB-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "apps/web/app has no dynamic path segments; IDs travel in search params"
+  },
+  "WEB-03": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "a student opening an admin URL is redirected by the client guard"
+  },
+  "WEB-04": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "vercel.json sets CSP, Permissions-Policy for camera, Referrer-Policy and HSTS"
+  },
+  "WEB-05": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "server data is fetched with TanStack Query and query keys include orgId (lint rule or review)"
+  },
+  "DATA-01": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "manual add generates studentId; the uid is linked at the student's first sign-in"
+  },
+  "DATA-02": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "attemptIndex created or read in a transaction allows one active attempt per student per test, even under concurrent starts"
+  },
+  "DATA-03": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "each autosave of a different question writes a different answer record"
+  },
+  "DATA-04": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "a 2,000-row leaderboard serializes under 1 MiB; boards above the page threshold split into pages"
+  },
+  "DATA-05": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "no student-facing response contains correctOptionIds or explanation before a full review is released"
+  },
+  "DATA-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "closing the exam tab marks laptop presence offline through onDisconnect"
+  },
+  "DATA-07": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "RTDB rules let only the API write live, signals and attemptOwners"
+  },
+  "DATA-08": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "Firestore rules deny every client read and write (rules-unit-testing)"
+  },
+  "DATA-09": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "Storage rules deny every client read and write (rules-unit-testing)"
+  },
+  "DATA-10": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "RTDB rules for laptop and phone presence writes, admin reads by orgId, super admin all, student own signals"
+  },
+  "DATA-11": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "Firestore PITR (7 days) and a daily export kept 30 days"
+  },
+  "API-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "errors use {error:{code,message,details}} with stable codes"
+  },
+  "API-02": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "Idempotency-Key is required on start and submit and repeated keys replay the stored response for 24 hours"
+  },
+  "API-03": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "every response carries X-Server-Time"
+  },
+  "API-04": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "org comes from the token claim; super admins pass X-Org-Id"
+  },
+  "API-05": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "list endpoints use cursor and limit with a maximum of 200"
+  },
+  "API-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "per-user rate limits of 10 answer saves and 5 event reports per second return 429 beyond the burst"
+  },
+  "SEC-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "no service account key files or private keys in the repo, config or workflows (gitleaks plus grep)"
+  },
+  "SEC-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "secrets live in Secret Manager and are mounted at deploy time"
+  },
+  "SEC-03": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "separate least-privilege service accounts for api, worker and Cloud Tasks"
+  },
+  "SEC-04": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "every route declares Zod request and response schemas (route table check) and extra fields are stripped from output"
+  },
+  "SEC-05": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "CORS allows only configured app origins; CSP in vercel.json allows only needed sources"
+  },
+  "SEC-06": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "uploads are checked by file signature and size before processing, and parsed only in the worker"
+  },
+  "SEC-07": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "log serializers hash or drop emails, PRNs and answers"
+  },
+  "SEC-08": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "first sign-in shows the DPDP consent notice explaining what is collected and why"
+  },
+  "SEC-09": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "Renovate config present, pnpm audit in CI, dependencies pinned by the lockfile"
+  },
+  "PERF-01": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "API caches resolved settings and questions keyed by test ID and question-set version"
+  },
+  "PERF-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "entitlements and account status are cached for 60 s against the injected clock"
+  },
+  "PERF-03": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "the exam payload is returned in one start response"
+  },
+  "PERF-04": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "live counts come from the RTDB mirror, not Firestore queries"
+  },
+  "PERF-05": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "MediaPipe files load during preflight and the exam screen requests none of them again"
+  },
+  "PERF-06": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "API minimum instances raised 30 minutes before each slot"
+  },
+  "PERF-07": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "manual",
+    "check": "k6 500-student scenario against staging meets every 12.2 target"
+  },
+  "REL-01": {
+    "phase": 8,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "production deploy job stops when a test is live unless overridden"
+  },
+  "REL-02": {
+    "phase": 8,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "rollback by shifting traffic to the previous Cloud Run revision"
+  },
+  "REL-03": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "on SIGTERM the API stops accepting requests and finishes in-flight ones within 8 seconds"
+  },
+  "REL-04": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "running a task handler twice has the same effect as once"
+  },
+  "REL-05": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "with RTDB unreachable the exam continues and no phone strike is recorded"
+  },
+  "REL-06": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "an LLM failure leaves the import job retryable and exams unaffected"
+  },
+  "REL-07": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "static",
+    "check": "docs/runbooks/exam-day.md covers pre-warming, monitoring, extra-time policy and contacts"
+  },
+  "OBS-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "request logs carry requestId, orgId, attemptId and route"
+  },
+  "OBS-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "Sentry on web, API and worker with releases and source maps"
+  },
+  "OBS-03": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "answer batches carry sync backlog and clock offset, stored for the dashboard"
+  },
+  "OBS-04": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "alerts for 5xx rate, answer-save p95, failed auto-submit and worker failures"
+  },
+  "OBS-05": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "exam-day Cloud Monitoring dashboard"
+  },
+  "CI-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "dev, staging and prod GCP and Firebase projects with Vercel environments"
+  },
+  "CI-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "ci.yml runs lint, typecheck, unit, emulator integration and Playwright on pull requests"
+  },
+  "CI-03": {
+    "phase": 8,
+    "status": "agreed",
+    "verify": "infra",
+    "check": "merge to main builds images, deploys staging, smoke tests, then production after approval and freeze check"
+  },
+  "CI-04": {
+    "phase": 8,
+    "status": "agreed",
+    "verify": "static",
+    "check": "data migrations are versioned scripts run as worker tasks"
+  },
+  "UI-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "ink, graphite, ballpoint, redpen and tick reach 4.5:1 on sheet and surface in both themes; dropout 3:1 on surface"
+  },
+  "UI-02": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "every state has a shape, icon or words besides colour (design review per screen)"
+  },
+  "UI-03": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "no gradients, glass or blur in any stylesheet or component (source scan)"
+  },
+  "UI-04": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "sentence case, no all-caps labels, eyebrows, middle dots or arrows in button text (copy review)"
+  },
+  "UI-05": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "the text measure token caps body text at 72 characters"
+  },
+  "UI-06": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "timers and counts use tabular figures or fixed-width digit slots (checked once fonts are installed)"
+  },
+  "UI-07": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "spacing tokens are exactly 4, 8, 12, 16, 24, 32, 48, 64, 96 and layout widths 1,280 and 1,120"
+  },
+  "UI-08": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "radius tokens: 2 px sheet, 4 px controls, 8 px panels, full for bubbles"
+  },
+  "UI-09": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "panels have a 1 px rule border and no shadow; one overlay shadow token"
+  },
+  "UI-10": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "motion tokens 120, 200 and 320 ms with the specified easing"
+  },
+  "UI-11": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "at most one orchestrated motion per screen (design review)"
+  },
+  "UI-12": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "with reduced motion emulated, transitions compute to 0 s"
+  },
+  "UI-13": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "tokens live in packages/ui as CSS variables exposed through Tailwind @theme"
+  },
+  "UI-14": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "each component has a Storybook entry with every state in light, dark and high contrast"
+  },
+  "UI-15": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "screenshot tests of exam screen, result page, live dashboard and test editor in light, dark and high contrast"
+  },
+  "UX-01": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "primary action sits top-right in the page header; long forms have a sticky footer with Discard and the primary button"
+  },
+  "UX-02": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "destructive actions sit apart; dialogs focus Cancel first, destructive button on the right, irreversible ones require typing the name"
+  },
+  "UX-03": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "Save and next is the largest button at bottom right; Submit test is in the top bar and opens the summary"
+  },
+  "UX-04": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "every clickable target on admin and student pages is at least 44 by 44 px"
+  },
+  "UX-05": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "clicking a table row opens a 560 px detail drawer; selecting rows shows a bulk-action bar"
+  },
+  "UX-06": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "Ctrl K opens the command palette and ? lists shortcuts"
+  },
+  "UX-07": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "content loads with skeletons; a refused optimistic toggle rolls back with an explanation"
+  },
+  "UX-08": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "empty states are one sentence and one action"
+  },
+  "UX-09": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "errors appear next to the field or action with what happened and how to fix it"
+  },
+  "UX-10": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "Publish test produces the notice \"Test published\""
+  },
+  "UX-11": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "every time a student acts on shows its timezone"
+  },
+  "UX-12": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin works from 768 px with sidebar icons below 1,200 px; student pages work at 360 px"
+  },
+  "UX-13": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "copy is plain, active and sentence case, with no exclamation marks in the exam (copy review)"
+  },
+  "UX-14": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "labels use the users' words (copy review)"
+  },
+  "A11Y-01": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "accessibility panel offers text size, theme, high contrast, reduce motion, increased spacing and reading ruler"
+  },
+  "A11Y-02": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "preferences save through PUT /v1/me/preferences and apply before first paint after reload"
+  },
+  "A11Y-03": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "every action works by keyboard in a logical order with a skip link to main content"
+  },
+  "A11Y-04": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "focus ring is a 2 px ballpoint outline with 2 px offset and is never covered by sticky bars"
+  },
+  "A11Y-05": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "dialogs trap focus and return it to the opener"
+  },
+  "A11Y-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "pressing T announces the remaining time"
+  },
+  "A11Y-07": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "pages have banner, navigation and main landmarks and a correct heading order"
+  },
+  "A11Y-08": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "options form an arrow-key radio group; track marks and palette bubbles are buttons with full state labels"
+  },
+  "A11Y-09": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "timer announces at 10, 5 and 1 minutes in a polite region; strikes use an alert dialog; sync changes are polite"
+  },
+  "A11Y-10": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "math renders KaTeX MathML; a question image without alt text is flagged"
+  },
+  "A11Y-11": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "fields have visible labels, required marked in words, errors linked to fields"
+  },
+  "A11Y-12": {
+    "phase": 8,
+    "status": "agreed",
+    "verify": "manual",
+    "check": "NVDA on Chrome and Firefox and VoiceOver on Safari pass on every screen"
+  },
+  "A11Y-13": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "unit",
+    "check": "text contrast 4.5:1 and outlines 3:1 in light, dark and high-contrast themes"
+  },
+  "A11Y-14": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "palette and sync states carry shape, icon or words besides colour"
+  },
+  "A11Y-15": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "non-exam pages reflow at 320 px without horizontal scroll; the exam palette collapses into a drawer below 1,280 px"
+  },
+  "A11Y-16": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "targets are at least 44 by 44 px (same check as UX-04)"
+  },
+  "A11Y-17": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "integration",
+    "check": "standing extra-time accommodations apply to attempts (same as OPS-07)"
+  },
+  "A11Y-18": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "static",
+    "check": "accessibility statement and runbook note the real-time exception and the extra-time alternatives"
+  },
+  "A11Y-19": {
+    "phase": 3,
+    "status": "proposed",
+    "verify": "integration",
+    "check": "assistive-technology accommodation stops focus-loss strikes"
+  },
+  "A11Y-20": {
+    "phase": 5,
+    "status": "proposed",
+    "verify": "integration",
+    "check": "camera exemption per student"
+  },
+  "A11Y-21": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "the Playwright axe helper fails on serious or critical issues and runs in CI"
+  },
+  "A11Y-22": {
+    "phase": 8,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "a public accessibility statement page lists the standard, known gaps and a contact"
+  },
+  "A11Y-23": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "static",
+    "check": "all interface text goes through the translation layer (lint rule against raw JSX strings)"
+  },
+  "US-SA-01": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "super admin creates an organization; duplicate slug refused; it appears as active"
+  },
+  "US-SA-02": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "added admin gets access on next sign-in; removed admin loses access (tokens revoked)"
+  },
+  "US-SA-03": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "super admin toggles a feature; the org's UI shows it locked and the change is audit-logged"
+  },
+  "US-SA-04": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "org detail shows students, admins, tests run, imports, reports and storage against limits"
+  },
+  "US-SA-05": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "suspend and archive are reversible and audit-logged"
+  },
+  "US-SA-06": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "cross-org audit log filters by organization, actor, action and date"
+  },
+  "US-SA-07": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "super admin creates a series and test in another org's workspace; actions logged with them as actor"
+  },
+  "US-AD-01": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin uploads a whitelist; duplicates and invalid emails reported before saving"
+  },
+  "US-AD-02": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin edits, deletes and adds a student; deleting one with attempts asks for confirmation"
+  },
+  "US-AD-03": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin maintains departments used by the profile form"
+  },
+  "US-AD-04": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin creates a series with settings and eligibility showing a live count"
+  },
+  "US-AD-05": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin overrides a setting per test and resets it to inherited"
+  },
+  "US-AD-06": {
+    "phase": 6,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin imports a file and reviews valid and flagged questions before approving"
+  },
+  "US-AD-07": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin configures sections, pools, difficulty mix, marking and timers with validation"
+  },
+  "US-AD-08": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin previews a test on the real exam screen without saving an attempt"
+  },
+  "US-AD-09": {
+    "phase": 2,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "an unapproved test cannot be scheduled"
+  },
+  "US-AD-10": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "release timing, detail, history and leaderboards are configurable per series and test"
+  },
+  "US-AD-11": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "live dashboard updates a student's status within 5 seconds, with filters"
+  },
+  "US-AD-12": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "extra time moves the deadline and the student's timer within 5 seconds, audit-logged with a reason"
+  },
+  "US-AD-13": {
+    "phase": 5,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "reset requires a reason, archives the old attempt and is audit-logged"
+  },
+  "US-AD-14": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin exports CSV and XLSX for a test and a series"
+  },
+  "US-AD-15": {
+    "phase": 7,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin generates an analytics report PDF; locked when the feature is off"
+  },
+  "US-AD-16": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "admin reads the org audit log with actor, time and change"
+  },
+  "US-AD-17": {
+    "phase": 4,
+    "status": "proposed",
+    "verify": "e2e",
+    "check": "correct an answer key and regrade"
+  },
+  "US-ST-01": {
+    "phase": 0,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "whitelisted email signs in; others see the contact message"
+  },
+  "US-ST-02": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "profile completion required on first sign-in and editable later unless locked"
+  },
+  "US-ST-03": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "dashboard shows live, upcoming and completed tests with window, duration and countdown; ineligible tests hidden"
+  },
+  "US-ST-04": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "preflight checks and phone pairing by QR code"
+  },
+  "US-ST-05": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "answers survive a network drop and sync when it returns, with an indicator"
+  },
+  "US-ST-06": {
+    "phase": 3,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "strike warning appears at once with reason and remaining count"
+  },
+  "US-ST-07": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "student sees score only, with sections, or full review as released"
+  },
+  "US-ST-08": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "history by series and day, scores only where allowed"
+  },
+  "US-ST-09": {
+    "phase": 4,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "leaderboard highlights the student's own rank"
+  },
+  "US-ST-10": {
+    "phase": 1,
+    "status": "agreed",
+    "verify": "e2e",
+    "check": "text size, contrast, theme and motion persist on the account and apply in the exam"
+  }
+}

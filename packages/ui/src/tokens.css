@@ -1,0 +1,197 @@
+/*
+ * Design tokens (spec 13.3 to 13.5) as CSS variables. Themes switch by swapping the variable set (UI-13):
+ *   <html data-theme="light|dark|system" data-contrast="high" data-motion="reduce|system" data-text-size="115" data-spacing="increased">
+ * High contrast wins over light and dark (DECISIONS Q6).
+ */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --sheet: #f3f5f7;
+  --surface: #ffffff;
+  --surface-sunken: #e9edf1;
+  --ink: #141a33;
+  --graphite: #5a6178;
+  --rule: #d3d9e2;
+  --dropout: #c9677a;
+  --dropout-faint: #efc9d0;
+  --ballpoint: #2e3fd1;
+  --ballpoint-wash: #e6e9fb;
+  --highlighter: #f2df3a;
+  --highlighter-ink: #141a33;
+  --redpen: #b8321f;
+  --redpen-wash: #f9e3df;
+  --tick: #17734a;
+  --tick-wash: #ddf0e6;
+  --on-ballpoint: #ffffff;
+  --on-redpen: #ffffff;
+  --border-width: 1px;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --sheet: #0f1326;
+  --surface: #171c33;
+  --surface-sunken: #0b0e1d;
+  --ink: #e8ebf5;
+  --graphite: #a3aac2;
+  --rule: #2a3150;
+  --dropout: #c97c8b;
+  --dropout-faint: #4a2a33;
+  --ballpoint: #8c9bff;
+  --ballpoint-wash: #1f2650;
+  --highlighter: #e9d53a;
+  --highlighter-ink: #141a33;
+  --redpen: #ff7a66;
+  --redpen-wash: #3a1c1a;
+  --tick: #4fc48a;
+  --tick-wash: #12301f;
+  --on-ballpoint: #0f1326;
+  --on-redpen: #0f1326;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme='system'] {
+    color-scheme: dark;
+    --sheet: #0f1326;
+    --surface: #171c33;
+    --surface-sunken: #0b0e1d;
+    --ink: #e8ebf5;
+    --graphite: #a3aac2;
+    --rule: #2a3150;
+    --dropout: #c97c8b;
+    --dropout-faint: #4a2a33;
+    --ballpoint: #8c9bff;
+    --ballpoint-wash: #1f2650;
+    --highlighter: #e9d53a;
+    --highlighter-ink: #141a33;
+    --redpen: #ff7a66;
+    --redpen-wash: #3a1c1a;
+    --tick: #4fc48a;
+    --tick-wash: #12301f;
+    --on-ballpoint: #0f1326;
+    --on-redpen: #0f1326;
+  }
+}
+
+/* High contrast (A11Y-01): pure black on white, 2 px borders, guide ink replaced by black outlines. */
+[data-contrast='high'] {
+  color-scheme: light;
+  --sheet: #ffffff;
+  --surface: #ffffff;
+  --surface-sunken: #ffffff;
+  --ink: #000000;
+  --graphite: #000000;
+  --rule: #000000;
+  --dropout: #000000;
+  --dropout-faint: #000000;
+  --ballpoint: #1a24a0;
+  --ballpoint-wash: #e6e9fb;
+  --highlighter: #f2df3a;
+  --highlighter-ink: #000000;
+  --redpen: #a01e0e;
+  --redpen-wash: #ffffff;
+  --tick: #0b5534;
+  --tick-wash: #ffffff;
+  --on-ballpoint: #ffffff;
+  --on-redpen: #ffffff;
+  --border-width: 2px;
+}
+
+:root {
+  /* Typography (13.4) */
+  --font-display: var(--font-display-face), 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-text: var(--font-text-face), 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  --font-code: var(--font-code-face), 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
+  --text-display-1: clamp(4.5rem, 3rem + 6vw, 8rem);
+  --text-display-2: clamp(3rem, 2.2rem + 3vw, 4.5rem);
+  --text-timer: 2.75rem;
+  --text-heading-1: 2.25rem;
+  --text-heading-2: 1.375rem;
+  --text-heading-3: 1.125rem;
+  --text-question: 1.25rem;
+  --text-body: 1.0625rem;
+  --text-body-small: 0.9375rem;
+  --text-caption: 0.8125rem;
+  --measure-body: 72ch;
+  --measure-question: 68ch;
+
+  /* Space and layout (UI-07) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --width-admin: 1280px;
+  --width-student: 1120px;
+  --gutter: 24px;
+  --target-min: 44px;
+
+  /* Shape (UI-08, UI-09) */
+  --radius-sheet: 2px;
+  --radius-control: 4px;
+  --radius-panel: 8px;
+  --radius-full: 9999px;
+  --shadow-overlay: 0 12px 32px -8px rgb(20 26 51 / 0.24);
+
+  /* Motion (UI-10) */
+  --duration-small: 120ms;
+  --duration-standard: 200ms;
+  --duration-drawer: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+
+/* Reduced motion makes every transition instant (UI-12). */
+[data-motion='reduce'] {
+  --duration-small: 0ms;
+  --duration-standard: 0ms;
+  --duration-drawer: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-motion='system'] {
+    --duration-small: 0ms;
+    --duration-standard: 0ms;
+    --duration-drawer: 0ms;
+  }
+}
+
+[data-motion='reduce'] *,
+[data-motion='reduce'] *::before,
+[data-motion='reduce'] *::after {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-motion='system'] *,
+  [data-motion='system'] *::before,
+  [data-motion='system'] *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+
+/* Text size setting (A11Y-01) */
+[data-text-size='115'] {
+  font-size: 115%;
+}
+[data-text-size='130'] {
+  font-size: 130%;
+}
+[data-text-size='150'] {
+  font-size: 150%;
+}
+
+/* Increased spacing: WCAG 1.4.12 text-spacing values (A11Y-01) */
+[data-spacing='increased'] body {
+  letter-spacing: 0.12em;
+  word-spacing: 0.16em;
+  line-height: 1.5;
+}
+[data-spacing='increased'] p {
+  margin-block-end: 2em;
+}
