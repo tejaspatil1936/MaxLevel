@@ -1,0 +1,15 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'asia-south1-docker.pkg.dev/test-prep-e4d7f/testprep/worker:latest',
+        '-f',
+        'apps/worker/Dockerfile',
+        '.',
+      ]
+images:
+  - 'asia-south1-docker.pkg.dev/test-prep-e4d7f/testprep/worker:latest'
+options:
+  logging: CLOUD_LOGGING_ONLY
