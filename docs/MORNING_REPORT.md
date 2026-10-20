@@ -12,6 +12,12 @@ Both failures are in locked or harness files the build may not change. Each is i
 - **e2e:** one locked assertion, F-4.03.spec.ts:171. It fails F-4.03, and F-3.03 through the REQ (DATA-05) they share.
 - **acceptance-lock:** the F-5.05 screenshot baselines sit inside the locked phase 5 folder.
 
+A rerun on the report commit (ca10b2f) also caught:
+- an integration test (API-01 empty settings change) that depended on emulator data left by earlier runs. It is fixed in 935efe8.
+- one more failure of the intermittent F-3.12 test (listed below).
+
+The final run on the pull request head was printed when the build finished. The PR's CI runs the same command.
+
 The 4 skipped tests are the two camera-clip tests (waiting for OWNER_SETUP 3.1) and the two real-provider smoke tests (no credentials).
 
 | Phase | Passing / total features |
@@ -32,7 +38,7 @@ Per-phase verification reports: docs/verification/phase-1.md to phase-8.md. Prog
 ## Blocked (docs/blocked/)
 
 - **phase-3-F-3.03.md:** every F-3.03 test passes. verify marks it failing only because it shares DATA-05 with the F-4.03 locked assertion.
-- **phase-3-F-3.12.md:** a locked test (F-3.12.spec.ts:126) that sometimes fails. It calls `page.clock.pauseAt(Date.now()+100)`, which can land in the page clock's past. It passed in the last four full runs.
+- **phase-3-F-3.12.md:** a locked test (F-3.12.spec.ts:126) that sometimes fails. It calls `page.clock.pauseAt(Date.now()+100)`, which can land in the page clock's past. It passed in most full runs and failed again in one late run.
 - **phase-4-F-4.03.md:** the locked test expects one `math` element in a prompt that holds two formulas (`$x + 3 = 7$` and `$x$`). The app is built; every other check of that test passes.
 - **phase-5-F-5.05.md:** `scripts/locks.mjs` counts the 12 screenshot baselines in tests/acceptance/phase-5/ as added tests. The repo guard forbids moving them, so every verify run fails its `acceptance-lock` step.
 
