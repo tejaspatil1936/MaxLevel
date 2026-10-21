@@ -132,7 +132,7 @@ describe('adminDiagnosticService', () => {
             departmentId: 'dept-mech', // mech vs series requiring cse
             graduationYear: 2026,
             status: 'registered',
-          },
+          } as unknown as StudentRecord,
         ],
       }),
     );

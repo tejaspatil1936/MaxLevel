@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
+import { AssistantMarkdown } from './AssistantMarkdown';
 
 interface ChatMessage extends AssistantChatMessage {
   id: string;
@@ -180,7 +181,11 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                       : 'border border-rule bg-sheet text-ink'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{m.content}</div>
+                  {m.role === 'user' ? (
+                    <div className="whitespace-pre-wrap">{m.content}</div>
+                  ) : (
+                    <AssistantMarkdown content={m.content} />
+                  )}
 
                   {/* Render Diagnostic summary card if available */}
                   {m.diagnostic ? (
