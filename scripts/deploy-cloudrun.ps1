@@ -47,7 +47,7 @@ Write-Host "==> Deploying Worker to Cloud Run..." -ForegroundColor Cyan
     --memory=1Gi `
     --cpu=1 `
     --port=4001 `
-    --set-env-vars="NODE_ENV=development,HOST=0.0.0.0,GCLOUD_PROJECT=$PROJECT_ID,LLM_PROVIDER=vertex,GOOGLE_VERTEX_PROJECT=$PROJECT_ID,GOOGLE_VERTEX_LOCATION=$REGION,LLM_MODEL=gemini-2.5-flash,FIREBASE_DATABASE_URL=https://$PROJECT_ID-default-rtdb.firebaseio.com,FIREBASE_STORAGE_BUCKET=$PROJECT_ID.firebasestorage.app" `
+    --set-env-vars="NODE_ENV=development,HOST=0.0.0.0,GCLOUD_PROJECT=$PROJECT_ID,LLM_PROVIDER=vertex,GOOGLE_VERTEX_PROJECT=$PROJECT_ID,GOOGLE_VERTEX_LOCATION=$REGION,LLM_MODEL=gemini-2.5-flash,FIREBASE_DATABASE_URL=https://$PROJECT_ID-default-rtdb.firebaseio.com,FIREBASE_STORAGE_BUCKET=test-prep-e4d7f-storage" `
     --project=$PROJECT_ID
 
 $workerUrl = (& $GCLOUD run services describe testprep-worker --region=$REGION --project=$PROJECT_ID --format="value(status.url)").Trim()
