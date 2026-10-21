@@ -22,20 +22,20 @@ test('AUTH-01 US-ST-01 signing in again with the same account after a failed att
 
 test('A11Y-07 every page has its own document title', async ({ page, signInAs }) => {
   await new SignInPage(page).goto();
-  await expect(page).toHaveTitle('Sign in – MITAOE Prep');
+  await expect(page).toHaveTitle('Sign in – MaxLevel');
   await signInAs(accounts.studentA);
-  await expect(page).toHaveTitle('Your tests – MITAOE Prep');
+  await expect(page).toHaveTitle('Your tests – MaxLevel');
 });
 
 test('A11Y-07 admin and platform homes are titled too', async ({ page, signInAs, browser }) => {
   await signInAs(accounts.adminA);
   await expect(adminHome(page).heading).toBeVisible();
-  await expect(page).toHaveTitle('Overview – MITAOE Prep');
+  await expect(page).toHaveTitle('Overview – MaxLevel');
   const other = await browser.newPage();
   const sa = new SignInPage(other);
   await sa.goto();
   await sa.signInWithEmulatorCredential(accounts.superAdmin.email, accounts.superAdmin.name);
   await platformHome(other).expectShown();
-  await expect(other).toHaveTitle('Organizations – MITAOE Prep');
+  await expect(other).toHaveTitle('Organizations – MaxLevel');
   await other.close();
 });

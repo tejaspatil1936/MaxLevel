@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      data-theme="system"
+      data-theme="light"
       data-motion="system"
       className={`${display.variable} ${text.variable} ${code.variable}`}
       // The boot script sets the saved theme, size and motion on <html> before React hydrates.

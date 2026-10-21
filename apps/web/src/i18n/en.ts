@@ -17,13 +17,14 @@ import { results } from './en/results';
 import { sections } from './en/sections';
 import { statement } from './en/statement';
 import { student } from './en/student';
+import { landing } from './en/landing';
 
 const core = {
-  'app.name': 'MITAOE Prep',
+  'app.name': 'MaxLevel',
   'app.skipToContent': 'Skip to main content',
   'app.loading': 'Loading',
   'app.signOut': 'Sign out',
-  'app.mark': 'MP',
+  'app.mark': 'ML',
   'common.close': 'Close',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
@@ -143,6 +144,7 @@ export const en = {
   ...leaderboards,
   ...live,
   ...statement,
+  ...landing,
 } as const;
 
 export type MessageKey = keyof typeof en;

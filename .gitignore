@@ -28,6 +28,7 @@ firestore-debug.log*
 !.env.example
 !.env.test
 *service-account*.json
+*-firebase-adminsdk-*.json
 *.tsbuildinfo
 apps/web/next-env.d.ts
 .emulators.log

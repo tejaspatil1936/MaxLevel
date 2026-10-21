@@ -13,7 +13,7 @@ export type Preferences = z.infer<typeof preferencesSchema>;
 
 export const DEFAULT_PREFERENCES: Preferences = {
   textSize: 100,
-  theme: 'system',
+  theme: 'light',
   highContrast: false,
   reduceMotion: 'system',
   increasedSpacing: false,

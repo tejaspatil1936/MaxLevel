@@ -4,7 +4,7 @@ export const statement = {
   'statement.title': 'Accessibility statement',
   'statement.link': 'Accessibility statement',
   'statement.lead':
-    'MITAOE Prep is used by students, placement cells and administrators. We want everyone to be able to use it, including people who use assistive technology.',
+    'MaxLevel is used by students, placement cells and administrators. We want everyone to be able to use it, including people who use assistive technology.',
   'statement.standard': 'Standard',
   'statement.standardText': 'Our target is WCAG 2.2 level AA on every screen, including the exam.',
   'statement.standardSettings':
@@ -27,6 +27,6 @@ export const statement = {
     'Standing accommodations: your placement cell can record an accommodation for a series, as a percentage of the duration or a number of extra minutes. It is added to every attempt of that series.',
   'statement.contact': 'Contact',
   'statement.contactExam': 'For extra time or an accommodation in an exam, ask your placement cell before the exam.',
-  'statement.contactEmail': 'To report an accessibility problem or ask for help with MITAOE Prep, email us:',
-  'statement.home': 'Go to MITAOE Prep',
+  'statement.contactEmail': 'To report an accessibility problem or ask for help with MaxLevel, email us:',
+  'statement.home': 'Go to MaxLevel',
 } as const;

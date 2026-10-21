@@ -2,9 +2,10 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-const ROOT = new URL('../../../', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const WEB = join(ROOT, 'apps/web');
 const read = (p: string) => readFileSync(join(ROOT, p), 'utf8');
 const SKIP = new Set([
