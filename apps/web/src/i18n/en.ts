@@ -18,6 +18,7 @@ import { sections } from './en/sections';
 import { statement } from './en/statement';
 import { student } from './en/student';
 import { landing } from './en/landing';
+import { assistant } from './en/assistant';
 
 const core = {
   'app.name': 'MaxLevel',
@@ -145,6 +146,7 @@ export const en = {
   ...live,
   ...statement,
   ...landing,
+  ...assistant,
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -14,6 +14,7 @@ import { AccessibilityButton } from './AccessibilityPanel';
 import { CommandPalette } from './CommandPalette';
 import { ADMIN_NAV, PLATFORM_NAV, type NavLink } from './nav';
 import { OrgSwitcher } from './OrgSwitcher';
+import { AdminCopilot } from '../admin/assistant/AdminCopilot';
 
 function SideLink({ link, locked }: { link: NavLink; locked: boolean }) {
   const path = usePathname();
@@ -126,6 +127,7 @@ export function AdminShell({
         </div>
       </div>
       {inOrg ? <CommandPalette orgId={orgId} links={ADMIN_NAV} /> : null}
+      {inOrg ? <AdminCopilot orgId={orgId} /> : null}
     </WorkspaceContext.Provider>
   );
 }

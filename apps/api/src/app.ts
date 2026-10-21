@@ -44,6 +44,7 @@ import { importRoutes } from './routes/imports';
 import { reportRoutes } from './routes/reports';
 import { testApprovalRoutes } from './routes/test-approval';
 import { examPreviewRoutes } from './routes/exam-preview';
+import { assistantRoutes } from './routes/assistant';
 import { whitelistRoutes } from './routes/whitelist';
 import { sessionRoutes } from './routes/session';
 import { auditWriter } from './services/audit';
@@ -149,6 +150,7 @@ export async function buildApp(deps: Deps, logger?: Logger): Promise<FastifyInst
     liveRoutes,
     auditRoutes,
     meRoutes,
+    assistantRoutes,
   ])
     await app.register(routes(ctx));
   // Test-only API: never registered outside NODE_ENV=test with a TEST_API_SECRET.

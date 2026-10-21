@@ -57,3 +57,4 @@ export * from './import-drafts';
 // the import schedule of import-llm.ts the name importRetryDelayMs (DECISIONS 2026-10-19, OPEN_QUESTIONS 36).
 export { retryDelayMs } from './sync';
 export { retryDelayMs as importRetryDelayMs } from './import-llm';
+export * from './assistant';

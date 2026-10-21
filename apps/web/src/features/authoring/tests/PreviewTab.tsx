@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { t } from '@/i18n';
 import { useQuestions } from '../questions/useQuestions';
 import { ApprovalChecklist } from './ApprovalChecklist';
+import { TestVisibilityInspector } from '@/features/admin/assistant/TestVisibilityInspector';
 
 /** The exam screen in preview mode for this test (Q-13, US-AD-08). */
 export const previewUrl = (testId: string) => `/exam/?preview=${encodeURIComponent(testId)}`;
@@ -42,6 +43,7 @@ export function PreviewTab({ test, onGoToQuestions }: { test: TestDetail; onGoTo
           }
         />
       )}
+      <TestVisibilityInspector testId={test.id} />
       <ApprovalChecklist test={test} questions={questions.data.items} />
     </div>
   );
