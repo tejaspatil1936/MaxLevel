@@ -7,7 +7,13 @@ import { PREFERENCES_BOOT_SCRIPT } from '@/lib/preferences-boot';
 import { code, display, text } from './fonts';
 import './globals.css';
 
-export const metadata: Metadata = { title: { default: t('app.name'), template: `%s – ${t('app.name')}` } };
+export const metadata: Metadata = {
+  title: { default: t('app.name'), template: `%s – ${t('app.name')}` },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+  },
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
