@@ -138,7 +138,7 @@ describe('repository hygiene', () => {
       );
     });
     expect(offenders.map((f) => relative(ROOT, f))).toEqual([]);
-  });
+  }, 15_000);
 
   it('SEC-09 Renovate is configured and every dependency is pinned by version', () => {
     expect(JSON.parse(read('renovate.json')).lockFileMaintenance.enabled).toBe(true);

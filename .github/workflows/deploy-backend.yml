@@ -1,0 +1,69 @@
+name: deploy-backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'apps/worker/**'
+      - 'packages/**'
+      - 'cloudbuild-*.yaml'
+      - 'api-env.yaml'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build & Deploy Worker to Cloud Run
+        run: |
+          gcloud builds submit --config=cloudbuild-worker.yaml --project=test-prep-e4d7f
+          gcloud run deploy testprep-worker \
+            --image=asia-south1-docker.pkg.dev/test-prep-e4d7f/testprep/worker:latest \
+            --region=asia-south1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --min-instances=0 \
+            --max-instances=5 \
+            --memory=1Gi \
+            --cpu=1 \
+            --port=4001 \
+            --set-env-vars="NODE_ENV=development,HOST=0.0.0.0,GCLOUD_PROJECT=test-prep-e4d7f,LLM_PROVIDER=vertex,GOOGLE_VERTEX_PROJECT=test-prep-e4d7f,GOOGLE_VERTEX_LOCATION=asia-south1,LLM_MODEL=gemini-2.5-flash,FIREBASE_DATABASE_URL=https://test-prep-e4d7f-default-rtdb.firebaseio.com,FIREBASE_STORAGE_BUCKET=test-prep-e4d7f-storage" \
+            --project=test-prep-e4d7f
+
+      - name: Build & Deploy API to Cloud Run
+        run: |
+          gcloud builds submit --config=cloudbuild-api.yaml --project=test-prep-e4d7f
+          gcloud run deploy testprep-api \
+            --image=asia-south1-docker.pkg.dev/test-prep-e4d7f/testprep/api:latest \
+            --region=asia-south1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --min-instances=0 \
+            --max-instances=10 \
+            --memory=512Mi \
+            --cpu=1 \
+            --port=4000 \
+            --env-vars-file=api-env.yaml \
+            --set-secrets="EXPORT_LINK_SECRET=export-link-secret:latest" \
+            --project=test-prep-e4d7f
