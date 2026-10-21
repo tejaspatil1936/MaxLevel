@@ -141,9 +141,9 @@ export function SignInScreen() {
 
                 <h2
                   id="hero-heading"
-                  className="font-display text-display-1 font-extrabold uppercase tracking-tight text-ink leading-[0.92]"
+                  className="font-display text-heading-1 sm:text-[2.75rem] font-bold tracking-tight text-ink leading-tight"
                 >
-                  <span>{t('landing.heroTitle1')}</span>
+                  <span>{t('landing.heroTitle1')}</span>{' '}
                   <span className="block text-ballpoint">{t('landing.heroTitle2')}</span>
                 </h2>
 
