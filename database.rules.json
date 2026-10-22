@@ -23,6 +23,12 @@
               "online": { ".validate": "newData.isBoolean()" },
               "lastSeen": { ".validate": "newData.isNumber() && newData.val() <= now" },
               "cameraOn": { ".validate": "newData.isBoolean()" },
+              "camera": {
+                ".validate": "newData.isString() && newData.val().matches(/^(starting|live|paused|failed)$/)"
+              },
+              "visible": { ".validate": "newData.isBoolean()" },
+              "session": { ".validate": "newData.isString() && newData.val().length <= 64" },
+              "stateSince": { ".validate": "newData.isNumber() && newData.val() <= now" },
               "$other": { ".validate": false }
             }
           }
@@ -32,6 +38,13 @@
     "live": {
       "$orgId": {
         ".read": "auth != null && auth.token.role === 'admin' && auth.token.orgId === $orgId"
+      }
+    },
+    "proctor": {
+      "$orgId": {
+        "$attemptId": {
+          ".read": "auth != null && auth.token.orgId === $orgId && ((auth.token.role === 'student' && root.child('attemptOwners').child($attemptId).val() === auth.uid) || (auth.token.role === 'device' && auth.token.attemptId === $attemptId))"
+        }
       }
     },
     "signals": {

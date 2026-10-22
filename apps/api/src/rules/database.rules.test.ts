@@ -41,6 +41,7 @@ beforeEach(async () => {
       attemptOwners: { 'att-1': 'u-stu-1', 'att-b': 'u-stu-b' },
       live: { 'org-a': { t1: { 'att-1': { strikes: 0 } } }, 'org-b': { t9: { 'att-b': { strikes: 0 } } } },
       signals: { 'org-a': { 'att-1': { deadlineAt: 1 } } },
+      proctor: { 'org-a': { 'att-1': { phoneSession: 's1', status: 'in_progress' } } },
       presence: { 'org-a': { t1: { 'att-1': { phone: { online: true, lastSeen: 1, cameraOn: true } } } } },
     });
   });
@@ -74,6 +75,11 @@ describe('Realtime Database rules', () => {
     await assertFails(set(ref(device('att-1', 'org-b'), `${P}/phone`), phone()));
     await assertFails(set(ref(device(), `${P}/laptop`), laptop()));
     await assertFails(set(ref(device(), `${P}/phone`), { ...phone(), cameraOn: 'yes' }));
+    const full = { ...phone(), camera: 'paused', visible: false, session: 's1', stateSince: serverTimestamp() };
+    await assertSucceeds(set(ref(device(), `${P}/phone`), full));
+    await assertFails(set(ref(device(), `${P}/phone`), { ...full, camera: 'recording' }));
+    await assertFails(set(ref(device(), `${P}/phone`), { ...full, stateSince: Date.now() + 60_000 }));
+    await assertFails(set(ref(device(), `${P}/phone`), { ...full, session: 'x'.repeat(65) }));
     await assertFails(get(ref(device(), `${P}/laptop`)));
     await assertFails(get(ref(device(), 'live/org-a')));
   });
@@ -121,5 +127,18 @@ describe('Realtime Database rules', () => {
     await assertFails(get(ref(studentA(), 'live/org-a/t1/att-1')));
     await assertFails(get(ref(studentA(), 'attemptOwners/att-1')));
     await assertFails(get(ref(db(null), `${P}/phone`)));
+  });
+
+  it('PR-16 PR-15 an attempt proctor record is read by its own student and its own phone, and written by no client', async () => {
+    const path = 'proctor/org-a/att-1';
+    await assertSucceeds(get(ref(studentA(), path)));
+    await assertSucceeds(get(ref(device(), path)));
+    for (const client of [otherStudent(), device('att-2'), device('att-1', 'org-b'), adminOf('org-a'), db(null)])
+      await assertFails(get(ref(client, path)));
+    await assertFails(get(ref(studentA(), 'proctor/org-a')));
+    for (const client of [studentA(), device(), adminOf('org-a'), superAdmin()]) {
+      await assertFails(set(ref(client, `${path}/phoneSession`), 'mine'));
+      await assertFails(set(ref(client, `${path}/strike`), { strikesCount: 0 }));
+    }
   });
 });
