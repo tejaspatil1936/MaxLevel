@@ -7,19 +7,33 @@ import {
   type EligibilityStudent,
   type PrewarmTarget,
   type AnswerRecord,
+  type AttemptEventDetails,
   type AttemptRecord,
+  type ProctorEventType,
   type GradingQuestion,
   type RankableAttempt,
   type Section,
   type Settings,
+  type StrikeVerdict,
 } from '@mitaoe/shared';
 import type { DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 
 // The worker's data access (ORG-03: every function takes orgId first). It reads and writes the same records as the
 // API's data layer (apps/api/src/data), only those its tasks need.
 
-/** What finishing an attempt stores (EX-17). */
-export type FinishedFields = Required<Pick<AttemptRecord, 'status' | 'submittedAt' | 'result'>>;
+/** What finishing an attempt stores (EX-17); a termination also says why (PR-10). */
+export type FinishedFields = Required<Pick<AttemptRecord, 'status' | 'submittedAt' | 'result'>> &
+  Pick<AttemptRecord, 'terminationReason'>;
+
+/** What recording a strike the worker decided did: the attempt as it now stands and the stored event's number. */
+export interface RecordedStrike {
+  attempt: AttemptRecord;
+  verdict: StrikeVerdict;
+  /** The stored event's strike number, when it counted (now or on an earlier run of the same task). */
+  strikeNumber?: number;
+  /** The event was already stored by an earlier run: nothing new was written. */
+  repeat: boolean;
+}
 
 /** What the release task reads of a test: its settings snapshot and release state (RES-01). */
 export interface ReleaseTest {
@@ -202,6 +216,50 @@ export function workerData(db: Firestore) {
             ];
           }),
       );
+    },
+
+    /**
+     * PR-07, PR-08, PR-11, REL-04: logs a strike event the worker decided and counts it in one transaction, as the
+     * API's recordEvent does, under a fixed event ID: a task run again finds its event and changes nothing. `decide`
+     * sees the attempt as stored. `ATTEMPT_FINISHED` (nothing stored) once it is not in progress; null when missing.
+     */
+    async recordServerStrike(
+      orgId: string,
+      attemptId: string,
+      event: { id: string; type: ProctorEventType; details: AttemptEventDetails; serverTs: number },
+      decide: (attempt: AttemptRecord) => StrikeVerdict,
+    ): Promise<RecordedStrike | 'ATTEMPT_FINISHED' | null> {
+      const ref = org(orgId).collection('attempts').doc(attemptId);
+      const eventRef = ref.collection('events').doc(event.id);
+      return db.runTransaction(async (tx) => {
+        const [snap, stored] = await Promise.all([tx.get(ref), tx.get(eventRef)]);
+        if (!snap.exists) return null;
+        const attempt = toAttempt(snap);
+        if (stored.exists) {
+          const strikeNumber = stored.get('strikeNumber') as number | undefined;
+          const verdict: StrikeVerdict = { counted: false, terminates: false };
+          return { attempt, verdict, repeat: true, ...(strikeNumber !== undefined ? { strikeNumber } : {}) };
+        }
+        if (attempt.status !== 'in_progress') return 'ATTEMPT_FINISHED';
+        const verdict = decide(attempt);
+        const strikeNumber = verdict.counted ? verdict.strikeNumber : undefined;
+        tx.create(eventRef, {
+          orgId,
+          type: event.type,
+          details: event.details,
+          clientTs: event.serverTs,
+          serverTs: event.serverTs,
+          ...(strikeNumber !== undefined ? { strikeNumber } : {}),
+        });
+        if (strikeNumber === undefined) return { attempt, verdict, repeat: false };
+        tx.update(ref, { strikesCount: strikeNumber, lastStrikeAt: event.serverTs });
+        return {
+          attempt: { ...attempt, strikesCount: strikeNumber, lastStrikeAt: event.serverTs },
+          verdict,
+          strikeNumber,
+          repeat: false,
+        };
+      });
     },
 
     /**
