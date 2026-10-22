@@ -11,6 +11,7 @@ export const PROCTOR_EVENT_TYPES = [
   'multiple_faces',
   'devtools',
   'phone_disconnected',
+  'phone_in_view',
   'context_menu',
   'clipboard',
   'print',
@@ -33,6 +34,7 @@ const STRIKE_TYPES: ReadonlySet<ProctorEventType> = new Set([
   'no_face',
   'multiple_faces',
   'phone_disconnected',
+  'phone_in_view',
 ]);
 
 /** One incident is one strike (PR-07): a strike event this soon after the last counted one is logged, not counted. */

@@ -65,6 +65,7 @@ export const live = {
   'live.event.multiple_faces': 'More than one face in view',
   'live.event.devtools': 'Developer tools shortcut',
   'live.event.phone_disconnected': 'Phone disconnected for more than a minute',
+  'live.event.phone_in_view': 'Phone seen in camera',
   'live.event.context_menu': 'Context menu',
   'live.event.clipboard': 'Copy or paste',
   'live.event.print': 'Print',

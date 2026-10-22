@@ -8,10 +8,18 @@ import {
   strikeVerdict,
 } from './strikes';
 
-const STRIKES = ['fullscreen_exit', 'tab_hidden', 'window_blur', 'no_face', 'multiple_faces', 'phone_disconnected'];
+const STRIKES = [
+  'fullscreen_exit',
+  'tab_hidden',
+  'window_blur',
+  'no_face',
+  'multiple_faces',
+  'phone_disconnected',
+  'phone_in_view',
+];
 
 describe('isStrikeEvent', () => {
-  it('PR-08 PR-11 the six incident types are strikes under every devtools policy', () => {
+  it('PR-08 PR-11 the seven incident types are strikes under every devtools policy', () => {
     for (const policy of ['block_strike', 'block', 'allow'] as const) {
       for (const type of STRIKES) expect(isStrikeEvent(type as never, policy), `${type} ${policy}`).toBe(true);
     }
