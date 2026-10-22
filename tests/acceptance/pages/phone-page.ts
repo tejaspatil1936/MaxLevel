@@ -9,6 +9,7 @@ export class PhonePage {
   readonly help: Locator;
   readonly video: Locator;
   readonly refusal: Locator;
+  readonly start: Locator;
 
   constructor(readonly page: Page) {
     this.main = page.getByRole('main');
@@ -18,12 +19,14 @@ export class PhonePage {
     this.video = page.locator('video');
     // In main: Next.js keeps its own empty route announcer (role alert) at the end of every page.
     this.refusal = this.main.getByRole('alert');
+    this.start = page.getByRole('button', { name: 'Start camera', exact: true });
   }
 
-  /** Opens a pairing link (the text of the laptop's `pairing-link`). */
+  /** Opens a pairing link (the text of the laptop's `pairing-link`) and taps `Start camera`, which redeems it. */
   async open(link: string): Promise<void> {
     await this.page.goto(link);
     await expect(this.heading).toBeVisible();
+    await this.start.click();
   }
 
   async expectConnected(): Promise<void> {

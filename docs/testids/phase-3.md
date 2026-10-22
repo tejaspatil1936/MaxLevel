@@ -343,10 +343,16 @@ exactly `Results will be released after the window closes at <HH:mm> IST.` (`aft
 
 ## Phone pairing page: `/pair/?token=<token>` (PR-14 to PR-17)
 
-Designed for phones first (390 px). The page redeems the token (`POST /v1/pairing/redeem`), signs in with the custom
-token, turns the camera on, requests a screen wake lock (`navigator.wakeLock.request('screen')`), and writes
-`presence/{orgId}/{testId}/{attemptId}/phone` `{ online: true, lastSeen: <server timestamp>, cameraOn: true }` every 5
-seconds, with `onDisconnect` setting `online: false`.
+Designed for phones first (390 px). The page first shows a `button` exactly `Start camera` and does nothing else, so
+a QR scanner's preview never uses the link up. The tap redeems the token (`POST /v1/pairing/redeem`), signs in with the
+custom token, turns the camera on, requests a screen wake lock (`navigator.wakeLock.request('screen')`), and writes
+`presence/{orgId}/{testId}/{attemptId}/phone` `{ online: true, lastSeen: <server timestamp>, cameraOn: true, camera,
+visible, session, stateSince }` with a heartbeat every 5 seconds, and `onDisconnect` setting `online: false`. `camera`
+is `starting`, `live`, `paused` or `failed`; a muted or ended camera is reopened by the page. Every write carries the
+pairing's `session`, which the database rules check against `proctor/{orgId}/{attemptId}/phoneSession`, so a phone
+paired later replaces this one. A reload of the same link rejoins without a new code. When another phone takes over,
+the page reads `Another phone is now the camera for this test. You can close this page.`; when the attempt ends,
+`Your test has ended. You can close this page.` (both `status`), and the camera stops.
 
 | What | Role | Name or text |
 | --- | --- | --- |
