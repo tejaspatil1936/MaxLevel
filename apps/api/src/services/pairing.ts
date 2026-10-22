@@ -2,6 +2,7 @@ import {
   isFinishedAttempt,
   PAIRING_TOKEN_TTL_MS,
   pairingTokenVerdict,
+  proctorPath,
   type Clock,
   type PairingRedeemResult,
   type PairingReservation,
@@ -91,7 +92,9 @@ export function pairingService(deps: PairingDeps) {
 
     /**
      * POST /v1/pairing/redeem (PR-14): a link works once and for 5 minutes on the Clock; it becomes a custom token for
-     * the phone, whose claims let it write only its own presence record (DATA-10).
+     * the phone, whose claims let it write only its own presence record (DATA-10), and a new session. The session is
+     * stored as the attempt's current phone before the reply (waiting at most OWNER_WRITE_LIMIT_MS, REL-05): the rules
+     * accept only presence writes that carry it, so the phone this replaces can write no more.
      */
     async redeem(token: string): Promise<PairingRedeemResult> {
       const dot = token.indexOf('.');
@@ -107,7 +110,10 @@ export function pairingService(deps: PairingDeps) {
         throw new AppError(410, done, 'This pairing link has expired. Show a new code on your laptop.');
       const { testId, attemptId } = done.record;
       const customToken = await auth.createCustomToken(`device-${attemptId}`, { role: 'device', orgId, attemptId });
-      return { customToken, orgId, testId, attemptId };
+      const session = randomBytes(16).toString('base64url');
+      const path = `${proctorPath(orgId, attemptId)}/phoneSession`;
+      await withinLimit(rtdb.ref(path).set(session), log, path);
+      return { customToken, orgId, testId, attemptId, session };
     },
   };
 }

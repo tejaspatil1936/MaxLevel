@@ -1,4 +1,11 @@
-import { liveRecordPath, signalPath, type AttemptRecord, type LiveRecord, type SignalRecord } from '@mitaoe/shared';
+import {
+  liveRecordPath,
+  proctorPath,
+  signalPath,
+  type AttemptRecord,
+  type LiveRecord,
+  type SignalRecord,
+} from '@mitaoe/shared';
 import type { Database } from 'firebase-admin/database';
 import { fireAndForget, withinLimit, type WarnLogger } from './rtdb-writes';
 
@@ -33,14 +40,23 @@ export function startedRecord(attempt: AttemptRecord, student: LiveStudent, now:
  * route replies anyway.
  */
 export function liveMirror(rtdb: Database, log: WarnLogger) {
+  /** Updates the live record; a new `status` also goes to the attempt's proctor record, which its phone follows. */
   const update = (
     orgId: string,
     testId: string,
     attemptId: string,
     fields: Partial<LiveRecord> & { backlog?: number },
+    status?: string,
   ) => {
     const path = liveRecordPath(orgId, testId, attemptId);
-    fireAndForget(rtdb.ref(path).update(fields), log, path);
+    const write =
+      status === undefined
+        ? rtdb.ref(path).update(fields)
+        : rtdb.ref().update({
+            ...Object.fromEntries(Object.entries(fields).map(([key, value]) => [`${path}/${key}`, value])),
+            [`${proctorPath(orgId, attemptId)}/status`]: status,
+          });
+    fireAndForget(write, log, path);
   };
   return {
     /** A pairing reservation before Start (PR-13): the student shows as `pairing`. */
@@ -68,27 +84,34 @@ export function liveMirror(rtdb: Database, log: WarnLogger) {
 
     /** Any finish: submit, time up, strike termination (EX-15 to EX-17, PR-10). */
     finished(orgId: string, attempt: AttemptRecord, now: number): void {
-      update(orgId, attempt.testId, attempt.id, {
-        status: attempt.status,
-        strikes: attempt.strikesCount,
-        ...(attempt.result ? { answered: attempt.draw.questionIds.length - attempt.result.unanswered } : {}),
-        updatedAt: now,
-      });
+      update(
+        orgId,
+        attempt.testId,
+        attempt.id,
+        {
+          status: attempt.status,
+          strikes: attempt.strikesCount,
+          ...(attempt.result ? { answered: attempt.draw.questionIds.length - attempt.result.unanswered } : {}),
+          updatedAt: now,
+        },
+        attempt.status,
+      );
     },
 
     /** A reinstated attempt (OPS-04): in progress again, with its answers, strikes and deadline. */
     reinstated(orgId: string, attempt: AttemptRecord, now: number): void {
-      update(orgId, attempt.testId, attempt.id, {
-        status: attempt.status,
-        strikes: attempt.strikesCount,
-        deadlineAt: attempt.deadlineAt,
-        updatedAt: now,
-      });
+      update(
+        orgId,
+        attempt.testId,
+        attempt.id,
+        { status: attempt.status, strikes: attempt.strikesCount, deadlineAt: attempt.deadlineAt, updatedAt: now },
+        attempt.status,
+      );
     },
 
     /** A reset (OPS-10): the record is kept as `reset`, which the live view never shows. */
     reset(orgId: string, attempt: AttemptRecord, now: number): void {
-      update(orgId, attempt.testId, attempt.id, { status: 'reset', updatedAt: now });
+      update(orgId, attempt.testId, attempt.id, { status: 'reset', updatedAt: now }, 'reset');
     },
 
     /**

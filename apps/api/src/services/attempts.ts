@@ -25,6 +25,9 @@ import {
   type Clock,
   type Settings,
   type TaskQueue,
+  outageOf,
+  phoneCheckDueAt,
+  phoneCheckTask,
 } from '@mitaoe/shared';
 import type { Database } from 'firebase-admin/database';
 import type { Data } from '../data';
@@ -357,6 +360,17 @@ export function attemptService(deps: AttemptDeps) {
       if (!test?.resolved) throw notFound('Attempt');
       const { devtoolsPolicy, maxStrikes } = test.resolved;
       const now = clock.now();
+      // PR-16: the laptop reports a phone gone for over 15 seconds; the worker decides the strike once the outage is
+      // due. Queued before the event is logged, so a failed enqueue fails the report and the laptop sends it again.
+      if (report.type === 'phone_paused' && test.resolved.secondCamera)
+        await queue.enqueue(
+          phoneCheckTask(
+            orgId,
+            attempt.id,
+            outageOf(report.details),
+            phoneCheckDueAt({ clientTs: report.clientTs, offlineMs: report.details.offlineMs }, now),
+          ),
+        );
       const done = await data.events.recordEvent(orgId, attempt.id, report, now, (stored) =>
         strikeVerdict({
           type: report.type,

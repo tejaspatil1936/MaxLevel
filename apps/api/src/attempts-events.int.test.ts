@@ -10,7 +10,7 @@ import { asClaims } from './test-support/tokens';
 // Proctoring events and strikes (PR-07, PR-08, PR-10, PR-11, DATA-05): POST and GET /v1/attempts/{id}/events on the
 // emulators. Each test uses its own students, so the per-user event limit (API-06) never interferes.
 
-const { db, auth } = initFirebase();
+const { db, auth, rtdb } = initFirebase();
 const org = `organizations/${SEED.orgA}`;
 let ctx: Awaited<ReturnType<typeof testApp>>;
 let api: ReturnType<typeof attemptClient>;
@@ -197,5 +197,45 @@ describe('proctoring events', () => {
     expect([resumed.status, resumed.body.attempt.status]).toEqual([200, 'terminated']);
     expect(resumed.body.attempt.strikesCount).toBe(1);
     for (const raw of [ended.raw, resumed.raw]) expect(leaks(raw)).toEqual([]);
+  });
+});
+
+describe('phone outages', () => {
+  const task = (id: string, outage: string) => db.doc(`_localTasks/phone-check-${id}-${outage}`).get();
+
+  it('PR-16 REL-04 a phone paused report queues one check, due when the outage reaches 60 seconds', async () => {
+    const { headers, id } = await started(11, { secondCamera: true });
+    const paused = { offlineMs: 16_000, stateSince: 111, lastSeen: 222 };
+    expect((await report(id, headers, 'phone_paused', paused)).body).toEqual({
+      strikesCount: 0,
+      counted: false,
+      status: 'in_progress',
+    });
+    const queued = await task(id, '111-222');
+    expect(queued.data()).toMatchObject({
+      path: '/tasks/phone-check',
+      payload: { orgId: SEED.orgA, attemptId: id, stateSince: 111, lastSeen: 222 },
+      // The report's clientTs is 50 ms before the server's clock.
+      scheduleTime: NOW - 50 + 44_000,
+    });
+    ctx.clock.set(NOW + 5_000);
+    expect((await report(id, headers, 'phone_paused', paused)).status, 'a repeat').toBe(200);
+    expect((await task(id, '111-222')).get('scheduleTime'), 'the first check is kept').toBe(NOW - 50 + 44_000);
+    expect((await report(id, headers, 'phone_paused', { offlineMs: 'x' })).status).toBe(200);
+    expect((await task(id, 'none-none')).exists, 'an unreadable outage is still checked').toBe(true);
+  });
+
+  it('PR-16 without a second camera a phone paused report is only logged', async () => {
+    const { headers, id } = await started(12);
+    expect((await report(id, headers, 'phone_paused', { offlineMs: 16_000, stateSince: 1, lastSeen: 2 })).status).toBe(
+      200,
+    );
+    expect((await task(id, '1-2')).exists).toBe(false);
+  });
+
+  it('PR-10 PR-15 an attempt ended by a strike tells its phone through the proctor record', async () => {
+    const { headers, id } = await started(13, { maxStrikes: 1 });
+    expect((await report(id, headers, 'tab_hidden')).body).toMatchObject({ status: 'terminated' });
+    await expect.poll(async () => (await rtdb.ref(`proctor/${SEED.orgA}/${id}/status`).get()).val()).toBe('terminated');
   });
 });

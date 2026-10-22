@@ -127,8 +127,11 @@ describe('pairing links', () => {
       orgId: SEED.orgA,
       testId: t.testId,
       attemptId,
+      session: expect.stringMatching(/^[A-Za-z0-9_-]{22}$/),
     });
     expect(claimsOf(redeemed.body.customToken)).toEqual({ role: 'device', orgId: SEED.orgA, attemptId });
+    const current = await rtdb.ref(`proctor/${SEED.orgA}/${attemptId}/phoneSession`).get();
+    expect(current.val(), 'the new session is the current phone').toBe(redeemed.body.session);
     const used = await redeem(once.body.token);
     expect([used.status, code(used)]).toEqual([409, 'PAIRING_TOKEN_USED']);
 
@@ -138,7 +141,10 @@ describe('pairing links', () => {
     ctx.clock.advance(1);
     const expired = await redeem(stale.body.token);
     expect([expired.status, code(expired)]).toEqual([410, 'PAIRING_TOKEN_EXPIRED']);
-    expect((await redeem(fresh.body.token)).status, 'a later code is still valid').toBe(200);
+    const replaced = await redeem(fresh.body.token);
+    expect(replaced.status, 'a later code is still valid').toBe(200);
+    expect(replaced.body.session, 'with a session of its own').not.toBe(redeemed.body.session);
+    expect((await rtdb.ref(`proctor/${SEED.orgA}/${attemptId}/phoneSession`).get()).val()).toBe(replaced.body.session);
 
     for (const bogus of ['not-a-real-token', `org-a.${'x'.repeat(43)}`, `org-b.${stale.body.token.split('.')[1]}`]) {
       const r = await redeem(bogus);

@@ -32,7 +32,14 @@ export type PairingReservation = z.infer<typeof pairingReservationSchema>;
 
 /** `POST /v1/pairing/redeem` (PR-14), sent by the phone with no sign-in. */
 export const pairingRedeemSchema = z.object({ token: z.string().min(1).max(256) }).strict();
-export const pairingRedeemResultSchema = z.object({ customToken: z.string(), orgId: id, testId: id, attemptId: id });
+export const pairingRedeemResultSchema = z.object({
+  customToken: z.string(),
+  orgId: id,
+  testId: id,
+  attemptId: id,
+  /** This pairing's session: every presence write carries it, and a newer pairing replaces it (DATA-10). */
+  session: z.string(),
+});
 export type PairingRedeemResult = z.infer<typeof pairingRedeemResultSchema>;
 
 /** Why a pairing token can't be redeemed; an unknown token is `PAIRING_TOKEN_INVALID`. */
