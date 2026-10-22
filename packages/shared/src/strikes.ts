@@ -22,9 +22,13 @@ export const PROCTOR_EVENT_TYPES = [
 export const proctorEventTypeSchema = z.enum(PROCTOR_EVENT_TYPES);
 export type ProctorEventType = z.infer<typeof proctorEventTypeSchema>;
 
-/** Types a student's browser may report; `late_sync` and `note` are written by the server only. */
+/** Written by the server only: a late sync, an admin's note, and a phone outage strike (the worker decides it). */
+const SERVER_EVENT_TYPES = ['late_sync', 'note', 'phone_disconnected'] as const;
+type ServerEventType = (typeof SERVER_EVENT_TYPES)[number];
+
+/** Types a student's browser may report. */
 export const CLIENT_EVENT_TYPES = PROCTOR_EVENT_TYPES.filter(
-  (t): t is Exclude<ProctorEventType, 'late_sync' | 'note'> => t !== 'late_sync' && t !== 'note',
+  (t): t is Exclude<ProctorEventType, ServerEventType> => !(SERVER_EVENT_TYPES as readonly string[]).includes(t),
 );
 
 /** Types that are always strikes; `devtools` is one only under the `block_strike` policy. */

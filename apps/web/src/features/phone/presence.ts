@@ -1,6 +1,6 @@
 'use client';
 
-import { presencePath, type LaptopPresence } from '@mitaoe/shared';
+import { phoneHealthy, presencePath, type LaptopPresence, type PhonePresence } from '@mitaoe/shared';
 import {
   onDisconnect,
   onValue,
@@ -86,13 +86,27 @@ export function useLaptopPresence(attempt: AttemptRef | null): void {
   }, [path]);
 }
 
+/** What the laptop knows of the phone's record: its health and the outage key, and when it last changed here. */
+export interface PhoneView {
+  healthy: boolean;
+  stateSince: number | null;
+  lastSeen: number | null;
+  /** The laptop's monotonic time the record's `lastSeen` last changed (or was first seen). */
+  changedAt: number;
+}
+
 /**
- * What the laptop sees of Realtime Database: its own connection, and whether the attempt's phone is online (a missing
- * record is offline). `phoneOnline` is null until the first answer.
+ * What the laptop sees of Realtime Database: its own connection, and the attempt's phone record (a missing record is
+ * an unhealthy phone). `phone` is undefined until the first answer and null when the record can't be read.
+ * `phoneOnline` is the phone healthy (online with a live camera), null until the first answer.
  */
-export function usePhoneLink(attempt: AttemptRef | null): { connected: boolean; phoneOnline: boolean | null } {
+export function usePhoneLink(attempt: AttemptRef | null): {
+  connected: boolean;
+  phone: PhoneView | null | undefined;
+  phoneOnline: boolean | null;
+} {
   const [connected, setConnected] = useState(false);
-  const [phoneOnline, setPhoneOnline] = useState<boolean | null>(null);
+  const [phone, setPhone] = useState<PhoneView | null | undefined>(undefined);
   const path = attempt ? presencePath(attempt.orgId, attempt.testId, attempt.attemptId, 'phone') : null;
   useEffect(() => {
     if (!path) return;
@@ -100,14 +114,24 @@ export function usePhoneLink(attempt: AttemptRef | null): { connected: boolean; 
     const offConnected = onConnected(db, setConnected);
     const offPhone = onValue(
       ref(db, path),
-      (snap) => setPhoneOnline((snap.val() as { online?: unknown } | null)?.online === true),
-      () => setPhoneOnline(null),
+      (snap) => {
+        const record = snap.val() as Partial<PhonePresence> | null;
+        const num = (v: unknown) => (typeof v === 'number' ? v : null);
+        const lastSeen = num(record?.lastSeen);
+        setPhone((before) => ({
+          healthy: phoneHealthy(record),
+          stateSince: num(record?.stateSince),
+          lastSeen,
+          changedAt: before && before.lastSeen === lastSeen ? before.changedAt : performance.now(),
+        }));
+      },
+      () => setPhone(null),
     );
     return () => {
       offConnected();
       offPhone();
-      setPhoneOnline(null);
+      setPhone(undefined);
     };
   }, [path]);
-  return { connected, phoneOnline };
+  return { connected, phone, phoneOnline: phone === undefined || phone === null ? null : phone.healthy };
 }

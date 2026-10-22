@@ -20,6 +20,7 @@ import { firebaseAuth } from '@/lib/firebase';
 import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
 import { useDeadlineSignal } from './deadline-signal';
+import { useServerStrikes } from './server-strikes';
 import { createAnswerSync, type AnswerSync, type PendingAnswer, type Rejection, type SyncStatus } from './answer-sync';
 import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
 import { installFocusWrap } from './focus-wrap';
@@ -364,7 +365,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   const { cameraRequired } = payload.settings;
   const cameraStream = useCameraWatch(cameraRequired, report);
   // Presence in Realtime Database (DATA-06): this laptop's own record, and with a second camera the phone's, whose
-  // disconnection brings up the reconnect overlay and then a strike (PR-16) unless our database is down (REL-05).
+  // disconnection brings up the reconnect overlay and is reported paused; the server decides the strike (PR-16) and it
+  // arrives through the proctor record, unless our database is down (REL-05).
   const { session } = useSession();
   const me = session.status === 'ready' ? session.me : null;
   const orgId = me?.orgId ?? null;
@@ -373,6 +375,7 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   useLaptopPresence(presenceOf);
   const { secondCamera } = payload.settings;
   const phone = usePhoneWatch(secondCamera ? presenceOf : null, report);
+  useServerStrikes(orgId, attemptId, proctor.serverStrike);
   // Each timed question is reported as served when it shows (Q-12); until the server answers, its countdown runs from
   // the time it showed here (QuestionTimer).
   const [served, setServed] = useState<Record<string, number>>(payload.questionServedAt);

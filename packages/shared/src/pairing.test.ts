@@ -57,13 +57,12 @@ describe('nextPhoneWatch', () => {
     expect(presencePath('org-a', 't1', 'a1', 'phone')).toBe('presence/org-a/t1/a1/phone');
   });
 
-  it('PR-16 a phone gone for over 15 seconds needs reconnecting and over 60 seconds is one strike', () => {
+  it('PR-16 a phone gone for over 15 seconds needs reconnecting and is reported paused once', () => {
     const looks = run([
       { at: 0, phoneOnline: true },
       { at: 1_000, phoneOnline: false },
       { at: 16_000, phoneOnline: false },
       { at: 16_001, phoneOnline: false },
-      { at: 61_000, phoneOnline: false },
       { at: 61_001, phoneOnline: false },
       { at: 120_000, phoneOnline: false },
     ]);
@@ -71,9 +70,8 @@ describe('nextPhoneWatch', () => {
       { at: 0, link: 'connected', reconnect: false, report: undefined },
       { at: 1_000, link: 'disconnected', reconnect: false, report: undefined },
       { at: 16_000, link: 'disconnected', reconnect: false, report: undefined },
-      { at: 16_001, link: 'disconnected', reconnect: true, report: undefined },
-      { at: 61_000, link: 'disconnected', reconnect: true, report: undefined },
-      { at: 61_001, link: 'disconnected', reconnect: true, report: 60_001 },
+      { at: 16_001, link: 'disconnected', reconnect: true, report: 15_001 },
+      { at: 61_001, link: 'disconnected', reconnect: true, report: undefined },
       { at: 120_000, link: 'disconnected', reconnect: true, report: undefined },
     ]);
   });
@@ -84,16 +82,16 @@ describe('nextPhoneWatch', () => {
       { at: 70_000, phoneOnline: false },
       { at: 71_000, phoneOnline: true },
       { at: 72_000, phoneOnline: false },
-      { at: 100_000, phoneOnline: false },
-      { at: 132_001, phoneOnline: false },
+      { at: 87_000, phoneOnline: false },
+      { at: 87_001, phoneOnline: false },
     ]);
     expect(looks.map((l) => [l.link, l.reconnect, l.report])).toEqual([
       ['disconnected', false, undefined],
       ['disconnected', true, 70_000],
       ['connected', false, undefined],
       ['disconnected', false, undefined],
-      ['disconnected', true, undefined],
-      ['disconnected', true, 60_001],
+      ['disconnected', false, undefined],
+      ['disconnected', true, 15_001],
     ]);
   });
 
@@ -114,7 +112,7 @@ describe('nextPhoneWatch', () => {
       ['unavailable', false, undefined],
       ['disconnected', false, undefined],
       ['disconnected', false, undefined],
-      ['disconnected', true, undefined],
+      ['disconnected', true, 15_001],
     ]);
   });
 });

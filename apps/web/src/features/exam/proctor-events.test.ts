@@ -121,4 +121,34 @@ describe('proctor event reporter', () => {
     h.reporter.report('window_blur');
     expect(h.sent[0]!.clientTs).toBe(1_000_001);
   });
+
+  it('PR-16 PR-09 a strike the server decided warns once with its count, and one from before the exam opened does not', async () => {
+    const h = harness({ strikesCount: 1 });
+    const strike = { eventId: 'phone-1-2', type: 'phone_disconnected' as const, status: 'in_progress' };
+    h.reporter.serverStrike({ ...strike, eventId: 'phone-0-0', strikesCount: 1 });
+    expect(h.warnings, 'counted before the exam opened here').toEqual([]);
+    h.reporter.serverStrike({ ...strike, strikesCount: 2 });
+    h.reporter.serverStrike({ ...strike, strikesCount: 2 });
+    expect(h.warnings).toEqual([{ type: 'phone_disconnected', count: 2 }]);
+    expect(h.counts).toEqual([2]);
+    // A laptop event right after is the same incident (PR-07): no second warning.
+    h.advance(1_000);
+    h.reporter.report('window_blur');
+    expect(h.warnings).toHaveLength(1);
+    h.reporter.acknowledge();
+    expect(h.warnings.at(-1)).toBeNull();
+    expect(h.sent.map((r) => r.type)).toEqual(['window_blur']);
+  });
+
+  it('PR-10 a server strike that ended the attempt opens the submitted screen', () => {
+    const h = harness();
+    h.reporter.serverStrike({
+      eventId: 'phone-1-2',
+      type: 'phone_disconnected',
+      strikesCount: 3,
+      status: 'terminated',
+    });
+    expect(h.warnings).toEqual([{ type: 'phone_disconnected', count: 3 }]);
+    expect(h.finished()).toBe(1);
+  });
 });

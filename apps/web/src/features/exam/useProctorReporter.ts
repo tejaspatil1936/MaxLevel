@@ -1,6 +1,6 @@
 'use client';
 
-import type { AttemptEventDetails, AttemptEventResult, AttemptPayload } from '@mitaoe/shared';
+import type { AttemptEventDetails, AttemptEventResult, AttemptPayload, ServerStrike } from '@mitaoe/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, serverNow } from '@/lib/api';
 import {
@@ -53,5 +53,6 @@ export function useProctorReporter(
     [],
   );
   const acknowledge = useCallback(() => reporter.current?.acknowledge(), []);
-  return { strikes, warning, report, acknowledge };
+  const serverStrike = useCallback((strike: ServerStrike) => reporter.current?.serverStrike(strike), []);
+  return { strikes, warning, report, acknowledge, serverStrike };
 }

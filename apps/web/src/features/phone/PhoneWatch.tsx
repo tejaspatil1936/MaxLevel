@@ -4,6 +4,7 @@ import {
   type AttemptEventDetails,
   initialPhoneWatch,
   nextPhoneWatch,
+  PHONE_STALE_AFTER_MS,
   type PairingToken,
   type PhoneLink,
 } from '@mitaoe/shared';
@@ -21,28 +22,38 @@ const LOOK_MS = 1000;
 
 /**
  * The laptop watching its phone during the attempt (PR-16, REL-05): the phone's presence, judged once a second by
- * shared `nextPhoneWatch`. A disconnection of more than 15 seconds needs the reconnect overlay, of more than 60 seconds
- * one `phone_disconnected` report; nothing is timed while the laptop's own Realtime Database connection is down.
- * Durations are on the monotonic clock, so a re-measured server offset never stretches or shortens them.
+ * shared `nextPhoneWatch`. The phone counts as gone when its record is offline or missing, its camera is not live, or
+ * the record has not changed for over 15 seconds (a frozen page). Gone for more than 15 seconds needs the reconnect
+ * overlay and one `phone_paused` report, carrying the record's `stateSince` and `lastSeen` so the server can tell
+ * whether the same outage is still going on when it decides the strike at 60 seconds. Nothing is timed while the
+ * laptop's own Realtime Database connection is down. Durations are on the monotonic clock, so a re-measured server
+ * offset never stretches or shortens them.
  */
 export function usePhoneWatch(
   attempt: AttemptRef | null,
-  report: (type: 'phone_disconnected', details: AttemptEventDetails) => void,
+  report: (type: 'phone_paused', details: AttemptEventDetails) => void,
 ): { link: PhoneLink; reconnect: boolean } {
-  const { connected, phoneOnline } = usePhoneLink(attempt);
+  const { connected, phone } = usePhoneLink(attempt);
   const [view, setView] = useState<{ link: PhoneLink; reconnect: boolean }>({ link: 'unavailable', reconnect: false });
   const watch = useRef(initialPhoneWatch);
   const watching = attempt !== null;
   useEffect(() => {
     if (!watching) return;
     const look = () => {
-      const seen = { laptopConnected: connected && phoneOnline !== null, phoneOnline: phoneOnline === true };
-      const next = nextPhoneWatch(watch.current, seen, performance.now());
+      const now = performance.now();
+      const healthy = !!phone && phone.healthy && now - phone.changedAt <= PHONE_STALE_AFTER_MS;
+      const seen = { laptopConnected: connected && phone !== undefined && phone !== null, phoneOnline: healthy };
+      const next = nextPhoneWatch(watch.current, seen, now);
       watch.current = next.state;
       setView((v) =>
         v.link === next.link && v.reconnect === next.reconnect ? v : { link: next.link, reconnect: next.reconnect },
       );
-      if (next.report) report('phone_disconnected', { disconnectedMs: Math.round(next.report.afterMs) });
+      if (next.report)
+        report('phone_paused', {
+          offlineMs: Math.round(next.report.afterMs),
+          stateSince: phone?.stateSince ?? null,
+          lastSeen: phone?.lastSeen ?? null,
+        });
     };
     const first = setTimeout(look, 0);
     const id = setInterval(look, LOOK_MS);
@@ -50,7 +61,7 @@ export function usePhoneWatch(
       clearTimeout(first);
       clearInterval(id);
     };
-  }, [watching, connected, phoneOnline, report]);
+  }, [watching, connected, phone, report]);
   return { link: view.link, reconnect: view.reconnect };
 }
 

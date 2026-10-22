@@ -1,11 +1,12 @@
 'use client';
 
+import type { ProctorEventType } from '@mitaoe/shared';
 import { AcknowledgeDialog } from '@mitaoe/ui';
 import { t, type MessageKey } from '@/i18n';
-import type { ClientEventType, StrikeWarning as Warning } from './proctor-events';
+import type { StrikeWarning as Warning } from './proctor-events';
 
 /** The reason of each strike type (docs/testids/phase-3.md); logged-only types never open a warning. */
-const REASONS: Partial<Record<ClientEventType, MessageKey>> = {
+const REASONS: Partial<Record<ProctorEventType, MessageKey>> = {
   fullscreen_exit: 'strike.reason.fullscreen_exit',
   tab_hidden: 'strike.reason.tab_hidden',
   window_blur: 'strike.reason.window_blur',
@@ -27,7 +28,7 @@ export function StrikeWarning({
 }: {
   warning: Warning | null;
   max: number;
-  onAcknowledge: (type: ClientEventType) => void;
+  onAcknowledge: (type: ProctorEventType) => void;
 }) {
   const left = Math.max(0, max - (warning?.count ?? 0));
   return (

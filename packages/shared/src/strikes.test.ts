@@ -37,8 +37,10 @@ describe('isStrikeEvent', () => {
     }
   });
 
-  it('PR-08 a browser may report every type but late_sync and note', () => {
-    expect(CLIENT_EVENT_TYPES).toEqual(PROCTOR_EVENT_TYPES.filter((t) => t !== 'late_sync' && t !== 'note'));
+  it('PR-08 PR-16 a browser may report every type but late_sync, note and the phone outage strike', () => {
+    expect(CLIENT_EVENT_TYPES).toEqual(
+      PROCTOR_EVENT_TYPES.filter((t) => t !== 'late_sync' && t !== 'note' && t !== 'phone_disconnected'),
+    );
   });
 });
 

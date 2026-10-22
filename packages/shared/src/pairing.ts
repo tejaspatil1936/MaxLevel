@@ -197,7 +197,7 @@ export function phoneCheckDueAt(report: { clientTs: number; offlineMs: unknown }
 /** What the exam banner says: the phone's state, or `unavailable` while the laptop can't reach Realtime Database. */
 export type PhoneLink = 'connected' | 'disconnected' | 'unavailable';
 
-/** The disconnection being followed: since when (server time), and whether its strike was reported. */
+/** The disconnection being followed: since when (the laptop's monotonic clock), and whether it was reported. */
 export interface PhoneWatchState {
   offlineSince: number | null;
   reported: boolean;
@@ -208,9 +208,9 @@ export const initialPhoneWatch: PhoneWatchState = { offlineSince: null, reported
 /**
  * One look at the phone's presence at `now`. While the laptop's own Realtime Database connection is down the phone's
  * state is unknown: nothing is timed and nothing reported, and the disconnection starts over once the laptop is back
- * (REL-05), so our outage never counts against the student. A phone that is offline (or has no record) for more than
- * 15 seconds needs the reconnect overlay, and for more than 60 seconds is reported once as a strike (PR-16); coming
- * back online ends the disconnection.
+ * (REL-05), so our outage never counts against the student. A phone that is not healthy (or has no record) for more
+ * than 15 seconds needs the reconnect overlay and is reported once as paused; the server then decides the strike if the
+ * outage reaches 60 seconds (PR-16). Coming back ends the disconnection.
  */
 export function nextPhoneWatch(
   state: PhoneWatchState,
@@ -222,7 +222,7 @@ export function nextPhoneWatch(
   const since = state.offlineSince ?? now;
   const afterMs = now - since;
   const reconnect = afterMs > PHONE_RECONNECT_AFTER_MS;
-  if (state.reported || afterMs <= PHONE_STRIKE_AFTER_MS)
+  if (state.reported || !reconnect)
     return { state: { offlineSince: since, reported: state.reported }, link: 'disconnected', reconnect };
   return { state: { offlineSince: since, reported: true }, link: 'disconnected', reconnect, report: { afterMs } };
 }

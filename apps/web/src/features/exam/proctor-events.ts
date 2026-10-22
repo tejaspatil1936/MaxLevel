@@ -5,6 +5,8 @@ import {
   retryDelayMs,
   type AttemptEventReport,
   type AttemptEventResult,
+  type ProctorEventType,
+  type ServerStrike,
   type Settings,
 } from '@mitaoe/shared';
 
@@ -13,14 +15,15 @@ import {
 // A strike shows its warning at once, before the API answers, numbered with the next count; the server's count
 // replaces it when the response arrives. Strikes within 3 seconds of the one that opened a warning are one incident
 // (PR-07): they are still reported, and the warning keeps the first event's reason. Failed reports are retried with
-// the answer sync's backoff, keeping their client time, until the API answers.
+// the answer sync's backoff, keeping their client time, until the API answers. A strike the server decided on its own
+// (a phone outage, PR-16) arrives through `serverStrike` and warns the same way.
 
 /** An event type the browser may report. */
 export type ClientEventType = AttemptEventReport['type'];
 
 export interface StrikeWarning {
   /** The event that opened the warning; its reason is shown. */
-  type: ClientEventType;
+  type: ProctorEventType;
   /** The strike number: the next count until the server answers, then the server's count. */
   count: number;
 }
@@ -44,6 +47,11 @@ export interface ProctorDeps {
 
 export interface ProctorReporter {
   report(type: ClientEventType, details?: AttemptEventDetails): void;
+  /**
+   * A strike the server decided (the attempt's proctor record). Each is shown once; one counted before the exam opened
+   * here (its count is not above the opening count) is not shown again.
+   */
+  serverStrike(strike: ServerStrike): void;
   /** The student acknowledged the warning. */
   acknowledge(): void;
   dispose(): void;
@@ -55,6 +63,7 @@ export function createProctorReporter(deps: ProctorDeps): ProctorReporter {
   let warning: (StrikeWarning & { report: AttemptEventReport }) | null = null;
   let disposed = false;
   let finished = false;
+  const serverStrikes = new Set<string>();
   const retries = new Set<() => void>();
 
   const show = (next: typeof warning) => {
@@ -111,8 +120,22 @@ export function createProctorReporter(deps: ProctorDeps): ProctorReporter {
       }
       send(report, 0);
     },
+    serverStrike(strike) {
+      if (disposed || finished || serverStrikes.has(strike.eventId)) return;
+      serverStrikes.add(strike.eventId);
+      if (strike.strikesCount <= deps.strikesCount) return;
+      if (strike.strikesCount > count) {
+        count = strike.strikesCount;
+        deps.onCount(count);
+      }
+      lastIncidentAt = Math.round(deps.now());
+      warning = null;
+      deps.onWarning({ type: strike.type, count: strike.strikesCount });
+      if (strike.status !== 'in_progress') finish();
+    },
     acknowledge() {
-      if (warning) show(null);
+      // A server strike's warning has no report behind it, so it is cleared here too.
+      show(null);
     },
     dispose() {
       disposed = true;
