@@ -296,6 +296,7 @@ reads `Strikes <n> of <max>`.
 | `multiple_faces` | `More than one face was in view.` |
 | `devtools` | `Developer tools are not allowed.` |
 | `phone_disconnected` | `Your phone camera was disconnected for more than a minute.` |
+| `phone_in_view` | `A phone was seen in your camera.` |
 
 When the response says `terminated`, the browser opens `/exam/submitted/?attempt=<id>` with `heading` level 1 exactly
 `Your test was ended` and the text exactly `You reached the maximum of <max> strikes. Your answers so far have been graded.`
