@@ -9,7 +9,7 @@ import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 import type { ExportData } from './export-data';
 import type { ImportData } from './import-data';
 import type { FileStore } from './firebase';
-import type { LiveMirror } from './live';
+import type { LiveMirror, PresenceReader } from './live';
 import { migrationData } from './migration-data';
 import { MIGRATION_BATCH_SIZE, MIGRATIONS, type Migration } from './migrations';
 import type { ReportData } from './report-data';
@@ -20,6 +20,7 @@ import { exportHandler, exportPayloadSchema } from './tasks/export';
 import { importHandler, importPayloadSchema } from './tasks/import';
 import { leaderboardHandler, leaderboardPayloadSchema } from './tasks/leaderboard';
 import { migrateHandler, MigrationFailedError, migratePayloadSchema } from './tasks/migrate';
+import { phoneCheckHandler, phoneCheckPayloadSchema } from './tasks/phone-check';
 import { prewarmHandler, prewarmPayloadSchema } from './tasks/prewarm';
 import { releaseResultsHandler, releaseResultsPayloadSchema } from './tasks/release-results';
 import { reportHandler, reportPayloadSchema } from './tasks/report';
@@ -40,6 +41,8 @@ export interface WorkerDeps {
   reports?: { data: ReportData; files: FileStore; printer: PdfPrinter };
   /** The live mirror in Realtime Database (OPS-02), written when a task finishes an attempt. */
   live?: LiveMirror;
+  /** Presence reads for the phone outage check (PR-16); with `live`, it handles /tasks/phone-check. */
+  presence?: PresenceReader;
   /** Raises the API's minimum instances before a slot (PERF-06); the logging driver when absent. */
   scaler?: InstanceScaler;
   /** The model AI imports and report summaries use (IMP-07): the scripted mock with LLM_PROVIDER=mock; none when unset. */
@@ -60,6 +63,7 @@ export const TASK_NAMES = [
   'export',
   'prewarm',
   'migrate',
+  'phone-check',
 ] as const;
 
 export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
@@ -182,6 +186,17 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
             const retryCount = Number(req.headers['x-cloudtasks-taskretrycount'] ?? 0);
             const outcome = await run(req.body, { retryCount: Number.isFinite(retryCount) ? retryCount : 0 });
             req.log.info({ task: 'report', reportId: req.body.reportId, outcome }, 'task done');
+            return { ok: true, outcome };
+          });
+      }
+      if (deps.live && deps.presence) {
+        const run = phoneCheckHandler({ ...deps, live: deps.live, presence: deps.presence, log: tasks.log });
+        handled.push('phone-check');
+        tasks
+          .withTypeProvider<ZodTypeProvider>()
+          .post('/phone-check', { schema: { body: phoneCheckPayloadSchema } }, async (req) => {
+            const outcome = await run(req.body);
+            req.log.info({ task: 'phone-check', attemptId: req.body.attemptId, outcome }, 'task done');
             return { ok: true, outcome };
           });
       }
