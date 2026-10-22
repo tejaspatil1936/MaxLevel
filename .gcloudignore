@@ -18,3 +18,5 @@ dist
 docs
 scripts
 .user_uploaded
+out
+**/out
