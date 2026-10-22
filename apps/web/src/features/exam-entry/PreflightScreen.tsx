@@ -6,7 +6,7 @@ import { CircleCheck, CircleX, LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { countFaces, loadFaceDetector } from '@/features/proctoring/face-detector';
+import { countFaces, countPhones, loadFaceDetector, loadPhoneDetector } from '@/features/proctoring/face-detector';
 import { TestNotAvailable } from '@/features/student/TestNotAvailable';
 import { testHeading } from '@/features/student/test-heading';
 import { useStudentTest } from '@/features/student/use-student-test';
@@ -101,8 +101,8 @@ function DeviceChecks({ testId, heading, exam }: { testId: string; heading: stri
     };
 
     const camera = async () => {
-      // The detector loads alongside the camera, and loads even without one, so the exam never fetches it (PERF-05).
-      const detector = loadFaceDetector();
+      // The detectors load alongside the camera, and load even without one, so the exam never fetches them (PERF-05).
+      const detector = Promise.all([loadFaceDetector(), loadPhoneDetector()]);
       detector.catch(() => undefined);
       const el = video.current;
       let cameraOn = false;
@@ -119,9 +119,10 @@ function DeviceChecks({ testId, heading, exam }: { testId: string; heading: stri
       }
       set('camera', cameraOn);
       try {
-        const d = await detector;
+        const [faces, phones] = await detector;
         if (!cameraOn || !el) throw new Error('No camera frame to analyse');
-        countFaces(d, el);
+        countFaces(faces, el);
+        countPhones(phones, el);
         set('face', true);
       } catch {
         set('face', false);

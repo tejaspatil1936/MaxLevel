@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Copies MediaPipe's WASM loaders and binaries from the installed @mediapipe/tasks-vision into public/mediapipe/wasm,
-// so face detection is served from the web app's own origin (PR-01) at the version the lockfile pins. The model
-// (public/mediapipe/models/blaze_face_short_range.tflite) is committed; the WASM files are generated and gitignored.
+// so face and phone detection are served from the web app's own origin (PR-01) at the version the lockfile pins. The models
+// (public/mediapipe/models/*.tflite) are committed; the WASM files are generated and gitignored.
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, join } from 'node:path';
