@@ -72,7 +72,7 @@ gcloud beta run domain-mappings create --service testprep-api --domain api.maxle
    - `NEXT_PUBLIC_FIREBASE_PROJECT_ID` = `test-prep-e4d7f`
    - `NEXT_PUBLIC_FIREBASE_API_KEY` = `AIzaSyAuV33S7ub9yYfTXhL93ZysMFSHzybx3Pk`
    - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` = `test-prep-e4d7f.firebaseapp.com`
-   - `NEXT_PUBLIC_FIREBASE_DATABASE_URL` = `https://test-prep-e4d7f-default-rtdb.firebaseio.com`
+   - `NEXT_PUBLIC_FIREBASE_DATABASE_URL` = `https://test-prep-e4d7f-default-rtdb.asia-southeast1.firebasedatabase.app`
    - `NEXT_PUBLIC_ACCESSIBILITY_EMAIL` = `admin@mitaoe.ac.in`
 4. Under **Settings -> Domains**, add `maxlevel.in`.
 

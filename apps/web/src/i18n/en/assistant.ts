@@ -20,4 +20,8 @@ export const assistant = {
   'assistant.checksFailed': '{count} issue(s) preventing student visibility',
   'assistant.eligibleStudents': '{count} eligible registered students',
   'assistant.fixButton': 'Fix Issue',
+  'assistant.minimize': 'Minimize button',
+  'assistant.hide': 'Hide button',
+  'assistant.expand': 'Expand button',
+  'assistant.showButton': 'Show Assistant button',
 } as const;

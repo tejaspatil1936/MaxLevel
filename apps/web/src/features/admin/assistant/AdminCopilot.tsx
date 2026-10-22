@@ -3,12 +3,14 @@
 import type { AssistantChatMessage, AssistantChatResponse, DiagnosticReport } from '@mitaoe/shared';
 import { Button } from '@mitaoe/ui';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowRight, Bot, Send, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowRight, Bot, Maximize2, Minimize2, Send, Sparkles, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { AssistantMarkdown } from './AssistantMarkdown';
+
+type ButtonMode = 'full' | 'compact' | 'hidden';
 
 interface ChatMessage extends AssistantChatMessage {
   id: string;
@@ -26,10 +28,31 @@ const INITIAL_MESSAGE: ChatMessage = {
 
 export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [btnMode, setBtnMode] = useState<ButtonMode>('compact');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('maxlevel_copilot_mode') as ButtonMode;
+      if (saved === 'full' || saved === 'compact' || saved === 'hidden') {
+        setBtnMode(saved);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const updateBtnMode = (newMode: ButtonMode) => {
+    setBtnMode(newMode);
+    try {
+      localStorage.setItem('maxlevel_copilot_mode', newMode);
+    } catch {
+      // ignore
+    }
+  };
 
   // Keyboard shortcut: Ctrl + Shift + A to toggle assistant
   useEffect(() => {
@@ -107,21 +130,97 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
 
   return (
     <>
-      {/* Floating Action Trigger Button */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <Button
-          variant="primary"
-          onClick={() => setIsOpen(true)}
-          className="group flex h-12 items-center gap-2.5 rounded-full px-4 shadow-lg transition-transform hover:scale-105"
-          aria-label={t('assistant.trigger')}
-        >
-          <Sparkles size={18} className="text-yellow-300 animate-pulse" aria-hidden="true" />
-          <span className="font-bold tracking-tight">{t('assistant.trigger')}</span>
-          <span className="rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold text-white/90">
-            {t('assistant.shortcut')}
-          </span>
-        </Button>
-      </div>
+      {/* Floating Action Trigger Button (Hidden when Drawer is Open) */}
+      {!isOpen && (
+        <div className="fixed bottom-6 right-6 z-40">
+          {btnMode === 'full' && (
+            <div className="flex items-center shadow-lg rounded-full bg-ballpoint text-on-ballpoint overflow-hidden transition-all duration-200 hover:shadow-xl hover:scale-102">
+              <button
+                type="button"
+                onClick={() => setIsOpen(true)}
+                className="flex h-11 items-center gap-2 pl-4 pr-2 font-bold tracking-tight text-white hover:opacity-90"
+                aria-label={t('assistant.trigger')}
+              >
+                <Sparkles size={16} className="text-yellow-300 animate-pulse" aria-hidden="true" />
+                <span className="text-sm font-semibold">{t('assistant.trigger')}</span>
+                <span className="rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold text-white/90">
+                  {t('assistant.shortcut')}
+                </span>
+              </button>
+              <div className="flex items-center border-l border-white/20 pr-1 pl-0.5">
+                <button
+                  type="button"
+                  onClick={() => updateBtnMode('compact')}
+                  title={t('assistant.minimize')}
+                  aria-label={t('assistant.minimize')}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                  <Minimize2 size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateBtnMode('hidden')}
+                  title={t('assistant.hide')}
+                  aria-label={t('assistant.hide')}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {btnMode === 'compact' && (
+            <div className="relative group flex items-center">
+              <button
+                type="button"
+                onClick={() => setIsOpen(true)}
+                title={`${t('assistant.trigger')} (${t('assistant.shortcut')})`}
+                aria-label={t('assistant.trigger')}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-ballpoint text-white shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
+              >
+                <Sparkles size={18} className="text-yellow-300 animate-pulse" aria-hidden="true" />
+              </button>
+              <div className="absolute right-full mr-2 hidden items-center gap-1.5 rounded-full bg-surface border border-rule px-2.5 py-1 shadow-md group-hover:flex">
+                <button
+                  type="button"
+                  onClick={() => updateBtnMode('full')}
+                  title={t('assistant.expand')}
+                  className="text-[11px] font-medium text-graphite hover:text-ink flex items-center gap-1"
+                >
+                  <Maximize2 size={12} />
+                  <span>{t('assistant.expand')}</span>
+                </button>
+                <span className="text-rule">|</span>
+                <button
+                  type="button"
+                  onClick={() => updateBtnMode('hidden')}
+                  title={t('assistant.hide')}
+                  className="text-[11px] font-medium text-graphite hover:text-redpen flex items-center gap-1"
+                >
+                  <X size={12} />
+                  <span>{t('assistant.hide')}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {btnMode === 'hidden' && (
+            <div className="fixed bottom-6 right-0">
+              <button
+                type="button"
+                onClick={() => updateBtnMode('compact')}
+                title={`${t('assistant.showButton')} (${t('assistant.shortcut')})`}
+                aria-label={t('assistant.showButton')}
+                className="flex h-7 items-center gap-1 rounded-l-md bg-ballpoint/75 hover:bg-ballpoint text-white px-2 shadow transition-all opacity-40 hover:opacity-100"
+              >
+                <Sparkles size={13} className="text-yellow-300" />
+                <span className="text-[10px] font-semibold">AI</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Slide-out Assistant Drawer */}
       {isOpen ? (
@@ -150,6 +249,18 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
+                onClick={() => updateBtnMode(btnMode === 'compact' ? 'full' : 'compact')}
+                title={btnMode === 'compact' ? t('assistant.expand') : t('assistant.minimize')}
+                className="text-graphite"
+              >
+                {btnMode === 'compact' ? (
+                  <Maximize2 size={16} aria-hidden="true" />
+                ) : (
+                  <Minimize2 size={16} aria-hidden="true" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={clearChat}
                 title={t('assistant.clear')}
                 className="text-graphite hover:text-redpen"
@@ -170,15 +281,10 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
           {/* Chat Messages Scroll Container */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}
-              >
+              <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
                 <div
                   className={`max-w-[90%] rounded-panel p-3.5 text-body-small leading-relaxed shadow-sm ${
-                    m.role === 'user'
-                      ? 'bg-ballpoint text-on-ballpoint'
-                      : 'border border-rule bg-sheet text-ink'
+                    m.role === 'user' ? 'bg-ballpoint text-on-ballpoint' : 'border border-rule bg-sheet text-ink'
                   }`}
                 >
                   {m.role === 'user' ? (
@@ -194,14 +300,10 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                         <span className="font-bold text-heading-3">{m.diagnostic.testTitle}</span>
                         <span
                           className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
-                            m.diagnostic.isVisibleToStudents
-                              ? 'bg-tick/15 text-tick'
-                              : 'bg-redpen/15 text-redpen'
+                            m.diagnostic.isVisibleToStudents ? 'bg-tick/15 text-tick' : 'bg-redpen/15 text-redpen'
                           }`}
                         >
-                          {m.diagnostic.isVisibleToStudents
-                            ? t('assistant.visible')
-                            : t('assistant.hidden')}
+                          {m.diagnostic.isVisibleToStudents ? t('assistant.visible') : t('assistant.hidden')}
                         </span>
                       </div>
 
