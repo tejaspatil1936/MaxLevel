@@ -18,8 +18,8 @@
             },
             "phone": {
               ".read": "auth != null && auth.token.role === 'student' && auth.token.orgId === $orgId && root.child('attemptOwners').child($attemptId).val() === auth.uid",
-              ".write": "auth != null && auth.token.role === 'device' && auth.token.orgId === $orgId && auth.token.attemptId === $attemptId",
-              ".validate": "newData.hasChildren(['online', 'lastSeen', 'cameraOn'])",
+              ".write": "auth != null && auth.token.role === 'device' && auth.token.orgId === $orgId && auth.token.attemptId === $attemptId && newData.child('session').val() === root.child('proctor').child($orgId).child($attemptId).child('phoneSession').val()",
+              ".validate": "newData.hasChildren(['online', 'lastSeen', 'cameraOn', 'camera', 'visible', 'session', 'stateSince'])",
               "online": { ".validate": "newData.isBoolean()" },
               "lastSeen": { ".validate": "newData.isNumber() && newData.val() <= now" },
               "cameraOn": { ".validate": "newData.isBoolean()" },

@@ -15,7 +15,15 @@ let env: RulesTestEnvironment;
 
 const P = 'presence/org-a/t1/att-1';
 const laptop = (online = true) => ({ online, lastSeen: serverTimestamp(), fullscreen: true, visible: true });
-const phone = (online = true) => ({ online, lastSeen: serverTimestamp(), cameraOn: true });
+const phone = (online = true, session = 's1') => ({
+  online,
+  lastSeen: serverTimestamp(),
+  cameraOn: online,
+  camera: 'live',
+  visible: online,
+  session,
+  stateSince: serverTimestamp(),
+});
 
 const db = (uid: string | null, claims: Record<string, string> = {}) =>
   uid === null ? env.unauthenticatedContext().database() : env.authenticatedContext(uid, claims).database();
@@ -75,9 +83,11 @@ describe('Realtime Database rules', () => {
     await assertFails(set(ref(device('att-1', 'org-b'), `${P}/phone`), phone()));
     await assertFails(set(ref(device(), `${P}/laptop`), laptop()));
     await assertFails(set(ref(device(), `${P}/phone`), { ...phone(), cameraOn: 'yes' }));
-    const full = { ...phone(), camera: 'paused', visible: false, session: 's1', stateSince: serverTimestamp() };
+    const full = { ...phone(), camera: 'paused' };
     await assertSucceeds(set(ref(device(), `${P}/phone`), full));
     await assertFails(set(ref(device(), `${P}/phone`), { ...full, camera: 'recording' }));
+    const { stateSince: _missing, ...partial } = full;
+    await assertFails(set(ref(device(), `${P}/phone`), partial));
     await assertFails(set(ref(device(), `${P}/phone`), { ...full, stateSince: Date.now() + 60_000 }));
     await assertFails(set(ref(device(), `${P}/phone`), { ...full, session: 'x'.repeat(65) }));
     await assertFails(get(ref(device(), `${P}/laptop`)));
@@ -140,5 +150,15 @@ describe('Realtime Database rules', () => {
       await assertFails(set(ref(client, `${path}/phoneSession`), 'mine'));
       await assertFails(set(ref(client, `${path}/strike`), { strikesCount: 0 }));
     }
+  });
+
+  it('DATA-10 PR-14 only the current pairing session may write the phone presence, its heartbeats and offline record', async () => {
+    await assertSucceeds(set(ref(device(), `${P}/phone`), phone()));
+    await assertSucceeds(update(ref(device(), `${P}/phone`), { lastSeen: serverTimestamp(), session: 's1' }));
+    // A phone this pairing replaced: its writes, partial or whole, and its offline record are refused.
+    await assertFails(set(ref(device(), `${P}/phone`), phone(true, 's0')));
+    await assertFails(update(ref(device(), `${P}/phone`), { lastSeen: serverTimestamp(), session: 's0' }));
+    await assertFails(onDisconnect(ref(device(), `${P}/phone`)).set(phone(false, 's0')));
+    await assertSucceeds(onDisconnect(ref(device(), `${P}/phone`)).set(phone(false)));
   });
 });
