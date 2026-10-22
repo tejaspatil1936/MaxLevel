@@ -66,6 +66,7 @@ export const exam = {
   'strike.reason.multiple_faces': 'More than one face was in view.',
   'strike.reason.devtools': 'Developer tools are not allowed.',
   'strike.reason.phone_disconnected': 'Your phone camera was disconnected for more than a minute.',
+  'strike.reason.phone_in_view': 'A phone was seen in your camera.',
   'attempt.timeLeft': 'Time left',
   'attempt.questionTimeLeft': 'Time left for this question',
   'attempt.timeAnnouncements': 'Time announcements',

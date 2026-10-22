@@ -13,6 +13,7 @@ const REASONS: Partial<Record<ClientEventType, MessageKey>> = {
   multiple_faces: 'strike.reason.multiple_faces',
   devtools: 'strike.reason.devtools',
   phone_disconnected: 'strike.reason.phone_disconnected',
+  phone_in_view: 'strike.reason.phone_in_view',
 };
 
 /**
