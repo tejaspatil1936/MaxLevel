@@ -365,10 +365,14 @@ the page reads `Another phone is now the camera for this test. You can close thi
 No request or WebSocket message from the phone page carries image or video data (PR-17).
 
 **On the laptop** (PR-16): the exam screen listens to the phone presence. When it shows `online: false` the banner
-reads `Phone disconnected`; after more than 15 seconds a modal `dialog` exactly `Reconnect your phone` opens with the
+reads `Phone disconnected`; so does a phone whose camera is not `live` or whose record has not changed for more than
+15 seconds. After more than 15 seconds a modal `dialog` exactly `Reconnect your phone` opens with the
 text exactly `Your phone camera is disconnected. Scan this code with your phone to reconnect it.`, a fresh
-`img` `QR code to pair your phone` and `pairing-link` (a new token); it closes by itself when the phone is back. After
-more than 60 seconds disconnected one `phone_disconnected` strike is reported. While the laptop's own Realtime Database
+`img` `QR code to pair your phone` and `pairing-link` (a new token); it closes by itself when the phone is back. When
+the dialog opens the laptop reports one `phone_paused` event (logged only) with `{ offlineMs, stateSince, lastSeen }`;
+the API queues `/tasks/phone-check` for when the outage reaches 60 seconds, and the worker, reading the presence
+records itself, records one `phone_disconnected` strike if the phone had no healthy heartbeat since and the laptop is
+online. The laptop shows the warning from `proctor/{orgId}/{attemptId}/strike`. While the laptop's own Realtime Database
 connection is down (`.info/connected` false), the banner reads `Phone status unavailable`, and neither the overlay nor
 a phone strike happens (REL-05); answers keep saving through the API.
 

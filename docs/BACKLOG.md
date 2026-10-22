@@ -147,3 +147,6 @@ Non-blocking findings from reviews and QA. Blocking ones are fixed in the phase 
 - OWNER_SETUP 8.5 should say the Cloud Tasks OIDC audience must equal the worker's TASKS_AUDIENCE.
 - The REL-01 freeze check's collection-group query on tests probably needs a collection-group index on status.
 - At text size 150% and 320 px the statement's h1 word "Accessibility" overflows by 2 px (sideways scroll); let the heading wrap or hyphenate.
+- Phone outage, second layer: an Eventarc trigger on `presence/*/*/*/phone` (asia-southeast1; Realtime Database triggers are Preview) that queues the same `/tasks/phone-check`, so a closed or tampered laptop tab still leads to the check.
+- Phone proctor proposal items not built: a 90 s outage limit and per-test phone strike caps (owner decision), admin review (`review` field) to clear a strike, a `source` field on every event (the worker's strike has `details.source: 'server'`), and an on-phone setup check of charging and auto-lock.
+- The admin copilot trigger's accessible name ("Ask copilot") does not contain its visible text with the shortcut badge (axe label-content-name-mismatch), failing F-5.01's accessibility check; from the copilot commits on main.

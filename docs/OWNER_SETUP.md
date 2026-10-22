@@ -30,7 +30,8 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
     and Service Account Token Creator **on itself only** (for signed URLs and custom tokens without key files;
     OPEN_QUESTIONS 21).
   - `worker@`: Firestore user, Storage object admin on the app bucket, Cloud Tasks enqueuer, Service Account User on
-    `tasks@`, Secret Manager accessor for the LLM key, and Token Creator on itself (signed export links).
+    `tasks@`, Secret Manager accessor for the LLM key, Token Creator on itself (signed export links), and Firebase
+    Realtime Database admin (the phone outage check reads presence and writes `proctor/…` and `live/…`, PR-16).
   - `tasks@`: Cloud Run invoker on the worker service only.
 - Where: IAM & Admin → Service accounts.
 - Confirm: `gcloud projects get-iam-policy <project>` lists only these bindings; no keys exist
@@ -111,11 +112,12 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 - Unblocks: PR-01, PR-02 (face present and multiple faces), EX-01 (face detection check passing).
 
 ### 3.2 Cloud Tasks queues
-- What: queues `auto-submit`, `results`, `leaderboard`, `imports`, `reports`, `exports` and `prewarm` in `asia-south1`
-  in staging and prod, each with OIDC push to the worker using `tasks@`.
+- What: queues `auto-submit`, `results`, `leaderboard`, `imports`, `reports`, `exports`, `prewarm` and `phone-checks`
+  in `asia-south1` in staging and prod, each with OIDC push to the worker using `tasks@`. `phone-checks` carries
+  `/tasks/phone-check`, the server's decision on a phone outage strike.
 - Where: Cloud Tasks.
 - Confirm: `gcloud tasks queues list --location asia-south1`.
-- Unblocks: EX-16, RES-01, LB-03, EXP-03, IMP-04, PERF-06.
+- Unblocks: EX-16, RES-01, LB-03, EXP-03, IMP-04, PERF-06, PR-16.
 
 ## Phase 5
 
