@@ -66,6 +66,7 @@ export const live = {
   'live.event.devtools': 'Developer tools shortcut',
   'live.event.phone_disconnected': 'Phone disconnected for more than a minute',
   'live.event.phone_in_view': 'Phone seen in camera',
+  'live.event.phone_paused': 'Phone camera paused for more than 15 seconds',
   'live.event.context_menu': 'Context menu',
   'live.event.clipboard': 'Copy or paste',
   'live.event.print': 'Print',

@@ -13,6 +13,7 @@ export const TASK_PATHS = [
   '/tasks/export',
   '/tasks/prewarm',
   '/tasks/migrate',
+  '/tasks/phone-check',
 ] as const;
 export type TaskPath = (typeof TASK_PATHS)[number];
 

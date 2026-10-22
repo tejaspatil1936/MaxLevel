@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   initialPhoneWatch,
   nextPhoneWatch,
+  outageOf,
+  phoneCheckDueAt,
+  phoneCheckTask,
+  phoneCheckVerdict,
+  phoneHealthy,
+  type PhonePresence,
   PAIRING_TOKEN_TTL_MS,
   pairingRedeemSchema,
   pairingTokenVerdict,
@@ -110,5 +116,90 @@ describe('nextPhoneWatch', () => {
       ['disconnected', false, undefined],
       ['disconnected', true, undefined],
     ]);
+  });
+});
+
+describe('phoneHealthy', () => {
+  it('PR-16 a phone is healthy only online with a live camera; an older record falls back to cameraOn', () => {
+    const base: PhonePresence = {
+      online: true,
+      lastSeen: 1,
+      cameraOn: true,
+      camera: 'live',
+      session: 's1',
+      stateSince: 1,
+    };
+    expect(phoneHealthy(base)).toBe(true);
+    expect(phoneHealthy({ ...base, online: false })).toBe(false);
+    for (const camera of ['starting', 'paused', 'failed'] as const)
+      expect(phoneHealthy({ ...base, camera })).toBe(false);
+    expect(phoneHealthy({ online: true, lastSeen: 1, cameraOn: true })).toBe(true);
+    expect(phoneHealthy({ online: true, lastSeen: 1, cameraOn: false })).toBe(false);
+    expect(phoneHealthy(null)).toBe(false);
+  });
+});
+
+describe('phoneCheckVerdict', () => {
+  const outage = { stateSince: 100, lastSeen: 200 };
+  const laptop = { online: true };
+  const phone = (p: Partial<PhonePresence>): Partial<PhonePresence> => ({
+    online: false,
+    lastSeen: 200,
+    cameraOn: false,
+    camera: 'live',
+    stateSince: 100,
+    ...p,
+  });
+  const verdict = (p: Partial<PhonePresence> | null, extra: Partial<Parameters<typeof phoneCheckVerdict>[0]> = {}) =>
+    phoneCheckVerdict({ attemptStatus: 'in_progress', laptop, phone: p, outage, ...extra });
+
+  it('PR-16 the same outage still going on is a strike: offline, camera paused, missing or frozen', () => {
+    expect(verdict(phone({}))).toBe('strike');
+    expect(verdict(phone({ online: true, camera: 'paused', lastSeen: 900 }))).toBe('strike');
+    expect(verdict(null)).toBe('strike');
+    expect(verdict(phone({ online: true, cameraOn: true, camera: 'live', lastSeen: 200 }))).toBe('strike');
+  });
+
+  it('PR-16 a phone that came back, even if it dropped again since, is not this outage', () => {
+    expect(verdict(phone({ online: true, cameraOn: true, camera: 'live', lastSeen: 900, stateSince: 800 }))).toBe(
+      'recovered',
+    );
+    expect(verdict(phone({ stateSince: 950, lastSeen: 950 }))).toBe('recovered');
+  });
+
+  it('REL-05 no strike while the laptop is offline too, and none once the attempt has ended', () => {
+    expect(verdict(phone({}), { laptop: { online: false } })).toBe('laptop_offline');
+    expect(verdict(phone({}), { laptop: null })).toBe('laptop_offline');
+    expect(verdict(phone({}), { attemptStatus: 'submitted' })).toBe('finished');
+    expect(verdict(phone({}), { attemptStatus: null })).toBe('finished');
+  });
+});
+
+describe('phoneCheckDueAt', () => {
+  it('PR-16 the check is due when the outage reaches 60 seconds as the laptop measured it', () => {
+    expect(phoneCheckDueAt({ clientTs: T0, offlineMs: 16_000 }, T0)).toBe(T0 + 44_000);
+    // A report that arrives late keeps its own time; one already past the limit is due now.
+    expect(phoneCheckDueAt({ clientTs: T0, offlineMs: 16_000 }, T0 + 10_000)).toBe(T0 + 44_000);
+    expect(phoneCheckDueAt({ clientTs: T0, offlineMs: 16_000 }, T0 + 50_000)).toBe(T0 + 50_000);
+  });
+
+  it('PR-16 a malformed or out-of-range duration never brings the strike closer than now or further than 60 s', () => {
+    expect(phoneCheckDueAt({ clientTs: T0, offlineMs: 'x' }, T0)).toBe(T0 + 60_000);
+    expect(phoneCheckDueAt({ clientTs: T0, offlineMs: -5 }, T0)).toBe(T0 + 60_000);
+    expect(phoneCheckDueAt({ clientTs: T0, offlineMs: 999_999 }, T0)).toBe(T0);
+    expect(phoneCheckDueAt({ clientTs: T0 + 3_600_000, offlineMs: 0 }, T0)).toBe(T0 + 60_000);
+  });
+});
+
+describe('phoneCheckTask', () => {
+  it('REL-04 one task per outage, named by it, at the due time', () => {
+    const task = phoneCheckTask('org-a', 'a1', outageOf({ stateSince: 100, lastSeen: 200 }), T0);
+    expect(task).toEqual({
+      name: 'phone-check-a1-100-200',
+      path: '/tasks/phone-check',
+      payload: { orgId: 'org-a', attemptId: 'a1', stateSince: 100, lastSeen: 200 },
+      scheduleTime: T0,
+    });
+    expect(phoneCheckTask('org-a', 'a1', outageOf({ stateSince: 'x' }), T0).name).toBe('phone-check-a1-none-none');
   });
 });

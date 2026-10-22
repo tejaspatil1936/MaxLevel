@@ -31,8 +31,8 @@ describe('isStrikeEvent', () => {
     expect(isStrikeEvent('devtools', 'allow')).toBe(false);
   });
 
-  it('PR-11 context menu, clipboard, print, late sync and notes are logged only', () => {
-    for (const type of ['context_menu', 'clipboard', 'print', 'late_sync', 'note'] as const) {
+  it('PR-11 context menu, clipboard, print, phone paused, late sync and notes are logged only', () => {
+    for (const type of ['context_menu', 'clipboard', 'print', 'phone_paused', 'late_sync', 'note'] as const) {
       expect(isStrikeEvent(type, 'block_strike'), type).toBe(false);
     }
   });

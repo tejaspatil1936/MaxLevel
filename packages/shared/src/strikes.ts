@@ -12,6 +12,7 @@ export const PROCTOR_EVENT_TYPES = [
   'devtools',
   'phone_disconnected',
   'phone_in_view',
+  'phone_paused',
   'context_menu',
   'clipboard',
   'print',
