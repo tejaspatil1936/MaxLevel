@@ -1,5 +1,13 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth, inMemoryPersistence, initializeAuth, type Auth } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  connectAuthEmulator,
+  getAuth,
+  indexedDBLocalPersistence,
+  inMemoryPersistence,
+  initializeAuth,
+  type Auth,
+} from 'firebase/auth';
 import { connectDatabaseEmulator, getDatabase, onValue, ref, type Database } from 'firebase/database';
 import { config } from './config';
 
@@ -66,14 +74,17 @@ export function firebaseDatabase(): Database {
 }
 
 /**
- * The paired phone's own Firebase app (PR-14): its device sign-in is kept in memory only and apart from the account
- * session, so it never reaches the API session or another tab.
+ * The paired phone's own Firebase app (PR-14): its device sign-in is kept apart from the account session (a named app
+ * stores under its own key), so it never reaches the API session. It is kept on the phone, so a reload of the phone
+ * page rejoins the attempt without a new code; in memory only where the browser stores nothing.
  */
 export function deviceFirebase(): { auth: Auth; database: Database } {
   if (device) return device;
   const of = getApps().find((a) => a.name === 'device') ?? initializeApp(config.firebase, 'device');
   device = {
-    auth: withAuthEmulator(initializeAuth(of, { persistence: inMemoryPersistence })),
+    auth: withAuthEmulator(
+      initializeAuth(of, { persistence: [indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence] }),
+    ),
     database: databaseOf(of),
   };
   return device;
