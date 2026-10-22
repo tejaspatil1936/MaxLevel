@@ -1,5 +1,5 @@
 # Deployment script for Google Cloud Run (test-prep-e4d7f)
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 $PROJECT_ID = "test-prep-e4d7f"
 $REGION = "asia-south1"

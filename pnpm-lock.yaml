@@ -231,7 +231,7 @@ importers:
         specifier: 14.5.0
         version: 14.5.0(@firebase/app-compat@0.5.19)(@firebase/app@0.16.3)(supports-color@7.2.0)
       google-auth-library:
-        specifier: ^11.3.1
+        specifier: 11.3.1
         version: 11.3.1(supports-color@7.2.0)
       pino:
         specifier: 10.4.0
