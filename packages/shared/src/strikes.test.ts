@@ -16,10 +16,13 @@ const STRIKES = [
   'multiple_faces',
   'phone_disconnected',
   'phone_in_view',
+  'dual_monitor',
+  'virtual_camera',
+  'automated_input',
 ];
 
 describe('isStrikeEvent', () => {
-  it('PR-08 PR-11 the seven incident types are strikes under every devtools policy', () => {
+  it('PR-08 PR-11 the ten incident types are strikes under every devtools policy', () => {
     for (const policy of ['block_strike', 'block', 'allow'] as const) {
       for (const type of STRIKES) expect(isStrikeEvent(type as never, policy), `${type} ${policy}`).toBe(true);
     }
@@ -31,8 +34,9 @@ describe('isStrikeEvent', () => {
     expect(isStrikeEvent('devtools', 'allow')).toBe(false);
   });
 
-  it('PR-11 context menu, clipboard, print, phone paused, late sync and notes are logged only', () => {
-    for (const type of ['context_menu', 'clipboard', 'print', 'phone_paused', 'late_sync', 'note'] as const) {
+  it('PR-11 context menu, clipboard, print, phone paused, voice, microphone, late sync and notes are logged only', () => {
+    const logged = ['context_menu', 'clipboard', 'print', 'phone_paused', 'voice_detected', 'mic_unavailable'] as const;
+    for (const type of [...logged, 'late_sync', 'note'] as const) {
       expect(isStrikeEvent(type, 'block_strike'), type).toBe(false);
     }
   });

@@ -15,6 +15,9 @@ const REASONS: Partial<Record<ProctorEventType, MessageKey>> = {
   devtools: 'strike.reason.devtools',
   phone_disconnected: 'strike.reason.phone_disconnected',
   phone_in_view: 'strike.reason.phone_in_view',
+  dual_monitor: 'strike.reason.dual_monitor',
+  virtual_camera: 'strike.reason.virtual_camera',
+  automated_input: 'strike.reason.automated_input',
 };
 
 /**
