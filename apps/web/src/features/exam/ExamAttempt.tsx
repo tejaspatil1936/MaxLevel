@@ -10,6 +10,7 @@ import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from
 import { PhoneStatus, ReconnectPhone, usePhoneWatch } from '@/features/phone/PhoneWatch';
 import { useLaptopPresence } from '@/features/phone/presence';
 import { CameraPreview } from '@/features/proctoring/CameraPreview';
+import { useAudioWatch } from '@/features/proctoring/useAudioWatch';
 import { useCameraWatch } from '@/features/proctoring/useCameraWatch';
 import { useDisplayWatch } from '@/features/proctoring/useDisplayWatch';
 import { AccessibilityButton } from '@/features/shell/AccessibilityPanel';
@@ -370,6 +371,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   // The laptop camera (PR-01, PR-02): on for the whole exam, faces counted on the device, incidents reported as above.
   const { cameraRequired } = payload.settings;
   const cameraStream = useCameraWatch(cameraRequired, report);
+  // Voice detection (the test's setting): talking is logged with a short clip for review, never a strike.
+  useAudioWatch(payload.settings.audioProctoring, attemptId, report);
   // Presence in Realtime Database (DATA-06): this laptop's own record, and with a second camera the phone's, whose
   // disconnection brings up the reconnect overlay and is reported paused; the server decides the strike (PR-16) and it
   // arrives through the proctor record, unless our database is down (REL-05).

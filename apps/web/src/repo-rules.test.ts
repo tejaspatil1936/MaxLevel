@@ -62,6 +62,8 @@ describe('security headers', () => {
   it('WEB-04 vercel.json sets CSP, Permissions-Policy for the camera, Referrer-Policy and HSTS', () => {
     expect(all['Content-Security-Policy']).toContain("default-src 'self'");
     expect(all['Permissions-Policy']).toContain('camera=(self)');
+    // Voice detection needs the microphone on the app's own pages.
+    expect(all['Permissions-Policy']).toContain('microphone=(self)');
     expect(all['Referrer-Policy']).toBe('strict-origin-when-cross-origin');
     expect(all['Strict-Transport-Security']).toMatch(/max-age=\d{8,}/);
   });
