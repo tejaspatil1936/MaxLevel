@@ -80,6 +80,7 @@ export const platform = {
   'org.storageCategoryExports': 'Result exports',
   'org.storageCategoryReports': 'Analytics reports',
   'org.storageCategoryQuestions': 'Question media',
+  'org.storageCategoryAudio': 'Voice detection recordings',
   'org.storageCategoryLogos': 'Logos',
   'org.storageCategoryOther': 'Other files',
   'org.storageClearAll': 'Purge all junk data',
