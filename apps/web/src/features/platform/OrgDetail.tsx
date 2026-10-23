@@ -12,6 +12,7 @@ import { qk } from '@/lib/query-keys';
 import { AddAdminDialog, EditOrgDialog } from './OrgDialogs';
 import { Entitlements, UsageTable } from './Entitlements';
 import { OrgStatus } from './status';
+import { OrgStorage } from './OrgStorage';
 
 type StatusAction = 'suspend' | 'archive' | 'restore';
 const ACTION_STATUS = { suspend: 'suspended', archive: 'archived', restore: 'active' } as const;
@@ -186,6 +187,8 @@ function OrgDetailView({ org }: { org: PlatformOrgDetail }) {
         </h2>
         <UsageTable org={org} />
       </section>
+
+      <OrgStorage orgId={org.id} orgName={org.name} readOnly={archived} />
 
       {editing ? <EditOrgDialog org={org} onClose={() => setEditing(false)} onSaved={put} /> : null}
       {adding ? <AddAdminDialog org={org} onClose={() => setAdding(false)} /> : null}

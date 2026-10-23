@@ -11,5 +11,6 @@ export const qk = {
   orgItem: (orgId: string, kind: string, id: string) => [orgId, kind, 'item', id] as const,
   platformOrgs: () => ['platform', 'orgs'] as const,
   platformOrg: (orgId: string) => ['platform', 'orgs', orgId] as const,
+  platformOrgStorage: (orgId: string) => ['platform', 'orgs', orgId, 'storage'] as const,
   platformAudit: (params: object) => ['platform', 'audit', params] as const,
 };

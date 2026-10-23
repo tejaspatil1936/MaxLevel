@@ -113,3 +113,46 @@ export const auditQuerySchema = pageQuerySchema.extend({
   to: z.coerce.number().int().optional(),
 });
 export const auditPageSchema = z.object({ items: z.array(auditEntrySchema), nextCursor: z.string().nullable() });
+
+// Storage management for organizations (Super-admin only)
+export const storageCategorySchema = z.enum(['all', 'imports', 'exports', 'reports', 'questions', 'logos', 'other']);
+export type StorageCategory = z.infer<typeof storageCategorySchema>;
+
+export const orgStorageFileSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  size: z.number(),
+  updated: z.string(),
+  contentType: z.string().optional(),
+  category: z.string(),
+});
+export type OrgStorageFile = z.infer<typeof orgStorageFileSchema>;
+
+export const orgStorageSummarySchema = z.object({
+  orgId: z.string(),
+  totalBytes: z.number(),
+  totalFiles: z.number(),
+  categories: z.record(
+    z.string(),
+    z.object({
+      count: z.number(),
+      bytes: z.number(),
+    }),
+  ),
+  recentFiles: z.array(orgStorageFileSchema),
+});
+export type OrgStorageSummary = z.infer<typeof orgStorageSummarySchema>;
+
+export const clearStorageRequestSchema = z.object({
+  category: storageCategorySchema.default('all'),
+});
+export type ClearStorageRequest = z.infer<typeof clearStorageRequestSchema>;
+
+export const clearStorageResponseSchema = z.object({
+  deletedCount: z.number(),
+  deletedBytes: z.number(),
+  category: z.string(),
+  remainingBytes: z.number(),
+  remainingFiles: z.number(),
+});
+export type ClearStorageResponse = z.infer<typeof clearStorageResponseSchema>;

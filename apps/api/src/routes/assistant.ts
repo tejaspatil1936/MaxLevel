@@ -8,6 +8,7 @@ import {
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { notFound } from '../errors';
+import { ASSISTANT_RATE_LIMIT } from '../plugins/rate-limit';
 import { createAdminAssistantService } from '../services/admin-assistant';
 import { adminDiagnosticService } from '../services/admin-diagnostic';
 import type { ApiContext } from './context';
@@ -34,22 +35,17 @@ export function assistantRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         },
       },
       async (req) => {
-        const report = await diagnostics.diagnoseTest(
-          req.orgId!,
-          req.params.id,
-          clock.now(),
-          req.query.student,
-        );
+        const report = await diagnostics.diagnoseTest(req.orgId!, req.params.id, clock.now(), req.query.student);
         if (!report) throw notFound('Test');
         return report;
       },
     );
 
-    // 2. Interactive Admin Assistant Chat Endpoint
+    // 2. Interactive Admin Assistant Chat Endpoint (Rate limited to control LLM costs)
     app.post(
       '/v1/admin/assistant/chat',
       {
-        config: admin,
+        config: { ...admin, rateLimit: ASSISTANT_RATE_LIMIT },
         schema: {
           body: assistantChatRequestSchema,
           response: { 200: assistantChatResponseSchema },

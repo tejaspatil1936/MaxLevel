@@ -21,3 +21,14 @@ export async function registerRateLimit(app: FastifyInstance): Promise<void> {
 export const ANSWER_RATE_LIMIT: RateLimitOptions = { max: 15, timeWindow: 1000 };
 /** Proctoring event reports: 5 a second plus a burst of 3 (POST /v1/attempts/{id}/events). */
 export const EVENT_RATE_LIMIT: RateLimitOptions = { max: 8, timeWindow: 1000 };
+/** Admin Copilot AI chat: 10 requests per minute per admin to control LLM costs. */
+export const ASSISTANT_RATE_LIMIT: RateLimitOptions = {
+  max: 10,
+  timeWindow: 60_000,
+  errorResponseBuilder: () =>
+    new AppError(
+      429,
+      'RATE_LIMITED',
+      'Assistant rate limit reached (10 queries/minute). Please wait a moment before sending another message to conserve AI credits.',
+    ),
+};

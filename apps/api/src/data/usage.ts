@@ -37,5 +37,9 @@ export function usageData(db: Firestore) {
         storageBytes: s.get('storageBytes') ?? 0,
       };
     },
+
+    async setStorageBytes(orgId: string, month: string, bytes: number): Promise<void> {
+      await ref(orgId, month).set({ orgId, month, storageBytes: Math.max(0, bytes) }, { merge: true });
+    },
   };
 }

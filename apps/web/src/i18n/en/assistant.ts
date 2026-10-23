@@ -24,4 +24,7 @@ export const assistant = {
   'assistant.hide': 'Hide button',
   'assistant.expand': 'Expand button',
   'assistant.showButton': 'Show Assistant button',
+  'assistant.rateLimited':
+    'Rate limit reached (10 queries/minute). Please wait a moment before sending another message to conserve AI credits.',
+  'assistant.error': 'Failed to get a response from the assistant. Please try again.',
 } as const;

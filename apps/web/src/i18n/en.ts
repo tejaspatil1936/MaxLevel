@@ -45,6 +45,7 @@ const core = {
   'common.next': 'Next page',
   'common.selected': '{n} selected',
   'common.bulkActions': 'Bulk actions',
+  'common.refresh': 'Refresh',
   'a11y.open': 'Accessibility settings',
   'a11y.textSize': 'Text size',
   'a11y.theme': 'Theme',

@@ -28,22 +28,22 @@ const INITIAL_MESSAGE: ChatMessage = {
 
 export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [btnMode, setBtnMode] = useState<ButtonMode>('compact');
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
+  const [btnMode, setBtnMode] = useState<ButtonMode>(() => {
+    if (typeof window === 'undefined') return 'compact';
     try {
       const saved = localStorage.getItem('maxlevel_copilot_mode') as ButtonMode;
       if (saved === 'full' || saved === 'compact' || saved === 'hidden') {
-        setBtnMode(saved);
+        return saved;
       }
     } catch {
       // ignore
     }
-  }, []);
+    return 'compact';
+  });
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const updateBtnMode = (newMode: ButtonMode) => {
     setBtnMode(newMode);
@@ -103,6 +103,17 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
       };
       setMessages((prev) => [...prev, userMsg, assistantMsg]);
       setInput('');
+    },
+    onError: (err: unknown) => {
+      const errObj = err as { status?: number; code?: string } | undefined;
+      const isRateLimit = errObj?.status === 429 || errObj?.code === 'RATE_LIMITED';
+      const content = isRateLimit ? t('assistant.rateLimited') : t('assistant.error');
+      const errorMsg: ChatMessage = {
+        id: createId('err'),
+        role: 'assistant',
+        content: `⚠️ **${content}**`,
+      };
+      setMessages((prev) => [...prev, errorMsg]);
     },
   });
 
@@ -191,7 +202,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                   <Maximize2 size={12} />
                   <span>{t('assistant.expand')}</span>
                 </button>
-                <span className="text-rule">|</span>
+                <span className="text-rule">{'|'}</span>
                 <button
                   type="button"
                   onClick={() => updateBtnMode('hidden')}
@@ -215,7 +226,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                 className="flex h-7 items-center gap-1 rounded-l-md bg-ballpoint/75 hover:bg-ballpoint text-white px-2 shadow transition-all opacity-40 hover:opacity-100"
               >
                 <Sparkles size={13} className="text-yellow-300" />
-                <span className="text-[10px] font-semibold">AI</span>
+                <span className="text-[10px] font-semibold">{'AI'}</span>
               </button>
             </div>
           )}

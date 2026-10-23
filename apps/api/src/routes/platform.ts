@@ -2,15 +2,21 @@ import {
   adminAddSchema,
   auditPageSchema,
   auditQuerySchema,
+  clearStorageRequestSchema,
+  clearStorageResponseSchema,
   entitlementsPutSchema,
   monthKey,
   orgAdminSchema,
   orgCreateSchema,
   orgPatchSchema,
+  orgStorageSummarySchema,
   platformOrgDetailSchema,
   platformOrgSchema,
   usageSchema,
+  type OrgStorageFile,
+  type OrgStorageSummary,
   type OrgUsage,
+  type StorageCategory,
 } from '@mitaoe/shared';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -27,6 +33,76 @@ const sa = { access: 'superAdmin' as const };
 function refuseArchived(org: { status: string }): void {
   if (org.status === 'archived')
     throw new AppError(409, 'ORG_ARCHIVED', 'This organization is archived and read-only. Restore it to make changes.');
+}
+
+function categorizeStoragePath(name: string): StorageCategory {
+  if (name.includes('/imports/')) return 'imports';
+  if (name.includes('/exports/')) return 'exports';
+  if (name.includes('/reports/')) return 'reports';
+  if (name.includes('/questions/')) return 'questions';
+  if (name.includes('/logo.') || name.includes('/logos/')) return 'logos';
+  return 'other';
+}
+
+async function listOrgStorage(
+  bucket: ApiContext['firebase']['bucket'],
+  orgId: string,
+): Promise<{ files: OrgStorageFile[]; summary: OrgStorageSummary }> {
+  const [filesWithOrgPrefix] = await bucket.getFiles({ prefix: `organizations/${orgId}/` }).catch(() => [[]]);
+  const [filesWithoutOrgPrefix] = await bucket.getFiles({ prefix: `${orgId}/` }).catch(() => [[]]);
+
+  const map = new Map<string, OrgStorageFile>();
+  const categories: Record<string, { count: number; bytes: number }> = {
+    imports: { count: 0, bytes: 0 },
+    exports: { count: 0, bytes: 0 },
+    reports: { count: 0, bytes: 0 },
+    questions: { count: 0, bytes: 0 },
+    logos: { count: 0, bytes: 0 },
+    other: { count: 0, bytes: 0 },
+  };
+
+  let totalBytes = 0;
+  let totalFiles = 0;
+
+  for (const f of [...filesWithOrgPrefix, ...filesWithoutOrgPrefix]) {
+    if (map.has(f.name)) continue;
+    const size = Number(f.metadata?.size ?? 0) || 0;
+    const updated = f.metadata?.updated ?? new Date().toISOString();
+    const contentType = f.metadata?.contentType;
+    const category = categorizeStoragePath(f.name);
+    const shortName = f.name.replace(/^organizations\/[^/]+\//, '').replace(new RegExp(`^${orgId}/`), '');
+
+    const record: OrgStorageFile = {
+      name: shortName || f.name,
+      path: f.name,
+      size,
+      updated,
+      contentType,
+      category,
+    };
+    map.set(f.name, record);
+
+    const cat = categories[category] ?? (categories[category] = { count: 0, bytes: 0 });
+    cat.count += 1;
+    cat.bytes += size;
+    totalBytes += size;
+    totalFiles += 1;
+  }
+
+  const allFiles = Array.from(map.values()).sort(
+    (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime(),
+  );
+
+  return {
+    files: allFiles,
+    summary: {
+      orgId,
+      totalBytes,
+      totalFiles,
+      categories,
+      recentFiles: allFiles.slice(0, 100),
+    },
+  };
 }
 
 /** Super-admin console: organizations, their admins, entitlements, usage and the cross-org audit log (spec 2). */
@@ -302,6 +378,93 @@ export function platformRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const org = await data.orgs.getOrgRecord(req.params.orgId);
         if (!org) throw notFound('Organization');
         return usageOf(org);
+      },
+    );
+
+    // Super-admin only: view object storage files & breakdown for an organization
+    app.get(
+      '/v1/platform/orgs/:orgId/storage',
+      { config: sa, schema: { params: orgParams, response: { 200: orgStorageSummarySchema } } },
+      async (req) => {
+        const { orgId } = req.params;
+        const org = await data.orgs.getOrgRecord(orgId);
+        if (!org) throw notFound('Organization');
+        const { summary } = await listOrgStorage(ctx.firebase.bucket, orgId);
+        return summary;
+      },
+    );
+
+    // Super-admin only: clear storage files for an organization (all junk or by category)
+    app.post(
+      '/v1/platform/orgs/:orgId/storage/clear',
+      {
+        config: sa,
+        schema: {
+          params: orgParams,
+          body: clearStorageRequestSchema,
+          response: { 200: clearStorageResponseSchema },
+        },
+      },
+      async (req) => {
+        const { orgId } = req.params;
+        const org = await data.orgs.getOrgRecord(orgId);
+        if (!org) throw notFound('Organization');
+
+        const { category } = req.body;
+        const { files, summary } = await listOrgStorage(ctx.firebase.bucket, orgId);
+
+        // Safety rule: 'all' clears everything except organization logo to protect branding
+        const filesToDelete =
+          category === 'all'
+            ? files.filter((f) => f.category !== 'logos')
+            : files.filter((f) => f.category === category);
+
+        let deletedCount = 0;
+        let deletedBytes = 0;
+
+        for (let i = 0; i < filesToDelete.length; i += 25) {
+          const chunk = filesToDelete.slice(i, i + 25);
+          await Promise.all(
+            chunk.map(async (f) => {
+              try {
+                await ctx.firebase.bucket.file(f.path).delete({ ignoreNotFound: true });
+                deletedCount += 1;
+                deletedBytes += f.size;
+              } catch (err) {
+                req.log.warn({ err, path: f.path }, 'platform.storage_delete_failed');
+              }
+            }),
+          );
+        }
+
+        const remainingBytes = Math.max(0, summary.totalBytes - deletedBytes);
+        const remainingFiles = Math.max(0, summary.totalFiles - deletedCount);
+
+        // Sync remaining storage bytes in usage records
+        const month = monthKey(clock.now(), org.timezone);
+        await data.usage.setStorageBytes(orgId, month, remainingBytes);
+
+        // Audit log the storage purge
+        const batch = db.batch();
+        audit(
+          req,
+          batch,
+          {
+            action: 'org.storage.clear',
+            target: { type: 'organization', id: orgId },
+            after: { category, deletedCount, deletedBytes, remainingBytes, remainingFiles },
+          },
+          orgId,
+        );
+        await batch.commit();
+
+        return {
+          deletedCount,
+          deletedBytes,
+          category,
+          remainingBytes,
+          remainingFiles,
+        };
       },
     );
 

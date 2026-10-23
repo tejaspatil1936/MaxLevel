@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatCountdown,
+  formatBytes,
   formatExamTimer,
   formatQuestionTimer,
   formatDay,
@@ -94,5 +95,16 @@ describe('result formats', () => {
     expect(formatMarks(1)).toBe('+1');
     expect(formatMarks(-0.25)).toBe('\u22120.25');
     expect(formatMarks(0)).toBe('0');
+  });
+
+  it('formats bytes into clean human readable units', () => {
+    expect(formatBytes(0)).toBe('0 B');
+    expect(formatBytes(-100)).toBe('0 B');
+    expect(formatBytes(512)).toBe('512 B');
+    expect(formatBytes(1024)).toBe('1.0 KB');
+    expect(formatBytes(1536)).toBe('1.5 KB');
+    expect(formatBytes(1048576)).toBe('1.0 MB');
+    expect(formatBytes(2621440)).toBe('2.5 MB');
+    expect(formatBytes(1073741824)).toBe('1.0 GB');
   });
 });
