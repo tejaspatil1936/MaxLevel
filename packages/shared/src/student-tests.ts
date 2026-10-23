@@ -71,6 +71,7 @@ export const examEntrySchema = settingsSchema.pick({
   fullscreenRequired: true,
   cameraRequired: true,
   secondCamera: true,
+  audioProctoring: true,
 });
 export type ExamEntry = z.infer<typeof examEntrySchema>;
 

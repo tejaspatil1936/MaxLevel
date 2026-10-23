@@ -72,6 +72,7 @@ describe('student dashboard schemas', () => {
         fullscreenRequired: true,
         cameraRequired: true,
         secondCamera: false,
+        audioProctoring: true,
         devtoolsPolicy: 'block',
       },
     });

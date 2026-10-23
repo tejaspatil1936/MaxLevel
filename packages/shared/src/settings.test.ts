@@ -5,7 +5,9 @@ import {
   settingsOverridesSchema,
   settingsProblems,
   SYSTEM_DEFAULTS,
+  withSnapshotFallbacks,
   zonedTimeToUtc,
+  type Settings,
 } from './settings';
 
 const series = { defaults: {}, dailyWindow: { startMinutes: 600, endMinutes: 660 } };
@@ -120,5 +122,18 @@ describe('settingsProblems', () => {
   it('SER-09 missing keys take the system defaults', () => {
     expect(settingsProblems({})).toEqual([]);
     expect(settingsProblems({ resultDetail: 'full', resultRelease: 'immediate' })).toEqual([]);
+  });
+});
+
+describe('withSnapshotFallbacks', () => {
+  it('TST-05 a snapshot published before voice detection existed keeps it off; a new one keeps its own value', () => {
+    const { audioProctoring: _absent, ...old } = { ...SYSTEM_DEFAULTS, window: null };
+    expect(withSnapshotFallbacks(old as Settings).audioProctoring).toBe(false);
+    expect(withSnapshotFallbacks({ ...SYSTEM_DEFAULTS, window: null }).audioProctoring).toBe(true);
+    expect(withSnapshotFallbacks(undefined)).toBeUndefined();
+  });
+
+  it('voice detection is on by default for new tests', () => {
+    expect(SYSTEM_DEFAULTS.audioProctoring).toBe(true);
   });
 });

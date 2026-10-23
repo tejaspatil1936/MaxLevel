@@ -15,6 +15,7 @@ import {
   type Section,
   type Settings,
   type StrikeVerdict,
+  withSnapshotFallbacks,
 } from '@mitaoe/shared';
 import type { DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 
@@ -47,7 +48,7 @@ export interface ReleaseTest {
 const toReleaseTest = (d: DocumentSnapshot): ReleaseTest => ({
   id: d.id,
   seriesId: d.get('seriesId') as string,
-  resolved: d.get('resolved') as Settings,
+  resolved: withSnapshotFallbacks(d.get('resolved') as Settings),
   resultsReleasedAt: typeof d.get('resultsReleasedAt') === 'number' ? (d.get('resultsReleasedAt') as number) : null,
   resultsWithdrawn: d.get('resultsWithdrawn') === true,
 });
@@ -102,7 +103,7 @@ export function workerData(db: Firestore) {
         id: d.id,
         seriesId: d.get('seriesId') as string,
         sections: (d.get('sections') as Section[] | undefined) ?? [],
-        resolved: d.get('resolved') as Settings,
+        resolved: withSnapshotFallbacks(d.get('resolved') as Settings),
       };
     },
 

@@ -114,6 +114,7 @@ export const examSettingsSchema = settingsSchema.pick({
   fullscreenRequired: true,
   cameraRequired: true,
   secondCamera: true,
+  audioProctoring: true,
   marking: true,
   questionTimeMode: true,
   questionTimeLimitSec: true,

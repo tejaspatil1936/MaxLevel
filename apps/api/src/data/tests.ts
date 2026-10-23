@@ -1,4 +1,11 @@
-import type { EligibilityRules, Section, Settings, SettingsOverrides, TestStatus } from '@mitaoe/shared';
+import {
+  withSnapshotFallbacks,
+  type EligibilityRules,
+  type Section,
+  type Settings,
+  type SettingsOverrides,
+  type TestStatus,
+} from '@mitaoe/shared';
 import { FieldValue, type Firestore, type Transaction } from 'firebase-admin/firestore';
 import { toMillis } from './keys';
 import { writer, type Tx } from './tx';
@@ -77,7 +84,7 @@ export function testsData(db: Firestore) {
       ...opt('drawCount'),
       status: d.get('status') ?? 'draft',
       ...opt('approval'),
-      ...opt('resolved'),
+      ...(d.get('resolved') ? { resolved: withSnapshotFallbacks(d.get('resolved') as Settings) } : {}),
       questionSetVersion: d.get('questionSetVersion') ?? 1,
       totalMarks: d.get('totalMarks') ?? 0,
       attemptsStarted: d.get('attemptsStarted') === true,

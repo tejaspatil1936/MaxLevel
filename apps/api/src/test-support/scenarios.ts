@@ -319,6 +319,7 @@ const examTest: Scenario = async (db, now, body, queue) => {
     fullscreenRequired: false,
     cameraRequired: false,
     secondCamera: false,
+    audioProctoring: false,
     shuffleQuestions: false,
     shuffleOptions: false,
     ...(body.overrides as object | undefined),
