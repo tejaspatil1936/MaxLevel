@@ -8,6 +8,9 @@ import {
   attemptStartSchema,
   attemptSubmitResultSchema,
   attemptSubmitSchema,
+  audioProofResultSchema,
+  audioProofUploadSchema,
+  clipIdSchema,
   docIdSchema,
   navigateResultSchema,
   navigateSchema,
@@ -19,6 +22,7 @@ import { z } from 'zod';
 import { AppError } from '../errors';
 import { ANSWER_RATE_LIMIT, EVENT_RATE_LIMIT } from '../plugins/rate-limit';
 import { attemptService } from '../services/attempts';
+import { audioProofService } from '../services/audio-proofs';
 import type { ApiContext } from './context';
 
 const student = { access: 'student' as const };
@@ -40,6 +44,7 @@ export const studentOf = (req: FastifyRequest) => {
 export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
   return async (app) => {
     const attempts = attemptService({ ...ctx, rtdb: ctx.firebase.rtdb, log: app.log });
+    const audioProofs = audioProofService(ctx);
 
     app.post(
       '/v1/attempts',
@@ -87,6 +92,26 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         schema: { params: idParams, body: attemptEventReportSchema, response: { 200: attemptEventResultSchema } },
       },
       async (req) => attempts.reportEvent(req.orgId!, studentOf(req).studentId, req.params.id, req.body),
+    );
+
+    // Voice detection: the exam screen's proof clip for a voice_detected event, limited like the events (API-06).
+    app.post(
+      '/v1/attempts/:id/audio-proof',
+      {
+        config: { ...student, rateLimit: EVENT_RATE_LIMIT },
+        schema: { params: idParams, body: audioProofUploadSchema, response: { 200: audioProofResultSchema } },
+      },
+      async (req) => audioProofs.upload(req.orgId!, studentOf(req).studentId, req.params.id, req.body),
+    );
+
+    // Voice detection: a proof clip, for admins of the attempt's organization (ORG-05) and super admins (ORG-14).
+    app.get(
+      '/v1/attempts/:id/audio-proof/:clipId',
+      { config: admin, schema: { params: idParams.extend({ clipId: clipIdSchema }) } },
+      async (req, reply) => {
+        const clip = await audioProofs.read(req.orgId!, req.params.id, req.params.clipId);
+        return reply.header('cache-control', 'private, no-store').type(clip.contentType).send(clip.bytes);
+      },
     );
 
     // PR-11: an attempt's event timeline, for admins of its organization (ORG-05) and super admins (ORG-14).
