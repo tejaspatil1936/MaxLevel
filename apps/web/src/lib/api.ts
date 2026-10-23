@@ -71,6 +71,20 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
   return json as T;
 }
 
+/** A file the API serves (an audio clip) as a Blob, with the same sign-in and workspace headers as `api`. */
+export async function apiBlob(path: string): Promise<Blob> {
+  const user = firebaseAuth().currentUser;
+  const headers: Record<string, string> = {};
+  if (user) headers.authorization = `Bearer ${await user.getIdToken()}`;
+  if (workspaceOrgId) headers['x-org-id'] = workspaceOrgId;
+  const res = await fetch(`${config.apiUrl}${path}`, { headers });
+  if (!res.ok) {
+    const e = (await res.json().catch(() => null))?.error;
+    throw new ApiError(res.status, e?.code ?? 'INTERNAL', e?.message ?? 'Request failed', e?.details ?? {});
+  }
+  return res.blob();
+}
+
 /** The current time by the server's clock, for display and defaults (EX-06); the API decides anything that counts. */
 // eslint-disable-next-line no-restricted-properties
 export const serverNow = () => Date.now() + clockOffsetMs;

@@ -3,8 +3,9 @@
 import type { AttemptEvent, AttemptEventList } from '@mitaoe/shared';
 import { Button, Drawer, InlineMessage, Skeleton } from '@mitaoe/ui';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { t } from '@/i18n';
-import { api } from '@/lib/api';
+import { api, apiBlob, ApiError } from '@/lib/api';
 import { formatZonedSeconds } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 
@@ -12,6 +13,33 @@ import { qk } from '@/lib/query-keys';
 function eventLabel(e: AttemptEvent): string {
   if (e.type === 'note') return typeof e.details.text === 'string' ? e.details.text : t('live.event.note');
   return t(`live.event.${e.type}`);
+}
+
+/**
+ * The proof clip of a `voice_detected` event: loaded only when the admin asks for it, played in the browser's own
+ * audio player, and released when the timeline closes.
+ */
+function VoiceClip({ attemptId, clipId }: { attemptId: string; clipId: string }) {
+  const [state, setState] = useState<{ url: string } | 'loading' | 'missing' | 'failed' | null>(null);
+  const url = state && typeof state === 'object' ? state.url : null;
+  useEffect(() => () => void (url && URL.revokeObjectURL(url)), [url]);
+  const load = () => {
+    setState('loading');
+    apiBlob(`/v1/attempts/${encodeURIComponent(attemptId)}/audio-proof/${encodeURIComponent(clipId)}`).then(
+      (blob) => setState({ url: URL.createObjectURL(blob) }),
+      (e: unknown) => setState(e instanceof ApiError && e.status === 404 ? 'missing' : 'failed'),
+    );
+  };
+  if (url) return <audio controls src={url} aria-label={t('live.timeline.clip')} className="w-full" />;
+  if (state === 'missing') return <span className="text-graphite">{t('live.timeline.clipMissing')}</span>;
+  return (
+    <span className="flex items-center gap-3">
+      <Button variant="secondary" onClick={load} disabled={state === 'loading'}>
+        {t('live.timeline.playClip')}
+      </Button>
+      {state === 'failed' ? <span className="text-redpen">{t('common.loadFailed')}</span> : null}
+    </span>
+  );
 }
 
 /**
@@ -58,6 +86,12 @@ export function TimelineDrawer(p: {
               <span>{eventLabel(e)}</span>
               {e.strikeNumber ? (
                 <span className="font-bold text-redpen">{t('live.timeline.strike', { n: e.strikeNumber })}</span>
+              ) : null}
+              {e.type === 'voice_detected' && e.details.whisper === true ? (
+                <span className="text-graphite">{t('live.timeline.whisper')}</span>
+              ) : null}
+              {e.type === 'voice_detected' && typeof e.details.clipId === 'string' ? (
+                <VoiceClip attemptId={p.attemptId} clipId={e.details.clipId} />
               ) : null}
             </li>
           ))}
