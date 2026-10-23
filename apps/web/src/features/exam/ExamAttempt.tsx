@@ -609,13 +609,14 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         }}
       />
       <AcknowledgeDialog
-        open={fullscreenRequired && fullscreenNeeded && !proctor.warning}
+        open={fullscreenRequired && fullscreenNeeded && !proctor.warning && !display.blocked}
         title={t('fullscreen.title')}
         actionLabel={t('strike.returnFullscreen')}
         onAction={enterFullscreen}
       >
         <p>{t('fullscreen.body')}</p>
       </AcknowledgeDialog>
+      {/* One blocking dialog at a time, so assistive technology reaches it: the second screen first, then fullscreen. */}
       <AcknowledgeDialog
         open={display.blocked && !proctor.warning}
         title={t('display.title')}
