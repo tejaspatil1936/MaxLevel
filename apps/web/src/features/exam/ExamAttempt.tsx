@@ -11,6 +11,7 @@ import { PhoneStatus, ReconnectPhone, usePhoneWatch } from '@/features/phone/Pho
 import { useLaptopPresence } from '@/features/phone/presence';
 import { CameraPreview } from '@/features/proctoring/CameraPreview';
 import { useCameraWatch } from '@/features/proctoring/useCameraWatch';
+import { useDisplayWatch } from '@/features/proctoring/useDisplayWatch';
 import { AccessibilityButton } from '@/features/shell/AccessibilityPanel';
 import { RoleGuard } from '@/features/shell/RoleGuard';
 import { testHeading } from '@/features/student/test-heading';
@@ -359,6 +360,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   );
   const enterFullscreen = () =>
     void document.documentElement.requestFullscreen?.().catch(() => setFullscreenNeeded(true));
+  // One screen only: with the lockdown on, a second screen is a strike and blocks the exam until it is unplugged.
+  const display = useDisplayWatch(fullscreenRequired, report);
   // Tab past either end wraps round inside the page, so the keyboard never blurs the window (PR-05, A11Y-03).
   useEffect(() => installFocusWrap(document), []);
   // The laptop camera (PR-01, PR-02): on for the whole exam, faces counted on the device, incidents reported as above.
@@ -606,6 +609,14 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         onAction={enterFullscreen}
       >
         <p>{t('fullscreen.body')}</p>
+      </AcknowledgeDialog>
+      <AcknowledgeDialog
+        open={display.blocked && !proctor.warning}
+        title={t('display.title')}
+        actionLabel={t('display.checkAgain')}
+        onAction={display.check}
+      >
+        <p>{t('display.body')}</p>
       </AcknowledgeDialog>
     </>
   );

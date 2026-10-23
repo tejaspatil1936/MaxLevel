@@ -15,6 +15,8 @@ export const examEntry = {
   'preflight.check.fullscreen': 'Fullscreen',
   'preflight.check.camera': 'Camera',
   'preflight.check.face': 'Face detection',
+  'preflight.virtualCamera':
+    "Your browser is using a virtual camera (such as OBS). Switch to your computer's own camera in the browser's camera settings: a virtual camera counts as a strike in the test.",
   'preflight.check.connection': 'Connection',
   'preflight.check.clock': 'Clock',
   'preflight.check.browser': 'Browser',

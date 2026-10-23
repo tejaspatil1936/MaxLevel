@@ -6,6 +6,7 @@ import { CircleCheck, CircleX, LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isVirtualCamera } from '@/features/proctoring/display-watch';
 import { countFaces, countPhones, loadFaceDetector, loadPhoneDetector } from '@/features/proctoring/face-detector';
 import { TestNotAvailable } from '@/features/student/TestNotAvailable';
 import { testHeading } from '@/features/student/test-heading';
@@ -67,6 +68,8 @@ function DeviceChecks({ testId, heading, exam }: { testId: string; heading: stri
   const [results, setResults] = useState<Results>({});
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
+  // A virtual camera passes the camera check but is a strike in the exam, so the student is told now.
+  const [virtualCamera, setVirtualCamera] = useState(false);
   // Each run of the checks gets a number; results of an older run, or after leaving the page, are dropped.
   const runs = useRef({ latest: 0 });
 
@@ -109,6 +112,7 @@ function DeviceChecks({ testId, heading, exam }: { testId: string; heading: stri
       try {
         stopCamera();
         stream.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        setVirtualCamera(isVirtualCamera(stream.current.getVideoTracks()[0]?.label));
         if (!el || runs.current.latest !== id) return stopCamera();
         el.srcObject = stream.current;
         await el.play();
@@ -208,6 +212,11 @@ function DeviceChecks({ testId, heading, exam }: { testId: string; heading: stri
           aria-label={t('preflight.cameraView')}
           className="mt-6 aspect-video w-72 -scale-x-100 rounded-panel border border-rule bg-surface-sunken object-cover"
         />
+      ) : null}
+      {exam.cameraRequired && virtualCamera ? (
+        <div className="mt-4">
+          <InlineMessage tone="danger">{t('preflight.virtualCamera')}</InlineMessage>
+        </div>
       ) : null}
     </>
   );
