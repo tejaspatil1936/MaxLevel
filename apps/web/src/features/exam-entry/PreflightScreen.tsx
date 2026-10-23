@@ -137,7 +137,17 @@ function DeviceChecks({ testId, heading, exam }: { testId: string; heading: stri
     set('screen', width >= MIN_SCREEN_WIDTH, t('preflight.detail.screen', { n: formatCount(width) }));
     if (exam.fullscreenRequired) set('fullscreen', document.fullscreenEnabled);
     set('browser', browserSupported(navigator.userAgent));
-    await Promise.all([network(), exam.cameraRequired ? camera() : undefined]);
+    // Voice detection: the microphone permission is asked for here, with the other devices, so the exam screen does
+    // not stop to ask. A refusal blocks nothing; the exam reports it (mic_unavailable) for the admin to see.
+    const microphone = async () => {
+      const mic = await navigator.mediaDevices?.getUserMedia({ audio: true, video: false }).catch(() => null);
+      mic?.getTracks().forEach((track) => track.stop());
+    };
+    await Promise.all([
+      network(),
+      exam.cameraRequired ? camera() : undefined,
+      exam.audioProctoring ? microphone() : undefined,
+    ]);
   }, [exam, stopCamera]);
 
   useEffect(() => {

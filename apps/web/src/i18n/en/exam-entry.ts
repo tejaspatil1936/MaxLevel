@@ -41,6 +41,14 @@ export const examEntry = {
   'rules.privacy':
     'Camera video never leaves your device. Only proctoring events, such as leaving fullscreen, are sent to the server.',
   'rules.agreement': 'I have read the rules and agree to follow them',
+  'rules.monitor.title': 'What this test monitors',
+  'rules.monitor.display':
+    'One screen only. A second monitor or TV connected to this computer records a strike and pauses your test until you disconnect it.',
+  'rules.monitor.camera': "Your computer's own camera. A virtual camera, such as OBS, records a strike.",
+  'rules.monitor.input':
+    'Your own answers. Answers entered by a script or browser extension are blocked and record a strike.',
+  'rules.monitor.audio':
+    'Voice detection. Your microphone is checked on your device for talking. When talking is detected, a 5-second recording is sent for a person to review, and it is deleted after 14 days. Nothing else from your microphone leaves your device.',
   'rules.start': 'Start test',
   'rules.blocked.checks': 'Complete the device checks first.',
   'rules.blocked.agreement': 'Tick the agreement to start.',
