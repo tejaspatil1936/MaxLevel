@@ -5,3 +5,27 @@
 
 /* packages/ui is linked into node_modules, which Tailwind skips by default. */
 @source '../../../packages/ui/src';
+
+/* Theme-aware MaxLevel logo visibility */
+.maxlevel-logo-light-bg {
+  display: block;
+}
+.maxlevel-logo-dark-bg {
+  display: none;
+}
+
+[data-theme='dark'] .maxlevel-logo-light-bg {
+  display: none;
+}
+[data-theme='dark'] .maxlevel-logo-dark-bg {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme='system'] .maxlevel-logo-light-bg {
+    display: none;
+  }
+  [data-theme='system'] .maxlevel-logo-dark-bg {
+    display: block;
+  }
+}

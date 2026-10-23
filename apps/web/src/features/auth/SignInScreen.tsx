@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { AccessibilityButton } from '@/features/shell/AccessibilityPanel';
+import { MaxLevelLogo } from '@/features/shell/MaxLevelLogo';
 import { t, type MessageKey } from '@/i18n';
 import { homeFor } from '@/lib/homes';
 import { useSession } from '@/lib/session';
@@ -64,9 +65,7 @@ export function SignInScreen() {
       >
         <div className="rounded-panel border border-rule bg-surface p-8 shadow-sm">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-control bg-ballpoint font-display text-heading-2 font-bold text-on-ballpoint">
-              {t('app.mark')}
-            </span>
+            <MaxLevelLogo size={36} />
             <span className="text-caption font-bold uppercase tracking-wider text-graphite">{t('app.name')}</span>
           </div>
           <h1 className="mt-4 font-display text-display-2 font-bold tracking-tight text-ink">
@@ -103,9 +102,7 @@ export function SignInScreen() {
       <header className="sticky top-0 z-30 border-b border-rule bg-surface/95 backdrop-blur-md">
         <div className="mx-auto flex min-h-16 max-w-student items-center justify-between gap-4 px-4 py-2">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-control bg-ballpoint font-display text-heading-3 font-bold text-on-ballpoint shadow-sm">
-              {t('app.mark')}
-            </span>
+            <MaxLevelLogo size={36} />
             <div className="flex flex-col">
               <span className="font-display text-heading-2 font-extrabold tracking-tight text-ink leading-none">
                 {t('app.name')}
@@ -394,9 +391,7 @@ export function SignInScreen() {
         <div className="mx-auto flex max-w-student flex-col items-start justify-between gap-6 px-4 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-control bg-ballpoint font-display text-[12px] font-bold text-on-ballpoint">
-                {t('app.mark')}
-              </span>
+              <MaxLevelLogo size={24} />
               <span className="font-display text-heading-3 font-bold text-ink">{t('app.name')}</span>
             </div>
             <p className="text-caption text-graphite">{t('landing.footerDesc')}</p>

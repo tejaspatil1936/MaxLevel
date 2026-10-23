@@ -14,6 +14,7 @@ import { AccessibilityButton } from './AccessibilityPanel';
 import { CommandPalette } from './CommandPalette';
 import { ADMIN_NAV, PLATFORM_NAV, type NavLink } from './nav';
 import { OrgSwitcher } from './OrgSwitcher';
+import { MaxLevelLogo } from './MaxLevelLogo';
 import { AdminCopilot } from '../admin/assistant/AdminCopilot';
 
 function SideLink({ link, locked }: { link: NavLink; locked: boolean }) {
@@ -83,12 +84,10 @@ export function AdminShell({
         {/* The rail's colour and rule run the page's full height; the sticky sidebar inside stays in view. */}
         <div className="w-20 shrink-0 border-r border-rule bg-surface min-[1200px]:w-60">
           <aside className="sticky top-0 flex h-screen flex-col gap-4 overflow-y-auto p-2 min-[1200px]:p-4">
-            <p className="flex min-h-11 items-center font-display text-heading-2 font-bold max-[1199px]:justify-center">
-              <span className="max-[1199px]:hidden">{t('app.name')}</span>
-              <span aria-hidden className="min-[1200px]:hidden">
-                {t('app.mark')}
-              </span>
-            </p>
+            <div className="flex min-h-11 items-center gap-2.5 font-display text-heading-2 font-bold max-[1199px]:justify-center">
+              <MaxLevelLogo size={28} />
+              <span className="max-[1199px]:hidden text-ink">{t('app.name')}</span>
+            </div>
             {superAdmin ? <OrgSwitcher current={inOrg ? orgName || null : null} onChange={setOrgId} /> : null}
             <nav aria-label={t('nav.main')}>
               <ul className="flex flex-col gap-1">

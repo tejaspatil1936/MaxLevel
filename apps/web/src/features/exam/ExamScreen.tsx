@@ -4,6 +4,7 @@ import type { ExamPayload, StudentQuestion } from '@mitaoe/shared';
 import { Button, cx, Dialog } from '@mitaoe/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode } from 'react';
 import { t } from '@/i18n';
+import { MaxLevelLogo } from '../shell/MaxLevelLogo';
 import { AnswerOptions } from './AnswerOptions';
 import { questionState, shortcutFor, type ExamAction, type ExamState } from './exam-state';
 import { QuestionPalette, TimingTrack, type PaletteGroup } from './QuestionPalette';
@@ -166,7 +167,10 @@ export function ExamScreen({
   return (
     <div className={cx('flex min-h-dvh flex-col bg-sheet', lockdown && 'print:hidden')}>
       <header className="sticky top-0 z-20 flex min-h-16 flex-wrap items-center gap-x-6 gap-y-2 border-b border-rule bg-surface px-6 py-2">
-        <h1 className="font-display text-heading-1 font-bold">{title}</h1>
+        <div className="flex items-center gap-3">
+          <MaxLevelLogo size={28} />
+          <h1 className="font-display text-heading-1 font-bold">{title}</h1>
+        </div>
         {bar}
       </header>
       <main id="main" tabIndex={-1} className="flex flex-1 flex-col">

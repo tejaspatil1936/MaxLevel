@@ -3,11 +3,12 @@
 import type { AssistantChatMessage, AssistantChatResponse, DiagnosticReport } from '@mitaoe/shared';
 import { Button } from '@mitaoe/ui';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowRight, Bot, Maximize2, Minimize2, Send, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowRight, Maximize2, Minimize2, Send, Sparkles, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
+import { MaxLevelLogo } from '../../shell/MaxLevelLogo';
 import { AssistantMarkdown } from './AssistantMarkdown';
 
 type ButtonMode = 'full' | 'compact' | 'hidden';
@@ -244,9 +245,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
           {/* Header */}
           <div className="flex items-center justify-between border-b border-rule bg-surface px-4 py-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-control bg-ballpoint text-on-ballpoint shadow-sm">
-                <Bot size={20} aria-hidden="true" />
-              </div>
+              <MaxLevelLogo size={32} />
               <div className="flex flex-col">
                 <span className="font-display text-heading-3 font-bold text-ink leading-tight">
                   {t('assistant.title')}

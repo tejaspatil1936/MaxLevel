@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { t } from '@/i18n';
 import { useSession } from '@/lib/session';
 import { AccessibilityButton } from './AccessibilityPanel';
+import { MaxLevelLogo } from './MaxLevelLogo';
 import { STUDENT_NAV } from './nav';
 
 /** Student shell (13.7): one top bar and centred content up to 1,120 px. */
@@ -21,7 +22,10 @@ export function StudentShell({ me, children }: { me: MeResponse; children: React
     <div className="min-h-screen">
       <header className="border-b border-rule bg-surface">
         <div className="mx-auto flex min-h-16 max-w-student flex-wrap items-center justify-between gap-4 px-4 py-2">
-          <p className="font-display text-heading-1 font-bold">{me.org?.name ?? t('app.name')}</p>
+          <div className="flex items-center gap-3">
+            <MaxLevelLogo size={28} />
+            <p className="font-display text-heading-1 font-bold">{me.org?.name ?? t('app.name')}</p>
+          </div>
           <nav aria-label={t('nav.main')}>
             <ul className="flex flex-wrap items-center gap-1">
               {STUDENT_NAV.map((link) => {
