@@ -74,7 +74,9 @@ export function audioCleanupTask(
 
 /** A clip may be deleted only inside its organization's audio folders (the worker checks the payload it is given). */
 export function isAudioProofPath(orgId: string, path: string): boolean {
-  return new RegExp(`^organizations/${orgId}/attempts/[A-Za-z0-9_-]+/audio/[A-Za-z0-9_-]{8,64}\\.(webm|ogg|m4a)$`).test(
-    path,
-  );
+  const m =
+    /^organizations\/([A-Za-z0-9_-]+)\/attempts\/[A-Za-z0-9_-]+\/audio\/[A-Za-z0-9_-]{8,64}\.(?:webm|ogg|m4a)$/.exec(
+      path,
+    );
+  return m?.[1] === orgId;
 }
