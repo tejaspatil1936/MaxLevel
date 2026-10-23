@@ -36,6 +36,8 @@ const settingsShape = {
   fullscreenRequired: z.boolean(),
   cameraRequired: z.boolean(),
   secondCamera: z.boolean(),
+  /** Voice detection through the laptop microphone, with a short clip kept for review when it fires. */
+  audioProctoring: z.boolean(),
   shuffleQuestions: z.boolean(),
   shuffleOptions: z.boolean(),
   resultRelease: z.enum(['immediate', 'after_close', 'manual', 'never']),
@@ -72,6 +74,7 @@ export const SYSTEM_DEFAULTS: Omit<Settings, 'window'> = {
   fullscreenRequired: true,
   cameraRequired: true,
   secondCamera: false,
+  audioProctoring: true,
   shuffleQuestions: true,
   shuffleOptions: true,
   resultRelease: 'after_close',
@@ -83,6 +86,20 @@ export const SYSTEM_DEFAULTS: Omit<Settings, 'window'> = {
   floorAtZero: false,
   questionTimeMode: 'none',
 };
+
+/**
+ * Settings added after tests were already published: a stored snapshot without one keeps that setting off, so a
+ * published test never starts doing something its students were not told about at publication (TST-05).
+ */
+export const SNAPSHOT_FALLBACKS = { audioProctoring: false } as const satisfies Partial<Settings>;
+
+/** A stored settings snapshot with the settings it predates filled from `SNAPSHOT_FALLBACKS`. */
+export function withSnapshotFallbacks(stored: Settings): Settings;
+export function withSnapshotFallbacks(stored: Settings | undefined): Settings | undefined;
+export function withSnapshotFallbacks(stored: Settings | undefined): Settings | undefined {
+  if (!stored) return stored;
+  return { ...SNAPSHOT_FALLBACKS, ...defined(stored) } as Settings;
+}
 
 /** Release and visibility settings: editing them never sends an approved test back to review (Q-15, TST-06). */
 export const RELEASE_SETTING_KEYS = [

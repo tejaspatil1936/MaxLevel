@@ -374,6 +374,27 @@ export function attemptsData(db: Firestore) {
       });
     },
 
+    /**
+     * Counts one voice proof clip against the attempt's limit, in a transaction so concurrent uploads never pass it.
+     * `ATTEMPT_FINISHED` once the attempt is not in progress, `LIMIT` at the limit, null when there is no attempt.
+     */
+    async reserveAudioProof(
+      orgId: string,
+      attemptId: string,
+      max: number,
+    ): Promise<'OK' | 'LIMIT' | 'ATTEMPT_FINISHED' | null> {
+      const ref = attempts(orgId).doc(attemptId);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return null;
+        if (snap.get('status') !== 'in_progress') return 'ATTEMPT_FINISHED';
+        const count = (snap.get('audioProofCount') as number | undefined) ?? 0;
+        if (count >= max) return 'LIMIT';
+        tx.update(ref, { audioProofCount: count + 1 });
+        return 'OK';
+      });
+    },
+
     /** OBS-03: the latest batch's backlog and clock offset; the only attempt field an answer batch writes (EX-14). */
     async recordSync(orgId: string, attemptId: string, sync: NonNullable<AttemptRecord['sync']>): Promise<void> {
       await attempts(orgId).doc(attemptId).update({ sync });

@@ -14,6 +14,7 @@ export const TASK_PATHS = [
   '/tasks/prewarm',
   '/tasks/migrate',
   '/tasks/phone-check',
+  '/tasks/audio-cleanup',
 ] as const;
 export type TaskPath = (typeof TASK_PATHS)[number];
 

@@ -46,3 +46,19 @@ scripts/locks.mjs refrozen). None are open.
   which moves the baselines away from where the contract and docs/MANUAL_CHECKS.md say they live.
 - Effect until then: `scripts/verify.sh feature F-5.05` and every later phase 5 verify print FAIL on
   `acceptance-lock` alone.
+
+## 2026-10-23 — a Microphone preflight row and a privacy note for tests with voice detection
+
+- What happens: voice detection (setting `audioProctoring`, on by default for new tests) needs the microphone, but
+  `PreflightPage.passAndContinue` (tests/acceptance/pages/exam-flow.ts) asserts the exact number of check rows and
+  `FIX_LINES` lists the only check names, so a `Microphone` row would fail every locked exam test that passes
+  preflight. The rules screen's privacy note is also matched word for word (`PRIVACY_NOTE`, F-3.04 EX-02), and with
+  voice detection on its second sentence ("Only proctoring events … are sent") is no longer the whole story.
+- What the build does meanwhile: preflight asks for the microphone alongside the other devices without a row, and a
+  refusal blocks nothing: the exam reports `mic_unavailable` for the admin to see. The rules screen keeps the locked
+  note and adds a separate "What this test monitors" list that discloses the 5-second clips and their 14-day deletion.
+- Proposed change: add `Microphone` to `FIX_LINES` (fix line: "Allow this page to use the microphone, then choose
+  Check again.") and to `ALL_CHECKS` for a test with voice detection on, so a refused microphone keeps the student out
+  of the rules like a refused camera; and allow the privacy note to read, with voice detection on, "Camera video never
+  leaves your device. Only proctoring events, such as leaving fullscreen, are sent to the server, and a 5-second
+  recording when talking is detected."

@@ -8,13 +8,14 @@ import type { WorkerData } from './data';
 import { taskAuthCheck, type TaskAuthCheck } from './oidc';
 import type { ExportData } from './export-data';
 import type { ImportData } from './import-data';
-import type { FileStore } from './firebase';
+import type { ClipStore, FileStore } from './firebase';
 import type { LiveMirror, PresenceReader } from './live';
 import { migrationData } from './migration-data';
 import { MIGRATION_BATCH_SIZE, MIGRATIONS, type Migration } from './migrations';
 import type { ReportData } from './report-data';
 import { reportFontUrl, type PdfPrinter } from './report-pdf';
 import { loggingInstanceScaler, type InstanceScaler } from './scaler';
+import { audioCleanupHandler, audioCleanupPayloadSchema } from './tasks/audio-cleanup';
 import { autoSubmitHandler, autoSubmitPayloadSchema } from './tasks/auto-submit';
 import { exportHandler, exportPayloadSchema } from './tasks/export';
 import { importHandler, importPayloadSchema } from './tasks/import';
@@ -43,6 +44,8 @@ export interface WorkerDeps {
   live?: LiveMirror;
   /** Presence reads for the phone outage check (PR-16); with `live`, it handles /tasks/phone-check. */
   presence?: PresenceReader;
+  /** Voice proof clips in Storage; with it, /tasks/audio-cleanup deletes them when their retention ends. */
+  clips?: ClipStore;
   /** Raises the API's minimum instances before a slot (PERF-06); the logging driver when absent. */
   scaler?: InstanceScaler;
   /** The model AI imports and report summaries use (IMP-07): the scripted mock with LLM_PROVIDER=mock; none when unset. */
@@ -64,6 +67,7 @@ export const TASK_NAMES = [
   'prewarm',
   'migrate',
   'phone-check',
+  'audio-cleanup',
 ] as const;
 
 export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
@@ -197,6 +201,17 @@ export async function buildWorker(deps: WorkerDeps): Promise<FastifyInstance> {
           .post('/phone-check', { schema: { body: phoneCheckPayloadSchema } }, async (req) => {
             const outcome = await run(req.body);
             req.log.info({ task: 'phone-check', attemptId: req.body.attemptId, outcome }, 'task done');
+            return { ok: true, outcome };
+          });
+      }
+      if (deps.clips) {
+        const run = audioCleanupHandler({ clips: deps.clips });
+        handled.push('audio-cleanup');
+        tasks
+          .withTypeProvider<ZodTypeProvider>()
+          .post('/audio-cleanup', { schema: { body: audioCleanupPayloadSchema } }, async (req) => {
+            const outcome = await run(req.body);
+            req.log.info({ task: 'audio-cleanup', orgId: req.body.orgId, outcome }, 'task done');
             return { ok: true, outcome };
           });
       }

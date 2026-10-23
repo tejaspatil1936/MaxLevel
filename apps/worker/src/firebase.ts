@@ -36,3 +36,19 @@ export function initFileStore(env: NodeJS.ProcessEnv = process.env): FileStore {
     },
   };
 }
+
+/** What the voice proof cleanup needs of Storage: deleting one object, a missing one counting as deleted. */
+export interface ClipStore {
+  remove(path: string): Promise<void>;
+}
+
+export function initClipStore(env: NodeJS.ProcessEnv = process.env): ClipStore {
+  initFirestore(env);
+  const projectId = env.GCLOUD_PROJECT ?? env.FIREBASE_PROJECT_ID ?? 'demo-mitaoe';
+  const bucket = getStorage(getApps()[0]).bucket(env.FIREBASE_STORAGE_BUCKET ?? `${projectId}.appspot.com`);
+  return {
+    async remove(path) {
+      await bucket.file(path).delete({ ignoreNotFound: true });
+    },
+  };
+}

@@ -15,6 +15,7 @@ describe('settings draft', () => {
       fullscreenRequired: true,
       cameraRequired: true,
       secondCamera: false,
+      audioProctoring: true,
       shuffleQuestions: true,
       shuffleOptions: true,
       showPastScores: true,

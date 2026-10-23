@@ -3,20 +3,30 @@
 import type { ClearStorageResponse, OrgStorageFile, OrgStorageSummary, StorageCategory } from '@mitaoe/shared';
 import { Button, ConfirmDialog, EmptyState, InlineMessage, Skeleton, StatusPill, Table } from '@mitaoe/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileSpreadsheet, FileText, HardDrive, Image as ImageIcon, Layers, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  AudioLines,
+  FileSpreadsheet,
+  FileText,
+  HardDrive,
+  Image as ImageIcon,
+  Layers,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { t, type MessageKey } from '@/i18n';
 import { api } from '@/lib/api';
 import { formatBytes, formatCount, formatDateTime } from '@/lib/format';
 import { qk } from '@/lib/query-keys';
 
-type CategoryKey = 'imports' | 'exports' | 'reports' | 'questions' | 'logos' | 'other';
+type CategoryKey = 'imports' | 'exports' | 'reports' | 'questions' | 'audio' | 'logos' | 'other';
 
 const CATEGORY_NAMES: Record<CategoryKey, MessageKey> = {
   imports: 'org.storageCategoryImports',
   exports: 'org.storageCategoryExports',
   reports: 'org.storageCategoryReports',
   questions: 'org.storageCategoryQuestions',
+  audio: 'org.storageCategoryAudio',
   logos: 'org.storageCategoryLogos',
   other: 'org.storageCategoryOther',
 };
@@ -26,6 +36,7 @@ const CATEGORY_ICONS: Record<CategoryKey, typeof HardDrive> = {
   exports: FileSpreadsheet,
   reports: FileText,
   questions: ImageIcon,
+  audio: AudioLines,
   logos: ImageIcon,
   other: HardDrive,
 };
@@ -35,6 +46,7 @@ const CATEGORY_TONES: Record<CategoryKey, 'info' | 'success' | 'neutral' | 'mute
   exports: 'success',
   reports: 'neutral',
   questions: 'muted',
+  audio: 'info',
   logos: 'muted',
   other: 'muted',
 };
@@ -154,7 +166,7 @@ export function OrgStorage({
       ) : null}
 
       {/* Storage Breakdown Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-body-small font-medium text-graphite">{t('org.storageTotal')}</span>
@@ -168,7 +180,7 @@ export function OrgStorage({
           </div>
         </div>
 
-        {(['imports', 'exports', 'reports', 'questions'] as const).map((cat) => {
+        {(['imports', 'exports', 'reports', 'questions', 'audio'] as const).map((cat) => {
           const stats = categories[cat] ?? { count: 0, bytes: 0 };
           const Icon = CATEGORY_ICONS[cat];
           const label = t(CATEGORY_NAMES[cat]);

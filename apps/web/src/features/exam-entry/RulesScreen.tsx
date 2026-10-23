@@ -139,6 +139,7 @@ function Rules({ page, orgId }: { page: StudentTestPage; orgId: string }) {
         <ShieldCheck aria-hidden size={20} className="mt-1 shrink-0 text-tick" />
         <span>{t('rules.privacy')}</span>
       </p>
+      <MonitoringNotice exam={page.exam} />
       {secondCamera ? (
         <section aria-labelledby={pairId} className="mt-8 max-w-measure border-t border-rule pt-6">
           <h2 id={pairId} className="text-heading-2 font-bold">
@@ -181,5 +182,31 @@ function Rules({ page, orgId }: { page: StudentTestPage; orgId: string }) {
         {start.isError ? <InlineMessage>{t('rules.startFailed', { reason })}</InlineMessage> : null}
       </div>
     </>
+  );
+}
+
+/**
+ * What the test watches, told before Start (owner request 2026-10-23): one screen, the student's own answers, a real
+ * camera and, when voice detection is on, the microphone with its short review clips.
+ */
+function MonitoringNotice({ exam }: { exam: StudentTestPage['exam'] }) {
+  const id = useId();
+  const lines: MessageKey[] = [
+    ...(exam.fullscreenRequired ? (['rules.monitor.display'] as const) : []),
+    ...(exam.cameraRequired ? (['rules.monitor.camera'] as const) : []),
+    'rules.monitor.input',
+    ...(exam.audioProctoring ? (['rules.monitor.audio'] as const) : []),
+  ];
+  return (
+    <section aria-labelledby={id} className="mt-6 max-w-measure">
+      <h2 id={id} className="text-heading-3 font-bold">
+        {t('rules.monitor.title')}
+      </h2>
+      <ul className="mt-2 list-disc space-y-1 pl-6">
+        {lines.map((line) => (
+          <li key={line}>{t(line)}</li>
+        ))}
+      </ul>
+    </section>
   );
 }

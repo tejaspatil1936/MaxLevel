@@ -10,7 +10,9 @@ import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from
 import { PhoneStatus, ReconnectPhone, usePhoneWatch } from '@/features/phone/PhoneWatch';
 import { useLaptopPresence } from '@/features/phone/presence';
 import { CameraPreview } from '@/features/proctoring/CameraPreview';
+import { useAudioWatch } from '@/features/proctoring/useAudioWatch';
 import { useCameraWatch } from '@/features/proctoring/useCameraWatch';
+import { useDisplayWatch } from '@/features/proctoring/useDisplayWatch';
 import { AccessibilityButton } from '@/features/shell/AccessibilityPanel';
 import { RoleGuard } from '@/features/shell/RoleGuard';
 import { testHeading } from '@/features/student/test-heading';
@@ -20,6 +22,7 @@ import { firebaseAuth } from '@/lib/firebase';
 import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
 import { useDeadlineSignal } from './deadline-signal';
+import { installInputGuard, type InputGuardDeps } from './input-guard';
 import { useServerStrikes } from './server-strikes';
 import { createAnswerSync, type AnswerSync, type PendingAnswer, type Rejection, type SyncStatus } from './answer-sync';
 import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
@@ -359,11 +362,17 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   );
   const enterFullscreen = () =>
     void document.documentElement.requestFullscreen?.().catch(() => setFullscreenNeeded(true));
+  // Scripted answers: untrusted key and option events are stopped, and the first is reported (automated_input).
+  useEffect(() => installInputGuard({ doc: document as unknown as InputGuardDeps['doc'], report }), [report]);
+  // One screen only: with the lockdown on, a second screen is a strike and blocks the exam until it is unplugged.
+  const display = useDisplayWatch(fullscreenRequired, report);
   // Tab past either end wraps round inside the page, so the keyboard never blurs the window (PR-05, A11Y-03).
   useEffect(() => installFocusWrap(document), []);
   // The laptop camera (PR-01, PR-02): on for the whole exam, faces counted on the device, incidents reported as above.
   const { cameraRequired } = payload.settings;
   const cameraStream = useCameraWatch(cameraRequired, report);
+  // Voice detection (the test's setting): talking is logged with a short clip for review, never a strike.
+  useAudioWatch(payload.settings.audioProctoring, attemptId, report);
   // Presence in Realtime Database (DATA-06): this laptop's own record, and with a second camera the phone's, whose
   // disconnection brings up the reconnect overlay and is reported paused; the server decides the strike (PR-16) and it
   // arrives through the proctor record, unless our database is down (REL-05).
@@ -600,12 +609,21 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
         }}
       />
       <AcknowledgeDialog
-        open={fullscreenRequired && fullscreenNeeded && !proctor.warning}
+        open={fullscreenRequired && fullscreenNeeded && !proctor.warning && !display.blocked}
         title={t('fullscreen.title')}
         actionLabel={t('strike.returnFullscreen')}
         onAction={enterFullscreen}
       >
         <p>{t('fullscreen.body')}</p>
+      </AcknowledgeDialog>
+      {/* One blocking dialog at a time, so assistive technology reaches it: the second screen first, then fullscreen. */}
+      <AcknowledgeDialog
+        open={display.blocked && !proctor.warning}
+        title={t('display.title')}
+        actionLabel={t('display.checkAgain')}
+        onAction={display.check}
+      >
+        <p>{t('display.body')}</p>
       </AcknowledgeDialog>
     </>
   );

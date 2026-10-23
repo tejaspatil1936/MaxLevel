@@ -45,6 +45,6 @@ describe('base seed', () => {
       defaults: { timingMode: 'fixed', maxStrikes: 4, resultDetail: 'sections', seriesLeaderboard: false },
       eligibility: { departmentIds: [], graduationYears: [2027], include: [], exclude: [] },
     });
-    expect(Object.keys(stored!.defaults as object)).toHaveLength(16);
+    expect(Object.keys(stored!.defaults as object)).toHaveLength(17);
   });
 });

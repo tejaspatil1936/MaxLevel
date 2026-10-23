@@ -124,6 +124,7 @@ export const authoring = {
   'setting.fullscreenRequired': 'Fullscreen required',
   'setting.cameraRequired': 'Laptop camera required',
   'setting.secondCamera': 'Second camera (phone)',
+  'setting.audioProctoring': 'Voice detection (microphone)',
   'setting.shuffleQuestions': 'Shuffle questions',
   'setting.shuffleOptions': 'Shuffle options',
   'setting.showPastScores': 'Show past scores to students',

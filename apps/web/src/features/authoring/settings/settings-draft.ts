@@ -20,6 +20,7 @@ export const SWITCH_KEYS = [
   'fullscreenRequired',
   'cameraRequired',
   'secondCamera',
+  'audioProctoring',
   'shuffleQuestions',
   'shuffleOptions',
   'showPastScores',

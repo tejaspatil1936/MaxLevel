@@ -4,7 +4,7 @@ import { loadConfig } from './config';
 import { workerData } from './data';
 import { exportData } from './export-data';
 import { importData } from './import-data';
-import { initFileStore, initFirestore } from './firebase';
+import { initClipStore, initFileStore, initFirestore } from './firebase';
 import { initRtdb, liveMirror, presenceReader } from './live';
 import { selectLlm } from './llm/select';
 import { reportData } from './report-data';
@@ -33,6 +33,7 @@ const app = await buildWorker({
   },
   live: liveMirror(rtdb),
   presence: presenceReader(rtdb),
+  clips: initClipStore(),
   migrations: { db },
   ...(llm ? { llm } : {}),
 });

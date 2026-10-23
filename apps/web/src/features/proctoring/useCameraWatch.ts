@@ -1,21 +1,30 @@
 'use client';
 
 import type { AttemptEventDetails, CameraIncident } from '@mitaoe/shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { startCameraWatch } from './camera-watch';
+import { isVirtualCamera } from './display-watch';
 import { countFaces, countPhones, loadFaceDetector, loadPhoneDetector } from './face-detector';
 
 /**
  * With `cameraRequired`, the camera is on for as long as the exam screen is open and faces and phones are counted on the
  * device (PR-01, PR-02). Preflight stopped its own camera, so this opens it again; the detectors are the ones preflight
  * loaded.
- * Returns the live stream for the self-view (PR-03).
+ * A camera whose label names a virtual camera (OBS and the like, which can play any video) is reported once per stream
+ * as `virtual_camera`, a strike. Returns the live stream for the self-view (PR-03).
  */
 export function useCameraWatch(
   required: boolean,
-  report: (type: CameraIncident, details: AttemptEventDetails) => void,
+  report: (type: CameraIncident | 'virtual_camera', details: AttemptEventDetails) => void,
 ): MediaStream | null {
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const judged = useRef<string | null>(null);
+  useEffect(() => {
+    const label = stream?.getVideoTracks()[0]?.label;
+    if (!stream || judged.current === stream.id) return;
+    judged.current = stream.id;
+    if (isVirtualCamera(label)) report('virtual_camera', { label: (label ?? '').slice(0, 120) });
+  }, [stream, report]);
   useEffect(() => {
     if (!required) return;
     return startCameraWatch({

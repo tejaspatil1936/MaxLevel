@@ -40,6 +40,7 @@ function categorizeStoragePath(name: string): StorageCategory {
   if (name.includes('/exports/')) return 'exports';
   if (name.includes('/reports/')) return 'reports';
   if (name.includes('/questions/')) return 'questions';
+  if (name.includes('/audio/')) return 'audio';
   if (name.includes('/logo.') || name.includes('/logos/')) return 'logos';
   return 'other';
 }
@@ -57,6 +58,7 @@ async function listOrgStorage(
     exports: { count: 0, bytes: 0 },
     reports: { count: 0, bytes: 0 },
     questions: { count: 0, bytes: 0 },
+    audio: { count: 0, bytes: 0 },
     logos: { count: 0, bytes: 0 },
     other: { count: 0, bytes: 0 },
   };
