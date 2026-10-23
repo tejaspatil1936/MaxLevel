@@ -112,9 +112,11 @@ Each step lists what to do, where, how to confirm it worked, and the requirement
 - Unblocks: PR-01, PR-02 (face present and multiple faces), EX-01 (face detection check passing).
 
 ### 3.2 Cloud Tasks queues
-- What: queues `auto-submit`, `results`, `leaderboard`, `imports`, `reports`, `exports`, `prewarm` and `phone-checks`
-  in `asia-south1` in staging and prod, each with OIDC push to the worker using `tasks@`. `phone-checks` carries
-  `/tasks/phone-check`, the server's decision on a phone outage strike.
+- What: queues `auto-submit`, `results`, `leaderboard`, `imports`, `reports`, `exports`, `prewarm`, `phone-checks`
+  and `audio-cleanup` in `asia-south1` in staging and prod, each with OIDC push to the worker using `tasks@`.
+  `phone-checks` carries `/tasks/phone-check`, the server's decision on a phone outage strike; `audio-cleanup` carries
+  `/tasks/audio-cleanup`, which deletes a voice detection clip 14 days after it was stored (Cloud Tasks schedules up
+  to 30 days ahead).
 - Where: Cloud Tasks.
 - Confirm: `gcloud tasks queues list --location asia-south1`.
 - Unblocks: EX-16, RES-01, LB-03, EXP-03, IMP-04, PERF-06, PR-16.
