@@ -107,7 +107,10 @@ export function attemptRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
     // Voice detection: a proof clip, for admins of the attempt's organization (ORG-05) and super admins (ORG-14).
     app.get(
       '/v1/attempts/:id/audio-proof/:clipId',
-      { config: admin, schema: { params: idParams.extend({ clipId: clipIdSchema }) } },
+      {
+        config: admin,
+        schema: { params: idParams.extend({ clipId: clipIdSchema }), response: { 200: z.custom<Buffer>() } },
+      },
       async (req, reply) => {
         const clip = await audioProofs.read(req.orgId!, req.params.id, req.params.clipId);
         return reply.header('cache-control', 'private, no-store').type(clip.contentType).send(clip.bytes);
