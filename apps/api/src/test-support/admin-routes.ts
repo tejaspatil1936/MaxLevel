@@ -476,6 +476,10 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   },
 
   'GET /v1/attempts/:id/events': { foreignParams: { id: 'att-org-b' }, fresh: withAttempt },
+  'GET /v1/attempts/:id/audio-proof/:clipId': {
+    foreignParams: { id: 'att-org-b', clipId: 'clip-12345678' },
+    fresh: async (db) => ({ params: { ...(await withAttempt(db)).params, clipId: 'clip-12345678' } }),
+  },
   'POST /v1/attempts/:id/extra-time': { foreignParams: { id: 'att-org-b' }, fresh: withTimedAttempt },
   'POST /v1/attempts/:id/terminate': { foreignParams: { id: 'att-org-b' }, fresh: withActionAttempt('in_progress') },
   'POST /v1/attempts/:id/reinstate': { foreignParams: { id: 'att-org-b' }, fresh: withActionAttempt('terminated') },
@@ -483,6 +487,9 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
 
   'GET /v1/live-tests': { fresh: (db) => withPublishedTest(db) },
   'GET /v1/tests/:id/live': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
+  'GET /v1/admin/diagnose/tests/:id': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
+  // An empty body is refused before the model is asked, so the route table never calls the LLM.
+  'POST /v1/admin/assistant/chat': { body: {} },
   'GET /v1/tests/:id/attempts': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
 
   'GET /v1/audit': {},
