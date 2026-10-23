@@ -115,7 +115,16 @@ export const auditQuerySchema = pageQuerySchema.extend({
 export const auditPageSchema = z.object({ items: z.array(auditEntrySchema), nextCursor: z.string().nullable() });
 
 // Storage management for organizations (Super-admin only)
-export const storageCategorySchema = z.enum(['all', 'imports', 'exports', 'reports', 'questions', 'logos', 'other']);
+export const storageCategorySchema = z.enum([
+  'all',
+  'imports',
+  'exports',
+  'reports',
+  'questions',
+  'audio',
+  'logos',
+  'other',
+]);
 export type StorageCategory = z.infer<typeof storageCategorySchema>;
 
 export const orgStorageFileSchema = z.object({
