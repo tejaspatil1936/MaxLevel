@@ -21,6 +21,7 @@ import { firebaseAuth } from '@/lib/firebase';
 import { qk } from '@/lib/query-keys';
 import { useSession } from '@/lib/session';
 import { useDeadlineSignal } from './deadline-signal';
+import { installInputGuard, type InputGuardDeps } from './input-guard';
 import { useServerStrikes } from './server-strikes';
 import { createAnswerSync, type AnswerSync, type PendingAnswer, type Rejection, type SyncStatus } from './answer-sync';
 import { ExamTimer, StrikeTally, SyncStatusView, TimeAnnouncements, useTimeAnnouncer } from './AttemptBar';
@@ -360,6 +361,8 @@ function AttemptExam({ payload, waiting }: OpenedExam) {
   );
   const enterFullscreen = () =>
     void document.documentElement.requestFullscreen?.().catch(() => setFullscreenNeeded(true));
+  // Scripted answers: untrusted key and option events are stopped, and the first is reported (automated_input).
+  useEffect(() => installInputGuard({ doc: document as unknown as InputGuardDeps['doc'], report }), [report]);
   // One screen only: with the lockdown on, a second screen is a strike and blocks the exam until it is unplugged.
   const display = useDisplayWatch(fullscreenRequired, report);
   // Tab past either end wraps round inside the page, so the keyboard never blurs the window (PR-05, A11Y-03).
