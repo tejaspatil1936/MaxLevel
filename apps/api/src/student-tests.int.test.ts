@@ -177,6 +177,7 @@ describe('student test page', () => {
         fullscreenRequired: false,
         cameraRequired: false,
         secondCamera: false,
+        audioProctoring: false,
       },
     });
     expect(res.raw).not.toContain('correctOptionIds');
@@ -206,6 +207,7 @@ describe('student test page', () => {
       fullscreenRequired: true,
       cameraRequired: true,
       secondCamera: false,
+      audioProctoring: false,
     });
   });
 

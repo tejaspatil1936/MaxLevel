@@ -35,7 +35,7 @@ describe('worker data access', () => {
       id: 't1',
       seriesId: 's1',
       sections: [{ id: 'x' }],
-      resolved: { maxStrikes: 3 },
+      resolved: { maxStrikes: 3, audioProctoring: false },
     });
     expect(await data.getGradedTest('org-a', 't2'), 'not published').toBeNull();
     expect(await data.answerKeys('org-a', 't1', ['q1', 'q2', 'q9'])).toEqual(
