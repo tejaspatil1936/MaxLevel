@@ -2,9 +2,9 @@ import localFont from 'next/font/local';
 
 // Self-hosted through next/font (13.4): files come from the @fontsource-variable packages.
 export const display = localFont({
-  src: '../node_modules/@fontsource-variable/big-shoulders-display/files/big-shoulders-display-latin-wght-normal.woff2',
+  src: '../node_modules/@fontsource-variable/unbounded/files/unbounded-latin-wght-normal.woff2',
   variable: '--font-display-face',
-  weight: '700 800',
+  weight: '200 900',
   display: 'swap',
 });
 

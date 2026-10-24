@@ -99,7 +99,7 @@
 
 :root {
   /* Typography (13.4) */
-  --font-display: var(--font-display-face), 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-display: var(--font-display-face), 'Unbounded', sans-serif;
   --font-text: var(--font-text-face), 'Atkinson Hyperlegible Next', system-ui, sans-serif;
   --font-code: var(--font-code-face), 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
   --text-display-1: clamp(4.5rem, 3rem + 6vw, 8rem);
