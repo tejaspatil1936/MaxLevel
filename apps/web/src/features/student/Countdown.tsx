@@ -24,11 +24,13 @@ export function Countdown({
   target,
   onElapsed,
   size = 'normal',
+  className,
 }: {
   label: string;
   target: number;
   onElapsed?: () => void;
-  size?: 'normal' | 'display';
+  size?: 'normal' | 'display' | 'compact';
+  className?: string;
 }) {
   const id = useId();
   const now = useServerNow();
@@ -40,17 +42,40 @@ export function Countdown({
     onElapsed?.();
   }, [remaining, onElapsed]);
   return (
-    <p className={cx('flex flex-wrap items-baseline gap-x-2', size === 'display' ? 'flex-col items-start' : '')}>
-      <span id={id} className="text-graphite">
+    <div
+      className={cx(
+        'flex',
+        size === 'display'
+          ? 'flex-col items-start gap-1'
+          : size === 'compact'
+            ? 'flex-row items-center gap-2'
+            : 'flex-wrap items-baseline gap-x-2',
+        className,
+      )}
+    >
+      <span
+        id={id}
+        className={cx(
+          'text-graphite',
+          size === 'display' ? 'text-body-small font-semibold' : size === 'compact' ? 'text-caption' : '',
+        )}
+      >
         {label}
       </span>
       <span
         role="timer"
         aria-labelledby={id}
-        className={cx('font-display font-extrabold tabular', size === 'display' ? 'text-display-1' : 'text-heading-2')}
+        className={cx(
+          'font-display font-bold tabular tracking-tight text-ink',
+          size === 'display'
+            ? 'text-timer leading-none'
+            : size === 'compact'
+              ? 'text-body font-bold'
+              : 'text-heading-2',
+        )}
       >
         {formatCountdown(remaining)}
       </span>
-    </p>
+    </div>
   );
 }

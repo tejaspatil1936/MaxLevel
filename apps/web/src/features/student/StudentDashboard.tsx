@@ -73,16 +73,28 @@ export function StudentDashboard() {
           </Group>
           <Group title={t('studentTests.completed')} items={d.completed}>
             {(test) => (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <Link
-                  href={resultUrl(test.attemptId)}
-                  className="inline-flex min-h-11 items-center text-heading-2 font-bold text-ballpoint underline"
-                >
-                  {testHeading(test)}
-                </Link>
-                <StatusPill tone={test.status === 'terminated' ? 'danger' : 'success'}>
-                  {t(FINISHED_STATUS[test.status])}
-                </StatusPill>
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-panel border border-rule bg-surface p-5 shadow-sm">
+                <div>
+                  <Link
+                    href={resultUrl(test.attemptId)}
+                    className="text-heading-2 font-bold text-ink transition-colors hover:text-ballpoint"
+                  >
+                    {testHeading(test)}
+                  </Link>
+                  <p className="mt-1 text-body-small text-graphite">{t(FINISHED_STATUS[test.status])}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <StatusPill tone={test.status === 'terminated' ? 'danger' : 'success'}>
+                    {t(FINISHED_STATUS[test.status])}
+                  </StatusPill>
+                  <Link
+                    href={resultUrl(test.attemptId)}
+                    className="inline-flex min-h-10 items-center justify-center gap-1 rounded-control border border-rule bg-surface px-4 text-body-small font-bold text-ink transition-colors hover:bg-ballpoint-wash"
+                  >
+                    <span>{t('studentTests.viewDetails')}</span>
+                    <span aria-hidden="true">&rarr;</span>
+                  </Link>
+                </div>
               </div>
             )}
           </Group>
@@ -104,20 +116,72 @@ function NextTest({
   onElapsed: () => void;
 }) {
   const id = useId();
+  const targetUrl = test.attemptId
+    ? `/exam/?attempt=${encodeURIComponent(test.attemptId)}`
+    : studentTestUrl(test.testId);
+
   return (
-    <section aria-labelledby={id} className="border-y-2 border-ink py-6">
-      <h2 id={id} className="text-body-small font-bold text-graphite">
-        {t('studentTests.nextTest')}
-      </h2>
-      <Link
-        href={studentTestUrl(test.testId)}
-        className="mt-2 inline-flex min-h-11 items-center font-display text-heading-1 font-bold text-ballpoint underline"
-      >
-        {testHeading(test)}
-      </Link>
-      <p className="mt-1 text-graphite">{formatWindow(test.window, timezone)}</p>
-      <div className="mt-4">
-        <Countdown {...countdownOf(test, live)} size="display" onElapsed={onElapsed} />
+    <section
+      aria-labelledby={id}
+      className="relative overflow-hidden rounded-panel border-2 border-rule bg-surface p-6 shadow-sm sm:p-8"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-caption font-bold uppercase tracking-wider text-graphite">
+            {t('studentTests.nextTest')}
+          </span>
+          <StatusPill tone={live ? 'success' : 'neutral'}>
+            {live ? (
+              <span className="flex items-center gap-1.5 font-bold">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-tick" />
+                {t('studentTests.live')}
+              </span>
+            ) : (
+              t('studentTests.upcoming')
+            )}
+          </StatusPill>
+        </div>
+        {live ? <span className="text-body-small text-graphite">{t('studentTests.lateWarning')}</span> : null}
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 items-start justify-between gap-6 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <Link
+            href={targetUrl}
+            className="inline-block font-display text-heading-1 font-bold text-ink transition-colors hover:text-ballpoint"
+          >
+            {testHeading(test)}
+          </Link>
+          {test.company ? <p className="mt-1 font-bold text-graphite">{test.company}</p> : null}
+
+          <div className="mt-4 flex flex-wrap gap-4 text-body-small text-graphite">
+            <div className="flex items-center gap-1.5 rounded-control border border-rule bg-surface-sunken px-3 py-1.5">
+              <span className="font-semibold text-ink">Window:</span>
+              <span>{formatWindow(test.window, timezone)}</span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-control border border-rule bg-surface-sunken px-3 py-1.5">
+              <span className="font-semibold text-ink">Duration:</span>
+              <span>{formatCount(test.durationMin)} mins</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-start gap-4 rounded-control border border-rule bg-surface-sunken p-5 md:items-end md:text-right">
+          <Countdown {...countdownOf(test, live)} size="display" onElapsed={onElapsed} />
+          <Link
+            href={targetUrl}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-ballpoint px-6 text-body font-bold text-on-ballpoint shadow transition-colors hover:bg-ink sm:w-auto"
+          >
+            <span>
+              {test.attemptId
+                ? t('studentTest.resume')
+                : live
+                  ? t('studentTests.startTest')
+                  : t('studentTests.viewDetails')}
+            </span>
+            <span aria-hidden="true">&rarr;</span>
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -139,13 +203,11 @@ function Group<T extends { testId: string }>({
       <h2 id={id} className="font-display text-heading-1 font-bold">
         {title}
       </h2>
-      <ul aria-labelledby={id} className="mt-3 border-t border-rule">
+      <div aria-labelledby={id} className="mt-4 flex flex-col gap-3">
         {items.map((item) => (
-          <li key={item.testId} className="border-b border-rule py-4">
-            {children(item)}
-          </li>
+          <div key={item.testId}>{children(item)}</div>
         ))}
-      </ul>
+      </div>
     </section>
   );
 }
@@ -161,21 +223,45 @@ function OpenItem({
   timezone: string;
   onElapsed: () => void;
 }) {
+  const targetUrl = test.attemptId
+    ? `/exam/?attempt=${encodeURIComponent(test.attemptId)}`
+    : studentTestUrl(test.testId);
+
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <Link
-          href={studentTestUrl(test.testId)}
-          className="inline-flex min-h-11 items-center text-heading-2 font-bold text-ballpoint underline"
-        >
-          {testHeading(test)}
-        </Link>
-        {test.company ? <p className="font-bold">{test.company}</p> : null}
-        <p className="mt-1">{t('studentTests.window', { window: formatWindow(test.window, timezone) })}</p>
-        <p>{t('studentTests.duration', { n: formatCount(test.durationMin) })}</p>
+    <div className="flex flex-col gap-4 rounded-panel border border-rule bg-surface p-5 shadow-sm transition-colors hover:border-ballpoint sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={targetUrl} className="text-heading-2 font-bold text-ink transition-colors hover:text-ballpoint">
+            {testHeading(test)}
+          </Link>
+          <StatusPill tone={live ? 'success' : 'neutral'}>
+            {live ? t('studentTests.live') : t('studentTests.upcoming')}
+          </StatusPill>
+        </div>
+        {test.company ? <p className="mt-0.5 font-bold text-graphite">{test.company}</p> : null}
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-small text-graphite">
+          <span>{t('studentTests.window', { window: formatWindow(test.window, timezone) })}</span>
+          <span>&bull;</span>
+          <span>{t('studentTests.duration', { n: formatCount(test.durationMin) })}</span>
+        </div>
       </div>
-      {/* An attempt in progress stays listed after the last start, so there is nothing to wait for. */}
-      <Countdown {...countdownOf(test, live)} onElapsed={test.attemptId ? undefined : onElapsed} />
+
+      <div className="flex flex-wrap items-center gap-4 sm:flex-nowrap">
+        <Countdown {...countdownOf(test, live)} size="compact" onElapsed={test.attemptId ? undefined : onElapsed} />
+        <Link
+          href={targetUrl}
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control bg-ballpoint px-5 text-body-small font-bold text-on-ballpoint shadow transition-colors hover:bg-ink"
+        >
+          <span>
+            {test.attemptId
+              ? t('studentTest.resume')
+              : live
+                ? t('studentTests.startTest')
+                : t('studentTests.viewDetails')}
+          </span>
+          <span aria-hidden="true">&rarr;</span>
+        </Link>
+      </div>
     </div>
   );
 }

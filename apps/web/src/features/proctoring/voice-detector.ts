@@ -15,14 +15,14 @@ export const VOICE_COOLDOWN_MS = 60_000;
 
 const WINDOW = VOICE_WINDOW_MS / VOICE_FRAME_MS;
 /** A voice frame stands this far above the noise floor (dB), and a whisper frame this far in its own band. */
-const VOICE_SNR_DB = 12;
-const WHISPER_SNR_DB = 10;
+const VOICE_SNR_DB = 8;
+const WHISPER_SNR_DB = 8;
 /** Quieter than this (dBFS) is never voice, whatever the floor: digital silence and a muted microphone. */
 const MIN_LEVEL_DB = -65;
 /** A frame whose two strongest bins hold more than this share of the band's energy is a tone, not a voice. */
 const MAX_TONALITY = 0.5;
 /** Share of the window that must be voice, and the level swing (dB) syllables give. */
-const MIN_ACTIVE_SHARE = 0.6;
+const MIN_ACTIVE_SHARE = 0.5;
 const MIN_SWING_DB = 4;
 /** The floor follows a quieter room at once and a louder one slowly (dB per frame). */
 const FLOOR_RISE_DB = 0.05;
