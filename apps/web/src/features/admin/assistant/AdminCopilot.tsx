@@ -53,6 +53,27 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('maxlevel_copilot_expanded') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleExpanded = () => {
+    setIsExpanded((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('maxlevel_copilot_expanded', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   const updateBtnMode = (newMode: ButtonMode) => {
     setBtnMode(newMode);
     try {
@@ -192,36 +213,47 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
 
           {btnMode === 'compact' && (
             <div className="relative group flex items-center">
+              {/* Hover bridge & action popup to the left of the button (seamless hover, zero dead gap) */}
+              <div className="absolute right-full top-1/2 -translate-y-1/2 pr-2.5 hidden group-hover:flex items-center z-10 before:absolute before:inset-y-0 before:-right-3 before:w-4">
+                <div className="flex items-center gap-1.5 rounded-full bg-surface border border-rule px-2.5 py-1 shadow-md whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateBtnMode('full');
+                    }}
+                    title={t('assistant.expand')}
+                    className="text-[11px] font-medium text-graphite hover:text-ink hover:bg-surface-sunken px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors"
+                  >
+                    <Maximize2 size={12} />
+                    <span>{t('assistant.expand')}</span>
+                  </button>
+                  <span className="text-rule">{'|'}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateBtnMode('hidden');
+                    }}
+                    title={t('assistant.hide')}
+                    className="text-[11px] font-medium text-graphite hover:text-redpen hover:bg-surface-sunken px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors"
+                  >
+                    <X size={12} />
+                    <span>{t('assistant.hide')}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Circular Floating Trigger Button */}
               <button
                 type="button"
                 onClick={() => setIsOpen(true)}
                 title={`${t('assistant.trigger')} (${t('assistant.shortcut')})`}
                 aria-label={t('assistant.trigger')}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-ballpoint text-on-ballpoint shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-ballpoint text-on-ballpoint shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 <Sparkles size={18} className="text-yellow-300 animate-pulse" aria-hidden="true" />
               </button>
-              <div className="absolute right-full mr-2 hidden items-center gap-1.5 rounded-full bg-surface border border-rule px-2.5 py-1 shadow-md group-hover:flex">
-                <button
-                  type="button"
-                  onClick={() => updateBtnMode('full')}
-                  title={t('assistant.expand')}
-                  className="text-[11px] font-medium text-graphite hover:text-ink flex items-center gap-1"
-                >
-                  <Maximize2 size={12} />
-                  <span>{t('assistant.expand')}</span>
-                </button>
-                <span className="text-rule">{'|'}</span>
-                <button
-                  type="button"
-                  onClick={() => updateBtnMode('hidden')}
-                  title={t('assistant.hide')}
-                  className="text-[11px] font-medium text-graphite hover:text-redpen flex items-center gap-1"
-                >
-                  <X size={12} />
-                  <span>{t('assistant.hide')}</span>
-                </button>
-              </div>
             </div>
           )}
 
@@ -248,7 +280,9 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
           role="dialog"
           aria-modal="true"
           aria-label={t('assistant.title')}
-          className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-rule bg-surface shadow-2xl sm:w-[440px]"
+          className={`fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-rule bg-surface shadow-2xl transition-all duration-300 ease-standard ${
+            isExpanded ? 'sm:w-[720px] lg:w-[860px]' : 'sm:w-[440px]'
+          }`}
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-rule bg-surface px-4 py-3">
@@ -267,15 +301,12 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
-                onClick={() => updateBtnMode(btnMode === 'compact' ? 'full' : 'compact')}
-                title={btnMode === 'compact' ? t('assistant.expand') : t('assistant.minimize')}
-                className="text-graphite"
+                onClick={toggleExpanded}
+                title={isExpanded ? t('assistant.minimizeDrawer') : t('assistant.expandDrawer')}
+                aria-label={isExpanded ? t('assistant.minimizeDrawer') : t('assistant.expandDrawer')}
+                className="text-graphite hover:text-ink"
               >
-                {btnMode === 'compact' ? (
-                  <Maximize2 size={16} aria-hidden="true" />
-                ) : (
-                  <Minimize2 size={16} aria-hidden="true" />
-                )}
+                {isExpanded ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}
               </Button>
               <Button
                 variant="ghost"

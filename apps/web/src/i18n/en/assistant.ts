@@ -23,6 +23,8 @@ export const assistant = {
   'assistant.minimize': 'Minimize button',
   'assistant.hide': 'Hide button',
   'assistant.expand': 'Expand button',
+  'assistant.expandDrawer': 'Expand to wide view',
+  'assistant.minimizeDrawer': 'Collapse to sidebar',
   'assistant.showButton': 'Show Assistant button',
   'assistant.rateLimited':
     'Rate limit reached (10 queries/minute). Please wait a moment before sending another message to conserve AI credits.',
