@@ -44,6 +44,7 @@ Log into GoDaddy DNS management for `maxlevel.in` and add:
 | **A** | `@` | `76.76.21.21` | Points `maxlevel.in` to Vercel |
 | **CNAME** | `www` | `cname.vercel-dns.com` | Points `www.maxlevel.in` to Vercel |
 | **CNAME** | `api` | `ghs.googlehosted.com` | Points `api.maxlevel.in` to Cloud Run |
+| **CNAME** | `auth` | `test-prep-e4d7f.web.app` | Points `auth.maxlevel.in` to Firebase Hosting (Auth popup handler) |
 
 ### Step 2.2: Map `api.maxlevel.in` in Google Cloud
 Run this command in PowerShell:
@@ -54,9 +55,10 @@ gcloud beta run domain-mappings create --service testprep-api --domain api.maxle
 
 ### Step 2.3: Authorize Domain in Firebase
 1. Open [Firebase Console -> Authentication -> Settings](https://console.firebase.google.com/project/test-prep-e4d7f/authentication/settings).
-2. Under **Authorized Domains**, add:
+2. Under **Authorized Domains**, ensure the following are present:
    - `maxlevel.in`
    - `www.maxlevel.in`
+   - `auth.maxlevel.in`
 
 ---
 
@@ -71,7 +73,7 @@ gcloud beta run domain-mappings create --service testprep-api --domain api.maxle
    - `NEXT_PUBLIC_API_URL` = `https://api.maxlevel.in`
    - `NEXT_PUBLIC_FIREBASE_PROJECT_ID` = `test-prep-e4d7f`
    - `NEXT_PUBLIC_FIREBASE_API_KEY` = `AIzaSyAuV33S7ub9yYfTXhL93ZysMFSHzybx3Pk`
-   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` = `test-prep-e4d7f.firebaseapp.com`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` = `auth.maxlevel.in`
    - `NEXT_PUBLIC_FIREBASE_DATABASE_URL` = `https://test-prep-e4d7f-default-rtdb.asia-southeast1.firebasedatabase.app`
    - `NEXT_PUBLIC_ACCESSIBILITY_EMAIL` = `admin@mitaoe.ac.in`
 4. Under **Settings -> Domains**, add `maxlevel.in`.
