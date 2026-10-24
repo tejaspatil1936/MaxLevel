@@ -35,11 +35,14 @@ export interface CheckedDraft {
   refersToFigure?: boolean;
 }
 
-const FIGURE_WORD = /\b(?:figure|diagram|graph|chart|picture|image)\b/i;
+const FIGURE_WORD = /\b(?:figure(?!\s+out\b)|diagram|chart|picture|image)\b/i;
 
-/** Whether the prompt names a figure: one of the figure words as a whole word, any case (`configure` does not). */
+const VISUAL_GRAPH =
+  /\b(?:(?:bar|line|pie|scatter|coordinate|area)\s+graphs?|graphs?\s+(?:below|above|shown|given|attached|depicted|illustrated|provided|[0-9]+\b)|(?:look\s+at|refer\s+to|from|as\s+shown\s+in|shown\s+in|as\s+per|based\s+on|see|study|observe|according\s+to)\s+(?:the\s+)?graphs?|(?:given|following|above|below|shown|attached)\s+graphs?|graphs?\s+(?:shows|depicts|illustrates|represents|indicates|displays)|\(\s*graphs?\s*\))\b/i;
+
+/** Whether the prompt names a figure: one of the figure words as a whole word, any case (`configure` does not; CS/math data-structure "graph" does not). */
 export function mentionsFigure(prompt: string): boolean {
-  return FIGURE_WORD.test(prompt);
+  return FIGURE_WORD.test(prompt) || VISUAL_GRAPH.test(prompt);
 }
 
 /**
@@ -64,7 +67,9 @@ export function importProblems(
       .sort((a, b) => a.order - b.order)[0];
     if (earlier) problems.push({ code: 'DUPLICATE_IN_IMPORT', of: earlier.order });
   }
-  if ((draft.refersToFigure === true || mentionsFigure(draft.prompt)) && draft.images.length === 0) {
+  const promptNeedsFigure = mentionsFigure(draft.prompt);
+  const modelSaysFigure = draft.refersToFigure === true && !(/\bgraphs?\b/i.test(draft.prompt) && !promptNeedsFigure);
+  if ((modelSaysFigure || promptNeedsFigure) && draft.images.length === 0) {
     problems.push({ code: 'MISSING_FIGURE' });
   }
   const rank = (p: ImportProblem) => IMPORT_PROBLEM_CODES.indexOf(p.code);

@@ -29,6 +29,7 @@ import { z } from 'zod';
 import type { ImportJobRecord } from '../data/imports';
 import { AppError, notFound } from '../errors';
 import { ORG_ID } from '../plugins/auth';
+import { pendingFlags } from '../services/import-drafts';
 import { importPageLinks, importSources, importUploadLinks } from '../services/import-uploads';
 import type { ApiContext } from './context';
 import { originOf } from './exports';
@@ -259,7 +260,14 @@ export function importRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           await queue
             .enqueue(importRetryTask(orgId, job.id, `requeue-${job.queuedAt}`))
             .catch((err: unknown) => req.log.warn({ err, jobId: job.id }, 'import.requeue_failed'));
-        const drafts = job.status === 'ready' ? await data.imports.listDrafts(orgId, job.id) : [];
+        let drafts = job.status === 'ready' ? await data.imports.listDrafts(orgId, job.id) : [];
+        if (job.status === 'ready') {
+          const testQuestions = await data.questions.listQuestions(orgId, job.testId);
+          const flags = pendingFlags(drafts, testQuestions);
+          drafts = drafts.map((d) =>
+            d.status === 'pending' && flags.has(d.id) ? { ...d, flags: flags.get(d.id)! } : d,
+          );
+        }
         const view: ImportJobView = {
           id: job.id,
           testId: job.testId,

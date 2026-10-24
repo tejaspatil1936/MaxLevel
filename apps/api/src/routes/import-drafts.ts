@@ -138,7 +138,12 @@ export function importDraftRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
         const orgId = req.orgId!;
         const { job, testQuestions } = await readyJob(orgId, req.params.id);
         const ids = [...new Set(req.body.draftIds)];
-        const before = pendingListed(await data.imports.listDrafts(orgId, job.id), ids);
+        const allDrafts = await data.imports.listDrafts(orgId, job.id);
+        const flags = pendingFlags(allDrafts, testQuestions);
+        const fresh = allDrafts.map((d) =>
+          d.status === 'pending' && flags.has(d.id) ? { ...d, flags: flags.get(d.id)! } : d,
+        );
+        const before = pendingListed(fresh, ids);
         refuseFlagged(before);
         const test = await data.tests.getTest(orgId, job.testId);
         if (!test) throw notFound('Test');
@@ -160,7 +165,11 @@ export function importDraftRoutes(ctx: ApiContext): FastifyPluginAsyncZod {
           name ? test.sections.find((s) => s.name.trim().toLowerCase() === name.trim().toLowerCase())?.id : undefined;
         return db.runTransaction(async (tx) => {
           const drafts = await data.imports.readDrafts(orgId, tx, job.id);
-          const listed = pendingListed(drafts, ids);
+          const txFlags = pendingFlags(drafts, testQuestions);
+          const txFresh = drafts.map((d) =>
+            d.status === 'pending' && txFlags.has(d.id) ? { ...d, flags: txFlags.get(d.id)! } : d,
+          );
+          const listed = pendingListed(txFresh, ids);
           refuseFlagged(listed);
           const now = clock.now();
           const last = Math.max(0, ...testQuestions.map((q) => q.order));

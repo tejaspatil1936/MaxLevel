@@ -97,7 +97,27 @@ describe('importProblems', () => {
     expect(mentionsFigure('Disfigured shapes are not counted.')).toBe(false);
     expect(mentionsFigure('The bar chart shows sales.')).toBe(true);
     expect(mentionsFigure('(see image)')).toBe(true);
+    expect(mentionsFigure('Which data structure is used to implement Breadth First Search (BFS) of a graph?')).toBe(
+      false,
+    );
+    expect(mentionsFigure('A schedule is conflict serializable if and only if its precedence graph is:')).toBe(false);
     expect(codes(check({ prompt: 'How do you configure the router?' }))).toEqual([]);
+    expect(
+      codes(
+        check({
+          prompt: 'Which data structure is used to implement Breadth First Search (BFS) of a graph?',
+          refersToFigure: true,
+        }),
+      ),
+    ).toEqual([]);
+    expect(
+      codes(
+        check({
+          prompt: 'A schedule is conflict serializable if and only if its precedence graph is:',
+          refersToFigure: true,
+        }),
+      ),
+    ).toEqual([]);
   });
 
   it('IMP-09 an image with empty alt text is IMAGE_WITHOUT_ALT with its 1-based number', () => {
