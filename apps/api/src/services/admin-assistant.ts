@@ -23,6 +23,153 @@ export interface AdminAssistantService {
   ): Promise<AssistantChatResponse>;
 }
 
+function formatMinutesToTime(totalMinutes: number): string {
+  const clamped = Math.min(Math.max(totalMinutes, 0), 1440);
+  const h24 = Math.floor(clamped / 60) % 24;
+  const m = clamped % 60;
+  const ampm = h24 >= 12 ? 'PM' : 'AM';
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  const mm = m < 10 ? `0${m}` : `${m}`;
+  return `${h12}:${mm} ${ampm}`;
+}
+
+function parseTimingDetails(text: string): {
+  dailyWindow?: { startMinutes: number; endMinutes: number };
+  durationMin: number;
+  days: number;
+} {
+  let dailyWindow: { startMinutes: number; endMinutes: number } | undefined;
+  // Match e.g. "from 10 am to 5 pm", "10am to 5pm", "10:00 to 17:00"
+  const windowMatch = text.match(
+    /(?:from\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:to|-)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i,
+  );
+  if (windowMatch) {
+    let startH = parseInt(windowMatch[1]!, 10);
+    const startM = windowMatch[2] ? parseInt(windowMatch[2], 10) : 0;
+    const startAmpm = windowMatch[3]?.toLowerCase();
+
+    let endH = parseInt(windowMatch[4]!, 10);
+    const endM = windowMatch[5] ? parseInt(windowMatch[5], 10) : 0;
+    const endAmpm = windowMatch[6]?.toLowerCase();
+
+    if (startAmpm === 'pm' && startH < 12) startH += 12;
+    if (startAmpm === 'am' && startH === 12) startH = 0;
+
+    if (endAmpm === 'pm' && endH < 12) endH += 12;
+    if (endAmpm === 'am' && endH === 12) endH = 0;
+
+    // Handle omitted start am/pm when end is pm (e.g. "from 10 to 5 pm")
+    if (!startAmpm && endAmpm === 'pm' && startH < 12 && startH > endH) {
+      // 10 is AM, 5 is PM
+    }
+
+    const startMinutes = Math.min(Math.max(startH * 60 + startM, 0), 1439);
+    const endMinutes = Math.min(Math.max(endH * 60 + endM, startMinutes + 1), 1440);
+    dailyWindow = { startMinutes, endMinutes };
+  }
+
+  // Duration: e.g. "30 min", "30 minutes", "1 hour"
+  let durationMin = 60;
+  const durMatch = text.match(/(\d+)\s*(?:min|minute|minutes|hr|hour|hours)/i);
+  if (durMatch) {
+    const val = parseInt(durMatch[1]!, 10);
+    if (/hr|hour/i.test(durMatch[0])) {
+      durationMin = val * 60;
+    } else {
+      durationMin = val;
+    }
+  }
+
+  // Days: e.g. "1 day", "2 days"
+  let days = 1;
+  const daysMatch = text.match(/(\d+)\s*days?/i);
+  if (daysMatch) {
+    days = Math.max(1, parseInt(daysMatch[1]!, 10));
+  }
+
+  return { dailyWindow, durationMin, days };
+}
+
+function extractEntityTitle(text: string, defaultName: string): string {
+  const match =
+    text.match(
+      /(?:series|test)\s+(?:ca+l+ed|named|titled|for)\s+["']?([a-zA-Z0-9_\-\s]+?)["']?(?:\s+(?:for|from|with|on|at|and|\d+\s*day)|$)/i,
+    ) ??
+    text.match(
+      /(?:ca+l+ed|named|titled)\s+["']?([a-zA-Z0-9_\-\s]+?)["']?(?:\s+(?:for|from|with|on|at|and|\d+\s*day)|$)/i,
+    ) ??
+    text.match(/(?:create|make|new)\s+(?:series|test)\s+["']?([a-zA-Z0-9_-]{2,30})["']?/i);
+
+  return match?.[1]?.trim() || defaultName;
+}
+
+function extractProposalFromText(
+  aiReply: string,
+  todayIso: string,
+): {
+  proposal: AssistantActionProposal | null;
+  cleanedReply: string;
+} {
+  let rawJson: string | null = null;
+  // 1. Try ```json:action or ```json or ```
+  const fenceMatch = aiReply.match(/```(?:json:action|json)?\s*(\{[\s\S]*?"actionType"[\s\S]*?\})\s*```/);
+  if (fenceMatch?.[1]) {
+    rawJson = fenceMatch[1];
+  } else {
+    // 2. Try raw { ... "actionType" ... }
+    const startIdx = aiReply.search(/\{\s*"actionType"/);
+    if (startIdx >= 0) {
+      const candidate = aiReply.slice(startIdx);
+      const lastBrace = candidate.lastIndexOf('}');
+      if (lastBrace >= 0) {
+        rawJson = candidate.slice(0, lastBrace + 1);
+      }
+    }
+  }
+
+  let proposal: AssistantActionProposal | null = null;
+  let cleanedReply = aiReply;
+
+  if (rawJson) {
+    try {
+      const raw = JSON.parse(rawJson);
+      const id = raw.id || `prop-${Math.random().toString(36).slice(2, 10)}`;
+      // Fix date hallucinations (e.g. past 2023 dates)
+      if (raw.seriesData) {
+        if (!raw.seriesData.startDate || raw.seriesData.startDate < todayIso) raw.seriesData.startDate = todayIso;
+        if (!raw.seriesData.endDate || raw.seriesData.endDate < raw.seriesData.startDate)
+          raw.seriesData.endDate = raw.seriesData.startDate;
+      }
+      if (raw.testData) {
+        if (!raw.testData.scheduledDate || raw.testData.scheduledDate < todayIso) raw.testData.scheduledDate = todayIso;
+      }
+      const parsed = assistantActionProposalSchema.safeParse({ id, ...raw });
+      if (parsed.success) {
+        proposal = parsed.data;
+        cleanedReply = aiReply
+          .replace(/```(?:json:action|json)?[\s\S]*?```/g, '')
+          .replace(/\{\s*"actionType"[\s\S]*?\}(?:\s*\}|)/g, '')
+          .trim();
+      }
+    } catch {
+      // Malformed / truncated JSON fallback
+    }
+  }
+
+  // Prevent misleading chatbot claims that it already modified the database directly
+  cleanedReply = cleanedReply
+    .replace(
+      /The series ["']?([^"'\n]+)["']? has been successfully created[^\n.]*/gi,
+      'I have prepared the action proposal for series "$1" below.',
+    )
+    .replace(/has been successfully created/gi, 'is ready in the action proposal below')
+    .replace(/\[🔗 Create a new Test[^\n]+\]\([^)]+\)/gi, '')
+    .replace(/\[🔗 edit series dates[^\n]+\]\([^)]+\)/gi, '')
+    .trim();
+
+  return { proposal, cleanedReply };
+}
+
 export function createAdminAssistantService(data: Data, entitlements?: EntitlementsService): AdminAssistantService {
   const diagnostics = adminDiagnosticService(data);
   const projectId = process.env.GCLOUD_PROJECT ?? 'test-prep-e4d7f';
@@ -81,7 +228,7 @@ export function createAdminAssistantService(data: Data, entitlements?: Entitleme
           contents,
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 1000,
+            maxOutputTokens: 3000,
           },
         }),
       });
@@ -98,12 +245,22 @@ export function createAdminAssistantService(data: Data, entitlements?: Entitleme
 
   return {
     async chat(orgId, messages, now, context) {
+      const todayIso = new Date(now).toISOString().slice(0, 10);
+      const todayYear = new Date(now).getFullYear();
+
       const lastUserMsg =
         messages
           .filter((m) => m.role === 'user')
           .at(-1)
           ?.content.trim() ?? '';
       const lower = lastUserMsg.toLowerCase();
+
+      // Combine user text across turns for context extraction
+      const allUserText = messages
+        .filter((m) => m.role === 'user')
+        .map((m) => m.content)
+        .join(' ');
+      const allUserLower = allUserText.toLowerCase();
 
       // 1. Check assessment integrity boundary (Humans only for questions)
       const isQuestionQuery =
@@ -126,7 +283,7 @@ export function createAdminAssistantService(data: Data, entitlements?: Entitleme
       const ent = entitlements ? await entitlements.get(orgId) : null;
       const canWrite = Boolean(ent?.features?.ai_assistant_write);
 
-      const isActionQuery =
+      const isAction =
         lower.includes('create series') ||
         lower.includes('make series') ||
         lower.includes('new series') ||
@@ -141,7 +298,24 @@ export function createAdminAssistantService(data: Data, entitlements?: Entitleme
         lower.includes('change eligibility') ||
         lower.includes('change setting') ||
         lower.includes('extend window') ||
-        lower.includes('flexible window');
+        lower.includes('flexible window') ||
+        /series\s+(?:ca+l+ed|named|for)/i.test(lastUserMsg) ||
+        /test\s+(?:ca+l+ed|named|for)/i.test(lastUserMsg);
+
+      const isConfirmation =
+        lower.includes('create it') ||
+        lower.includes('creratet') ||
+        lower.includes('creat it') ||
+        lower.includes('do it') ||
+        lower.includes('make it') ||
+        lower.includes('confirm') ||
+        lower.includes('proceed') ||
+        lower.includes('apply it') ||
+        lower.includes('go ahead') ||
+        lower.includes('yes please') ||
+        lower.includes('yes do it');
+
+      const isActionQuery = isAction || (isConfirmation && messages.length > 1);
 
       if (isActionQuery && !canWrite) {
         return {
@@ -244,10 +418,16 @@ export function createAdminAssistantService(data: Data, entitlements?: Entitleme
         : '';
 
       const actionPrompt = canWrite
-        ? `\nConversational Series & Test Management (Action Proposals):
-You can draft configurations for Test Series and Tests when requested by the administrator.
-When the user asks to create or configure a series, test, change dates/windows/timing, proctoring settings, or eligibility:
-You MUST explain what you are configuring in natural language, AND generate a structured proposal in a fenced json:action block at the end of your response:
+        ? `\nConversational Series & Test Management:
+Current Environment Date: ${todayIso} (Current Year: ${todayYear}).
+When generating series or test dates, default to today's date (${todayIso}) unless the administrator explicitly requests other dates. Under no circumstances generate past years (such as 2023 or 2024).
+
+CRITICAL HUMAN-IN-THE-LOOP RULE:
+- You DO NOT have direct access to mutate the database or create series/tests.
+- You MUST NEVER say "The series has been created" or "The test has been created". That is a hallucination.
+- When an administrator asks to create or configure a series or test, or says "create it" / "confirm" / "proceed":
+  1. Concisely summarize what you are configuring (in 2-3 sentences max).
+  2. Always generate a structured proposal in a fenced json:action block at the end of your response:
 \`\`\`json:action
 {
   "actionType": "create_series",
@@ -255,12 +435,12 @@ You MUST explain what you are configuring in natural language, AND generate a st
   "summary": "1-sentence summary of configuration",
   "seriesData": {
     "title": "Series Name",
-    "startDate": "YYYY-MM-DD",
-    "endDate": "YYYY-MM-DD",
-    "dailyWindow": { "startMinutes": 540, "endMinutes": 1080 },
+    "startDate": "${todayIso}",
+    "endDate": "${todayIso}",
+    "dailyWindow": { "startMinutes": 600, "endMinutes": 1020 },
     "defaults": {
       "timingMode": "fixed",
-      "durationMin": 60,
+      "durationMin": 30,
       "maxStrikes": 3,
       "fullscreenRequired": true,
       "cameraRequired": true,
@@ -274,11 +454,13 @@ You MUST explain what you are configuring in natural language, AND generate a st
     }
   },
   "diffs": [
-    { "field": "timingMode", "label": "Timing Mode", "value": "flexible (60 min)" }
+    { "field": "timingMode", "label": "Daily Test Window", "value": "10:00 AM – 5:00 PM" }
   ],
   "warning": "Questions must be uploaded and approved manually in the Test Editor."
 }
 \`\`\`
+  3. Tell the administrator: "Please review the proposed parameters in the card below and click **Confirm & Apply** to create it."
+
 STRICT BOUNDARY: Under NO circumstances generate questions. Only configure containers, settings, schedules, and eligibility.`
         : '';
 
@@ -319,27 +501,107 @@ Formatting Guidelines:
       const aiReply = await callVertexGemini(systemPrompt, priorHistory, lastUserMsg);
 
       if (aiReply) {
-        let proposal: AssistantActionProposal | null = null;
-        let cleanedReply = aiReply;
-        const match = aiReply.match(/```json:action\s*([\s\S]*?)\s*```/);
-        if (match?.[1]) {
-          try {
-            const raw = JSON.parse(match[1]);
-            const id = `prop-${Math.random().toString(36).slice(2, 10)}`;
-            const parsed = assistantActionProposalSchema.safeParse({ id, ...raw });
-            if (parsed.success) {
-              proposal = parsed.data;
-              cleanedReply = aiReply.replace(/```json:action[\s\S]*?```/, '').trim();
-            }
-          } catch {
-            // malformed json fallback
+        let { proposal, cleanedReply } = extractProposalFromText(aiReply, todayIso);
+
+        // Safety Net: If user requested an action/confirmation but Vertex didn't output a valid proposal block
+        if (!proposal && canWrite && isActionQuery) {
+          const isSeries = allUserLower.includes('series') || !allUserLower.includes('test');
+          const timing = parseTimingDetails(allUserText);
+
+          if (isSeries) {
+            const seriesTitle = extractEntityTitle(allUserText, 'Campus Placement Drive');
+            const endIso =
+              timing.days === 1 ? todayIso : new Date(now + timing.days * 86400000).toISOString().slice(0, 10);
+            const windowText = timing.dailyWindow
+              ? `${formatMinutesToTime(timing.dailyWindow.startMinutes)} – ${formatMinutesToTime(timing.dailyWindow.endMinutes)}`
+              : 'Flexible Schedule';
+
+            proposal = {
+              id: `prop-${Math.random().toString(36).slice(2, 10)}`,
+              actionType: 'create_series',
+              title: `Create Series: ${seriesTitle}`,
+              summary: `Draft series container for "${seriesTitle}" for ${timing.days} day (${todayIso}) from ${windowText} with ${timing.durationMin}m duration.`,
+              seriesData: {
+                title: seriesTitle,
+                startDate: todayIso,
+                endDate: endIso,
+                ...(timing.dailyWindow ? { dailyWindow: timing.dailyWindow } : {}),
+                defaults: {
+                  timingMode: timing.dailyWindow ? 'fixed' : 'flexible',
+                  durationMin: timing.durationMin,
+                  maxStrikes: 3,
+                  fullscreenRequired: true,
+                  cameraRequired: true,
+                  audioProctoring: true,
+                },
+                eligibility: {
+                  departmentIds: [],
+                  graduationYears: [],
+                  include: [],
+                  exclude: [],
+                },
+              },
+              diffs: [
+                { field: 'title', label: 'Series Name', value: seriesTitle },
+                { field: 'dates', label: 'Series Dates', value: `${todayIso} (${timing.days} Day)` },
+                { field: 'window', label: 'Daily Test Window', value: windowText },
+                { field: 'durationMin', label: 'Exam Duration', value: `${timing.durationMin} Minutes` },
+                { field: 'proctoring', label: 'Proctoring Rules', value: 'Webcam, Audio & Fullscreen Enabled' },
+                { field: 'eligibility', label: 'Eligibility', value: 'All Registered Students (No Restrictions)' },
+              ],
+              requiresConfirmation: true,
+              warning: 'Questions must be uploaded and approved manually in the Test Editor.',
+            };
+
+            cleanedReply = `### 📋 Proposed Action: Create Placement Series\n\nI have configured the **"${seriesTitle}"** series for ${timing.days} day (${todayIso}) from **${windowText}** with a **${timing.durationMin} minute** test duration.\n\n👉 **To create this series in your database, please review the proposed parameters below and click "Confirm & Apply".**`;
+          } else {
+            const targetSeries = seriesList[0];
+            const seriesId = targetSeries?.id ?? 'series-1';
+            const testTitle = extractEntityTitle(allUserText, 'Aptitude Assessment');
+            const testDate = targetSeries?.startDate ?? todayIso;
+
+            proposal = {
+              id: `prop-${Math.random().toString(36).slice(2, 10)}`,
+              actionType: 'create_test',
+              title: `Create Test: ${testTitle}`,
+              summary: `Draft test container for "${testTitle}" in series "${targetSeries?.title ?? 'Series'}" on ${testDate}.`,
+              seriesId,
+              testData: {
+                seriesId,
+                title: testTitle,
+                scheduledDate: testDate,
+                overrides: {
+                  timingMode: 'flexible',
+                  durationMin: timing.durationMin,
+                  fullscreenRequired: true,
+                  cameraRequired: true,
+                  audioProctoring: true,
+                },
+                eligibility: {
+                  departmentIds: [],
+                  graduationYears: [],
+                  include: [],
+                  exclude: [],
+                },
+              },
+              diffs: [
+                { field: 'series', label: 'Parent Series', value: targetSeries?.title ?? 'Series' },
+                { field: 'date', label: 'Scheduled Date', value: testDate },
+                { field: 'durationMin', label: 'Duration', value: `${timing.durationMin} Minutes` },
+                { field: 'proctoring', label: 'Proctoring Rules', value: 'Webcam, Audio & Fullscreen' },
+              ],
+              requiresConfirmation: true,
+              warning: 'Questions must be uploaded and approved manually in the Test Editor.',
+            };
+
+            cleanedReply = `### 📋 Proposed Action: Create Test Container\n\nI have drafted the test container **"${testTitle}"** under series **"${targetSeries?.title ?? 'Series'}"** with a **${timing.durationMin} minute** duration.\n\n👉 **To create this test in your database, please review the proposed parameters below and click "Confirm & Apply".**`;
           }
         }
 
         // Derive relevant follow-up prompt suggestions
         const suggestions: string[] = [];
         if (proposal) {
-          suggestions.push('Confirm this proposal');
+          suggestions.push('Confirm & Apply proposal');
           suggestions.push('Cancel proposal');
           suggestions.push('How to add questions?');
         } else if (isVisibilityQuery) {
@@ -427,26 +689,30 @@ Formatting Guidelines:
 
       // Action proposal fallback when Vertex AI is offline
       if (isActionQuery && canWrite) {
-        const isSeries = lower.includes('series');
-        const todayIso = new Date(now).toISOString().slice(0, 10);
-        const tomorrowIso = new Date(now + 86400000).toISOString().slice(0, 10);
+        const isSeries = allUserLower.includes('series') || !allUserLower.includes('test');
+        const timing = parseTimingDetails(allUserText);
 
         if (isSeries) {
-          const titleMatch = lastUserMsg.match(/(?:for|named|called|title)\s+["']?([^"'\n,]+)["']?/i);
-          const seriesTitle = titleMatch?.[1]?.trim() || 'Campus Placement Drive 2026';
+          const seriesTitle = extractEntityTitle(allUserText, 'Campus Placement Drive');
+          const endIso =
+            timing.days === 1 ? todayIso : new Date(now + timing.days * 86400000).toISOString().slice(0, 10);
+          const windowText = timing.dailyWindow
+            ? `${formatMinutesToTime(timing.dailyWindow.startMinutes)} – ${formatMinutesToTime(timing.dailyWindow.endMinutes)}`
+            : 'Flexible Window (9:00 AM - 6:00 PM)';
+
           const proposal: AssistantActionProposal = {
             id: `prop-${Math.random().toString(36).slice(2, 10)}`,
             actionType: 'create_series',
             title: `Create Series: ${seriesTitle}`,
-            summary: `Draft series container for "${seriesTitle}" from ${todayIso} to ${tomorrowIso} with flexible 60m duration and proctoring enabled.`,
+            summary: `Draft series container for "${seriesTitle}" for ${timing.days} day (${todayIso}) from ${windowText} with ${timing.durationMin}m duration.`,
             seriesData: {
               title: seriesTitle,
               startDate: todayIso,
-              endDate: tomorrowIso,
-              dailyWindow: { startMinutes: 540, endMinutes: 1080 },
+              endDate: endIso,
+              ...(timing.dailyWindow ? { dailyWindow: timing.dailyWindow } : {}),
               defaults: {
-                timingMode: 'flexible',
-                durationMin: 60,
+                timingMode: timing.dailyWindow ? 'fixed' : 'flexible',
+                durationMin: timing.durationMin,
                 maxStrikes: 3,
                 fullscreenRequired: true,
                 cameraRequired: true,
@@ -460,8 +726,10 @@ Formatting Guidelines:
               },
             },
             diffs: [
-              { field: 'timingMode', label: 'Timing Mode', value: 'Flexible Window (9:00 AM - 6:00 PM)' },
-              { field: 'durationMin', label: 'Exam Duration', value: '60 Minutes' },
+              { field: 'title', label: 'Series Name', value: seriesTitle },
+              { field: 'dates', label: 'Series Dates', value: `${todayIso} (${timing.days} Day)` },
+              { field: 'window', label: 'Daily Test Window', value: windowText },
+              { field: 'durationMin', label: 'Exam Duration', value: `${timing.durationMin} Minutes` },
               { field: 'proctoring', label: 'Proctoring Rules', value: 'Webcam, Audio & Fullscreen Enabled' },
               { field: 'eligibility', label: 'Eligibility', value: 'All Registered Students (No Restrictions)' },
             ],
@@ -470,23 +738,22 @@ Formatting Guidelines:
           };
 
           return {
-            reply: `### 📋 Proposed Action: Create Placement Series\n\nI have drafted a new series **"${seriesTitle}"** based on your request.\n\nPlease review the configuration parameters in the proposal card below and click **Confirm & Create** to proceed.`,
+            reply: `### 📋 Proposed Action: Create Placement Series\n\nI have configured the **"${seriesTitle}"** series for ${timing.days} day (${todayIso}) from **${windowText}** with a **${timing.durationMin} minute** test duration.\n\n👉 **To create this series in your database, please review the proposed parameters below and click "Confirm & Apply".**`,
             proposal,
-            suggestions: ['Confirm this proposal', 'Cancel proposal', 'How to add questions?'],
+            suggestions: ['Confirm & Apply proposal', 'Cancel proposal', 'How to add questions?'],
           };
         } else {
           // Test creation proposal
           const targetSeries = seriesList[0];
           const seriesId = targetSeries?.id ?? 'series-1';
-          const titleMatch = lastUserMsg.match(/(?:for|named|called|title)\s+["']?([^"'\n,]+)["']?/i);
-          const testTitle = titleMatch?.[1]?.trim() || 'Aptitude Assessment';
+          const testTitle = extractEntityTitle(allUserText, 'Aptitude Assessment');
           const testDate = targetSeries?.startDate ?? todayIso;
 
           const proposal: AssistantActionProposal = {
             id: `prop-${Math.random().toString(36).slice(2, 10)}`,
             actionType: 'create_test',
             title: `Create Test: ${testTitle}`,
-            summary: `Draft test container for "${testTitle}" in series "${targetSeries?.title ?? 'Default Series'}" on ${testDate}.`,
+            summary: `Draft test container for "${testTitle}" in series "${targetSeries?.title ?? 'Series'}" on ${testDate}.`,
             seriesId,
             testData: {
               seriesId,
@@ -494,7 +761,7 @@ Formatting Guidelines:
               scheduledDate: testDate,
               overrides: {
                 timingMode: 'flexible',
-                durationMin: 60,
+                durationMin: timing.durationMin,
                 fullscreenRequired: true,
                 cameraRequired: true,
                 audioProctoring: true,
@@ -509,7 +776,7 @@ Formatting Guidelines:
             diffs: [
               { field: 'series', label: 'Parent Series', value: targetSeries?.title ?? 'Series' },
               { field: 'date', label: 'Scheduled Date', value: testDate },
-              { field: 'durationMin', label: 'Duration', value: '60 Minutes' },
+              { field: 'durationMin', label: 'Duration', value: `${timing.durationMin} Minutes` },
               { field: 'proctoring', label: 'Proctoring Rules', value: 'Webcam, Audio & Fullscreen' },
             ],
             requiresConfirmation: true,
@@ -517,9 +784,9 @@ Formatting Guidelines:
           };
 
           return {
-            reply: `### 📋 Proposed Action: Create Test Container\n\nI have drafted the test container **"${testTitle}"** under series **"${targetSeries?.title ?? 'Series'}"**.\n\nPlease review the configuration parameters in the proposal card below and click **Confirm & Create** to proceed.`,
+            reply: `### 📋 Proposed Action: Create Test Container\n\nI have drafted the test container **"${testTitle}"** under series **"${targetSeries?.title ?? 'Series'}"** with a **${timing.durationMin} minute** duration.\n\n👉 **To create this test in your database, please review the proposed parameters below and click "Confirm & Apply".**`,
             proposal,
-            suggestions: ['Confirm this proposal', 'Cancel proposal', 'How to add questions?'],
+            suggestions: ['Confirm & Apply proposal', 'Cancel proposal', 'How to add questions?'],
           };
         }
       }

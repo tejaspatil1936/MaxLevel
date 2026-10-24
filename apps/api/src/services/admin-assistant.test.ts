@@ -177,4 +177,53 @@ describe('createAdminAssistantService', () => {
     expect(res.proposal?.testData?.title).toBe('Cognitive Aptitude Round 1');
     expect(res.proposal?.testData?.seriesId).toBe('series-1');
   });
+
+  it('creates action proposal with timing window and duration for complex series request ("gate" 10am-5pm 30m)', async () => {
+    const mockEntitlements = {
+      get: async () => ({ features: { ai_assistant_write: true } }),
+    } as unknown as EntitlementsService;
+    const service = createAdminAssistantService(mockData(), mockEntitlements);
+    const res = await service.chat(
+      'org-1',
+      [
+        {
+          role: 'user',
+          content: 'create series caalled gate for 1 day 1 test only from 10 am to 5 pm thats it 30 min test',
+        },
+      ],
+      1700000000000,
+    );
+    expect(res.proposal).toBeDefined();
+    expect(res.proposal?.actionType).toBe('create_series');
+    expect(res.proposal?.seriesData?.title).toBe('gate');
+    expect(res.proposal?.seriesData?.startDate).toBe(res.proposal?.seriesData?.endDate); // 1 day
+    expect(res.proposal?.seriesData?.dailyWindow).toEqual({ startMinutes: 600, endMinutes: 1020 });
+    expect(res.proposal?.seriesData?.defaults?.durationMin).toBe(30);
+    expect(res.reply).toContain('gate');
+    expect(res.reply).toContain('Confirm & Apply');
+  });
+
+  it('handles follow-up confirmation ("okay creratet it") by retaining proposal from context', async () => {
+    const mockEntitlements = {
+      get: async () => ({ features: { ai_assistant_write: true } }),
+    } as unknown as EntitlementsService;
+    const service = createAdminAssistantService(mockData(), mockEntitlements);
+    const res = await service.chat(
+      'org-1',
+      [
+        {
+          role: 'user',
+          content: 'create series caalled gate for 1 day 1 test only from 10 am to 5 pm thats it 30 min test',
+        },
+        { role: 'assistant', content: 'Here is the draft for gate series.' },
+        { role: 'user', content: 'okay creratet it' },
+      ],
+      1700000000000,
+    );
+    expect(res.proposal).toBeDefined();
+    expect(res.proposal?.actionType).toBe('create_series');
+    expect(res.proposal?.seriesData?.title).toBe('gate');
+    expect(res.proposal?.seriesData?.dailyWindow).toEqual({ startMinutes: 600, endMinutes: 1020 });
+    expect(res.reply).toContain('Confirm & Apply');
+  });
 });

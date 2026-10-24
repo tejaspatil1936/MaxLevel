@@ -72,7 +72,9 @@ async function listOrgStorage(
     const updated = f.metadata?.updated ?? new Date().toISOString();
     const contentType = f.metadata?.contentType;
     const category = categorizeStoragePath(f.name);
-    const shortName = f.name.replace(/^organizations\/[^/]+\//, '').replace(new RegExp(`^${orgId}/`), '');
+    const prefix = `${orgId}/`;
+    let shortName = f.name.replace(/^organizations\/[^/]+\//, '');
+    if (shortName.startsWith(prefix)) shortName = shortName.slice(prefix.length);
 
     const record: OrgStorageFile = {
       name: shortName || f.name,

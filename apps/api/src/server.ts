@@ -19,4 +19,7 @@ app.addHook('onClose', () => dispatcher.stop());
 installGracefulShutdown(app);
 await app.listen({ port: config.port, host: config.host });
 // When TASK_QUEUE is local (e.g. Cloud Run direct worker call without Cloud Tasks), run the in-process dispatcher.
-if (config.taskQueue === 'local') dispatcher.start(app.log);
+// In test-only mock production runs (scripts/verify.sh prod_api), METADATA_SERVER_DETECTION=none is set without GCP credentials.
+if (config.taskQueue === 'local' && process.env.METADATA_SERVER_DETECTION !== 'none') {
+  dispatcher.start(app.log);
+}
