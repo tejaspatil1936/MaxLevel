@@ -92,7 +92,7 @@ export function StudentDashboard() {
                     className="inline-flex min-h-10 items-center justify-center gap-1 rounded-control border border-rule bg-surface px-4 text-body-small font-bold text-ink transition-colors hover:bg-ballpoint-wash"
                   >
                     <span>{t('studentTests.viewDetails')}</span>
-                    <span aria-hidden="true">&rarr;</span>
+                    <span aria-hidden="true">{'\u2192'}</span>
                   </Link>
                 </div>
               </div>
@@ -148,21 +148,19 @@ function NextTest({
         <div className="md:col-span-2">
           <Link
             href={targetUrl}
-            className="inline-block font-display text-heading-1 font-bold text-ink transition-colors hover:text-ballpoint"
+            className="inline-block font-display text-heading-2 font-bold text-ink transition-colors hover:text-ballpoint"
           >
             {testHeading(test)}
           </Link>
           {test.company ? <p className="mt-1 font-bold text-graphite">{test.company}</p> : null}
 
-          <div className="mt-4 flex flex-wrap gap-4 text-body-small text-graphite">
-            <div className="flex items-center gap-1.5 rounded-control border border-rule bg-surface-sunken px-3 py-1.5">
-              <span className="font-semibold text-ink">Window:</span>
-              <span>{formatWindow(test.window, timezone)}</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-control border border-rule bg-surface-sunken px-3 py-1.5">
-              <span className="font-semibold text-ink">Duration:</span>
-              <span>{formatCount(test.durationMin)} mins</span>
-            </div>
+          <div className="mt-4 flex flex-wrap gap-3 text-body-small text-graphite">
+            <span className="rounded-control border border-rule bg-surface-sunken px-3 py-1.5">
+              {t('studentTests.window', { window: formatWindow(test.window, timezone) })}
+            </span>
+            <span className="rounded-control border border-rule bg-surface-sunken px-3 py-1.5">
+              {t('studentTests.duration', { n: formatCount(test.durationMin) })}
+            </span>
           </div>
         </div>
 
@@ -179,7 +177,7 @@ function NextTest({
                   ? t('studentTests.startTest')
                   : t('studentTests.viewDetails')}
             </span>
-            <span aria-hidden="true">&rarr;</span>
+            <span aria-hidden="true">{'\u2192'}</span>
           </Link>
         </div>
       </div>
@@ -241,7 +239,7 @@ function OpenItem({
         {test.company ? <p className="mt-0.5 font-bold text-graphite">{test.company}</p> : null}
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-small text-graphite">
           <span>{t('studentTests.window', { window: formatWindow(test.window, timezone) })}</span>
-          <span>&bull;</span>
+          <span>{'\u2022'}</span>
           <span>{t('studentTests.duration', { n: formatCount(test.durationMin) })}</span>
         </div>
       </div>
@@ -259,7 +257,7 @@ function OpenItem({
                 ? t('studentTests.startTest')
                 : t('studentTests.viewDetails')}
           </span>
-          <span aria-hidden="true">&rarr;</span>
+          <span aria-hidden="true">{'\u2192'}</span>
         </Link>
       </div>
     </div>
