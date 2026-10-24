@@ -1,7 +1,14 @@
-import type { AssistantChatMessage, AssistantChatResponse, DiagnosticReport } from '@mitaoe/shared';
+import {
+  assistantActionProposalSchema,
+  type AssistantActionProposal,
+  type AssistantChatMessage,
+  type AssistantChatResponse,
+  type DiagnosticReport,
+} from '@mitaoe/shared';
 import { GoogleAuth } from 'google-auth-library';
 import type { Data } from '../data';
 import { adminDiagnosticService } from './admin-diagnostic';
+import type { EntitlementsService } from './entitlements';
 
 const auth = new GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/cloud-platform'],
@@ -16,7 +23,7 @@ export interface AdminAssistantService {
   ): Promise<AssistantChatResponse>;
 }
 
-export function createAdminAssistantService(data: Data): AdminAssistantService {
+export function createAdminAssistantService(data: Data, entitlements?: EntitlementsService): AdminAssistantService {
   const diagnostics = adminDiagnosticService(data);
   const projectId = process.env.GCLOUD_PROJECT ?? 'test-prep-e4d7f';
 
@@ -98,7 +105,56 @@ export function createAdminAssistantService(data: Data): AdminAssistantService {
           ?.content.trim() ?? '';
       const lower = lastUserMsg.toLowerCase();
 
-      // 1. Gather live organizational drives and metadata
+      // 1. Check assessment integrity boundary (Humans only for questions)
+      const isQuestionQuery =
+        (lower.includes('question') || lower.includes('questions')) &&
+        (lower.includes('generate') ||
+          lower.includes('create') ||
+          lower.includes('add') ||
+          lower.includes('write') ||
+          lower.includes('make') ||
+          lower.includes('sample'));
+
+      if (isQuestionQuery) {
+        return {
+          reply: `### 🛡️ Human-Only Question Authoring Boundary\n\nI can configure series, tests, scheduling windows, proctoring settings, and student eligibility.\n\nHowever, **question creation, uploading, and approval are strictly reserved for human administrators** to maintain examination integrity and prevent artificial hallucinations.\n\n👉 **To add questions to a test:**\n1. Open your test in the [Test Editor](/admin/tests/edit?id=${context?.testId ?? ''}).\n2. Click **Import Questions** to upload your XLSX, CSV, or PDF question bank.\n3. Review the preview and click **Approve Question Set**.`,
+          suggestions: ['Create a test series', 'Set up a 60 min test', "Why can't students see my test?"],
+        };
+      }
+
+      // 2. Check organization entitlement for AI series & test management
+      const ent = entitlements ? await entitlements.get(orgId) : null;
+      const canWrite = Boolean(ent?.features?.ai_assistant_write);
+
+      const isActionQuery =
+        lower.includes('create series') ||
+        lower.includes('make series') ||
+        lower.includes('new series') ||
+        lower.includes('create test') ||
+        lower.includes('make test') ||
+        lower.includes('new test') ||
+        lower.includes('setup test') ||
+        lower.includes('set up test') ||
+        lower.includes('set up a test') ||
+        lower.includes('update test') ||
+        lower.includes('update series') ||
+        lower.includes('change eligibility') ||
+        lower.includes('change setting') ||
+        lower.includes('extend window') ||
+        lower.includes('flexible window');
+
+      if (isActionQuery && !canWrite) {
+        return {
+          reply: `### 🔒 AI-Assisted Management is Disabled\n\nConversational creation and configuration of test series and tests is currently **disabled** for this organization.\n\nTo enable this capability:\n1. Contact your Superadmin.\n2. In **Organization Settings > Plan & Entitlements**, toggle on **"AI-Assisted Series & Test Creation"**.\n\nIn the meantime, you can create and configure series and tests manually in the [Series Editor](/admin/series).`,
+          suggestions: [
+            "Why can't students see my test?",
+            'How do I grant extra time?',
+            'Difference between Whitelist and Students?',
+          ],
+        };
+      }
+
+      // 3. Gather live organizational drives and metadata
       const seriesList = await data.series.listSeries(orgId);
       const allTests: Array<{
         id: string;
@@ -143,7 +199,7 @@ export function createAdminAssistantService(data: Data): AdminAssistantService {
       const whitelist = await data.whitelist.listWhitelist(orgId);
       const students = await data.students.listStudents(orgId);
 
-      // 2. Identify target test for visibility diagnosis if applicable
+      // 4. Identify target test for visibility diagnosis if applicable
       const isVisibilityQuery =
         lower.includes('not appearing') ||
         lower.includes('not showing') ||
@@ -169,7 +225,7 @@ export function createAdminAssistantService(data: Data): AdminAssistantService {
         attachedDiagnostic = await diagnostics.diagnoseTest(orgId, targetTestId, now);
       }
 
-      // 3. Assemble dynamic real-time system prompt
+      // 5. Assemble dynamic real-time system prompt
       const driveSummaries = allTests.map((t) => {
         const startStr = new Date(t.startAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
         const endStr = new Date(t.endAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -187,6 +243,45 @@ export function createAdminAssistantService(data: Data): AdminAssistantService {
 - Issues Found: ${attachedDiagnostic.issues.map((i) => `[${i.severity.toUpperCase()}] ${i.title}: ${i.message}. How to fix: ${i.howToFix} (Action: ${i.actionHref ?? 'none'})`).join('; ') || 'None'}`
         : '';
 
+      const actionPrompt = canWrite
+        ? `\nConversational Series & Test Management (Action Proposals):
+You can draft configurations for Test Series and Tests when requested by the administrator.
+When the user asks to create or configure a series, test, change dates/windows/timing, proctoring settings, or eligibility:
+You MUST explain what you are configuring in natural language, AND generate a structured proposal in a fenced json:action block at the end of your response:
+\`\`\`json:action
+{
+  "actionType": "create_series",
+  "title": "Descriptive title for action",
+  "summary": "1-sentence summary of configuration",
+  "seriesData": {
+    "title": "Series Name",
+    "startDate": "YYYY-MM-DD",
+    "endDate": "YYYY-MM-DD",
+    "dailyWindow": { "startMinutes": 540, "endMinutes": 1080 },
+    "defaults": {
+      "timingMode": "fixed",
+      "durationMin": 60,
+      "maxStrikes": 3,
+      "fullscreenRequired": true,
+      "cameraRequired": true,
+      "audioProctoring": true
+    },
+    "eligibility": {
+      "departmentIds": [],
+      "graduationYears": [],
+      "include": [],
+      "exclude": []
+    }
+  },
+  "diffs": [
+    { "field": "timingMode", "label": "Timing Mode", "value": "flexible (60 min)" }
+  ],
+  "warning": "Questions must be uploaded and approved manually in the Test Editor."
+}
+\`\`\`
+STRICT BOUNDARY: Under NO circumstances generate questions. Only configure containers, settings, schedules, and eligibility.`
+        : '';
+
       const systemPrompt = `You are the MaxLevel Placement Copilot, an expert AI assistant embedded in the college placement administration dashboard.
 You help college placement coordinators, TPOs, and exam proctors navigate drives, troubleshoot issues, and answer questions.
 
@@ -198,6 +293,7 @@ ${driveSummaries.join('\n') || '- None currently created'}
 - Total Whitelisted Student Emails (Gatekeeper List): ${whitelist.length}
 - Total Registered Student Academic Profiles: ${students.length}
 ${diagnosticText}
+${actionPrompt}
 
 Platform Navigation Reference:
 - Series & Test Authoring: /admin/series, /admin/series/edit?id=..., /admin/tests/edit?id=...
@@ -218,14 +314,35 @@ Formatting Guidelines:
 4. When asked about test statistics (e.g. "how many students gave Day 1 test"), cite the exact real numbers from the context above.
 5. If troubleshooting test visibility, clearly explain why the test is hidden and give the exact link to fix it.`;
 
-      // 4. Attempt AI Generation with Vertex AI Gemini
+      // 6. Attempt AI Generation with Vertex AI Gemini
       const priorHistory = messages.slice(0, -1);
       const aiReply = await callVertexGemini(systemPrompt, priorHistory, lastUserMsg);
 
       if (aiReply) {
+        let proposal: AssistantActionProposal | null = null;
+        let cleanedReply = aiReply;
+        const match = aiReply.match(/```json:action\s*([\s\S]*?)\s*```/);
+        if (match?.[1]) {
+          try {
+            const raw = JSON.parse(match[1]);
+            const id = `prop-${Math.random().toString(36).slice(2, 10)}`;
+            const parsed = assistantActionProposalSchema.safeParse({ id, ...raw });
+            if (parsed.success) {
+              proposal = parsed.data;
+              cleanedReply = aiReply.replace(/```json:action[\s\S]*?```/, '').trim();
+            }
+          } catch {
+            // malformed json fallback
+          }
+        }
+
         // Derive relevant follow-up prompt suggestions
         const suggestions: string[] = [];
-        if (isVisibilityQuery) {
+        if (proposal) {
+          suggestions.push('Confirm this proposal');
+          suggestions.push('Cancel proposal');
+          suggestions.push('How to add questions?');
+        } else if (isVisibilityQuery) {
           suggestions.push('Who is eligible for this test?');
           suggestions.push('How do I grant extra time?');
           suggestions.push('How to export scorecards?');
@@ -241,9 +358,10 @@ Formatting Guidelines:
         }
 
         return {
-          reply: aiReply,
+          reply: cleanedReply,
           diagnostic: attachedDiagnostic ?? undefined,
           suggestions,
+          proposal: proposal ?? undefined,
         };
       }
 
@@ -305,6 +423,105 @@ Formatting Guidelines:
           reply: `### 📊 How to Export Candidate Scorecards for Corporate Recruiters\n1. Open **Reports** in the left sidebar ([open reports](/admin/reports/)).\n2. Select the completed Series or Test drive.\n3. Click **Generate Recruiter Report**.\n4. Click **Export CSV** at the top right to download clean spreadsheets for HR.`,
           suggestions: ['How do I grant extra time?', "Why can't students see my test?"],
         };
+      }
+
+      // Action proposal fallback when Vertex AI is offline
+      if (isActionQuery && canWrite) {
+        const isSeries = lower.includes('series');
+        const todayIso = new Date(now).toISOString().slice(0, 10);
+        const tomorrowIso = new Date(now + 86400000).toISOString().slice(0, 10);
+
+        if (isSeries) {
+          const titleMatch = lastUserMsg.match(/(?:for|named|called|title)\s+["']?([^"'\n,]+)["']?/i);
+          const seriesTitle = titleMatch?.[1]?.trim() || 'Campus Placement Drive 2026';
+          const proposal: AssistantActionProposal = {
+            id: `prop-${Math.random().toString(36).slice(2, 10)}`,
+            actionType: 'create_series',
+            title: `Create Series: ${seriesTitle}`,
+            summary: `Draft series container for "${seriesTitle}" from ${todayIso} to ${tomorrowIso} with flexible 60m duration and proctoring enabled.`,
+            seriesData: {
+              title: seriesTitle,
+              startDate: todayIso,
+              endDate: tomorrowIso,
+              dailyWindow: { startMinutes: 540, endMinutes: 1080 },
+              defaults: {
+                timingMode: 'flexible',
+                durationMin: 60,
+                maxStrikes: 3,
+                fullscreenRequired: true,
+                cameraRequired: true,
+                audioProctoring: true,
+              },
+              eligibility: {
+                departmentIds: [],
+                graduationYears: [],
+                include: [],
+                exclude: [],
+              },
+            },
+            diffs: [
+              { field: 'timingMode', label: 'Timing Mode', value: 'Flexible Window (9:00 AM - 6:00 PM)' },
+              { field: 'durationMin', label: 'Exam Duration', value: '60 Minutes' },
+              { field: 'proctoring', label: 'Proctoring Rules', value: 'Webcam, Audio & Fullscreen Enabled' },
+              { field: 'eligibility', label: 'Eligibility', value: 'All Registered Students (No Restrictions)' },
+            ],
+            requiresConfirmation: true,
+            warning: 'Questions must be uploaded and approved manually in the Test Editor.',
+          };
+
+          return {
+            reply: `### 📋 Proposed Action: Create Placement Series\n\nI have drafted a new series **"${seriesTitle}"** based on your request.\n\nPlease review the configuration parameters in the proposal card below and click **Confirm & Create** to proceed.`,
+            proposal,
+            suggestions: ['Confirm this proposal', 'Cancel proposal', 'How to add questions?'],
+          };
+        } else {
+          // Test creation proposal
+          const targetSeries = seriesList[0];
+          const seriesId = targetSeries?.id ?? 'series-1';
+          const titleMatch = lastUserMsg.match(/(?:for|named|called|title)\s+["']?([^"'\n,]+)["']?/i);
+          const testTitle = titleMatch?.[1]?.trim() || 'Aptitude Assessment';
+          const testDate = targetSeries?.startDate ?? todayIso;
+
+          const proposal: AssistantActionProposal = {
+            id: `prop-${Math.random().toString(36).slice(2, 10)}`,
+            actionType: 'create_test',
+            title: `Create Test: ${testTitle}`,
+            summary: `Draft test container for "${testTitle}" in series "${targetSeries?.title ?? 'Default Series'}" on ${testDate}.`,
+            seriesId,
+            testData: {
+              seriesId,
+              title: testTitle,
+              scheduledDate: testDate,
+              overrides: {
+                timingMode: 'flexible',
+                durationMin: 60,
+                fullscreenRequired: true,
+                cameraRequired: true,
+                audioProctoring: true,
+              },
+              eligibility: {
+                departmentIds: [],
+                graduationYears: [],
+                include: [],
+                exclude: [],
+              },
+            },
+            diffs: [
+              { field: 'series', label: 'Parent Series', value: targetSeries?.title ?? 'Series' },
+              { field: 'date', label: 'Scheduled Date', value: testDate },
+              { field: 'durationMin', label: 'Duration', value: '60 Minutes' },
+              { field: 'proctoring', label: 'Proctoring Rules', value: 'Webcam, Audio & Fullscreen' },
+            ],
+            requiresConfirmation: true,
+            warning: 'Questions must be uploaded and approved manually in the Test Editor.',
+          };
+
+          return {
+            reply: `### 📋 Proposed Action: Create Test Container\n\nI have drafted the test container **"${testTitle}"** under series **"${targetSeries?.title ?? 'Series'}"**.\n\nPlease review the configuration parameters in the proposal card below and click **Confirm & Create** to proceed.`,
+            proposal,
+            suggestions: ['Confirm this proposal', 'Cancel proposal', 'How to add questions?'],
+          };
+        }
       }
 
       // Math / general query fallback if Vertex AI was unreachable

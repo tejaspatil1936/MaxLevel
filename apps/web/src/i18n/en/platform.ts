@@ -55,6 +55,7 @@ export const platform = {
   'feature.extra_time_grants': 'Extra time',
   'feature.results_export': 'Results export',
   'feature.analytics_reports': 'Analytics reports',
+  'feature.ai_assistant_write': 'AI-Assisted Series & Test Creation',
   'limit.max_students': 'Max students',
   'limit.max_admins': 'Max admins',
   'limit.ai_imports_per_month': 'AI imports per month',

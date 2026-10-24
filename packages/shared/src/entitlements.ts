@@ -12,6 +12,7 @@ export const FEATURE_DEFAULTS = {
   extra_time_grants: true,
   results_export: true,
   analytics_reports: false,
+  ai_assistant_write: false,
 } as const;
 export type FeatureFlag = keyof typeof FEATURE_DEFAULTS;
 export const FEATURE_FLAGS = Object.keys(FEATURE_DEFAULTS) as FeatureFlag[];

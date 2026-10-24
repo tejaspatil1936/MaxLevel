@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { FEATURE_DEFAULTS, LIMIT_DEFAULTS, monthKey, resolveEntitlements } from './entitlements';
 
 describe('resolveEntitlements', () => {
-  it('FF-01 with nothing set, every feature is on except analytics reports, and limits take system defaults', () => {
+  it('FF-01 with nothing set, every feature is on except analytics reports and ai assistant write, and limits take system defaults', () => {
     const e = resolveEntitlements({});
     expect(e.features).toEqual(FEATURE_DEFAULTS);
     expect(e.features.analytics_reports).toBe(false);
+    expect(e.features.ai_assistant_write).toBe(false);
     expect(e.limits).toEqual(LIMIT_DEFAULTS);
   });
 

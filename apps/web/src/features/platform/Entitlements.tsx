@@ -19,6 +19,7 @@ export const FEATURE_LABEL: Record<FeatureFlag, MessageKey> = {
   extra_time_grants: 'feature.extra_time_grants',
   results_export: 'feature.results_export',
   analytics_reports: 'feature.analytics_reports',
+  ai_assistant_write: 'feature.ai_assistant_write',
 };
 const LIMIT_LABEL: Record<LimitKey, MessageKey> = {
   max_students: 'limit.max_students',

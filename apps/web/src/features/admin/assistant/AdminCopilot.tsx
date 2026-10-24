@@ -1,6 +1,11 @@
 'use client';
 
-import type { AssistantChatMessage, AssistantChatResponse, DiagnosticReport } from '@mitaoe/shared';
+import type {
+  AssistantActionProposal,
+  AssistantChatMessage,
+  AssistantChatResponse,
+  DiagnosticReport,
+} from '@mitaoe/shared';
 import { Button } from '@mitaoe/ui';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, Maximize2, Minimize2, Send, Sparkles, Trash2, X } from 'lucide-react';
@@ -9,6 +14,7 @@ import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
 import { MaxLevelLogo } from '../../shell/MaxLevelLogo';
+import { ActionProposalCard } from './ActionProposalCard';
 import { AssistantMarkdown } from './AssistantMarkdown';
 
 type ButtonMode = 'full' | 'compact' | 'hidden';
@@ -16,6 +22,7 @@ type ButtonMode = 'full' | 'compact' | 'hidden';
 interface ChatMessage extends AssistantChatMessage {
   id: string;
   diagnostic?: DiagnosticReport | null;
+  proposal?: AssistantActionProposal | null;
 }
 
 let msgCounter = 0;
@@ -101,6 +108,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
         role: 'assistant',
         content: data.reply,
         diagnostic: data.diagnostic,
+        proposal: data.proposal,
       };
       setMessages((prev) => [...prev, userMsg, assistantMsg]);
       setInput('');
@@ -150,12 +158,12 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
               <button
                 type="button"
                 onClick={() => setIsOpen(true)}
-                className="flex h-11 items-center gap-2 pl-4 pr-2 font-bold tracking-tight text-white hover:opacity-90"
+                className="flex h-11 items-center gap-2 pl-4 pr-2 font-bold tracking-tight text-on-ballpoint hover:opacity-90"
                 aria-label={t('assistant.trigger')}
               >
                 <Sparkles size={16} className="text-yellow-300 animate-pulse" aria-hidden="true" />
                 <span className="text-sm font-semibold">{t('assistant.trigger')}</span>
-                <span className="rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold text-white/90">
+                <span className="rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold text-on-ballpoint">
                   {t('assistant.shortcut')}
                 </span>
               </button>
@@ -165,7 +173,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                   onClick={() => updateBtnMode('compact')}
                   title={t('assistant.minimize')}
                   aria-label={t('assistant.minimize')}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-on-ballpoint/70 hover:text-on-ballpoint hover:bg-white/20 transition-colors"
                 >
                   <Minimize2 size={13} />
                 </button>
@@ -174,7 +182,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                   onClick={() => updateBtnMode('hidden')}
                   title={t('assistant.hide')}
                   aria-label={t('assistant.hide')}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-on-ballpoint/70 hover:text-on-ballpoint hover:bg-white/20 transition-colors"
                 >
                   <X size={14} />
                 </button>
@@ -189,7 +197,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                 onClick={() => setIsOpen(true)}
                 title={`${t('assistant.trigger')} (${t('assistant.shortcut')})`}
                 aria-label={t('assistant.trigger')}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-ballpoint text-white shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-ballpoint text-on-ballpoint shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
               >
                 <Sparkles size={18} className="text-yellow-300 animate-pulse" aria-hidden="true" />
               </button>
@@ -224,7 +232,7 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                 onClick={() => updateBtnMode('compact')}
                 title={`${t('assistant.showButton')} (${t('assistant.shortcut')})`}
                 aria-label={t('assistant.showButton')}
-                className="flex h-7 items-center gap-1 rounded-l-md bg-ballpoint/75 hover:bg-ballpoint text-white px-2 shadow transition-all opacity-40 hover:opacity-100"
+                className="flex h-7 items-center gap-1 rounded-l-md bg-ballpoint/75 hover:bg-ballpoint text-on-ballpoint px-2 shadow transition-all opacity-40 hover:opacity-100"
               >
                 <Sparkles size={13} className="text-yellow-300" />
                 <span className="text-[10px] font-semibold">{'AI'}</span>
@@ -352,6 +360,9 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
                       ) : null}
                     </div>
                   ) : null}
+
+                  {/* Render Action Proposal Card if available */}
+                  {m.proposal ? <ActionProposalCard proposal={m.proposal} /> : null}
                 </div>
               </div>
             ))}

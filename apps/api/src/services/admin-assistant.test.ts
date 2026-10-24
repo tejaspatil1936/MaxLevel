@@ -4,6 +4,7 @@ import type { Data } from '../data';
 import type { SeriesRecord } from '../data/series';
 import type { StudentRecord } from '../data/students';
 import type { TestRecord } from '../data/tests';
+import type { EntitlementsService } from './entitlements';
 import { createAdminAssistantService } from './admin-assistant';
 
 describe('createAdminAssistantService', () => {
@@ -117,5 +118,63 @@ describe('createAdminAssistantService', () => {
     );
     expect(res.reply).toContain('Whitelist');
     expect(res.reply).toContain('Students Tab');
+  });
+
+  it('strictly refuses to generate or create questions and directs to Test Editor', async () => {
+    const service = createAdminAssistantService(mockData());
+    const res = await service.chat(
+      'org-1',
+      [{ role: 'user', content: 'Can you generate 10 questions for this test?' }],
+      2000,
+    );
+    expect(res.reply).toContain('Human-Only Question Authoring Boundary');
+    expect(res.reply).toContain('Test Editor');
+    expect(res.proposal).toBeUndefined();
+  });
+
+  it('notifies admin when AI series management is disabled', async () => {
+    const mockEntitlements = {
+      get: async () => ({ features: { ai_assistant_write: false } }),
+    } as unknown as EntitlementsService;
+    const service = createAdminAssistantService(mockData(), mockEntitlements);
+    const res = await service.chat('org-1', [{ role: 'user', content: 'Please create series for TCS NQT 2026' }], 2000);
+    expect(res.reply).toContain('AI-Assisted Management is Disabled');
+    expect(res.reply).toContain('Organization Settings');
+    expect(res.proposal).toBeUndefined();
+  });
+
+  it('creates action proposal for series when AI series management is enabled', async () => {
+    const mockEntitlements = {
+      get: async () => ({ features: { ai_assistant_write: true } }),
+    } as unknown as EntitlementsService;
+    const service = createAdminAssistantService(mockData(), mockEntitlements);
+    const res = await service.chat(
+      'org-1',
+      [{ role: 'user', content: 'Please create series called "TCS NQT 2026 Season 1"' }],
+      2000,
+    );
+    expect(res.proposal).toBeDefined();
+    expect(res.proposal?.actionType).toBe('create_series');
+    expect(res.proposal?.title).toContain('TCS NQT 2026 Season 1');
+    expect(res.proposal?.seriesData?.title).toBe('TCS NQT 2026 Season 1');
+    expect(res.proposal?.diffs.length).toBeGreaterThan(0);
+    expect(res.proposal?.warning).toContain('Questions must be uploaded and approved manually');
+  });
+
+  it('creates action proposal for test when AI series management is enabled', async () => {
+    const mockEntitlements = {
+      get: async () => ({ features: { ai_assistant_write: true } }),
+    } as unknown as EntitlementsService;
+    const service = createAdminAssistantService(mockData(), mockEntitlements);
+    const res = await service.chat(
+      'org-1',
+      [{ role: 'user', content: 'Please create test called "Cognitive Aptitude Round 1"' }],
+      2000,
+    );
+    expect(res.proposal).toBeDefined();
+    expect(res.proposal?.actionType).toBe('create_test');
+    expect(res.proposal?.title).toContain('Cognitive Aptitude Round 1');
+    expect(res.proposal?.testData?.title).toBe('Cognitive Aptitude Round 1');
+    expect(res.proposal?.testData?.seriesId).toBe('series-1');
   });
 });

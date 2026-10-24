@@ -27,4 +27,15 @@ export const assistant = {
   'assistant.rateLimited':
     'Rate limit reached (10 queries/minute). Please wait a moment before sending another message to conserve AI credits.',
   'assistant.error': 'Failed to get a response from the assistant. Please try again.',
+  'assistant.proposalBadge': 'Proposed Action — Requires Approval',
+  'assistant.proposalConfirm': 'Confirm & Apply',
+  'assistant.proposalApplying': 'Applying changes...',
+  'assistant.proposalDismiss': 'Dismiss',
+  'assistant.proposalDismissed': 'Proposal dismissed.',
+  'assistant.proposalSuccess': 'Action completed successfully.',
+  'assistant.proposalOpenEditor': 'Open in Editor',
+  'assistant.proposalQuestionWarning':
+    '⚠️ Questions cannot be created or modified by AI. Assessment questions must be uploaded, previewed, and approved manually in the Test Editor.',
+  'assistant.proposalSummary': 'Summary of Configuration',
+  'assistant.proposalParameters': 'Parameters to Apply',
 } as const;

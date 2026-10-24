@@ -488,8 +488,8 @@ export const ADMIN_ROUTE_SAMPLES: Record<string, AdminRouteSample> = {
   'GET /v1/live-tests': { fresh: (db) => withPublishedTest(db) },
   'GET /v1/tests/:id/live': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
   'GET /v1/admin/diagnose/tests/:id': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
-  // An empty body is refused before the model is asked, so the route table never calls the LLM.
   'POST /v1/admin/assistant/chat': { body: {} },
+  'POST /v1/admin/assistant/apply-action': { body: {} },
   'GET /v1/tests/:id/attempts': { foreignParams: { id: 'test-org-b' }, fresh: (db) => withPublishedTest(db) },
 
   'GET /v1/audit': {},
