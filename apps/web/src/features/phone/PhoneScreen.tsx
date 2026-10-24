@@ -114,6 +114,7 @@ function usePhonePairing(token: string) {
   const [link, setLink] = useState<Link>('connecting');
   const [camera, setCamera] = useState<PhoneCamera>('starting');
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [occluded, setOccluded] = useState(false);
   const [started, setStarted] = useState(false);
   useEffect(() => {
     if (!started) return;
@@ -145,6 +146,11 @@ function usePhonePairing(token: string) {
       setPhase('running');
       stops.push(keepAwake());
       let current: PhoneCamera = 'starting';
+      let occludedCount = 0;
+      let isOccluded = false;
+      let hiddenVideo: HTMLVideoElement | null = null;
+      let checkInterval: ReturnType<typeof setInterval> | null = null;
+
       const writer = phonePresence(
         database,
         presencePath(paired.orgId, paired.testId, paired.attemptId, 'phone'),
@@ -174,6 +180,62 @@ function usePhonePairing(token: string) {
           () => undefined,
         ),
       );
+
+      if (typeof document !== 'undefined') {
+        const canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        hiddenVideo = document.createElement('video');
+        hiddenVideo.muted = true;
+        hiddenVideo.playsInline = true;
+
+        checkInterval = setInterval(() => {
+          if (!live || !hiddenVideo?.srcObject || hiddenVideo.readyState < 2) return;
+          try {
+            ctx?.drawImage(hiddenVideo, 0, 0, 16, 16);
+            const imgData = ctx?.getImageData(0, 0, 16, 16);
+            if (!imgData) return;
+            const data = imgData.data;
+            let sum = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              sum += 0.299 * (data[i] ?? 0) + 0.587 * (data[i + 1] ?? 0) + 0.114 * (data[i + 2] ?? 0);
+            }
+            const avgBrightness = sum / 256;
+            // Hand or object covering lens results in pitch black avgBrightness < 8
+            if (avgBrightness < 8) {
+              occludedCount++;
+              if (occludedCount >= 3 && !isOccluded) {
+                isOccluded = true;
+                current = 'paused';
+                setCamera('paused');
+                setOccluded(true);
+                writer.changed();
+              }
+            } else {
+              if (occludedCount > 0) occludedCount = 0;
+              if (isOccluded) {
+                isOccluded = false;
+                current = 'live';
+                setCamera('live');
+                setOccluded(false);
+                writer.changed();
+              }
+            }
+          } catch {
+            // ignore canvas read errors
+          }
+        }, 1000);
+
+        stops.push(() => {
+          if (checkInterval) clearInterval(checkInterval);
+          if (hiddenVideo) {
+            hiddenVideo.srcObject = null;
+            hiddenVideo = null;
+          }
+        });
+      }
+
       stops.push(
         keepCamera(
           {
@@ -188,11 +250,19 @@ function usePhonePairing(token: string) {
           },
           {
             state: (next) => {
-              current = next;
-              if (live) setCamera(next);
-              writer.changed();
+              if (!isOccluded) {
+                current = next;
+                if (live) setCamera(next);
+                writer.changed();
+              }
             },
-            stream: (s) => live && setStream(s),
+            stream: (s) => {
+              if (live) setStream(s);
+              if (hiddenVideo) {
+                hiddenVideo.srcObject = s;
+                if (s) void hiddenVideo.play().catch(() => undefined);
+              }
+            },
           },
         ),
       );
@@ -202,14 +272,14 @@ function usePhonePairing(token: string) {
       stopAll();
     };
   }, [started, token]);
-  return { phase, refusal, link, camera, stream, start: () => setStarted(true), started };
+  return { phase, refusal, link, camera, stream, occluded, start: () => setStarted(true), started };
 }
 
 /** /pair/?token=<token> (spec 7.9, UX-12): designed for phones first. */
 export function PhoneScreen() {
   const token = useSearchParams().get('token') ?? '';
   const video = useRef<HTMLVideoElement | null>(null);
-  const { phase, refusal, link, camera, stream, start, started } = usePhonePairing(token);
+  const { phase, refusal, link, camera, stream, occluded, start, started } = usePhonePairing(token);
   useEffect(() => {
     const v = video.current;
     if (!v) return;
@@ -263,7 +333,9 @@ export function PhoneScreen() {
             className="aspect-[3/4] w-full rounded-panel border border-rule bg-surface-sunken object-cover"
           />
           {camera === 'failed' ? <InlineMessage>{t('phone.cameraFailed')}</InlineMessage> : null}
-          {camera === 'paused' ? <InlineMessage>{t('phone.cameraPaused')}</InlineMessage> : null}
+          {camera === 'paused' ? (
+            <InlineMessage>{t(occluded ? 'phone.cameraCovered' : 'phone.cameraPaused')}</InlineMessage>
+          ) : null}
           {help}
         </>
       )}

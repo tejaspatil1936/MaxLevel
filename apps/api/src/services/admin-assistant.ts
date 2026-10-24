@@ -19,7 +19,7 @@ export interface AdminAssistantService {
     orgId: string,
     messages: AssistantChatMessage[],
     now: number,
-    context?: { testId?: string },
+    context?: { testId?: string; seriesId?: string },
   ): Promise<AssistantChatResponse>;
 }
 
@@ -464,8 +464,21 @@ CRITICAL HUMAN-IN-THE-LOOP RULE:
 STRICT BOUNDARY: Under NO circumstances generate questions. Only configure containers, settings, schedules, and eligibility.`
         : '';
 
+      const activeTest = allTests.find((t) => t.id === targetTestId);
+      const activeSeries = seriesList.find((s) => s.id === context?.seriesId);
+      const activeContextPrompt = activeTest
+        ? `\n### CURRENT ACTIVE SCREEN CONTEXT:
+The administrator is currently viewing/editing Test "${activeTest.title}" (ID: ${activeTest.id}, Series: "${activeTest.seriesTitle}").
+When the administrator asks about "this test", "it", or requests changes (e.g. disabling immediate result release, window timing, proctoring, etc.), they are referring to "${activeTest.title}" (ID: ${activeTest.id}). Focus on and apply actions to this test directly without asking for clarification.`
+        : activeSeries
+          ? `\n### CURRENT ACTIVE SCREEN CONTEXT:
+The administrator is currently viewing/editing Series "${activeSeries.title}" (ID: ${activeSeries.id}).
+When the administrator asks about "this series", "it", or requests changes, they are referring to "${activeSeries.title}" (ID: ${activeSeries.id}). Focus on this series directly without asking for clarification.`
+          : '';
+
       const systemPrompt = `You are the MaxLevel Placement Copilot, an expert AI assistant embedded in the college placement administration dashboard.
 You help college placement coordinators, TPOs, and exam proctors navigate drives, troubleshoot issues, and answer questions.
+${activeContextPrompt}
 
 College Placement Drive Real-Time Context:
 - Active Series Drives:

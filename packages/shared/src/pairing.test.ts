@@ -52,25 +52,25 @@ describe('pairingTokenVerdict', () => {
 describe('nextPhoneWatch', () => {
   it('PR-15 PR-16 heartbeats every 5 s, the overlay after more than 15 s and the strike after more than 60 s', () => {
     expect(PHONE_HEARTBEAT_MS).toBe(5_000);
-    expect(PHONE_RECONNECT_AFTER_MS).toBe(15_000);
+    expect(PHONE_RECONNECT_AFTER_MS).toBe(10_000);
     expect(PHONE_STRIKE_AFTER_MS).toBe(60_000);
     expect(presencePath('org-a', 't1', 'a1', 'phone')).toBe('presence/org-a/t1/a1/phone');
   });
 
-  it('PR-16 a phone gone for over 15 seconds needs reconnecting and is reported paused once', () => {
+  it('PR-16 a phone gone for over 10 seconds needs reconnecting and is reported paused once', () => {
     const looks = run([
       { at: 0, phoneOnline: true },
       { at: 1_000, phoneOnline: false },
-      { at: 16_000, phoneOnline: false },
-      { at: 16_001, phoneOnline: false },
+      { at: 11_000, phoneOnline: false },
+      { at: 11_001, phoneOnline: false },
       { at: 61_001, phoneOnline: false },
       { at: 120_000, phoneOnline: false },
     ]);
     expect(looks).toEqual([
       { at: 0, link: 'connected', reconnect: false, report: undefined },
       { at: 1_000, link: 'disconnected', reconnect: false, report: undefined },
-      { at: 16_000, link: 'disconnected', reconnect: false, report: undefined },
-      { at: 16_001, link: 'disconnected', reconnect: true, report: 15_001 },
+      { at: 11_000, link: 'disconnected', reconnect: false, report: undefined },
+      { at: 11_001, link: 'disconnected', reconnect: true, report: 10_001 },
       { at: 61_001, link: 'disconnected', reconnect: true, report: undefined },
       { at: 120_000, link: 'disconnected', reconnect: true, report: undefined },
     ]);
@@ -82,8 +82,8 @@ describe('nextPhoneWatch', () => {
       { at: 70_000, phoneOnline: false },
       { at: 71_000, phoneOnline: true },
       { at: 72_000, phoneOnline: false },
-      { at: 87_000, phoneOnline: false },
-      { at: 87_001, phoneOnline: false },
+      { at: 82_000, phoneOnline: false },
+      { at: 82_001, phoneOnline: false },
     ]);
     expect(looks.map((l) => [l.link, l.reconnect, l.report])).toEqual([
       ['disconnected', false, undefined],
@@ -91,7 +91,7 @@ describe('nextPhoneWatch', () => {
       ['connected', false, undefined],
       ['disconnected', false, undefined],
       ['disconnected', false, undefined],
-      ['disconnected', true, 15_001],
+      ['disconnected', true, 10_001],
     ]);
   });
 
@@ -102,8 +102,8 @@ describe('nextPhoneWatch', () => {
       { at: 2_000, laptopConnected: false, phoneOnline: false },
       { at: 80_000, laptopConnected: false, phoneOnline: false },
       { at: 81_000, phoneOnline: false },
-      { at: 96_000, phoneOnline: false },
-      { at: 96_001, phoneOnline: false },
+      { at: 91_000, phoneOnline: false },
+      { at: 91_001, phoneOnline: false },
     ]);
     expect(looks.map((l) => [l.link, l.reconnect, l.report])).toEqual([
       ['connected', false, undefined],
@@ -112,7 +112,7 @@ describe('nextPhoneWatch', () => {
       ['unavailable', false, undefined],
       ['disconnected', false, undefined],
       ['disconnected', false, undefined],
-      ['disconnected', true, 15_001],
+      ['disconnected', true, 10_001],
     ]);
   });
 });

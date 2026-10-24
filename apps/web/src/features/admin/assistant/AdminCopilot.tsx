@@ -10,6 +10,7 @@ import { Button } from '@mitaoe/ui';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, Maximize2, Minimize2, Send, Sparkles, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { api } from '@/lib/api';
@@ -34,7 +35,24 @@ const INITIAL_MESSAGE: ChatMessage = {
   content: `👋 Hello! I am your **MaxLevel Placement Copilot**.\n\nI can help you troubleshoot why tests aren't appearing, explain where to click for live proctoring actions, or summarize drive results.\n\n**Select a common question below or type your issue:**`,
 };
 
-export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?: string }) {
+export function AdminCopilot({
+  orgId,
+  testId: propTestId,
+  seriesId: propSeriesId,
+}: {
+  orgId: string | null;
+  testId?: string;
+  seriesId?: string;
+}) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Automatically detect active test or series from URL search parameters
+  const queryId = searchParams.get('id') ?? searchParams.get('test') ?? searchParams.get('testId');
+  const isSeriesRoute = pathname?.includes('/series');
+  const activeTestId = propTestId ?? (!isSeriesRoute ? (queryId ?? undefined) : undefined);
+  const activeSeriesId = propSeriesId ?? (isSeriesRoute ? (queryId ?? undefined) : undefined);
+
   const [isOpen, setIsOpen] = useState(false);
   const [btnMode, setBtnMode] = useState<ButtonMode>(() => {
     if (typeof window === 'undefined') return 'compact';
@@ -110,11 +128,19 @@ export function AdminCopilot({ orgId, testId }: { orgId: string | null; testId?:
         ...messages.map(({ role, content }) => ({ role, content })),
         { role: 'user', content: userText },
       ];
+      const context =
+        activeTestId || activeSeriesId
+          ? {
+              ...(activeTestId ? { testId: activeTestId } : {}),
+              ...(activeSeriesId ? { seriesId: activeSeriesId } : {}),
+            }
+          : undefined;
+
       return api<AssistantChatResponse>('/v1/admin/assistant/chat', {
         method: 'POST',
         body: {
           messages: updatedMessages,
-          context: testId ? { testId } : undefined,
+          context,
         },
       });
     },

@@ -13,7 +13,7 @@ export const PAIRING_TOKEN_TTL_MS = 5 * 60_000;
 /** The phone writes its presence every 5 seconds (PR-15). */
 export const PHONE_HEARTBEAT_MS = 5_000;
 /** A phone disconnected for longer than this brings up the reconnect overlay (PR-16). */
-export const PHONE_RECONNECT_AFTER_MS = 15_000;
+export const PHONE_RECONNECT_AFTER_MS = 10_000;
 /** A phone disconnected for longer than this is one `phone_disconnected` strike (PR-16). */
 export const PHONE_STRIKE_AFTER_MS = 60_000;
 /**

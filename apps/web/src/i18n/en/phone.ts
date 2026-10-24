@@ -24,6 +24,8 @@ export const phone = {
   'phone.start': 'Start camera',
   'phone.cameraPaused':
     'Your phone camera is paused. Keep this page open and the screen unlocked; the camera restarts by itself.',
+  'phone.cameraCovered':
+    'Your phone camera is covered or pitch black. Uncover the camera to avoid an exam disconnection strike.',
   'phone.replaced': 'Another phone is now the camera for this test. You can close this page.',
   'phone.ended': 'Your test has ended. You can close this page.',
   'phone.preview': 'Your phone camera',
