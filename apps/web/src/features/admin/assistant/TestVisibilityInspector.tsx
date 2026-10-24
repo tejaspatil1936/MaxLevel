@@ -53,17 +53,11 @@ export function TestVisibilityInspector({ testId }: { testId: string }) {
               isVisible ? 'bg-tick/15 text-tick' : 'bg-redpen/15 text-redpen'
             }`}
           >
-            {isVisible ? (
-              <CheckCircle2 size={20} aria-hidden="true" />
-            ) : (
-              <AlertCircle size={20} aria-hidden="true" />
-            )}
+            {isVisible ? <CheckCircle2 size={20} aria-hidden="true" /> : <AlertCircle size={20} aria-hidden="true" />}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-display text-heading-3 font-bold text-ink">
-                {t('assistant.diagnoseTitle')}
-              </span>
+              <span className="font-display text-heading-3 font-bold text-ink">{t('assistant.diagnoseTitle')}</span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
                   isVisible ? 'bg-tick/15 text-tick' : 'bg-redpen/15 text-redpen'
@@ -77,11 +71,7 @@ export function TestVisibilityInspector({ testId }: { testId: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => setExpanded(!expanded)}
-            className="gap-1.5 font-bold"
-          >
+          <Button variant="secondary" onClick={() => setExpanded(!expanded)} className="gap-1.5 font-bold">
             <span>{expanded ? t('common.close') : t('common.moreActions')}</span>
             {expanded ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
           </Button>
@@ -127,9 +117,7 @@ export function TestVisibilityInspector({ testId }: { testId: string }) {
                 <div
                   key={issue.code}
                   className={`flex flex-col gap-1.5 rounded-control border p-3 ${
-                    issue.severity === 'critical'
-                      ? 'border-redpen/30 bg-redpen-wash/20'
-                      : 'border-rule bg-sheet'
+                    issue.severity === 'critical' ? 'border-redpen/30 bg-redpen-wash/20' : 'border-rule bg-sheet'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -144,9 +132,7 @@ export function TestVisibilityInspector({ testId }: { testId: string }) {
                   </div>
                   <p className="text-body-small text-graphite">{issue.message}</p>
                   <div className="mt-1 flex items-center justify-between border-t border-rule/50 pt-2">
-                    <span className="text-caption font-semibold text-graphite">
-                      {issue.howToFix}
-                    </span>
+                    <span className="text-caption font-semibold text-graphite">{issue.howToFix}</span>
                     {issue.actionHref && issue.actionLabel ? (
                       <Link
                         href={issue.actionHref}

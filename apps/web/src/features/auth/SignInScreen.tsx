@@ -119,7 +119,7 @@ export function SignInScreen() {
   return (
     <div className="flex min-h-screen flex-col bg-sheet text-ink">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-30 border-b border-rule bg-surface/95 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-rule bg-surface">
         <div className="mx-auto flex min-h-16 max-w-student items-center justify-between gap-4 px-4 py-2">
           <div className="flex items-center gap-3">
             <MaxLevelLogo size={36} />
@@ -252,7 +252,7 @@ export function SignInScreen() {
         {/* Next-Gen Proctoring Innovations Section */}
         <section
           aria-labelledby="innovations-heading"
-          className="border-b border-rule bg-surface-sunken/40 py-16 md:py-20"
+          className="border-b border-rule bg-surface-sunken py-16 md:py-20"
         >
           <div className="mx-auto max-w-student px-4">
             <div className="max-w-measure">
@@ -359,7 +359,7 @@ export function SignInScreen() {
               <div
                 role="tablist"
                 aria-label={t('landing.audience.tabAriaLabel')}
-                className="inline-flex self-start rounded-panel border border-rule bg-surface p-1.5 shadow-sm"
+                className="inline-flex self-start rounded-panel border border-rule bg-surface p-1 shadow-sm"
               >
                 <button
                   type="button"
@@ -368,12 +368,18 @@ export function SignInScreen() {
                   aria-selected={audienceTab === 'students'}
                   aria-controls="panel-students"
                   className={cx(
-                    'flex items-center gap-2 rounded-control px-4 py-2 text-body-small font-bold transition-colors',
-                    audienceTab === 'students' ? 'bg-ballpoint text-white shadow-sm' : 'text-graphite hover:text-ink',
+                    'flex items-center gap-2 rounded-control px-4 py-2 text-body-small font-bold whitespace-nowrap transition-colors',
+                    audienceTab === 'students'
+                      ? 'bg-ballpoint text-on-ballpoint border border-ballpoint'
+                      : 'border border-transparent text-graphite hover:text-ink hover:bg-surface-sunken',
                   )}
                   onClick={() => setAudienceTab('students')}
                 >
-                  <GraduationCap size={18} aria-hidden="true" />
+                  <GraduationCap
+                    size={18}
+                    aria-hidden="true"
+                    className={audienceTab === 'students' ? 'text-on-ballpoint' : 'text-graphite'}
+                  />
                   <span>{t('landing.audience.tabStudents')}</span>
                 </button>
                 <button
@@ -383,12 +389,18 @@ export function SignInScreen() {
                   aria-selected={audienceTab === 'orgs'}
                   aria-controls="panel-orgs"
                   className={cx(
-                    'flex items-center gap-2 rounded-control px-4 py-2 text-body-small font-bold transition-colors',
-                    audienceTab === 'orgs' ? 'bg-ballpoint text-white shadow-sm' : 'text-graphite hover:text-ink',
+                    'flex items-center gap-2 rounded-control px-4 py-2 text-body-small font-bold whitespace-nowrap transition-colors',
+                    audienceTab === 'orgs'
+                      ? 'bg-ballpoint text-on-ballpoint border border-ballpoint'
+                      : 'border border-transparent text-graphite hover:text-ink hover:bg-surface-sunken',
                   )}
                   onClick={() => setAudienceTab('orgs')}
                 >
-                  <Building2 size={18} aria-hidden="true" />
+                  <Building2
+                    size={18}
+                    aria-hidden="true"
+                    className={audienceTab === 'orgs' ? 'text-on-ballpoint' : 'text-graphite'}
+                  />
                   <span>{t('landing.audience.tabOrgs')}</span>
                 </button>
               </div>
@@ -535,7 +547,7 @@ export function SignInScreen() {
         </section>
 
         {/* Architectural Comparison Section */}
-        <section aria-labelledby="compare-heading" className="border-t border-rule bg-surface-sunken/30 py-16 md:py-20">
+        <section aria-labelledby="compare-heading" className="border-t border-rule bg-surface-sunken py-16 md:py-20">
           <div className="mx-auto max-w-student px-4">
             <div className="max-w-measure">
               <span className="text-caption font-bold uppercase tracking-widest text-ballpoint">
@@ -565,7 +577,7 @@ export function SignInScreen() {
                       </th>
                       <th
                         scope="col"
-                        className="border-l border-rule bg-ballpoint-wash/40 p-4 text-caption font-bold uppercase tracking-wider text-ballpoint sm:w-3/8"
+                        className="border-l border-rule bg-ballpoint-wash p-4 text-caption font-bold uppercase tracking-wider text-ballpoint sm:w-3/8"
                       >
                         {t('landing.compare.colMaxLevel')}
                       </th>
@@ -582,7 +594,7 @@ export function SignInScreen() {
                           <span>{t('landing.compare.row1Legacy')}</span>
                         </div>
                       </td>
-                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                      <td className="border-l border-rule bg-surface p-4 font-semibold text-ink align-top">
                         <div className="flex items-start gap-2">
                           <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
                           <span>{t('landing.compare.row1MaxLevel')}</span>
@@ -599,7 +611,7 @@ export function SignInScreen() {
                           <span>{t('landing.compare.row2Legacy')}</span>
                         </div>
                       </td>
-                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                      <td className="border-l border-rule bg-surface p-4 font-semibold text-ink align-top">
                         <div className="flex items-start gap-2">
                           <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
                           <span>{t('landing.compare.row2MaxLevel')}</span>
@@ -616,7 +628,7 @@ export function SignInScreen() {
                           <span>{t('landing.compare.row3Legacy')}</span>
                         </div>
                       </td>
-                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                      <td className="border-l border-rule bg-surface p-4 font-semibold text-ink align-top">
                         <div className="flex items-start gap-2">
                           <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
                           <span>{t('landing.compare.row3MaxLevel')}</span>
@@ -633,7 +645,7 @@ export function SignInScreen() {
                           <span>{t('landing.compare.row4Legacy')}</span>
                         </div>
                       </td>
-                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                      <td className="border-l border-rule bg-surface p-4 font-semibold text-ink align-top">
                         <div className="flex items-start gap-2">
                           <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
                           <span>{t('landing.compare.row4MaxLevel')}</span>
@@ -650,7 +662,7 @@ export function SignInScreen() {
                           <span>{t('landing.compare.row5Legacy')}</span>
                         </div>
                       </td>
-                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                      <td className="border-l border-rule bg-surface p-4 font-semibold text-ink align-top">
                         <div className="flex items-start gap-2">
                           <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
                           <span>{t('landing.compare.row5MaxLevel')}</span>

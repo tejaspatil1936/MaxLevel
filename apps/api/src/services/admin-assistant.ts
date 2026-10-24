@@ -1,8 +1,4 @@
-import type {
-  AssistantChatMessage,
-  AssistantChatResponse,
-  DiagnosticReport,
-} from '@mitaoe/shared';
+import type { AssistantChatMessage, AssistantChatResponse, DiagnosticReport } from '@mitaoe/shared';
 import { GoogleAuth } from 'google-auth-library';
 import type { Data } from '../data';
 import { adminDiagnosticService } from './admin-diagnostic';
@@ -95,7 +91,11 @@ export function createAdminAssistantService(data: Data): AdminAssistantService {
 
   return {
     async chat(orgId, messages, now, context) {
-      const lastUserMsg = messages.filter((m) => m.role === 'user').at(-1)?.content.trim() ?? '';
+      const lastUserMsg =
+        messages
+          .filter((m) => m.role === 'user')
+          .at(-1)
+          ?.content.trim() ?? '';
       const lower = lastUserMsg.toLowerCase();
 
       // 1. Gather live organizational drives and metadata
@@ -122,11 +122,7 @@ export function createAdminAssistantService(data: Data): AdminAssistantService {
           const startAt = t.resolved?.window?.start ?? 0;
           const endAt = t.resolved?.window?.end ?? 0;
           const windowState =
-            startAt > 0 && endAt > 0 && now >= startAt && now <= endAt
-              ? 'live'
-              : now < startAt
-                ? 'upcoming'
-                : 'ended';
+            startAt > 0 && endAt > 0 && now >= startAt && now <= endAt ? 'live' : now < startAt ? 'upcoming' : 'ended';
           allTests.push({
             id: t.id,
             seriesId: s.id,
@@ -180,9 +176,7 @@ export function createAdminAssistantService(data: Data): AdminAssistantService {
         return `- Test "${t.title}" (ID: ${t.id}, Day: ${t.dayNumber ?? 'N/A'}, Series: "${t.seriesTitle}"): Status=${t.status}, Window=${t.windowState} (${startStr} to ${endStr}), Total Attempts Started=${t.attemptCount}, Branches=[${t.departments.join(', ')}], Batches=[${t.graduationYears.join(', ')}]`;
       });
 
-      const seriesSummaries = seriesList.map(
-        (s) => `- Series "${s.title}" (ID: ${s.id}): Status=${s.status}`,
-      );
+      const seriesSummaries = seriesList.map((s) => `- Series "${s.title}" (ID: ${s.id}): Status=${s.status}`);
 
       const diagnosticText = attachedDiagnostic
         ? `\n### Attached Deterministic Diagnostic for "${attachedDiagnostic.testTitle}":
@@ -275,7 +269,9 @@ Formatting Guidelines:
           lines.push(`### 🟢 Test **"${d.testTitle}"** is Live and Visible!`);
           lines.push(`• **Parent Series:** "${d.seriesTitle}" is Active ✅`);
           lines.push(`• **Test Status:** Scheduled ✅`);
-          lines.push(`• **Eligible Students:** ${d.eligibleStudentCount} registered students meet the eligibility rules.`);
+          lines.push(
+            `• **Eligible Students:** ${d.eligibleStudentCount} registered students meet the eligibility rules.`,
+          );
         }
 
         return {

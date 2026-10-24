@@ -55,18 +55,19 @@ describe('createAdminAssistantService', () => {
     ({
       tests: {
         getTest: async () => baseTest,
-        listTests: async () => (overrides?.testsList ?? [baseTest]).map((t) => ({
-          id: t.id,
-          seriesId: t.seriesId,
-          title: t.title,
-          dayNumber: t.dayNumber,
-          status: t.status,
-          totalMarks: t.totalMarks,
-          attemptsStarted: t.attemptsStarted,
-          window: { start: 1000, end: 5000 },
-          durationMin: 60,
-          eligibility: { departments: ['dept-cse'], graduationYears: [2026] },
-        })),
+        listTests: async () =>
+          (overrides?.testsList ?? [baseTest]).map((t) => ({
+            id: t.id,
+            seriesId: t.seriesId,
+            title: t.title,
+            dayNumber: t.dayNumber,
+            status: t.status,
+            totalMarks: t.totalMarks,
+            attemptsStarted: t.attemptsStarted,
+            window: { start: 1000, end: 5000 },
+            durationMin: 60,
+            eligibility: { departments: ['dept-cse'], graduationYears: [2026] },
+          })),
       },
       series: {
         getSeries: async () => baseSeries,
@@ -109,7 +110,11 @@ describe('createAdminAssistantService', () => {
 
   it('explains difference between whitelist and students', async () => {
     const service = createAdminAssistantService(mockData());
-    const res = await service.chat('org-1', [{ role: 'user', content: 'difference between whitelist and students' }], 2000);
+    const res = await service.chat(
+      'org-1',
+      [{ role: 'user', content: 'difference between whitelist and students' }],
+      2000,
+    );
     expect(res.reply).toContain('Whitelist');
     expect(res.reply).toContain('Students Tab');
   });

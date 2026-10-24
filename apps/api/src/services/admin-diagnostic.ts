@@ -126,7 +126,8 @@ export function adminDiagnosticService(data: Data) {
           code: 'WINDOW_FUTURE',
           title: 'Test Starts in the Future',
           message: `The test opens on ${new Date(window.start).toLocaleString('en-IN')}. Students will see it in their "Upcoming Tests" list, but cannot begin answering until the window opens.`,
-          howToFix: 'No action needed if scheduled intentionally. If you want students to start now, update the start time.',
+          howToFix:
+            'No action needed if scheduled intentionally. If you want students to start now, update the start time.',
           actionHref: `/admin/tests/edit?id=${test.id}`,
           actionLabel: 'Edit Start Time',
         });
@@ -158,9 +159,7 @@ export function adminDiagnosticService(data: Data) {
         exclude: [],
       };
 
-      const eligibleStudents = registeredStudents.filter((s) =>
-        isEligible(asEligibility(s), seriesRules, testRules),
-      );
+      const eligibleStudents = registeredStudents.filter((s) => isEligible(asEligibility(s), seriesRules, testRules));
 
       if (registeredStudents.length === 0) {
         const whitelist = await data.whitelist.listWhitelist(orgId);

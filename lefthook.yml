@@ -3,7 +3,7 @@ pre-commit:
   parallel: true
   commands:
     secrets:
-      run: 'command -v gitleaks >/dev/null 2>&1 || exit 0; gitleaks git --pre-commit --staged --redact --no-banner'
+      run: gitleaks git --pre-commit --staged --redact --no-banner
     lint:
       glob: "*.{ts,tsx,js,mjs,cjs}"
       exclude: "^legacy/"
