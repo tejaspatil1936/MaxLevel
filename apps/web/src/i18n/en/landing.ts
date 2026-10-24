@@ -75,4 +75,98 @@ export const landing = {
     'Each college or department manages its own private student rosters, question banks, and proctors.',
   'landing.footerDesc': 'Smart Placement Examination & Proctoring Platform for Colleges.',
   'landing.copyright': '© MaxLevel. All rights reserved.',
+
+  // Next-Gen Innovations
+  'landing.innovations.tag': 'NEXT-GEN PROCTORING SUITE',
+  'landing.innovations.heading': 'Cheating-Proof by Design. 100% Student Privacy.',
+  'landing.innovations.lead':
+    'Built-in on-device AI monitors audio, displays, and inputs directly in the browser—with zero expensive cloud video streaming and zero invasive software installations.',
+  'landing.innovations.audioTitle': 'AI Background Audio & Whisper Detector',
+  'landing.innovations.audioDesc':
+    'Real-time on-device acoustic analysis detects speech and whispers while ignoring typing and fan hum. 5-second proof clips are saved for admin review and auto-deleted after 14 days.',
+  'landing.innovations.audioBadge': 'On-Device AI · 14-Day Auto-Cleanup',
+  'landing.innovations.displayTitle': 'Dual Monitor & HDMI Splitter Defense',
+  'landing.innovations.displayDesc':
+    'Detects secondary monitors, extended displays, and HDMI splitters. Automatically records a strike and pauses the exam until the extra screen is unplugged.',
+  'landing.innovations.displayBadge': 'Hardware Multi-Screen Intercept',
+  'landing.innovations.inputTitle': 'Script & Auto-Typer Protection',
+  'landing.innovations.inputDesc':
+    'Blocks browser extensions, auto-typers, and injected scripts from answering questions programmatically using browser event trust validation.',
+  'landing.innovations.inputBadge': 'Synthetic Event Blocker',
+  'landing.innovations.cameraTitle': 'Virtual Camera & Video Loop Shield',
+  'landing.innovations.cameraDesc':
+    'Intercepts virtual camera drivers like OBS and ManyCam attempting to loop pre-recorded video feeds, guaranteeing verified live camera presence.',
+  'landing.innovations.cameraBadge': 'OBS & Virtual Feed Filter',
+
+  // Audience Tabs
+  'landing.audience.tag': 'DESIGNED FOR CAMPUS DRIVES',
+  'landing.audience.heading': 'Built for both students and placement cells.',
+  'landing.audience.lead':
+    'A calm, respectful, and reliable testing experience for students; total academic integrity, live visibility, and instant scoring for colleges.',
+  'landing.audience.tabStudents': 'For Students',
+  'landing.audience.tabOrgs': 'For Colleges & Placement Cells',
+  'landing.audience.tabAriaLabel': 'Platform benefits by audience',
+
+  // For Students cards
+  'landing.students.card1Title': 'Zero Video Saved to Cloud',
+  'landing.students.card1Desc':
+    'Webcam and phone streams are analyzed in real time on your device. Video is never uploaded or saved online, safeguarding student privacy.',
+  'landing.students.card1Badge': '100% Private',
+  'landing.students.card2Title': 'Immune to Wi-Fi Drops',
+  'landing.students.card2Desc':
+    'Answers save on your laptop instantly. If campus internet cuts out or power flickers, keep answering—your work syncs seamlessly on reconnect.',
+  'landing.students.card2Badge': 'Zero Lost Work',
+  'landing.students.card3Title': '3-Second Phone Camera Pairing',
+  'landing.students.card3Desc':
+    'No invasive apps to install. Just scan an on-screen QR code with your phone camera to link your second angle in seconds.',
+  'landing.students.card3Badge': 'Zero Downloads',
+  'landing.students.card4Title': 'Inclusive Accessibility for All',
+  'landing.students.card4Desc':
+    'Adjust text scaling up to 150%, enable high-contrast display, turn on the reading ruler, or switch to dyslexic-friendly fonts at any time.',
+  'landing.students.card4Badge': 'WCAG 2.2 AAA',
+
+  // For Orgs cards
+  'landing.orgs.card1Title': 'Live Proctor Command Center',
+  'landing.orgs.card1Desc':
+    'Watch 500+ students live on a unified dashboard with strike alerts, connection telemetry, one-click extra time grants, and audio proof playback.',
+  'landing.orgs.card1Badge': 'Real-Time Oversight',
+  'landing.orgs.card2Title': 'Instant Paper Ingestion (PDF / Word / Excel)',
+  'landing.orgs.card2Desc':
+    'Upload raw question papers in seconds. AI extracts questions, complex mathematical formulas, diagrams, and keys for faculty approval.',
+  'landing.orgs.card2Badge': 'Automated Extraction',
+  'landing.orgs.card3Title': 'Admin AI Diagnostic Copilot',
+  'landing.orgs.card3Desc':
+    'Integrated AI assistant helps faculty analyze batch performance, spot difficult questions, troubleshoot settings, and generate candidate summaries.',
+  'landing.orgs.card3Badge': 'Intelligent Analytics',
+  'landing.orgs.card4Title': 'Recruiter-Ready Excel & PDF Scorecards',
+  'landing.orgs.card4Desc':
+    'Generate verified rank lists, percentile distributions, and section-wise breakdowns ready to hand to visiting company recruiters.',
+  'landing.orgs.card4Badge': 'Instant Company Handoff',
+
+  // Comparison section
+  'landing.compare.tag': 'THE ARCHITECTURAL DIFFERENCE',
+  'landing.compare.heading': 'Why modern colleges replace legacy exam software.',
+  'landing.compare.colFeature': 'Feature',
+  'landing.compare.colLegacy': 'Legacy Exam Tools',
+  'landing.compare.colMaxLevel': 'MaxLevel Architecture',
+  'landing.compare.row1Feature': 'Software Setup',
+  'landing.compare.row1Legacy': 'Invasive desktop apps, secure browsers, or plugins requiring admin rights.',
+  'landing.compare.row1MaxLevel':
+    'Zero install: runs securely in standard web browsers (Chrome, Edge, Firefox, Safari).',
+  'landing.compare.row2Feature': 'Bandwidth & Privacy',
+  'landing.compare.row2Legacy': 'Uploads gigabytes of webcam video to cloud servers, choking campus Wi-Fi.',
+  'landing.compare.row2MaxLevel':
+    '0 KB video uploaded: AI face and phone detection runs entirely on the student device.',
+  'landing.compare.row3Feature': 'Network Drops',
+  'landing.compare.row3Legacy': 'Locks up or kicks student out on connection flicker; answers lost.',
+  'landing.compare.row3MaxLevel':
+    'Local answer vault: student continues writing uninterrupted and syncs automatically.',
+  'landing.compare.row4Feature': 'Audio Proctoring',
+  'landing.compare.row4Legacy': 'No audio detection or continuous raw audio recording violating privacy.',
+  'landing.compare.row4MaxLevel':
+    'On-device whisper and speech filtering; only 5s review clips stored and auto-deleted in 14 days.',
+  'landing.compare.row5Feature': 'Hardware Bypass',
+  'landing.compare.row5Legacy': 'Easily bypassed with secondary monitors, HDMI splitters, and virtual webcams.',
+  'landing.compare.row5MaxLevel':
+    'Hardware-level dual-screen intercept and virtual camera detection with immediate strikes.',
 } as const;

@@ -1,10 +1,29 @@
 'use client';
 
-import { Button, InlineMessage } from '@mitaoe/ui';
-import { Activity, CheckCircle2, FileSpreadsheet, Lock, ShieldCheck, Smartphone, WifiOff } from 'lucide-react';
+import { Button, InlineMessage, cx } from '@mitaoe/ui';
+import {
+  Activity,
+  Bot,
+  Building2,
+  Check,
+  CheckCircle2,
+  FileSpreadsheet,
+  FileText,
+  GraduationCap,
+  Lock,
+  Mic,
+  MonitorX,
+  ShieldAlert,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Video,
+  WifiOff,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AccessibilityButton } from '@/features/shell/AccessibilityPanel';
 import { MaxLevelLogo } from '@/features/shell/MaxLevelLogo';
 import { t, type MessageKey } from '@/i18n';
@@ -43,6 +62,7 @@ function GoogleIcon() {
 export function SignInScreen() {
   const { session, signInWithGoogle, chooseOrg, signOut } = useSession();
   const router = useRouter();
+  const [audienceTab, setAudienceTab] = useState<'students' | 'orgs'>('students');
 
   useEffect(() => {
     if (session.status === 'ready') router.replace(homeFor(session.me.role));
@@ -229,79 +249,416 @@ export function SignInScreen() {
           </div>
         </section>
 
-        {/* What We Provide to Organizations Section */}
-        <section aria-labelledby="org-heading" className="py-16 md:py-20">
+        {/* Next-Gen Proctoring Innovations Section */}
+        <section
+          aria-labelledby="innovations-heading"
+          className="border-b border-rule bg-surface-sunken/40 py-16 md:py-20"
+        >
           <div className="mx-auto max-w-student px-4">
             <div className="max-w-measure">
-              <span className="text-caption font-bold uppercase tracking-widest text-ballpoint">
-                {t('landing.capTag')}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-ballpoint-wash px-3 py-1 text-caption font-bold text-ballpoint">
+                <Sparkles size={14} aria-hidden="true" />
+                <span>{t('landing.innovations.tag')}</span>
               </span>
-              <h3 id="org-heading" className="mt-2 font-display text-heading-1 font-bold text-ink">
-                {t('landing.capHeading')}
+              <h3
+                id="innovations-heading"
+                className="mt-4 font-display text-heading-1 font-bold tracking-tight text-ink"
+              >
+                {t('landing.innovations.heading')}
               </h3>
-              <p className="mt-3 text-body text-graphite">{t('landing.capLead')}</p>
+              <p className="mt-3 text-body text-graphite leading-relaxed">{t('landing.innovations.lead')}</p>
             </div>
 
-            {/* 4 Feature Pillars Grid */}
-            <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Feature 1 */}
-              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
+            <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Innovation 1: AI Background Audio & Whisper Detector */}
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm transition-shadow hover:shadow-md">
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
-                    <Smartphone size={24} aria-hidden="true" />
+                    <Mic size={24} aria-hidden="true" />
                   </div>
-                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.feat1Title')}</h4>
-                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.feat1Desc')}</p>
+                  <h4 className="mt-4 text-heading-3 font-bold text-ink">{t('landing.innovations.audioTitle')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.innovations.audioDesc')}
+                  </p>
                 </div>
                 <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
                   <CheckCircle2 size={16} aria-hidden="true" />
-                  <span>{t('landing.feat1Badge')}</span>
+                  <span>{t('landing.innovations.audioBadge')}</span>
                 </div>
               </div>
 
-              {/* Feature 2 */}
+              {/* Innovation 2: Dual Monitor & HDMI Splitter Defense */}
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm transition-shadow hover:shadow-md">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <MonitorX size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-3 font-bold text-ink">{t('landing.innovations.displayTitle')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.innovations.displayDesc')}
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.innovations.displayBadge')}</span>
+                </div>
+              </div>
+
+              {/* Innovation 3: Script & Auto-Typer Protection */}
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm transition-shadow hover:shadow-md">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <ShieldAlert size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-3 font-bold text-ink">{t('landing.innovations.inputTitle')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.innovations.inputDesc')}
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.innovations.inputBadge')}</span>
+                </div>
+              </div>
+
+              {/* Innovation 4: Virtual Camera & Video Loop Shield */}
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm transition-shadow hover:shadow-md">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <Video size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-3 font-bold text-ink">{t('landing.innovations.cameraTitle')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.innovations.cameraDesc')}
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.innovations.cameraBadge')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Audience Feature Showcase Section */}
+        <section aria-labelledby="audience-heading" className="py-16 md:py-20">
+          <div className="mx-auto max-w-student px-4">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+              <div className="max-w-measure">
+                <span className="text-caption font-bold uppercase tracking-widest text-ballpoint">
+                  {t('landing.audience.tag')}
+                </span>
+                <h3 id="audience-heading" className="mt-2 font-display text-heading-1 font-bold text-ink">
+                  {t('landing.audience.heading')}
+                </h3>
+                <p className="mt-3 text-body text-graphite">{t('landing.audience.lead')}</p>
+              </div>
+
+              {/* Segmented Audience Tab Controls */}
+              <div
+                role="tablist"
+                aria-label={t('landing.audience.tabAriaLabel')}
+                className="inline-flex self-start rounded-panel border border-rule bg-surface p-1.5 shadow-sm"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  id="tab-students"
+                  aria-selected={audienceTab === 'students'}
+                  aria-controls="panel-students"
+                  className={cx(
+                    'flex items-center gap-2 rounded-control px-4 py-2 text-body-small font-bold transition-colors',
+                    audienceTab === 'students' ? 'bg-ballpoint text-white shadow-sm' : 'text-graphite hover:text-ink',
+                  )}
+                  onClick={() => setAudienceTab('students')}
+                >
+                  <GraduationCap size={18} aria-hidden="true" />
+                  <span>{t('landing.audience.tabStudents')}</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  id="tab-orgs"
+                  aria-selected={audienceTab === 'orgs'}
+                  aria-controls="panel-orgs"
+                  className={cx(
+                    'flex items-center gap-2 rounded-control px-4 py-2 text-body-small font-bold transition-colors',
+                    audienceTab === 'orgs' ? 'bg-ballpoint text-white shadow-sm' : 'text-graphite hover:text-ink',
+                  )}
+                  onClick={() => setAudienceTab('orgs')}
+                >
+                  <Building2 size={18} aria-hidden="true" />
+                  <span>{t('landing.audience.tabOrgs')}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Students Panel */}
+            <div
+              id="panel-students"
+              role="tabpanel"
+              aria-labelledby="tab-students"
+              hidden={audienceTab !== 'students'}
+              className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2"
+            >
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <Lock size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.students.card1Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.students.card1Desc')}
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.students.card1Badge')}</span>
+                </div>
+              </div>
+
               <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
                     <WifiOff size={24} aria-hidden="true" />
                   </div>
-                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.feat2Title')}</h4>
-                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.feat2Desc')}</p>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.students.card2Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.students.card2Desc')}
+                  </p>
                 </div>
                 <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
                   <CheckCircle2 size={16} aria-hidden="true" />
-                  <span>{t('landing.feat2Badge')}</span>
+                  <span>{t('landing.students.card2Badge')}</span>
                 </div>
               </div>
 
-              {/* Feature 3 */}
               <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
-                    <FileSpreadsheet size={24} aria-hidden="true" />
+                    <Smartphone size={24} aria-hidden="true" />
                   </div>
-                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.feat3Title')}</h4>
-                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.feat3Desc')}</p>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.students.card3Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.students.card3Desc')}
+                  </p>
                 </div>
                 <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
                   <CheckCircle2 size={16} aria-hidden="true" />
-                  <span>{t('landing.feat3Badge')}</span>
+                  <span>{t('landing.students.card3Badge')}</span>
                 </div>
               </div>
 
-              {/* Feature 4 */}
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <Sparkles size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.students.card4Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">
+                    {t('landing.students.card4Desc')}
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.students.card4Badge')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Organizations Panel */}
+            <div
+              id="panel-orgs"
+              role="tabpanel"
+              aria-labelledby="tab-orgs"
+              hidden={audienceTab !== 'orgs'}
+              className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2"
+            >
               <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
                     <Activity size={24} aria-hidden="true" />
                   </div>
-                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.feat4Title')}</h4>
-                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.feat4Desc')}</p>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.orgs.card1Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.orgs.card1Desc')}</p>
                 </div>
                 <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
                   <CheckCircle2 size={16} aria-hidden="true" />
-                  <span>{t('landing.feat4Badge')}</span>
+                  <span>{t('landing.orgs.card1Badge')}</span>
                 </div>
+              </div>
+
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <FileSpreadsheet size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.orgs.card2Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.orgs.card2Desc')}</p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.orgs.card2Badge')}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <Bot size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.orgs.card3Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.orgs.card3Desc')}</p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.orgs.card3Badge')}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between rounded-panel border border-rule bg-surface p-6 shadow-sm">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-control bg-ballpoint-wash text-ballpoint">
+                    <FileText size={24} aria-hidden="true" />
+                  </div>
+                  <h4 className="mt-4 text-heading-2 font-bold text-ink">{t('landing.orgs.card4Title')}</h4>
+                  <p className="mt-2 text-body-small text-graphite leading-relaxed">{t('landing.orgs.card4Desc')}</p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 border-t border-rule pt-4 text-caption font-bold text-tick">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{t('landing.orgs.card4Badge')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Architectural Comparison Section */}
+        <section aria-labelledby="compare-heading" className="border-t border-rule bg-surface-sunken/30 py-16 md:py-20">
+          <div className="mx-auto max-w-student px-4">
+            <div className="max-w-measure">
+              <span className="text-caption font-bold uppercase tracking-widest text-ballpoint">
+                {t('landing.compare.tag')}
+              </span>
+              <h3 id="compare-heading" className="mt-2 font-display text-heading-1 font-bold text-ink">
+                {t('landing.compare.heading')}
+              </h3>
+            </div>
+
+            <div className="mt-10 overflow-hidden rounded-panel border border-rule bg-surface shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-body-small">
+                  <thead>
+                    <tr className="border-b border-rule bg-surface-sunken">
+                      <th
+                        scope="col"
+                        className="p-4 text-caption font-bold uppercase tracking-wider text-graphite sm:w-1/4"
+                      >
+                        {t('landing.compare.colFeature')}
+                      </th>
+                      <th
+                        scope="col"
+                        className="p-4 text-caption font-bold uppercase tracking-wider text-graphite sm:w-3/8"
+                      >
+                        {t('landing.compare.colLegacy')}
+                      </th>
+                      <th
+                        scope="col"
+                        className="border-l border-rule bg-ballpoint-wash/40 p-4 text-caption font-bold uppercase tracking-wider text-ballpoint sm:w-3/8"
+                      >
+                        {t('landing.compare.colMaxLevel')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-rule">
+                    <tr>
+                      <th scope="row" className="p-4 font-bold text-ink align-top">
+                        {t('landing.compare.row1Feature')}
+                      </th>
+                      <td className="p-4 text-graphite align-top">
+                        <div className="flex items-start gap-2">
+                          <X size={16} className="mt-0.5 shrink-0 text-redpen" aria-hidden="true" />
+                          <span>{t('landing.compare.row1Legacy')}</span>
+                        </div>
+                      </td>
+                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                        <div className="flex items-start gap-2">
+                          <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
+                          <span>{t('landing.compare.row1MaxLevel')}</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="p-4 font-bold text-ink align-top">
+                        {t('landing.compare.row2Feature')}
+                      </th>
+                      <td className="p-4 text-graphite align-top">
+                        <div className="flex items-start gap-2">
+                          <X size={16} className="mt-0.5 shrink-0 text-redpen" aria-hidden="true" />
+                          <span>{t('landing.compare.row2Legacy')}</span>
+                        </div>
+                      </td>
+                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                        <div className="flex items-start gap-2">
+                          <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
+                          <span>{t('landing.compare.row2MaxLevel')}</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="p-4 font-bold text-ink align-top">
+                        {t('landing.compare.row3Feature')}
+                      </th>
+                      <td className="p-4 text-graphite align-top">
+                        <div className="flex items-start gap-2">
+                          <X size={16} className="mt-0.5 shrink-0 text-redpen" aria-hidden="true" />
+                          <span>{t('landing.compare.row3Legacy')}</span>
+                        </div>
+                      </td>
+                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                        <div className="flex items-start gap-2">
+                          <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
+                          <span>{t('landing.compare.row3MaxLevel')}</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="p-4 font-bold text-ink align-top">
+                        {t('landing.compare.row4Feature')}
+                      </th>
+                      <td className="p-4 text-graphite align-top">
+                        <div className="flex items-start gap-2">
+                          <X size={16} className="mt-0.5 shrink-0 text-redpen" aria-hidden="true" />
+                          <span>{t('landing.compare.row4Legacy')}</span>
+                        </div>
+                      </td>
+                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                        <div className="flex items-start gap-2">
+                          <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
+                          <span>{t('landing.compare.row4MaxLevel')}</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="p-4 font-bold text-ink align-top">
+                        {t('landing.compare.row5Feature')}
+                      </th>
+                      <td className="p-4 text-graphite align-top">
+                        <div className="flex items-start gap-2">
+                          <X size={16} className="mt-0.5 shrink-0 text-redpen" aria-hidden="true" />
+                          <span>{t('landing.compare.row5Legacy')}</span>
+                        </div>
+                      </td>
+                      <td className="border-l border-rule bg-ballpoint-wash/10 p-4 font-semibold text-ink align-top">
+                        <div className="flex items-start gap-2">
+                          <Check size={16} className="mt-0.5 shrink-0 text-tick" aria-hidden="true" />
+                          <span>{t('landing.compare.row5MaxLevel')}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

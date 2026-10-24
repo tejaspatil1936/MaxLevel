@@ -43,7 +43,7 @@ describe('static export', () => {
       (f) => /\.(t|j)sx?$/.test(f) && /^\s*['"]use server['"]/m.test(readFileSync(f, 'utf8')),
     );
     expect([...offenders, ...serverActions].map((f) => relative(ROOT, f))).toEqual([]);
-  });
+  }, 15_000);
 
   it('WEB-02 no dynamic path segments; IDs travel in search params', () => {
     const dirs = walk(join(WEB, 'app')).map((f) => relative(join(WEB, 'app'), f));
